@@ -5,4 +5,4 @@
 [![Plugins](https://img.shields.io/badge/plugins-9-blueviolet)](./PLUGINS.md)
 [![Skills](https://img.shields.io/badge/skills-40-blue)](./PLUGINS.md)
 
-AI skills for UXD teams — PatternFly development, prototyping, research, design review, accessibility auditing, and migration tooling. Plugins work in both **Claude Code** and **Cursor**.
+AI skills for PatternFly and UXD teams — component development, design, accessibility, and migration. Plugins work in both **Claude Code** and **Cursor**.
