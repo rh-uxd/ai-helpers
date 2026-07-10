@@ -32,3 +32,36 @@ jobs:
             echo "::error::New generated files need to be committed: $UNTRACKED"
             exit 1
           fi
+
+      - name: Validate skill integrity
+        run: |
+          ERRORS=0
+
+          while IFS= read -r skill_file; do
+            dir_name=$(basename "$(dirname "$skill_file")")
+
+            # Check required frontmatter fields
+            fm_name=$(awk '/^---$/{if(++c==2)exit} c==1 && /^name:/{sub(/^name: */, ""); gsub(/["'"'"']/, ""); print; exit}' "$skill_file")
+            fm_desc=$(awk '/^---$/{if(++c==2)exit} c==1 && /^description:/{sub(/^description: */, ""); gsub(/["'"'"']/, ""); print; exit}' "$skill_file")
+
+            if [[ -z "$fm_name" ]]; then
+              echo "::error file=${skill_file}::Missing 'name' in frontmatter"
+              ERRORS=$((ERRORS + 1))
+            elif [[ "$fm_name" != "$dir_name" ]]; then
+              echo "::error file=${skill_file}::Frontmatter name '${fm_name}' does not match directory '${dir_name}'"
+              ERRORS=$((ERRORS + 1))
+            fi
+
+            if [[ -z "$fm_desc" ]]; then
+              echo "::error file=${skill_file}::Missing 'description' in frontmatter"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done < <(find plugins -name 'SKILL.md' 2>/dev/null)
+
+          if [[ "$ERRORS" -gt 0 ]]; then
+            echo "${ERRORS} skill integrity error(s) found."
+            exit 1
+          else
+            SKILL_COUNT=$(find plugins -name 'SKILL.md' 2>/dev/null | wc -l | tr -d ' ')
+            echo "Validated ${SKILL_COUNT} skill(s), 0 errors."
+          fi

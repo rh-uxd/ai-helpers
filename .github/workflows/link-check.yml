@@ -1,0 +1,60 @@
+name: Check Internal Links
+
+on:
+  pull_request:
+    paths:
+      - '**/*.md'
+
+jobs:
+  check-links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Check internal markdown links
+        run: |
+          BROKEN=0
+
+          while IFS= read -r file; do
+            dir=$(dirname "$file")
+
+            while read -r link; do
+              [[ -z "$link" ]] && continue
+              # Skip external URLs, anchors, and template variables
+              [[ "$link" =~ ^https?:// ]] && continue
+              [[ "$link" =~ ^mailto: ]] && continue
+              [[ "$link" =~ ^\# ]] && continue
+              [[ "$link" =~ ^\{\{ ]] && continue
+
+              # Strip anchor fragment and query string
+              target="${link%%#*}"
+              target="${target%%\?*}"
+              [[ -z "$target" ]] && continue
+
+              # Resolve relative to the file's directory
+              if [[ "$target" == /* ]]; then
+                resolved=".${target}"
+              else
+                resolved="${dir}/${target}"
+              fi
+
+              # Normalize path — skip links that escape the repo root
+              # (e.g., ../../issues/new/choose are GitHub UI-relative URLs)
+              normalized=$(realpath -m --relative-to=. "$resolved" 2>/dev/null || echo "$resolved")
+              [[ "$normalized" == ..* ]] && continue
+
+              if [[ ! -e "$resolved" ]]; then
+                echo "::error file=${file}::Broken link: ${link} -> ${normalized} (not found)"
+                BROKEN=$((BROKEN + 1))
+              fi
+            done < <(grep -oP '\[[^\]]*\]\(\K[^)]+' "$file" 2>/dev/null)
+
+          done < <(find . -name '*.md' -not -path './.git/*')
+
+          if [[ "$BROKEN" -gt 0 ]]; then
+            echo ""
+            echo "${BROKEN} broken internal link(s) found."
+            exit 1
+          else
+            echo "All internal links OK."
+          fi
