@@ -33,14 +33,13 @@ jobs:
             exit 1
           fi
 
-      - name: Validate skill integrity
+      - name: Validate skill and agent integrity
         run: |
           ERRORS=0
 
           while IFS= read -r skill_file; do
             dir_name=$(basename "$(dirname "$skill_file")")
 
-            # Check required frontmatter fields
             fm_name=$(awk '/^---$/{if(++c==2)exit} c==1 && /^name:/{sub(/^name: */, ""); gsub(/["'"'"']/, ""); print; exit}' "$skill_file")
             fm_desc=$(awk '/^---$/{if(++c==2)exit} c==1 && /^description:/{sub(/^description: */, ""); gsub(/["'"'"']/, ""); print; exit}' "$skill_file")
 
@@ -58,10 +57,31 @@ jobs:
             fi
           done < <(find plugins -name 'SKILL.md' 2>/dev/null)
 
+          while IFS= read -r agent_file; do
+            file_name=$(basename "$agent_file" .md)
+
+            fm_name=$(awk '/^---$/{if(++c==2)exit} c==1 && /^name:/{sub(/^name: */, ""); gsub(/["'"'"']/, ""); print; exit}' "$agent_file")
+            fm_desc=$(awk '/^---$/{if(++c==2)exit} c==1 && /^description:/{sub(/^description: */, ""); gsub(/["'"'"']/, ""); print; exit}' "$agent_file")
+
+            if [[ -z "$fm_name" ]]; then
+              echo "::error file=${agent_file}::Missing 'name' in frontmatter"
+              ERRORS=$((ERRORS + 1))
+            elif [[ "$fm_name" != "$file_name" ]]; then
+              echo "::error file=${agent_file}::Frontmatter name '${fm_name}' does not match filename '${file_name}'"
+              ERRORS=$((ERRORS + 1))
+            fi
+
+            if [[ -z "$fm_desc" ]]; then
+              echo "::error file=${agent_file}::Missing 'description' in frontmatter"
+              ERRORS=$((ERRORS + 1))
+            fi
+          done < <(find plugins -path '*/agents/*.md' -not -path '*/agents/*/*.md' 2>/dev/null)
+
           if [[ "$ERRORS" -gt 0 ]]; then
-            echo "${ERRORS} skill integrity error(s) found."
+            echo "${ERRORS} integrity error(s) found."
             exit 1
           else
             SKILL_COUNT=$(find plugins -name 'SKILL.md' 2>/dev/null | wc -l | tr -d ' ')
-            echo "Validated ${SKILL_COUNT} skill(s), 0 errors."
+            AGENT_COUNT=$(find plugins -path '*/agents/*.md' -not -path '*/agents/*/*.md' 2>/dev/null | wc -l | tr -d ' ')
+            echo "Validated ${SKILL_COUNT} skill(s) and ${AGENT_COUNT} agent(s), 0 errors."
           fi
