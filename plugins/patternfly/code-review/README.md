@@ -2,14 +2,10 @@
 
 # Code Review Plugin
 
-Code review and quality — adversarial review, security patterns.
+Code review and quality \u2014 adversarial review, security patterns.
 
 ## What's Included
 
 ### Agents
 
 - **PF Assist** (`pf-assist`) — PatternFly development routing — maps code changes, test gaps, scaffolding needs, and design work to the right PF sub-skills.
-
-## Sources
-
-- [PatternFly.org](https://www.patternfly.org/)

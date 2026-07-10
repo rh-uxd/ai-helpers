@@ -6,13 +6,13 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 
 - [uxd-workshop](#uxd-workshop) — UXD team tools and skill incubator — prototyping, research, design review, team workflows
 - [a11y](#a11y) — Accessibility auditing, reporting, and documentation
-- [code-review](#code-review) — Code review and quality — adversarial review, security patterns
-- [design-audit](#design-audit) — Design audit — validate existing code and designs against PatternFly standards
-- [design-guide](#design-guide) — Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation
-- [migration](#migration) — PF version migration — breaking change detection, class scanning, upgrade planning
-- [patternfly-mcp](#patternfly-mcp) — PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol
+- [code-review](#code-review) — Code review and quality \u2014 adversarial review, security patterns
+- [design-audit](#design-audit) — Design audit \u2014 validate existing code and designs against PatternFly standards
+- [design-guide](#design-guide) — Design guide \u2014 component selection, interaction patterns, AI experience patterns, Figma design creation
+- [migration](#migration) — PF version migration \u2014 breaking change detection, class scanning, upgrade planning
+- [patternfly-mcp](#patternfly-mcp) — PatternFly MCP server \u2014 provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol
 - [pf-workshop](#pf-workshop) — PatternFly team tools and skill incubation — issue triage, release management, codebase auditing, new skill development
-- [react](#react) — React component development — coding standards, testing, and structure
+- [react](#react) — React component development \u2014 coding standards, testing, and structure
 
 ---
 
@@ -36,7 +36,7 @@ No skills or agents yet.
 
 ### code-review
 
-Code review and quality — adversarial review, security patterns
+Code review and quality \u2014 adversarial review, security patterns
 
 | Agent | Description |
 |-------|-------------|
@@ -47,7 +47,7 @@ Code review and quality — adversarial review, security patterns
 
 ### design-audit
 
-Design audit — validate existing code and designs against PatternFly standards
+Design audit \u2014 validate existing code and designs against PatternFly standards
 
 | Skill | Description |
 |-------|-------------|
@@ -62,7 +62,7 @@ Design audit — validate existing code and designs against PatternFly standards
 
 ### design-guide
 
-Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation
+Design guide \u2014 component selection, interaction patterns, AI experience patterns, Figma design creation
 
 | Skill | Description |
 |-------|-------------|
@@ -78,7 +78,7 @@ Design guide — component selection, interaction patterns, AI experience patter
 
 ### migration
 
-PF version migration — breaking change detection, class scanning, upgrade planning
+PF version migration \u2014 breaking change detection, class scanning, upgrade planning
 
 | Skill | Description |
 |-------|-------------|
@@ -90,7 +90,7 @@ PF version migration — breaking change detection, class scanning, upgrade plan
 
 ### patternfly-mcp
 
-PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol
+PatternFly MCP server \u2014 provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol
 
 This plugin provides an MCP server only — no skills or agents. Other plugins declare it as a dependency so the MCP server is installed automatically.
 
@@ -130,7 +130,7 @@ PatternFly team tools and skill incubation — issue triage, release management,
 
 ### react
 
-React component development — coding standards, testing, and structure
+React component development \u2014 coding standards, testing, and structure
 
 | Skill | Description |
 |-------|-------------|

@@ -2,7 +2,7 @@
 
 # React Plugin
 
-React component development — coding standards, testing, and structure.
+React component development \u2014 coding standards, testing, and structure.
 
 ## What's Included
 
@@ -20,9 +20,3 @@ React component development — coding standards, testing, and structure.
 - **PF Coding Standards** (`pf-coding-standards`) — PatternFly React coding standards — import patterns, component composition, token usage, and style conventions.
 - **PF Component Structure Audit** (`pf-component-structure-audit`) — PatternFly React structural composition rules — required hierarchies, wrapper components, and props-vs-children patterns.
 - **PF Unit Test Standards** (`pf-unit-test-standards`) — PatternFly React unit testing standards — RTL patterns, mock boundaries, coverage expectations, and assertion style.
-
-## Sources
-
-- [PatternFly.org](https://www.patternfly.org/)
-- [PatternFly React GitHub](https://github.com/patternfly/patternfly-react)
-- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro)

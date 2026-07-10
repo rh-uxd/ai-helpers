@@ -2,7 +2,7 @@
 
 # Design Guide Plugin
 
-Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation.
+Design guide \u2014 component selection, interaction patterns, AI experience patterns, Figma design creation.
 
 Use this plugin when you're **building** something and need help choosing the right PatternFly components, patterns, or design language. For **validating** existing code or designs against PF standards, see [design-audit](../design-audit/).
 
@@ -16,9 +16,3 @@ Use this plugin when you're **building** something and need help choosing the ri
 ### Agents
 
 - **PF Microcopy** (`pf-microcopy`) — PatternFly component microcopy standards — button labels, tooltips, alt text, and error messages.
-
-## Sources
-
-- [PatternFly.org](https://www.patternfly.org/)
-- [PatternFly Design Tokens](https://www.patternfly.org/tokens/all-patternfly-tokens)
-- [Figma](https://www.figma.com/)

@@ -2,7 +2,7 @@
 
 # Migration Plugin
 
-PF version migration — breaking change detection, class scanning, upgrade planning.
+PF version migration \u2014 breaking change detection, class scanning, upgrade planning.
 
 ## What's Included
 
@@ -10,8 +10,3 @@ PF version migration — breaking change detection, class scanning, upgrade plan
 
 - **PF CSS Migration Scan** (`/migration:pf-css-migration-scan`) — Scan code for legacy PatternFly CSS classes and recommend PF6-safe replacements.
 - **PF React Migration Scan** (`/migration:pf-react-migration-scan`) — Scan code for @patternfly/react-* API breaking changes and produce a markdown report.
-
-## Sources
-
-- [PatternFly.org](https://www.patternfly.org/)
-- [PatternFly Migration Guide](https://www.patternfly.org/get-started/upgrade)

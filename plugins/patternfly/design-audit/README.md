@@ -2,7 +2,7 @@
 
 # Design Audit Plugin
 
-Design audit — validate existing code and designs against PatternFly standards.
+Design audit \u2014 validate existing code and designs against PatternFly standards.
 
 Use this plugin when you're **checking** whether existing code or designs follow PF standards. For help **choosing** the right PF components and patterns when building, see [design-guide](../design-guide/).
 
@@ -15,9 +15,3 @@ Use this plugin when you're **checking** whether existing code or designs follow
 - **PF Figma Check** (`/design-audit:pf-figma-check`) — Check Figma designs against PatternFly v6 standards for colors, typography, spacing, and component usage.
 - **PF Figma Token Check** (`/design-audit:pf-figma-token-check`) — Audit designs against the PatternFly 6 token architecture and bridge Figma styles to PF semantic tokens.
 - **PF Icon Finder** (`/design-audit:pf-icon-finder`) — Identify PatternFly icons in Figma mockups and provide the correct React import statements.
-
-## Sources
-
-- [PatternFly.org](https://www.patternfly.org/)
-- [PatternFly Design Tokens](https://www.patternfly.org/tokens/all-patternfly-tokens)
-- [Figma](https://www.figma.com/)

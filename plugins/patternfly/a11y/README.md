@@ -5,9 +5,3 @@
 Accessibility auditing, reporting, and documentation.
 
 No skills or agents yet.
-
-## Sources
-
-- [PatternFly.org](https://www.patternfly.org/)
-- [PatternFly Accessibility Guide](https://www.patternfly.org/accessibility/accessibility-fundamentals)
-- [WCAG 2.1](https://www.w3.org/WAI/WCAG21/quickref/)
