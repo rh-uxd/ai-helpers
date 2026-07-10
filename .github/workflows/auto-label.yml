@@ -11,10 +11,10 @@ jobs:
   label:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Apply labels based on changed paths
-        uses: actions/github-script@v7
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
           script: |
             const { data: files } = await github.rest.pulls.listFiles({
@@ -28,7 +28,7 @@ jobs:
             const labels = new Set();
 
             // Plugin-level labels
-            const pluginPattern = /^plugins\/(?:patternfly\/)?([^/]+)\//;
+            const pluginPattern = /^plugins\/(?:patternfly\/)?([^./][^/]*)\//;
             for (const path of paths) {
               const match = path.match(pluginPattern);
               if (match) labels.add(`area/${match[1]}`);
@@ -44,7 +44,7 @@ jobs:
 
             // Cross-boundary detection
             const pfChanged = paths.some(p => p.startsWith('plugins/patternfly/'));
-            const uxdChanged = paths.some(p => p.startsWith('plugins/uxd'));
+            const uxdChanged = paths.some(p => p.startsWith('plugins/') && !p.startsWith('plugins/patternfly/'));
             if (pfChanged && uxdChanged) labels.add('cross-boundary');
 
             if (labels.size === 0) return;

@@ -12,7 +12,7 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Validate manifests and skill consistency
         run: bash scripts/validate-manifests.sh
@@ -20,8 +20,15 @@ jobs:
       - name: Check generated docs are up to date
         run: |
           bash scripts/generate-plugins-md.sh
-          if ! git diff --quiet PLUGINS.md README.md; then
-            echo "::error::PLUGINS.md or README.md is out of date. Run 'make generate' and commit the result."
-            git diff PLUGINS.md README.md
+          GENERATED_FILES="PLUGINS.md README.md CONTRIBUTING-SKILLS.md"
+          GENERATED_GLOBS="plugins/*/README.md plugins/*/*/README.md"
+          if ! git diff --quiet $GENERATED_FILES $GENERATED_GLOBS 2>/dev/null; then
+            echo "::error::Generated docs are out of date. Run 'bash scripts/generate-plugins-md.sh' and commit the result."
+            git diff $GENERATED_FILES $GENERATED_GLOBS 2>/dev/null
+            exit 1
+          fi
+          UNTRACKED=$(git ls-files --others --exclude-standard $GENERATED_FILES $GENERATED_GLOBS 2>/dev/null || true)
+          if [[ -n "$UNTRACKED" ]]; then
+            echo "::error::New generated files need to be committed: $UNTRACKED"
             exit 1
           fi

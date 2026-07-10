@@ -9,14 +9,14 @@ jobs:
   check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           fetch-depth: 0
 
       - name: Detect cross-boundary changes
         run: |
           PF_CHANGED=$(git diff --name-only origin/main...HEAD | grep -c '^plugins/patternfly/' || true)
-          UXD_CHANGED=$(git diff --name-only origin/main...HEAD | grep -c '^plugins/uxd' || true)
+          UXD_CHANGED=$(git diff --name-only origin/main...HEAD | grep '^plugins/' | grep -cv '^plugins/patternfly/' || true)
           SHARED_CHANGED=$(git diff --name-only origin/main...HEAD | grep -cE '^(\.claude-plugin/|\.cursor-plugin/|scripts/|CONTRIBUTING|GOVERNANCE)' || true)
 
           if [ "$PF_CHANGED" -gt 0 ] && [ "$UXD_CHANGED" -gt 0 ]; then
