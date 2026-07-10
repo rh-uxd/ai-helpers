@@ -1,22 +1,21 @@
-# Plugin domains — each team owns their plugins exclusively
-plugins/patternfly/                 @rh-uxd/pf-ai-helpers-maintainers
-plugins/uxd-workshop/               @rh-uxd/ai-helpers-maintainers
+# All plugin content
+plugins/                            @rh-uxd/ai-helpers-maintainers
 
-# Shared infrastructure — both teams must approve
-.claude-plugin/marketplace.json     @rh-uxd/pf-ai-helpers-maintainers @rh-uxd/ai-helpers-maintainers
-.cursor-plugin/marketplace.json     @rh-uxd/pf-ai-helpers-maintainers @rh-uxd/ai-helpers-maintainers
-scripts/                            @rh-uxd/pf-ai-helpers-maintainers @rh-uxd/ai-helpers-maintainers
+# Shared infrastructure
+.claude-plugin/marketplace.json     @rh-uxd/ai-helpers-maintainers
+.cursor-plugin/marketplace.json     @rh-uxd/ai-helpers-maintainers
+scripts/                            @rh-uxd/ai-helpers-maintainers
 
-# Governance docs — both teams must approve
-GOVERNANCE.md                       @rh-uxd/pf-ai-helpers-maintainers @rh-uxd/ai-helpers-maintainers
-CONTRIBUTING.md                     @rh-uxd/pf-ai-helpers-maintainers @rh-uxd/ai-helpers-maintainers
-CONTRIBUTING-SKILLS.md              @rh-uxd/pf-ai-helpers-maintainers @rh-uxd/ai-helpers-maintainers
-.github/CODEOWNERS                  @rh-uxd/pf-ai-helpers-maintainers @rh-uxd/ai-helpers-maintainers
+# Governance and contributing docs
+GOVERNANCE.md                       @rh-uxd/ai-helpers-maintainers
+CONTRIBUTING.md                     @rh-uxd/ai-helpers-maintainers
+CONTRIBUTING-SKILLS.md              @rh-uxd/ai-helpers-maintainers
+.github/CODEOWNERS                  @rh-uxd/ai-helpers-maintainers
 
-# CI/CD — both teams must approve
-.github/workflows/                  @rh-uxd/pf-ai-helpers-maintainers @rh-uxd/ai-helpers-maintainers
-.coderabbit.yaml                    @rh-uxd/pf-ai-helpers-maintainers @rh-uxd/ai-helpers-maintainers
+# CI/CD
+.github/workflows/                  @rh-uxd/ai-helpers-maintainers
+.coderabbit.yaml                    @rh-uxd/ai-helpers-maintainers
 
-# Repo-level config — UXD maintains
+# Repo-level config
 CLAUDE.md                           @rh-uxd/ai-helpers-maintainers
 .agents/                            @rh-uxd/ai-helpers-maintainers
