@@ -1,0 +1,12 @@
+{
+  "name": "uxd-workshop",
+  "description": "UXD team tools and skill incubator — prototyping, research, design review, team workflows",
+  "intent": "UXD team tools and skill incubation",
+  "decisionTest": "Is this a UXD team workflow tool, or a new UXD skill that isn't ready for a consumer plugin yet?",
+  "version": "1.0.0",
+  "author": {
+    "name": "UXD Team"
+  },
+  "repository": "https://github.com/rh-uxd/ai-helpers",
+  "license": "Apache-2.0"
+}

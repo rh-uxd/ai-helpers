@@ -63,6 +63,7 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 <!-- BEGIN PLUGIN TABLE -->
 | Plugin | What it helps you do | Decision test | Example skills |
 |--------|---------------------|---------------|----------------|
+| **uxd-workshop** | UXD team tools and skill incubation | Is this a UXD team workflow tool, or a new UXD skill that isn't ready for a consumer plugin yet? |  |
 | **a11y** | Audit and document accessibility | Does this help me make my UI accessible? |  |
 | **code-review** | Review code for quality | Does this help me review code for quality? |  |
 | **design-audit** | Validate existing code/designs against PF standards | Does this check whether existing code or designs follow PF standards? | `pf-code-token-check`, `pf-color-scan`, `pf-figma-check` |
@@ -84,6 +85,7 @@ Plugin names must tell a user exactly what the plugin helps them do. A user brow
 
 <!-- BEGIN GOOD NAMES -->
 **Good names** describe the capability:
+- `uxd-workshop` — UXD team tools and skill incubator — prototyping, research, design review, team workflows
 - `a11y` — Accessibility auditing, reporting, and documentation
 - `code-review` — Code review and quality — adversarial review, security patterns
 - `design-audit` — Design audit — validate existing code and designs against PatternFly standards

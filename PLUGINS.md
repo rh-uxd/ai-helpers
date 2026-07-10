@@ -4,6 +4,7 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 
 ## Table of Contents
 
+- [uxd-workshop](#uxd-workshop) — UXD team tools and skill incubator — prototyping, research, design review, team workflows
 - [a11y](#a11y) — Accessibility auditing, reporting, and documentation
 - [code-review](#code-review) — Code review and quality — adversarial review, security patterns
 - [design-audit](#design-audit) — Design audit — validate existing code and designs against PatternFly standards
@@ -14,6 +15,15 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 - [react](#react) — React component development — coding standards, testing, and structure
 
 ---
+
+### uxd-workshop
+
+UXD team tools and skill incubator — prototyping, research, design review, team workflows
+
+No skills or agents yet.
+
+
+<br>
 
 ### a11y
 
