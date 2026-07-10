@@ -1,0 +1,27 @@
+name: Validate
+
+on:
+  pull_request:
+    paths:
+      - 'plugins/**'
+      - '.claude-plugin/**'
+      - '.cursor-plugin/**'
+      - 'scripts/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate manifests and skill consistency
+        run: bash scripts/validate-manifests.sh
+
+      - name: Check generated docs are up to date
+        run: |
+          bash scripts/generate-plugins-md.sh
+          if ! git diff --quiet PLUGINS.md README.md; then
+            echo "::error::PLUGINS.md or README.md is out of date. Run 'make generate' and commit the result."
+            git diff PLUGINS.md README.md
+            exit 1
+          fi

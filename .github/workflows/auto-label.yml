@@ -1,0 +1,57 @@
+name: Auto-Label PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Apply labels based on changed paths
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              per_page: 100,
+            });
+
+            const paths = files.map(f => f.filename);
+            const labels = new Set();
+
+            // Plugin-level labels
+            const pluginPattern = /^plugins\/(?:patternfly\/)?([^/]+)\//;
+            for (const path of paths) {
+              const match = path.match(pluginPattern);
+              if (match) labels.add(`area/${match[1]}`);
+            }
+
+            // Content-type labels
+            if (paths.some(p => p.includes('/skills/'))) labels.add('skill');
+            if (paths.some(p => p.includes('/agents/'))) labels.add('agent');
+            if (paths.some(p => p.startsWith('eval/'))) labels.add('eval');
+            if (paths.some(p => p.includes('plugin.json') || p.includes('marketplace.json'))) labels.add('manifest');
+            if (paths.some(p => p.startsWith('scripts/'))) labels.add('automation');
+            if (paths.some(p => /^(CONTRIBUTING|GOVERNANCE|MIGRATION|SETUP|CLAUDE)/.test(p.split('/').pop()))) labels.add('docs');
+
+            // Cross-boundary detection
+            const pfChanged = paths.some(p => p.startsWith('plugins/patternfly/'));
+            const uxdChanged = paths.some(p => p.startsWith('plugins/uxd'));
+            if (pfChanged && uxdChanged) labels.add('cross-boundary');
+
+            if (labels.size === 0) return;
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [...labels],
+            });

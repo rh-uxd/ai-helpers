@@ -1,0 +1,28 @@
+name: Cross-Boundary Check
+
+on:
+  pull_request:
+    paths:
+      - 'plugins/**'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect cross-boundary changes
+        run: |
+          PF_CHANGED=$(git diff --name-only origin/main...HEAD | grep -c '^plugins/patternfly/' || true)
+          UXD_CHANGED=$(git diff --name-only origin/main...HEAD | grep -c '^plugins/uxd' || true)
+          SHARED_CHANGED=$(git diff --name-only origin/main...HEAD | grep -cE '^(\.claude-plugin/|\.cursor-plugin/|scripts/|CONTRIBUTING|GOVERNANCE)' || true)
+
+          if [ "$PF_CHANGED" -gt 0 ] && [ "$UXD_CHANGED" -gt 0 ]; then
+            echo "::warning::Cross-boundary PR: touches both PatternFly and UXD plugins. Both teams must approve via CODEOWNERS."
+          fi
+
+          if [ "$SHARED_CHANGED" -gt 0 ]; then
+            echo "::notice::Shared infra change detected. Both teams must approve per CODEOWNERS."
+          fi

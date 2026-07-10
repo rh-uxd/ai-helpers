@@ -1,0 +1,23 @@
+# VS Code
+/.vscode/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+
+# Generated output
+prototypes/
+
+# Temporary files
+tmp/
+
+# Eval run artifacts
+eval/runs/
+
+# Environment variables (contributor credentials)
+.env*
+
+# Local Claude Code settings (user-specific)
+.claude/settings.local.json
