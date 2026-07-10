@@ -10,11 +10,11 @@
   "dependencies": ["patternfly-mcp"],
   "version": "1.0.0",
   "category": "workshop",
+  "keywords": ["patternfly"],
   "author": {
     "name": "UXD Team",
     "url": "https://www.patternfly.org"
   },
   "repository": "https://github.com/rh-uxd/ai-helpers",
-  "license": "MIT",
-  "agents": ["./agents/pf-voice-and-tone.md"]
+  "license": "MIT"
 }

@@ -80,6 +80,10 @@ AI Tool (Claude Code / Cursor)
 ├── plugins/
 │   └── patternfly/         # PatternFly plugins
 │       ├── react/          # React development — testing, structure, coding standards
+│       │   └── skills/
+│       │       └── pf-test-gen/
+│       │           ├── SKILL.md
+│       │           └── eval/   # Evals colocated with their skill
 │       ├── design-guide/   # Design guidance — component selection, AI patterns
 │       ├── design-audit/   # Design auditing — token checks, color scanning
 │       ├── a11y/           # Accessibility auditing and documentation
@@ -87,7 +91,6 @@ AI Tool (Claude Code / Cursor)
 │       ├── code-review/    # Code review and quality
 │       ├── pf-workshop/    # PF team tools and skill incubation
 │       └── patternfly-mcp/ # MCP server integration
-├── eval/                   # Eval configs and test cases
 ├── scripts/                # Automation (doc generation, scaffolding, validation)
 ├── CONTRIBUTING.md         # How to contribute
 └── CONTRIBUTING-SKILLS.md  # Step-by-step skill creation guide
@@ -95,7 +98,7 @@ AI Tool (Claude Code / Cursor)
 
 ## PatternFly MCP Server
 
-PatternFly plugins work best with the [PatternFly MCP server](https://github.com/patternfly/patternfly-mcp), which gives AI tools access to component documentation, prop schemas, and design guidelines. Install it alongside the plugins for the best experience — see the [patternfly-mcp plugin README](plugins/patternfly/patternfly-mcp/README.md) for setup instructions.
+PatternFly plugins automatically include the [PatternFly MCP server](https://github.com/patternfly/patternfly-mcp), which gives AI tools access to component documentation, prop schemas, and design guidelines — no extra setup required.
 
 ## Contributing
 

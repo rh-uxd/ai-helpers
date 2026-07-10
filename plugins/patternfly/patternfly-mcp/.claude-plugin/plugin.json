@@ -1,11 +1,14 @@
 {
   "name": "patternfly-mcp",
-  "description": "PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol",
+  "description": "PatternFly MCP server \u2014 provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol",
   "intent": "Connect AI tools to PatternFly documentation and component data",
   "mcpServers": {
     "patternfly": {
       "command": "npx",
-      "args": ["-y", "@patternfly/patternfly-mcp@2.0.1"]
+      "args": [
+        "-y",
+        "@patternfly/patternfly-mcp@2.0.1"
+      ]
     }
   },
   "version": "1.0.0",
@@ -14,5 +17,8 @@
     "url": "https://www.patternfly.org"
   },
   "repository": "https://github.com/rh-uxd/ai-helpers",
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "patternfly"
+  ]
 }

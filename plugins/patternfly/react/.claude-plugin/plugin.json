@@ -1,14 +1,25 @@
 {
   "name": "react",
-  "description": "React component development — coding standards, testing, and structure",
+  "description": "React component development \u2014 coding standards, testing, and structure",
   "intent": "Develop and test React components",
   "decisionTest": "Does this help me write or test a React component?",
   "sources": [
-    { "name": "PatternFly.org", "url": "https://www.patternfly.org/" },
-    { "name": "PatternFly React GitHub", "url": "https://github.com/patternfly/patternfly-react" },
-    { "name": "React Testing Library", "url": "https://testing-library.com/docs/react-testing-library/intro" }
+    {
+      "name": "PatternFly.org",
+      "url": "https://www.patternfly.org/"
+    },
+    {
+      "name": "PatternFly React GitHub",
+      "url": "https://github.com/patternfly/patternfly-react"
+    },
+    {
+      "name": "React Testing Library",
+      "url": "https://testing-library.com/docs/react-testing-library/intro"
+    }
   ],
-  "dependencies": ["patternfly-mcp"],
+  "dependencies": [
+    "patternfly-mcp"
+  ],
   "version": "1.0.0",
   "author": {
     "name": "UXD Team",
@@ -16,9 +27,7 @@
   },
   "repository": "https://github.com/rh-uxd/ai-helpers",
   "license": "MIT",
-  "agents": [
-    "./agents/pf-coding-standards.md",
-    "./agents/pf-component-structure-audit.md",
-    "./agents/pf-unit-test-standards.md"
+  "keywords": [
+    "patternfly"
   ]
 }
