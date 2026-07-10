@@ -1,0 +1,29 @@
+{
+  "name": "pf-migration",
+  "description": "PF version migration \u2014 breaking change detection, class scanning, upgrade planning",
+  "intent": "Upgrade PatternFly versions",
+  "decisionTest": "Does this help me upgrade PF versions?",
+  "sources": [
+    {
+      "name": "PatternFly.org",
+      "url": "https://www.patternfly.org/"
+    },
+    {
+      "name": "PatternFly Migration Guide",
+      "url": "https://www.patternfly.org/get-started/upgrade"
+    }
+  ],
+  "dependencies": [
+    "pf-mcp"
+  ],
+  "version": "1.0.0",
+  "author": {
+    "name": "UXD Team",
+    "url": "https://www.patternfly.org"
+  },
+  "repository": "https://github.com/rh-uxd/ai-helpers",
+  "license": "MIT",
+  "keywords": [
+    "patternfly"
+  ]
+}

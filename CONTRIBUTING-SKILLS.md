@@ -64,14 +64,14 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 | Plugin | What it helps you do | Decision test | Example skills |
 |--------|---------------------|---------------|----------------|
 | **uxd-workshop** | UXD team tools and skill incubation | Is this a UXD team workflow tool, or a new UXD skill that isn't ready for a consumer plugin yet? |  |
-| **a11y** | Audit and document accessibility | Does this help me make my UI accessible? |  |
-| **code-review** | Review code for quality | Does this help me review code for quality? |  |
-| **design-audit** | Validate existing code/designs against PF standards | Does this check whether existing code or designs follow PF standards? | `pf-code-token-check`, `pf-color-scan`, `pf-figma-check` |
-| **design-guide** | Choose the right PF components and patterns when building | Does this help me choose the right PF components and patterns when building? | `pf-ai-guide`, `pf-figma-design-mode` |
-| **migration** | Upgrade PatternFly versions | Does this help me upgrade PF versions? | `pf-css-migration-scan`, `pf-react-migration-scan` |
-| **patternfly-mcp** | Connect AI tools to PatternFly documentation and component data |  |  |
+| **pf-a11y** | Audit and document accessibility | Does this help me make my UI accessible? |  |
+| **pf-code-review** | Review code for quality | Does this help me review code for quality? |  |
+| **pf-design-audit** | Validate existing code/designs against PF standards | Does this check whether existing code or designs follow PF standards? | `pf-code-token-check`, `pf-color-scan`, `pf-figma-check` |
+| **pf-design-guide** | Choose the right PF components and patterns when building | Does this help me choose the right PF components and patterns when building? | `pf-ai-guide`, `pf-figma-design-mode` |
+| **pf-mcp** | Connect AI tools to PatternFly documentation and component data |  |  |
+| **pf-migration** | Upgrade PatternFly versions | Does this help me upgrade PF versions? | `pf-css-migration-scan`, `pf-react-migration-scan` |
+| **pf-react** | Develop and test React components | Does this help me write or test a React component? | `pf-component-check`, `pf-deploy`, `pf-design-comments-setup` |
 | **pf-workshop** | Team tools and skill incubation | Is this a team workflow tool, or a new skill that isn't ready for a consumer plugin yet? | `pf-analytics-repo-pruning`, `pf-bug-triage`, `pf-content-review` |
-| **react** | Develop and test React components | Does this help me write or test a React component? | `pf-component-check`, `pf-deploy`, `pf-design-comments-setup` |
 <!-- END PLUGIN TABLE -->
 
 **How to decide:**
@@ -86,13 +86,13 @@ Plugin names must tell a user exactly what the plugin helps them do. A user brow
 <!-- BEGIN GOOD NAMES -->
 **Good names** describe the capability:
 - `uxd-workshop` — UXD team tools and skill incubator — prototyping, research, design review, team workflows
-- `a11y` — Accessibility auditing, reporting, and documentation
-- `code-review` — Code review and quality \u2014 adversarial review, security patterns
-- `design-audit` — Design audit \u2014 validate existing code and designs against PatternFly standards
-- `design-guide` — Design guide \u2014 component selection, interaction patterns, AI experience patterns, Figma design creation
-- `migration` — PF version migration \u2014 breaking change detection, class scanning, upgrade planning
-- `patternfly-mcp` — PatternFly MCP server \u2014 provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol
-- `react` — React component development \u2014 coding standards, testing, and structure
+- `pf-a11y` — Accessibility auditing, reporting, and documentation
+- `pf-code-review` — Code review and quality \u2014 adversarial review, security patterns
+- `pf-design-audit` — Design audit \u2014 validate existing code and designs against PatternFly standards
+- `pf-design-guide` — Design guide \u2014 component selection, interaction patterns, AI experience patterns, Figma design creation
+- `pf-mcp` — PatternFly MCP server \u2014 provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol
+- `pf-migration` — PF version migration \u2014 breaking change detection, class scanning, upgrade planning
+- `pf-react` — React component development \u2014 coding standards, testing, and structure
 <!-- END GOOD NAMES -->
 
 **Bad names** are vague categories:

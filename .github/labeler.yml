@@ -2,37 +2,37 @@
 # Labels are applied by .github/workflows/auto-label.yml
 
 # Plugin area labels
-area/react:
+area/pf-react:
   - changed-files:
-      - any-glob-to-any-file: plugins/patternfly/react/**
+      - any-glob-to-any-file: plugins/patternfly/pf-react/**
 
-area/design-guide:
+area/pf-design-guide:
   - changed-files:
-      - any-glob-to-any-file: plugins/patternfly/design-guide/**
+      - any-glob-to-any-file: plugins/patternfly/pf-design-guide/**
 
-area/design-audit:
+area/pf-design-audit:
   - changed-files:
-      - any-glob-to-any-file: plugins/patternfly/design-audit/**
+      - any-glob-to-any-file: plugins/patternfly/pf-design-audit/**
 
-area/a11y:
+area/pf-a11y:
   - changed-files:
-      - any-glob-to-any-file: plugins/patternfly/a11y/**
+      - any-glob-to-any-file: plugins/patternfly/pf-a11y/**
 
-area/migration:
+area/pf-migration:
   - changed-files:
-      - any-glob-to-any-file: plugins/patternfly/migration/**
+      - any-glob-to-any-file: plugins/patternfly/pf-migration/**
 
-area/code-review:
+area/pf-code-review:
   - changed-files:
-      - any-glob-to-any-file: plugins/patternfly/code-review/**
+      - any-glob-to-any-file: plugins/patternfly/pf-code-review/**
 
 area/pf-workshop:
   - changed-files:
       - any-glob-to-any-file: plugins/patternfly/pf-workshop/**
 
-area/patternfly-mcp:
+area/pf-mcp:
   - changed-files:
-      - any-glob-to-any-file: plugins/patternfly/patternfly-mcp/**
+      - any-glob-to-any-file: plugins/patternfly/pf-mcp/**
 
 area/uxd-workshop:
   - changed-files:

@@ -5,14 +5,14 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 ## Table of Contents
 
 - [uxd-workshop](#uxd-workshop) — UXD team tools and skill incubator — prototyping, research, design review, team workflows
-- [a11y](#a11y) — Accessibility auditing, reporting, and documentation
-- [code-review](#code-review) — Code review and quality \u2014 adversarial review, security patterns
-- [design-audit](#design-audit) — Design audit \u2014 validate existing code and designs against PatternFly standards
-- [design-guide](#design-guide) — Design guide \u2014 component selection, interaction patterns, AI experience patterns, Figma design creation
-- [migration](#migration) — PF version migration \u2014 breaking change detection, class scanning, upgrade planning
-- [patternfly-mcp](#patternfly-mcp) — PatternFly MCP server \u2014 provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol
+- [pf-a11y](#pf-a11y) — Accessibility auditing, reporting, and documentation
+- [pf-code-review](#pf-code-review) — Code review and quality \u2014 adversarial review, security patterns
+- [pf-design-audit](#pf-design-audit) — Design audit \u2014 validate existing code and designs against PatternFly standards
+- [pf-design-guide](#pf-design-guide) — Design guide \u2014 component selection, interaction patterns, AI experience patterns, Figma design creation
+- [pf-mcp](#pf-mcp) — PatternFly MCP server \u2014 provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol
+- [pf-migration](#pf-migration) — PF version migration \u2014 breaking change detection, class scanning, upgrade planning
+- [pf-react](#pf-react) — React component development \u2014 coding standards, testing, and structure
 - [pf-workshop](#pf-workshop) — PatternFly team tools and skill incubation — issue triage, release management, codebase auditing, new skill development
-- [react](#react) — React component development \u2014 coding standards, testing, and structure
 
 ---
 
@@ -25,7 +25,7 @@ No skills or agents yet.
 
 <br>
 
-### a11y
+### pf-a11y
 
 Accessibility auditing, reporting, and documentation
 
@@ -34,7 +34,7 @@ No skills or agents yet.
 
 <br>
 
-### code-review
+### pf-code-review
 
 Code review and quality \u2014 adversarial review, security patterns
 
@@ -45,7 +45,7 @@ Code review and quality \u2014 adversarial review, security patterns
 
 <br>
 
-### design-audit
+### pf-design-audit
 
 Design audit \u2014 validate existing code and designs against PatternFly standards
 
@@ -60,7 +60,7 @@ Design audit \u2014 validate existing code and designs against PatternFly standa
 
 <br>
 
-### design-guide
+### pf-design-guide
 
 Design guide \u2014 component selection, interaction patterns, AI experience patterns, Figma design creation
 
@@ -76,7 +76,16 @@ Design guide \u2014 component selection, interaction patterns, AI experience pat
 
 <br>
 
-### migration
+### pf-mcp
+
+PatternFly MCP server \u2014 provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol
+
+This plugin provides an MCP server only — no skills or agents. Other plugins declare it as a dependency so the MCP server is installed automatically.
+
+
+<br>
+
+### pf-migration
 
 PF version migration \u2014 breaking change detection, class scanning, upgrade planning
 
@@ -88,11 +97,24 @@ PF version migration \u2014 breaking change detection, class scanning, upgrade p
 
 <br>
 
-### patternfly-mcp
+### pf-react
 
-PatternFly MCP server \u2014 provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol
+React component development \u2014 coding standards, testing, and structure
 
-This plugin provides an MCP server only — no skills or agents. Other plugins declare it as a dependency so the MCP server is installed automatically.
+| Skill | Description |
+|-------|-------------|
+| `pf-component-check` | Audit PatternFly React component nesting, wrapper hierarchies, and layout structure. |
+| `pf-deploy` | Deploy a PatternFly React project to GitHub Pages using pfcli deploy. |
+| `pf-design-comments-setup` | Integrate @patternfly/design-comments into React apps for on-page design feedback, pinned comment threads, GitHub Issues sync, and Jira linking. |
+| `pf-import-check` | Audit and fix invalid PatternFly import paths across packages. |
+| `pf-project-gen` | Scaffolds PatternFly React projects with PF6-safe dependencies, imports, and starter layout. |
+| `pf-test-gen` | Generate a unit test file for a React component using Testing Library. |
+
+| Agent | Description |
+|-------|-------------|
+| `pf-coding-standards` | PatternFly React coding standards — import patterns, component composition, token usage, and style conventions. |
+| `pf-component-structure-audit` | PatternFly React structural composition rules — required hierarchies, wrapper components, and props-vs-children patterns. |
+| `pf-unit-test-standards` | PatternFly React unit testing standards — RTL patterns, mock boundaries, coverage expectations, and assertion style. |
 
 
 <br>
@@ -124,26 +146,4 @@ PatternFly team tools and skill incubation — issue triage, release management,
 | Agent | Description |
 |-------|-------------|
 | `pf-voice-and-tone` | PatternFly and Red Hat voice and tone standards — friendly, approachable, collaborative, inventive. |
-
-
-<br>
-
-### react
-
-React component development \u2014 coding standards, testing, and structure
-
-| Skill | Description |
-|-------|-------------|
-| `pf-component-check` | Audit PatternFly React component nesting, wrapper hierarchies, and layout structure. |
-| `pf-deploy` | Deploy a PatternFly React project to GitHub Pages using pfcli deploy. |
-| `pf-design-comments-setup` | Integrate @patternfly/design-comments into React apps for on-page design feedback, pinned comment threads, GitHub Issues sync, and Jira linking. |
-| `pf-import-check` | Audit and fix invalid PatternFly import paths across packages. |
-| `pf-project-gen` | Scaffolds PatternFly React projects with PF6-safe dependencies, imports, and starter layout. |
-| `pf-test-gen` | Generate a unit test file for a React component using Testing Library. |
-
-| Agent | Description |
-|-------|-------------|
-| `pf-coding-standards` | PatternFly React coding standards — import patterns, component composition, token usage, and style conventions. |
-| `pf-component-structure-audit` | PatternFly React structural composition rules — required hierarchies, wrapper components, and props-vs-children patterns. |
-| `pf-unit-test-standards` | PatternFly React unit testing standards — RTL patterns, mock boundaries, coverage expectations, and assertion style. |
 

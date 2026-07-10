@@ -11,33 +11,33 @@
       "category": "workshop"
     },
     {
-      "name": "react",
-      "source": "./plugins/patternfly/react",
+      "name": "pf-react",
+      "source": "./plugins/patternfly/pf-react",
       "description": "React component development — coding standards, testing, and structure"
     },
     {
-      "name": "design-guide",
-      "source": "./plugins/patternfly/design-guide",
+      "name": "pf-design-guide",
+      "source": "./plugins/patternfly/pf-design-guide",
       "description": "Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation"
     },
     {
-      "name": "design-audit",
-      "source": "./plugins/patternfly/design-audit",
+      "name": "pf-design-audit",
+      "source": "./plugins/patternfly/pf-design-audit",
       "description": "Design audit — validate existing code and designs against PatternFly standards"
     },
     {
-      "name": "migration",
-      "source": "./plugins/patternfly/migration",
+      "name": "pf-migration",
+      "source": "./plugins/patternfly/pf-migration",
       "description": "PF version migration — breaking change detection, class scanning, upgrade planning"
     },
     {
-      "name": "code-review",
-      "source": "./plugins/patternfly/code-review",
+      "name": "pf-code-review",
+      "source": "./plugins/patternfly/pf-code-review",
       "description": "Code review and quality — adversarial review, security patterns"
     },
     {
-      "name": "a11y",
-      "source": "./plugins/patternfly/a11y",
+      "name": "pf-a11y",
+      "source": "./plugins/patternfly/pf-a11y",
       "description": "Accessibility auditing, reporting, and documentation"
     },
     {
@@ -47,8 +47,8 @@
       "category": "workshop"
     },
     {
-      "name": "patternfly-mcp",
-      "source": "./plugins/patternfly/patternfly-mcp",
+      "name": "pf-mcp",
+      "source": "./plugins/patternfly/pf-mcp",
       "description": "PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol"
     }
   ]

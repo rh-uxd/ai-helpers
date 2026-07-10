@@ -4,7 +4,7 @@
 
 ### Where do PatternFly skills live?
 
-Under `plugins/patternfly/<plugin-name>/skills/`. For example, a React testing skill goes in `plugins/patternfly/react/skills/pf-my-skill/SKILL.md`.
+Under `plugins/patternfly/<plugin-name>/skills/`. For example, a React testing skill goes in `plugins/patternfly/pf-react/skills/pf-my-skill/SKILL.md`.
 
 ### I have a fork of the old `patternfly/ai-helpers` repo. What do I do?
 

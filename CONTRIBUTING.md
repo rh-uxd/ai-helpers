@@ -19,9 +19,9 @@ PatternFly skills live under `plugins/patternfly/` and use the `pf-` prefix. You
 **Quick start:**
 
 1. Fork and clone this repo
-2. Create your skill: `make scaffold PLUGIN=react SKILL=pf-my-skill`
+2. Create your skill: `make scaffold PLUGIN=pf-react SKILL=pf-my-skill`
 3. Edit the generated `SKILL.md` — see [CONTRIBUTING-SKILLS.md](CONTRIBUTING-SKILLS.md) for the full guide
-4. Test locally: invoke `/react:pf-my-skill` on a real scenario
+4. Test locally: invoke `/pf-react:pf-my-skill` on a real scenario
 5. Run `make validate` to check consistency
 6. Open a pull request
 
@@ -49,14 +49,14 @@ See [SETUP.md](SETUP.md) for environment configuration (API tokens, tool setting
 | Plugin | What's in it | Skill prefix |
 |--------|-------------|-------------|
 | **uxd-workshop** | UXD team skills — prototyping, research, design review. New UXD contributions start here. | `uxd-` |
-| **react** | React component development — coding standards, testing, and structure | `pf-` |
-| **design-guide** | Component selection, interaction patterns, AI experience patterns, Figma design creation | `pf-` |
-| **design-audit** | Validate existing code and designs against PatternFly standards | `pf-` |
-| **migration** | PF version migration — breaking change detection, class scanning, upgrade planning | `pf-` |
-| **code-review** | Code review and quality — adversarial review, security patterns | `pf-` or generic |
-| **a11y** | Accessibility auditing, reporting, and documentation | `pf-` or generic |
+| **pf-a11y** | Accessibility auditing, reporting, and documentation | `pf-` |
+| **pf-code-review** | Code review and quality — adversarial review, security patterns | `pf-` |
+| **pf-design-audit** | Validate existing code and designs against PatternFly standards | `pf-` |
+| **pf-design-guide** | Component selection, interaction patterns, AI experience patterns, Figma design creation | `pf-` |
+| **pf-mcp** | PatternFly MCP server config | — |
+| **pf-migration** | PF version migration — breaking change detection, class scanning, upgrade planning | `pf-` |
+| **pf-react** | React component development — coding standards, testing, and structure | `pf-` |
 | **pf-workshop** | PF team tools and skill incubation — issue triage, release management, codebase auditing | `pf-` |
-| **patternfly-mcp** | PatternFly MCP server config | — |
 
 Over time, more plugins may be created to organize skills — by persona (`developer`, `designer`, `researcher`), by workflow (`sprint-ops`), or by capability. The workshops are where skills incubate before graduating to consumer plugins.
 
@@ -143,11 +143,11 @@ The test: can someone look at the plugin name and know whether their skill belon
 Plugin names must tell a user exactly what the plugin helps them do. A user browsing the marketplace should understand what they're installing without clicking through.
 
 **Good names** describe the capability:
-- `a11y` — accessibility auditing, reporting, and documentation
-- `code-review` — code review and quality
-- `design-audit` — validate existing code and designs against standards
-- `migration` — version migration and upgrade planning
-- `react` — React component development
+- `pf-a11y` — accessibility auditing, reporting, and documentation
+- `pf-code-review` — code review and quality
+- `pf-design-audit` — validate existing code and designs against standards
+- `pf-migration` — version migration and upgrade planning
+- `pf-react` — React component development
 
 **Bad names** are vague categories:
 - `workflow` — what workflow?
