@@ -1,0 +1,3 @@
+html.prototype-grayscale {
+  filter: grayscale(100%);
+}

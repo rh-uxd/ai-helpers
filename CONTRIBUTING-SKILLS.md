@@ -70,7 +70,7 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 | **design-guide** | Choose the right PF components and patterns when building | Does this help me choose the right PF components and patterns when building? | `pf-ai-guide`, `pf-figma-design-mode` |
 | **migration** | Upgrade PatternFly versions | Does this help me upgrade PF versions? | `pf-css-migration-scan`, `pf-react-migration-scan` |
 | **patternfly-mcp** | Connect AI tools to PatternFly documentation and component data |  |  |
-| **pf-workshop** | Team tools and skill incubation | Is this a team workflow tool, or a new skill that isn't ready for a consumer plugin yet? | `analytics-repo-pruning`, `duplicate-epic`, `figma-diff` |
+| **pf-workshop** | Team tools and skill incubation | Is this a team workflow tool, or a new skill that isn't ready for a consumer plugin yet? | `pf-analytics-repo-pruning`, `pf-duplicate-epic`, `pf-figma-diff` |
 | **react** | Develop and test React components | Does this help me write or test a React component? | `pf-component-check`, `pf-deploy`, `pf-design-comments-setup` |
 <!-- END PLUGIN TABLE -->
 
@@ -119,15 +119,15 @@ This repo uses two prefixes to distinguish skill domains:
 | `pf-` | PatternFly-specific skills | Component development, PF testing, PF migration, design tokens |
 | `uxd-` | UXD team skills | Prototyping, research, design review, team workflows |
 
-Generic skills that aren't specific to either domain go in the appropriate workshop without a domain-specific prefix (e.g., `summarize-pr-reviews` in `pf-workshop`).
+All skills use a domain prefix — `pf-` for PatternFly, `uxd-` for UXD — regardless of how specific the skill is. This ensures consistent discoverability when searching or browsing the skill list.
 
 | Type | Domain? | Plugin | Name |
 |------|---------|--------|------|
 | Skill | PF — generates PF component tests | `react` | `pf-test-gen` |
 | Skill | PF — PF design token auditing | `design-audit` | `pf-figma-token-check` |
+| Skill | PF — summarizes PR reviews | `pf-workshop` | `pf-summarize-pr-reviews` |
 | Skill | UXD — creates prototypes | `uxd-workshop` | `uxd-prototype-create` |
 | Skill | UXD — retrieves research insights | `uxd-workshop` | `uxd-research-insights` |
-| Skill | Neither — summarizes PR reviews | `pf-workshop` | `summarize-pr-reviews` |
 | Agent | PF — PF React coding standards | `react` | `pf-coding-standards` |
 | Agent | UXD — workflow routing | `uxd-workshop` | `uxd-assist` |
 
