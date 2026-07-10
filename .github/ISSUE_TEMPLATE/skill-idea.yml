@@ -1,0 +1,54 @@
+name: Skill Idea
+description: Propose a new skill or improvement to an existing one
+labels: ["type: skill-idea", "needs triage"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What should this skill do?
+      description: One or two sentences describing the capability.
+      placeholder: "Generate a changelog entry from the last N git commits, formatted for release notes."
+    validations:
+      required: true
+
+  - type: textarea
+    id: who
+    attributes:
+      label: Who is it for?
+      description: Who would use this skill and when?
+      placeholder: "Developers preparing a release — they run this before tagging."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Domain
+      description: Which area does this skill belong to?
+      options:
+        - PatternFly (component dev, design, migration, a11y)
+        - UXD (prototyping, research, design review)
+        - Both / Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example input and output
+      description: What would a user provide, and what should the skill produce?
+      placeholder: |
+        **Input:** `/changelog` in a repo with recent commits
+        **Output:** A markdown changelog grouped by type (features, fixes, docs)
+
+  - type: dropdown
+    id: implement
+    attributes:
+      label: Would you like to implement this?
+      description: We can help you get started!
+      options:
+        - "Yes — I'd like to build it"
+        - "Maybe — I'd need guidance"
+        - "No — just the idea"
+    validations:
+      required: true

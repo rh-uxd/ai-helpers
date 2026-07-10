@@ -1,0 +1,73 @@
+# Auto-label config for actions/labeler
+# Labels are applied by .github/workflows/auto-label.yml
+
+# Plugin area labels
+area/react:
+  - changed-files:
+      - any-glob-to-any-file: plugins/patternfly/react/**
+
+area/design-guide:
+  - changed-files:
+      - any-glob-to-any-file: plugins/patternfly/design-guide/**
+
+area/design-audit:
+  - changed-files:
+      - any-glob-to-any-file: plugins/patternfly/design-audit/**
+
+area/a11y:
+  - changed-files:
+      - any-glob-to-any-file: plugins/patternfly/a11y/**
+
+area/migration:
+  - changed-files:
+      - any-glob-to-any-file: plugins/patternfly/migration/**
+
+area/code-review:
+  - changed-files:
+      - any-glob-to-any-file: plugins/patternfly/code-review/**
+
+area/pf-workshop:
+  - changed-files:
+      - any-glob-to-any-file: plugins/patternfly/pf-workshop/**
+
+area/patternfly-mcp:
+  - changed-files:
+      - any-glob-to-any-file: plugins/patternfly/patternfly-mcp/**
+
+area/uxd-workshop:
+  - changed-files:
+      - any-glob-to-any-file: plugins/uxd-workshop/**
+
+# Content-type labels
+skill:
+  - changed-files:
+      - any-glob-to-any-file: plugins/**/skills/**
+
+agent:
+  - changed-files:
+      - any-glob-to-any-file: plugins/**/agents/**
+
+eval:
+  - changed-files:
+      - any-glob-to-any-file: eval/**
+
+manifest:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '**/.claude-plugin/**'
+          - '**/.cursor-plugin/**'
+
+automation:
+  - changed-files:
+      - any-glob-to-any-file: scripts/**
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: .github/workflows/**
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - '*.md'
+          - '!PLUGINS.md'

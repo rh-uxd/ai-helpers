@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: PatternFly Documentation
+    url: https://www.patternfly.org
+    about: Questions about PatternFly components or design patterns
+  - name: Skill Writing Guide
+    url: https://github.com/anthropics/claude-plugins-official/tree/main/plugins/skill-creator
+    about: How to write effective AI skills (Anthropic's official guide)

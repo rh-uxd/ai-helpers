@@ -1,0 +1,72 @@
+name: Bug Report
+description: Report a skill or agent that isn't working as expected
+labels: ["type: bug", "needs triage"]
+body:
+  - type: dropdown
+    id: plugin-area
+    attributes:
+      label: Plugin area
+      description: Which plugin does this affect?
+      options:
+        - PatternFly — react
+        - PatternFly — design-guide
+        - PatternFly — design-audit
+        - PatternFly — migration
+        - PatternFly — code-review
+        - PatternFly — a11y
+        - PatternFly — pf-workshop
+        - PatternFly — patternfly-mcp
+        - UXD — uxd-workshop
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: skill-name
+    attributes:
+      label: Skill or agent name
+      description: The exact name (e.g., `pf-test-gen`, `uxd-prototype-create`)
+      placeholder: pf-test-gen
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ai-tool
+    attributes:
+      label: AI tool
+      description: Which tool were you using?
+      options:
+        - Claude Code
+        - Cursor
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did the skill do? What did you expect it to do?
+      placeholder: |
+        **Expected:** The skill generates tests for my component.
+        **Actual:** The skill produced an empty output with no explanation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: How can someone reproduce this?
+      placeholder: |
+        1. Open a project with a React component
+        2. Invoke `/react:pf-test-gen`
+        3. Point it at `src/MyComponent.tsx`
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Anything else that might help — error messages, screenshots, skill version
