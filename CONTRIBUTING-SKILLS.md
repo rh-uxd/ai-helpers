@@ -282,6 +282,24 @@ Evals use [agent-eval-harness](https://github.com/opendatahub-io/agent-eval-harn
 claude plugin install agent-eval-harness@agent-eval-harness-dev
 ```
 
+### Skillsaw
+
+[Skillsaw](https://github.com/stbenjam/skillsaw) is an open-source linter for AI coding agent context files — skills, agents, and manifests. It runs automatically on every PR and checks for issues a human reviewer would miss: weak language, attention dead zones (critical instructions buried in the middle of long files), token budget overruns, embedded secrets, contradictions, and placeholder text.
+
+**You don't need to install anything.** Skillsaw runs in CI and posts annotations directly on your PR. If you want to run it locally before pushing:
+
+```bash
+make lint
+```
+
+This uses `uvx` (zero-install) to run skillsaw against the repo. You need [uv](https://docs.astral.sh/uv/getting-started/installation/) installed.
+
+Skillsaw findings are **advisory, not blocking** — your PR won't be held up by warnings. But addressing them makes your skill more effective when an AI agent consumes it.
+
+Existing violations are baselined. You'll only see issues introduced by your changes.
+
+*Inspired by [RedHatProductSecurity/prodsec-skills](https://github.com/RedHatProductSecurity/prodsec-skills).*
+
 ### Security rules
 
 Skills are instructions that an AI tool follows on behalf of a user. Contributors must not include instructions that:

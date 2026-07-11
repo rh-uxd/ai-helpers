@@ -1,0 +1,46 @@
+name: Skillsaw
+
+on:
+  pull_request:
+    paths:
+      - 'plugins/**'
+      - '.claude-plugin/**'
+      - '.cursor-plugin/**'
+      - '*.md'
+      - '.coderabbit.yaml'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Run skillsaw
+        id: skillsaw
+        uses: stbenjam/skillsaw@v0
+        with:
+          strict: false
+          fail-on: error
+          verbose: false
+        continue-on-error: true
+
+      - name: Post summary
+        if: always()
+        run: |
+          echo "## Skillsaw Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.skillsaw.outcome }}" = "failure" ]; then
+            echo "> **Errors found** — see annotations above for details." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "> All checks passed. New violations (if any) are shown as annotations." >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Skillsaw lints skills, agents, and manifests for content quality —" >> $GITHUB_STEP_SUMMARY
+          echo "weak language, attention dead zones, token budgets, embedded secrets, and more." >> $GITHUB_STEP_SUMMARY
+          echo "See [CONTRIBUTING-SKILLS.md](../blob/main/CONTRIBUTING-SKILLS.md#skillsaw) for details." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Existing violations are baselined — only new issues introduced by this PR are shown." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "*Inspired by [RedHatProductSecurity/prodsec-skills](https://github.com/RedHatProductSecurity/prodsec-skills).*" >> $GITHUB_STEP_SUMMARY

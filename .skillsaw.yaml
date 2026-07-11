@@ -1,0 +1,53 @@
+# skillsaw configuration — https://github.com/stbenjam/skillsaw
+# Inspired by RedHatProductSecurity/prodsec-skills, tuned for this marketplace.
+#
+# Improvements over upstream prodsec pattern:
+#   - Baseline-aware: existing violations are snapshotted in .skillsaw-baseline.json
+#     so new contributors only see issues they introduce
+#   - Non-blocking: CI warns on new violations but does not block merge (yet)
+#   - Eval encouragement: agentskill-unreferenced-files excludes eval/ dirs
+#     because eval files are colocated with skills but intentionally not
+#     referenced from SKILL.md
+
+version: "0.16.0"
+
+rules:
+  # Eval files live alongside skills but aren't referenced from SKILL.md — by design.
+  # Without this exclude, every eval file triggers an unreferenced-files warning.
+  agentskill-unreferenced-files:
+    enabled: auto
+    severity: warning
+    exclude:
+      - "**/eval/**"
+
+  # Security: catch secrets early
+  content-embedded-secrets:
+    enabled: auto
+    severity: error
+
+  # Content intelligence — the high-value rules that shell scripts can't replicate
+  content-weak-language:
+    enabled: auto
+    severity: warning
+  content-critical-position:
+    enabled: auto
+    severity: warning
+  content-negative-only:
+    enabled: auto
+    severity: warning
+  content-contradiction:
+    enabled: auto
+    severity: warning
+  content-placeholder-text:
+    enabled: auto
+    severity: warning
+  context-budget:
+    enabled: auto
+    severity: warning
+
+# No custom rules — use the built-in set
+custom-rules: []
+
+# CI: warn on new violations, don't block merge
+strict: false
+fail-on: error

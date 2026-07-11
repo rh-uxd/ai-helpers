@@ -205,7 +205,7 @@ graph LR
     A[Create branch] --> B[Write skill]
     B --> C[Test locally]
     C --> D[Open PR]
-    D --> E[CodeRabbit review]
+    D --> E[Skillsaw + CodeRabbit]
     E --> F[Human review]
     F --> G[Merge to main]
     G --> H[CI updates PLUGINS.md]
@@ -216,7 +216,7 @@ graph LR
 3. Add your skill, agent, or plugin changes
 4. Test locally — invoke the skill on a real scenario and verify the output
 5. Open a pull request against `main`
-6. CodeRabbit reviews automatically (structure, security, manifests)
+6. Skillsaw lints content quality (advisory); CodeRabbit reviews structure and security
 7. A maintainer reviews for intent and quality
 8. On merge, CI regenerates `PLUGINS.md` and the README plugin table
 
@@ -232,6 +232,7 @@ Before opening your PR, verify:
 - [ ] Tested locally on a real scenario
 - [ ] If new plugin: `.claude-plugin/` and `.cursor-plugin/` manifests are identical
 - [ ] Consumer-facing skills have an eval colocated at `skills/<skill-name>/eval/`
+- [ ] `make lint` passes locally (optional — CI runs it automatically)
 
 ## Your first contribution
 
