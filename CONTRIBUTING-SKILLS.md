@@ -63,7 +63,7 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 <!-- BEGIN PLUGIN TABLE -->
 | Plugin | What it helps you do | Decision test | Example skills |
 |--------|---------------------|---------------|----------------|
-| **uxd-workshop** | UXD team tools and skill incubation | Is this a UXD team workflow tool, or a new UXD skill that isn't ready for a consumer plugin yet? |  |
+| **uxd-workshop** | UXD team tools and skill incubation | Is this a UXD team workflow tool, or a new UXD skill that isn't ready for a consumer plugin yet? | `uxd-evaluate-design-heuristics`, `uxd-figma-read`, `uxd-prototype-create` |
 | **pf-a11y** | Audit and document accessibility | Does this help me make my UI accessible? |  |
 | **pf-code-review** | Review code for quality | Does this help me review code for quality? |  |
 | **pf-design-audit** | Validate existing code/designs against PF standards | Does this check whether existing code or designs follow PF standards? | `pf-code-token-check`, `pf-color-scan`, `pf-figma-check` |

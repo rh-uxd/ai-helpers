@@ -1,0 +1,147 @@
+# Decision Points — Reference Examples
+#
+# Decisions are now planned DYNAMICALLY by the AI based on the RFE and target
+# codebase context. This file serves as a reference catalog of common decision
+# categories the AI may draw from — it is NOT a fixed checklist.
+#
+# The AI identifies 4–7 decisions (configurable via --depth) that have genuine
+# tradeoffs for the specific RFE. Some RFEs may surface entirely different
+# decisions than those listed here.
+#
+# See .claude/skills/prototype-create/SKILL.md Step 8 for the dynamic planning process.
+# See decision-workflow.md for the decision artifact format and storage schema.
+
+reference_decisions:
+  - id: layout-pattern
+    order: 1
+    name: Layout Pattern
+    question: What overall page structure best serves these user stories?
+    context_from: rfe_user_stories
+    options:
+      - id: list-detail
+        name: List + Detail
+        description: >
+          Master list on the left, detail panel on the right.
+          Good for browsing and inspecting items.
+        when_to_use: Browse-heavy workflows, item inspection, configuration lists
+        examples: Email clients, file managers, settings pages
+      - id: card-grid
+        name: Card Grid
+        description: >
+          Cards arranged in a responsive grid. Each card is a summary
+          with click-through to detail.
+        when_to_use: Discovery, dashboards, catalog browsing, visual content
+        examples: App stores, dashboards, resource catalogs
+      - id: dashboard
+        name: Dashboard
+        description: >
+          Widgets and panels showing aggregated data, status, and actions.
+          Information-dense overview page.
+        when_to_use: Monitoring, status overview, operational views
+        examples: Observability dashboards, admin panels, analytics
+      - id: wizard
+        name: Wizard / Stepper
+        description: >
+          Multi-step guided flow. One decision per step, linear progression
+          with back/next navigation.
+        when_to_use: Complex creation flows, onboarding, configuration setup
+        examples: Resource creation, setup wizards, deployment flows
+      - id: form-page
+        name: Form Page
+        description: >
+          Single-page form with sections. Good for data entry and configuration.
+        when_to_use: Settings, profile editing, data input, CRUD operations
+        examples: User settings, resource configuration, data import
+
+  - id: interaction-model
+    order: 2
+    name: Interaction Model
+    question: How should users interact with the core content?
+    context_from: layout_decision
+    options:
+      - id: inline-edit
+        name: Inline Editing
+        description: Edit content directly where it appears. Click to edit, blur to save.
+        when_to_use: Quick edits, spreadsheet-like interfaces, content management
+      - id: modal-dialogs
+        name: Modal Dialogs
+        description: Actions open in a centered overlay. Focused, interruptive, clear scope.
+        when_to_use: Confirmations, focused creation, destructive actions
+      - id: drawer-panels
+        name: Drawer Panels
+        description: Side panel slides in for detail or editing. Context preserved.
+        when_to_use: Detail inspection, editing without losing list context
+      - id: page-navigation
+        name: Page Navigation
+        description: Each action navigates to a new page. Full-page context for complex operations.
+        when_to_use: Complex forms, multi-step processes, deep detail views
+      - id: expandable-rows
+        name: Expandable Rows
+        description: Rows expand in-place to reveal detail. Keeps list context visible.
+        when_to_use: Tables with occasional detail inspection, log entries
+
+  - id: information-density
+    order: 3
+    name: Information Density
+    question: How much information should be visible at once?
+    context_from: layout_decision
+    options:
+      - id: progressive
+        name: Progressive Disclosure
+        description: Show essentials first, reveal detail on demand. Clean default view.
+        when_to_use: Mixed audience (novice + expert), complex domains
+      - id: dense
+        name: High Density
+        description: Show as much data as possible. Compact spacing, smaller text, more columns.
+        when_to_use: Power users, monitoring, data analysis, operational views
+      - id: spacious
+        name: Spacious / Focused
+        description: Generous whitespace, large text, one thing at a time.
+        when_to_use: Onboarding, consumer-facing, content consumption
+      - id: tabbed
+        name: Tabbed Sections
+        description: Organize content into tabs. One tab visible at a time, all accessible.
+        when_to_use: Multiple distinct content areas, settings categories
+
+  - id: visual-tone
+    order: 4
+    name: Visual Tone
+    question: What aesthetic direction should the prototype convey?
+    context_from: rfe_product_context
+    options:
+      - id: utilitarian
+        name: Utilitarian / Enterprise
+        description: >
+          Clean, professional, no-nonsense. Dense but organized. Tables over cards.
+          Standard platform look.
+        personality: Reliable, efficient, trustworthy
+      - id: friendly
+        name: Friendly / Approachable
+        description: >
+          Warmer colors, rounded corners, illustrations or icons. Feels inviting.
+          Good for onboarding-heavy features.
+        personality: Welcoming, helpful, modern
+      - id: data-dense
+        name: Data-Dense / Analytical
+        description: >
+          Optimized for information consumption. Charts, metrics, status indicators.
+          Dark theme friendly.
+        personality: Precise, powerful, expert-oriented
+      - id: conversational
+        name: Conversational / AI-Native
+        description: >
+          Chat-like interface, natural language interaction, progressive responses.
+          Good for AI-assisted features.
+        personality: Intelligent, responsive, human-like
+
+  - id: key-components
+    order: 5
+    name: Key Component Choices
+    question: Which design system components best serve the critical UI elements?
+    context_from: all_prior_decisions
+    note: >
+      This decision is generated dynamically based on the RFE's specific
+      needs and the prior decisions. The options are drawn from the design
+      system component library. Typically 2-4 component choices are surfaced
+      for the most critical UI elements in the prototype.
+    dynamic: true

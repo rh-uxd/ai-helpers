@@ -1,0 +1,51 @@
+# uxd-prototype-create
+
+Creates UX prototypes from various inputs and delivers them in multiple formats. Guides users conversationally through what to build and where to put it.
+
+## Inputs
+
+The skill accepts any combination of these — it asks clarifying questions to fill gaps:
+
+| Input type | Examples |
+|------------|----------|
+| Jira ticket | URL, issue key (`PROJ-298`), or JQL query via Atlassian MCP |
+| Figma design | Figma file URL — extracts frame structure and screenshots via Figma MCP |
+| Feature description | Plain text describing what to prototype |
+| Existing codebase | Local path or git URL to build on top of (workspace mode) |
+| Research context | Personas, JTBD, user stories in `.context/research-context/` |
+| Prior decisions | Existing `.artifacts/{ID}/decisions/` from an earlier run |
+
+## Outputs
+
+| Output | Format | Location |
+|--------|--------|----------|
+| Prototype | HTML (standalone) or framework code (workspace mode) | `.artifacts/{ID}/prototype/` or target workspace |
+| Design decisions | HTML comparison pages + JSON record | `.artifacts/{ID}/decisions/` |
+| RFE snapshot | Markdown with YAML frontmatter | `.artifacts/{ID}/rfe-snapshot.md` |
+| Changeset manifest | Markdown listing all created/modified files | `.artifacts/{ID}/changeset.md` |
+| Workspace analysis | JSON with tech stack, conventions, verification commands | `.artifacts/{ID}/workspace-analysis.json` |
+| Metadata | JSON with mode, source, assumptions | `.artifacts/{ID}/metadata.json` |
+
+
+## Decision Modes
+
+| Mode | Behavior |
+|------|----------|
+| **auto** | AI makes all design decisions based on best practices. Fast, no pauses. |
+| **decide** | Generates HTML decision pages with visual previews and tradeoffs. User picks each direction. |
+
+Decision depth (`--depth`) controls how many decisions are surfaced: `under` (2-3), `normal` (4-7), `over` (8-12).
+
+## Quick Start
+
+Just tell the agent what you want to prototype — it asks the rest conversationally:
+
+- "Prototype PROJ-298"
+- "Create a prototype from this Figma design: https://figma.com/design/..."
+- "I have an idea for a settings page — let's prototype it"
+- "Build on top of my existing repo at /path/to/project"
+
+## Related
+
+- **uxd-prototype-evaluate** — Score and test the prototype after creation
+- **uxd-prototype-pipeline** (agent) — Run the full create-review-refine-submit pipeline end-to-end

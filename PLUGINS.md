@@ -20,7 +20,18 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 
 UXD team tools and skill incubator — prototyping, research, design review, team workflows
 
-No skills or agents yet.
+| Skill | Description |
+|-------|-------------|
+| `uxd-evaluate-design-heuristics` | Score a design against accessibility, visual hierarchy, content, and state coverage heuristics. |
+| `uxd-figma-read` | Retrieve design context from a Figma file. |
+| `uxd-prototype-create` | Create or refine a UX prototype from various input sources — a Jira ticket, Figma design, feature description, or just an idea. |
+| `uxd-prototype-evaluate` | Evaluate a prototype's quality through rubric scoring, simulated usability testing, and desirability studies. |
+| `uxd-prototype-publish` | Publish a prototype to a target destination — push to a git repo as a merge request, or deploy a sanitized copy to GitHub Pages, GitLab Pages, or Vercel. |
+| `uxd-research-heuristic-eval` | Conduct a heuristic evaluation of a prototype or interface using three independent expert evaluators. |
+
+| Agent | Description |
+|-------|-------------|
+| `uxd-assist` | UXD workflow routing — maps design review, research, prototyping, and evaluation needs to the right UXD sub-skills. |
 
 
 <br>
