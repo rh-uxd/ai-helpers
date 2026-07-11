@@ -101,6 +101,7 @@ Source URL: [full URL, or "N/A"]
 Source files: [file paths, or "N/A"]
 Input type: [URL | screenshots | text description | mixed]
 Task context: [what the user is trying to accomplish, if provided]
+Evaluation date: [YYYY-MM-DD]
 ```
 
 - If the researcher provides a **URL**, copy the full URL exactly
@@ -268,8 +269,22 @@ templates in [references/report-templates.md](references/report-templates.md).
 
 **Review subject is required in every output.** Prominently display
 the review subject record near the top of each report — including the
-full **Source URL** when one was provided. Researchers running multiple
-evaluations rely on this block to tell reports apart at a glance.
+full **Source URL** when one was provided and the **Evaluation date**.
+Researchers running multiple evaluations rely on this block to tell
+reports apart at a glance.
+
+**Evaluator legend is required in every output.** Include the following
+legend in all outputs (chat, spreadsheet, markdown, HTML) so readers
+understand what each evaluator was focused on:
+
+| Evaluator | Lens | Focus |
+|-----------|------|-------|
+| A | Visual inspection | Labels, layout, visual hierarchy, affordances, feedback indicators — screen by screen, element by element |
+| B | Task flow | Transitions, feedback after actions, where users might lose context — follows the user's likely workflow |
+| C | Edge cases | Empty states, long text, unexpected input, missing data, accessibility gaps — looks for what's NOT there |
+
+Place this legend alongside the severity legend so researchers have a
+complete key for interpreting the findings.
 
 All outputs include a traceability line at the bottom. Read the version
 from the plugin's `plugin.json` manifest and populate `[version]`.

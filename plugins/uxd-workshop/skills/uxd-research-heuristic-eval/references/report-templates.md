@@ -16,13 +16,23 @@ Save to: `[project-dir]/heuristic-eval-[date].md`
 | **Source files** | [File paths used, or `N/A`] |
 | **Input type** | [URL / screenshots / text description / mixed] |
 | **Task context** | [What the user is trying to accomplish, or `Not provided`] |
+| **Evaluation date** | [YYYY-MM-DD] |
 
-**Date:** [YYYY-MM-DD]
 **Framework(s):** [framework name(s), comma-separated if multiple]
 **Evaluators:** 3 generalist [+ N specialist if applicable]
 **Total violations found:** [count]
 **Severity breakdown:** [N] critical, [N] major, [N] minor, [N] cosmetic
 **Agreement breakdown:** [N] unanimous, [N] majority, [N] single-evaluator
+
+---
+
+## Evaluator Legend
+
+| Evaluator | Lens | Focus |
+|-----------|------|-------|
+| A | Visual inspection | Labels, layout, visual hierarchy, affordances, feedback indicators — screen by screen, element by element |
+| B | Task flow | Transitions, feedback after actions, where users might lose context — follows the user's likely workflow |
+| C | Edge cases | Empty states, long text, unexpected input, missing data, accessibility gaps — looks for what's NOT there |
 
 ---
 
@@ -179,8 +189,12 @@ Generate a self-contained HTML file (all CSS/JS inline) with:
 - **Review subject block** — Display the review subject record near the
   top of the report (immediately after the title, before findings).
   Include the full **Source URL** as a clickable link when provided.
-  Use a compact table or definition list so researchers can distinguish
-  this report from others at a glance.
+  Include the **Evaluation date**. Use a compact table or definition
+  list so researchers can distinguish this report from others at a glance.
+- **Evaluator legend** — Display a compact table immediately after the
+  review subject block showing each evaluator's lens and focus area.
+  Readers should be able to understand what "Identified by: Evaluator A"
+  means without scrolling or referencing external documentation.
 - **Embedded source screenshots** — Read each screenshot image file
   provided as input, base64-encode it, and embed it in the HTML as
   an `<img>` tag inside a collapsible "Source Screenshots" section

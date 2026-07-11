@@ -18,7 +18,7 @@ review:
 If the researcher chooses spreadsheet, create a Google Sheet using
 the Google Workspace MCP with the following structure:
 
-**Sheet name:** `Heuristic Eval Review — [date]`
+**Sheet name:** `Heuristic Eval Review — [date] — [Review subject short title]`
 
 **Review subject rows** (place above the severity legend):
 
@@ -29,8 +29,27 @@ the Google Workspace MCP with the following structure:
 | 3 | Source files | [file paths, or N/A] |
 | 4 | Input type | [URL / screenshots / text / mixed] |
 | 5 | Task context | [task context, or Not provided] |
+| 6 | Evaluation date | [YYYY-MM-DD] |
 
 Leave one blank row before the severity legend.
+
+**Severity legend** (include as a visible block after the blank row):
+- Critical — Will cause users to fail the task or lose data. Must be fixed before release.
+- Major — Causes significant difficulty or frustration. Users may find workarounds but shouldn't have to.
+- Minor — Noticeable but doesn't significantly impair task completion. Fix when possible.
+- Cosmetic — Aesthetic or minor inconsistency. Fix if time permits.
+
+Leave one blank row before the evaluator legend.
+
+**Evaluator legend** (include as a visible block after the severity legend):
+
+| Evaluator | Lens | Focus |
+|-----------|------|-------|
+| A | Visual inspection | Labels, layout, visual hierarchy, affordances, feedback indicators |
+| B | Task flow | Transitions, feedback after actions, where users might lose context |
+| C | Edge cases | Empty states, long text, unexpected input, missing data, accessibility gaps |
+
+Leave one blank row before the column headers.
 
 **Columns:**
 | Column | Content |
@@ -48,15 +67,6 @@ Leave one blank row before the severity legend.
 | K — Identified by | Which evaluators flagged it |
 
 **Additional requirements:**
-- Include severity definitions as a note or legend row at the top
-  of the sheet so they're visible during review:
-  - Critical — Will cause users to fail the task or lose data.
-    Must be fixed before release.
-  - Major — Causes significant difficulty or frustration. Users may
-    find workarounds but shouldn't have to.
-  - Minor — Noticeable but doesn't significantly impair task
-    completion. Fix when possible.
-  - Cosmetic — Aesthetic or minor inconsistency. Fix if time permits.
 - Pre-fill the Suggested Severity column with the ratings from
   reconciliation.
 - Add data validation to column G (Your Severity) limiting choices
@@ -82,12 +92,14 @@ If the researcher chooses chat, present the findings inline.
 when reformatting for readability):
 
 1. **Review subject record** — display the review subject, full Source
-   URL (when provided), source files, input type, and task context
-   before severity definitions.
+   URL (when provided), source files, input type, task context, and
+   evaluation date before severity definitions.
 2. **Severity definitions** — always display the four severity levels
    and their definitions before the first violation.
-3. **Every consolidated violation** with its suggested severity.
-4. **The review prompt** below.
+3. **Evaluator legend** — display the evaluator table (A/B/C with
+   lens and focus) so the reader can interpret "Identified by" fields.
+4. **Every consolidated violation** with its suggested severity.
+5. **The review prompt** below.
 
 Display each consolidated violation and prompt the researcher:
 
