@@ -4,8 +4,4 @@
 
 Code review and quality — adversarial review, security patterns.
 
-## What's Included
-
-### Agents
-
-- **PF Assist** (`pf-assist`) — PatternFly development routing — maps code changes, test gaps, scaffolding needs, and design work to the right PF sub-skills.
+No skills or agents yet.

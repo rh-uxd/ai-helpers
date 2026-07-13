@@ -26,16 +26,29 @@ Load additional context based on the task at hand:
 ## Project Structure
 
 ```
-plugins/<uxd-plugin>/              — UXD plugins (top level)
-plugins/patternfly/<pf-plugin>/    — PatternFly plugins (nested)
-  ├── .claude-plugin/plugin.json   — Claude plugin manifest
-  ├── .cursor-plugin/plugin.json   — Cursor plugin manifest (identical)
-  ├── skills/<skill-name>/SKILL.md — Skill definitions
-  └── agents/<agent-name>.md       — Agent definitions
+plugins/uxd-workshop/              — UXD plugins (top level)
+plugins/patternfly/                — PatternFly meta-plugin (installs all PF sub-plugins)
+  ├── .claude-plugin/plugin.json   — Meta-plugin manifest (dependencies only, no skills)
+  ├── agents/pf-assist.md          — PatternFly routing agent
+  ├── pf-react/                    — Sub-plugin: React development
+  ├── pf-design-guide/             — Sub-plugin: Design guidance
+  └── ...
 .claude-plugin/marketplace.json    — Claude marketplace config
 .cursor-plugin/marketplace.json    — Cursor marketplace config
 scripts/                           — Automation scripts
 ```
+
+## Meta-plugin Architecture
+
+The `patternfly` plugin at `plugins/patternfly/` is a **meta-plugin** — it declares dependencies on consumer-facing PF plugins and auto-installs them. It has no skills, only the `pf-assist` routing agent.
+
+**Delisted plugins** (kept on disk, not in marketplace.json):
+- `pf-a11y` — empty, no skills yet
+- `pf-code-review` — empty after pf-assist moved to meta-plugin
+
+## Versioning
+
+No `version` field in plugin.json — Claude Code falls back to git commit SHA, so every merge to main automatically invalidates the cache. No manual bumping needed.
 
 ## Code Style
 

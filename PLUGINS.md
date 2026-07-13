@@ -4,9 +4,8 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 
 ## Table of Contents
 
+- [patternfly](#patternfly) — Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
 - [uxd-workshop](#uxd-workshop) — UXD team tools and skill incubator — prototyping, research, design review, team workflows
-- [pf-a11y](#pf-a11y) — Accessibility auditing, reporting, and documentation
-- [pf-code-review](#pf-code-review) — Code review and quality — adversarial review, security patterns
 - [pf-design-audit](#pf-design-audit) — Design audit — validate existing code and designs against PatternFly standards
 - [pf-design-guide](#pf-design-guide) — Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation
 - [pf-mcp](#pf-mcp) — PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol
@@ -15,6 +14,17 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 - [pf-workshop](#pf-workshop) — PatternFly team tools and skill incubation — issue triage, release management, codebase auditing, new skill development
 
 ---
+
+### patternfly
+
+Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
+
+| Agent | Description |
+|-------|-------------|
+| `pf-assist` | PatternFly development routing — maps code changes, test gaps, scaffolding needs, and design work to the right PF sub-skills. |
+
+
+<br>
 
 ### uxd-workshop
 
@@ -32,26 +42,6 @@ UXD team tools and skill incubator — prototyping, research, design review, tea
 | Agent | Description |
 |-------|-------------|
 | `uxd-assist` | UXD workflow routing — maps design review, research, prototyping, and evaluation needs to the right UXD sub-skills. |
-
-
-<br>
-
-### pf-a11y
-
-Accessibility auditing, reporting, and documentation
-
-No skills or agents yet.
-
-
-<br>
-
-### pf-code-review
-
-Code review and quality — adversarial review, security patterns
-
-| Agent | Description |
-|-------|-------------|
-| `pf-assist` | PatternFly development routing — maps code changes, test gaps, scaffolding needs, and design work to the right PF sub-skills. |
 
 
 <br>

@@ -1,7 +1,6 @@
 {
   "name": "pf-mcp",
   "description": "PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol",
-  "intent": "Connect AI tools to PatternFly documentation and component data",
   "mcpServers": {
     "patternfly": {
       "command": "npx",
@@ -11,7 +10,6 @@
       ]
     }
   },
-  "version": "1.0.0",
   "author": {
     "name": "UXD Team",
     "url": "https://www.patternfly.org"

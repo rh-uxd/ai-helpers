@@ -61,21 +61,20 @@ Open the file and read it. It's just markdown. Ask yourself:
 Every skill or agent must live in a plugin. Pick the one that matches your skill's domain:
 
 <!-- BEGIN PLUGIN TABLE -->
-| Plugin | What it helps you do | Decision test | Example skills |
-|--------|---------------------|---------------|----------------|
-| **uxd-workshop** | UXD team tools and skill incubation | Is this a UXD team workflow tool, or a new UXD skill that isn't ready for a consumer plugin yet? | `uxd-evaluate-design-heuristics`, `uxd-figma-read`, `uxd-prototype-create` |
-| **pf-a11y** | Audit and document accessibility | Does this help me make my UI accessible? |  |
-| **pf-code-review** | Review code for quality | Does this help me review code for quality? |  |
-| **pf-design-audit** | Validate existing code/designs against PF standards | Does this check whether existing code or designs follow PF standards? | `pf-code-token-check`, `pf-color-scan`, `pf-figma-check` |
-| **pf-design-guide** | Choose the right PF components and patterns when building | Does this help me choose the right PF components and patterns when building? | `pf-ai-guide`, `pf-figma-design-mode` |
-| **pf-mcp** | Connect AI tools to PatternFly documentation and component data |  |  |
-| **pf-migration** | Upgrade PatternFly versions | Does this help me upgrade PF versions? | `pf-css-migration-scan`, `pf-react-migration-scan` |
-| **pf-react** | Develop and test React components | Does this help me write or test a React component? | `pf-component-check`, `pf-deploy`, `pf-design-comments-setup` |
-| **pf-workshop** | Team tools and skill incubation | Is this a team workflow tool, or a new skill that isn't ready for a consumer plugin yet? | `pf-analytics-repo-pruning`, `pf-bug-triage`, `pf-content-review` |
+| Plugin | What it does | Example skills |
+|--------|-------------|----------------|
+| **patternfly** | Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs |  |
+| **uxd-workshop** | UXD team tools and skill incubator — prototyping, research, design review, team workflows | `uxd-evaluate-design-heuristics`, `uxd-figma-read`, `uxd-prototype-create` |
+| **pf-design-audit** | Design audit — validate existing code and designs against PatternFly standards | `pf-code-token-check`, `pf-color-scan`, `pf-figma-check` |
+| **pf-design-guide** | Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation | `pf-ai-guide`, `pf-figma-design-mode` |
+| **pf-mcp** | PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol |  |
+| **pf-migration** | PF version migration — breaking change detection, class scanning, upgrade planning | `pf-css-migration-scan`, `pf-react-migration-scan` |
+| **pf-react** | React component development — coding standards, testing, and structure | `pf-component-check`, `pf-deploy`, `pf-design-comments-setup` |
+| **pf-workshop** | PatternFly team tools and skill incubation — issue triage, release management, codebase auditing, new skill development | `pf-analytics-repo-pruning`, `pf-bug-triage`, `pf-content-review` |
 <!-- END PLUGIN TABLE -->
 
 **How to decide:**
-- Use the **decision test** column. If you can answer "yes" to a plugin's question, that's where your skill goes.
+- Read the **What it does** column. Pick the plugin whose description best matches your skill's domain.
 - If your skill matches multiple plugins, pick the one closest to its *primary input/output*.
 - If it doesn't fit any plugin, open an issue to discuss creating a new one.
 
@@ -85,9 +84,8 @@ Plugin names must tell a user exactly what the plugin helps them do. A user brow
 
 <!-- BEGIN GOOD NAMES -->
 **Good names** describe the capability:
+- `patternfly` — Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
 - `uxd-workshop` — UXD team tools and skill incubator — prototyping, research, design review, team workflows
-- `pf-a11y` — Accessibility auditing, reporting, and documentation
-- `pf-code-review` — Code review and quality — adversarial review, security patterns
 - `pf-design-audit` — Design audit — validate existing code and designs against PatternFly standards
 - `pf-design-guide` — Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation
 - `pf-mcp` — PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol

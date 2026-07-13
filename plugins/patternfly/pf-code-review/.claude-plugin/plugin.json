@@ -1,18 +1,9 @@
 {
   "name": "pf-code-review",
   "description": "Code review and quality — adversarial review, security patterns",
-  "intent": "Review code for quality",
-  "decisionTest": "Does this help me review code for quality?",
-  "sources": [
-    {
-      "name": "PatternFly.org",
-      "url": "https://www.patternfly.org/"
-    }
-  ],
   "dependencies": [
     "pf-mcp"
   ],
-  "version": "1.0.0",
   "author": {
     "name": "UXD Team",
     "url": "https://www.patternfly.org"

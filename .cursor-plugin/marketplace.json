@@ -5,10 +5,14 @@
   },
   "plugins": [
     {
+      "name": "patternfly",
+      "source": "./plugins/patternfly",
+      "description": "Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs"
+    },
+    {
       "name": "uxd-workshop",
       "source": "./plugins/uxd-workshop",
-      "description": "UXD team tools and skill incubator — new skills land here first, graduate to consumer plugins when validated",
-      "category": "workshop"
+      "description": "UXD team tools — prototyping, research, design review"
     },
     {
       "name": "pf-react",
@@ -18,38 +22,28 @@
     {
       "name": "pf-design-guide",
       "source": "./plugins/patternfly/pf-design-guide",
-      "description": "Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation"
+      "description": "Design guide — component selection, interaction patterns, AI experience patterns"
     },
     {
       "name": "pf-design-audit",
       "source": "./plugins/patternfly/pf-design-audit",
-      "description": "Design audit — validate existing code and designs against PatternFly standards"
+      "description": "Design audit — validate designs against PatternFly standards"
     },
     {
       "name": "pf-migration",
       "source": "./plugins/patternfly/pf-migration",
-      "description": "PF version migration — breaking change detection, class scanning, upgrade planning"
-    },
-    {
-      "name": "pf-code-review",
-      "source": "./plugins/patternfly/pf-code-review",
-      "description": "Code review and quality — adversarial review, security patterns"
-    },
-    {
-      "name": "pf-a11y",
-      "source": "./plugins/patternfly/pf-a11y",
-      "description": "Accessibility auditing, reporting, and documentation"
-    },
-    {
-      "name": "pf-workshop",
-      "source": "./plugins/patternfly/pf-workshop",
-      "description": "PatternFly team tools and skill incubation — issue triage, release management, codebase auditing, new skill development",
-      "category": "workshop"
+      "description": "PF version migration — breaking change detection, upgrade planning"
     },
     {
       "name": "pf-mcp",
       "source": "./plugins/patternfly/pf-mcp",
-      "description": "PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol"
+      "description": "PatternFly MCP server — component docs and design tokens via MCP"
+    },
+    {
+      "name": "pf-workshop",
+      "source": "./plugins/patternfly/pf-workshop",
+      "description": "PatternFly team tools — issue triage, release management, skill incubation",
+      "category": "workshop"
     }
   ]
 }

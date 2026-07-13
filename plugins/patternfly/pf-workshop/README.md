@@ -29,8 +29,3 @@ PatternFly team tools and skill incubation — issue triage, release management,
 ### Agents
 
 - **PF Voice And Tone** (`pf-voice-and-tone`) — PatternFly and Red Hat voice and tone standards — friendly, approachable, collaborative, inventive.
-
-## Sources
-
-- [PatternFly.org](https://www.patternfly.org/)
-- [PatternFly React GitHub](https://github.com/patternfly/patternfly-react)

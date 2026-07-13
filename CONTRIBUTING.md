@@ -36,29 +36,17 @@ UXD skills live at `plugins/uxd-workshop/` and use the `uxd-` prefix. UXD PRs ar
 **Quick start:**
 
 1. Fork and clone this repo
-2. Set up credentials — follow [SETUP.md](SETUP.md) for API tokens (only needed for skills that interact with external services)
+2. Check the skill's README for any setup requirements (API tokens, tool access)
 3. Create your skill: `make scaffold PLUGIN=uxd-workshop SKILL=uxd-my-skill`
 4. Test locally and open a PR
 
-## Setup
-
-See [SETUP.md](SETUP.md) for environment configuration (API tokens, tool settings).
-
 ## How this marketplace is organized
 
-| Plugin | What's in it | Skill prefix |
-|--------|-------------|-------------|
-| **uxd-workshop** | UXD team skills — prototyping, research, design review. New UXD contributions start here. | `uxd-` |
-| **pf-a11y** | Accessibility auditing, reporting, and documentation | `pf-` |
-| **pf-code-review** | Code review and quality — adversarial review, security patterns | `pf-` |
-| **pf-design-audit** | Validate existing code and designs against PatternFly standards | `pf-` |
-| **pf-design-guide** | Component selection, interaction patterns, AI experience patterns, Figma design creation | `pf-` |
-| **pf-mcp** | PatternFly MCP server config | — |
-| **pf-migration** | PF version migration — breaking change detection, class scanning, upgrade planning | `pf-` |
-| **pf-react** | React component development — coding standards, testing, and structure | `pf-` |
-| **pf-workshop** | PF team tools and skill incubation — issue triage, release management, codebase auditing | `pf-` |
+Plugins organize skills by domain. See the [full plugin table](CONTRIBUTING-SKILLS.md#step-5-pick-the-right-plugin) for what each plugin does and example skills.
 
-Over time, more plugins may be created to organize skills — by persona (`developer`, `designer`, `researcher`), by workflow (`sprint-ops`), or by capability. The workshops are where skills incubate before graduating to consumer plugins.
+- **PatternFly skills** → `plugins/patternfly/<plugin>/` — use the `pf-` prefix
+- **UXD skills** → `plugins/uxd-workshop/` — use the `uxd-` prefix
+- Not sure where your skill belongs? Start in the workshop that matches your domain (`pf-workshop` or `uxd-workshop`). Skills graduate to consumer plugins once validated.
 
 ## Adding a skill
 
@@ -140,19 +128,7 @@ The test: can someone look at the plugin name and know whether their skill belon
 
 ### Plugin naming standard
 
-Plugin names must tell a user exactly what the plugin helps them do. A user browsing the marketplace should understand what they're installing without clicking through.
-
-**Good names** describe the capability:
-- `pf-a11y` — accessibility auditing, reporting, and documentation
-- `pf-code-review` — code review and quality
-- `pf-design-audit` — validate existing code and designs against standards
-- `pf-migration` — version migration and upgrade planning
-- `pf-react` — React component development
-
-**Bad names** are vague categories:
-- `workflow` — what workflow?
-- `styling` — styling what? how?
-- `ops` — too abstract
+Plugin names must tell a user exactly what the plugin helps them do. A user browsing the marketplace should understand what they're installing without clicking through. See [CONTRIBUTING-SKILLS.md](CONTRIBUTING-SKILLS.md#plugin-naming-standard) for naming examples and guidelines.
 
 ### Graduation from the workshop
 

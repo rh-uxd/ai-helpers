@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/rh-uxd/ai-helpers)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
-[![Plugins](https://img.shields.io/badge/plugins-9-blueviolet)](./PLUGINS.md)
+[![Plugins](https://img.shields.io/badge/plugins-8-blueviolet)](./PLUGINS.md)
 [![Skills](https://img.shields.io/badge/skills-38-blue)](./PLUGINS.md)
 
 AI skills for PatternFly and UXD teams — component development, design, accessibility, and migration. Plugins work in both **Claude Code** and **Cursor**.
@@ -12,20 +12,22 @@ AI skills for PatternFly and UXD teams — component development, design, access
 ### Claude Code
 
 ```bash
-# Add the marketplace
-/plugin marketplace add rh-uxd/ai-helpers
+# Add the marketplace (one time)
+claude plugins marketplace add rh-uxd/ai-helpers
 
-# Install a plugin
-/plugin install pf-react@ai-helpers
+# Install everything PatternFly (React, design guide, audit, migration, and MCP)
+claude plugins install patternfly@uxd-ai-helpers
 ```
 
-After installation, the plugin's skills and agents are available in any project:
+That's it. All PatternFly skills are now available:
 
 ```
 /pf-react:pf-test-gen          # Generate unit tests for a React component
 /pf-design-guide:pf-ai-guide   # Get AI experience design guidance
 /pf-design-audit:pf-color-scan # Scan for hardcoded colors that should be tokens
 ```
+
+**Power users:** Install individual plugins for granular control (e.g., `claude plugins install pf-react@uxd-ai-helpers`).
 
 Enable auto-update to receive new skills as they're merged:
 
@@ -40,9 +42,8 @@ Add this repo as a third-party plugin source in Cursor's settings.
 <!-- BEGIN PLUGIN TABLE -->
 | Plugin | Description |
 |--------|-------------|
+| <nobr>**patternfly**</nobr> | Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs |
 | <nobr>**uxd-workshop**</nobr> | UXD team tools and skill incubator — prototyping, research, design review, team workflows |
-| <nobr>**pf-a11y**</nobr> | Accessibility auditing, reporting, and documentation |
-| <nobr>**pf-code-review**</nobr> | Code review and quality — adversarial review, security patterns |
 | <nobr>**pf-design-audit**</nobr> | Design audit — validate existing code and designs against PatternFly standards |
 | <nobr>**pf-design-guide**</nobr> | Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation |
 | <nobr>**pf-mcp**</nobr> | PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol |
@@ -78,17 +79,13 @@ AI Tool (Claude Code / Cursor)
 ├── .claude-plugin/         # Claude Code marketplace config
 ├── .cursor-plugin/         # Cursor marketplace config
 ├── plugins/
-│   └── patternfly/         # PatternFly plugins
+│   ├── uxd-workshop/       # UXD team tools (skills + uxd-assist agent)
+│   └── patternfly/         # PatternFly meta-plugin + sub-plugins
+│       ├── agents/            # pf-assist routing agent
 │       ├── pf-react/          # React development — testing, structure, coding standards
-│       │   └── skills/
-│       │       └── pf-test-gen/
-│       │           ├── SKILL.md
-│       │           └── eval/   # Evals colocated with their skill
 │       ├── pf-design-guide/   # Design guidance — component selection, AI patterns
 │       ├── pf-design-audit/   # Design auditing — token checks, color scanning
-│       ├── pf-a11y/           # Accessibility auditing and documentation
 │       ├── pf-migration/      # PF version migration tools
-│       ├── pf-code-review/    # Code review and quality
 │       ├── pf-workshop/       # PF team tools and skill incubation
 │       └── pf-mcp/            # MCP server integration
 ├── scripts/                # Automation (doc generation, scaffolding, validation)
@@ -118,4 +115,4 @@ Every pull request runs through automated quality gates:
 
 ## License
 
-[Apache-2.0](./LICENSE)
+[MIT](./LICENSE)

@@ -1,7 +1,11 @@
 {
-  "name": "pf-design-audit",
-  "description": "Design audit — validate existing code and designs against PatternFly standards",
+  "name": "patternfly",
+  "description": "Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs",
   "dependencies": [
+    "pf-react",
+    "pf-design-guide",
+    "pf-design-audit",
+    "pf-migration",
     "pf-mcp"
   ],
   "author": {

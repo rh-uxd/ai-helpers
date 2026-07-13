@@ -91,6 +91,11 @@ get_plugin_desc() {
   get_plugin_json_field "$plugin_dir" "description"
 }
 
+is_listed() {
+  local plugin="$1"
+  grep -q "\"name\": *\"$plugin\"" .claude-plugin/marketplace.json 2>/dev/null
+}
+
 # Generate markdown sources list from plugin.json sources array
 get_plugin_sources_md() {
   local plugin_dir="${1%/}"
@@ -192,6 +197,7 @@ HEADER
   for plugin_dir in plugins/*/ plugins/*/*/; do
     [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
     plugin=$(basename "$plugin_dir")
+    is_listed "$plugin" || continue
     desc=$(get_plugin_desc "$plugin_dir")
     echo "- [${plugin}](#${plugin}) — ${desc}"
   done
@@ -204,6 +210,7 @@ HEADER
   for plugin_dir in plugins/*/ plugins/*/*/; do
     [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
     plugin=$(basename "$plugin_dir")
+    is_listed "$plugin" || continue
     desc=$(get_plugin_desc "$plugin_dir")
 
     if [ "$first_plugin" = true ]; then
@@ -280,6 +287,8 @@ if [ -f "$README" ]; then
   skill_count=0
   for plugin_dir in plugins/*/ plugins/*/*/; do
     [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
+    plugin=$(basename "$plugin_dir")
+    is_listed "$plugin" || continue
     plugin_count=$((plugin_count + 1))
     if [ -d "${plugin_dir}skills" ]; then
       for skill_dir in "${plugin_dir}skills"/*/; do
@@ -305,6 +314,7 @@ if [ -f "$README" ]; then
   for plugin_dir in plugins/*/ plugins/*/*/; do
     [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
     plugin=$(basename "$plugin_dir")
+    is_listed "$plugin" || continue
     desc=$(get_plugin_desc "$plugin_dir")
     table_content+=$'\n'"| <nobr>**${plugin}**</nobr> | ${desc} |"
   done
@@ -320,15 +330,15 @@ CONTRIB="CONTRIBUTING-SKILLS.md"
 if [ -f "$CONTRIB" ]; then
   # Plugin table
   contrib_table=""
-  contrib_table+="| Plugin | What it helps you do | Decision test | Example skills |"$'\n'
-  contrib_table+="|--------|---------------------|---------------|----------------|"
+  contrib_table+="| Plugin | What it does | Example skills |"$'\n'
+  contrib_table+="|--------|-------------|----------------|"
   for plugin_dir in plugins/*/ plugins/*/*/; do
     [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
     plugin=$(basename "$plugin_dir")
-    intent=$(get_plugin_json_field "$plugin_dir" "intent")
-    decision_test=$(get_plugin_json_field "$plugin_dir" "decisionTest")
+    is_listed "$plugin" || continue
+    desc=$(get_plugin_desc "$plugin_dir")
     examples=$(get_example_skills "$plugin_dir" 3)
-    contrib_table+=$'\n'"| **${plugin}** | ${intent} | ${decision_test} | ${examples} |"
+    contrib_table+=$'\n'"| **${plugin}** | ${desc} | ${examples} |"
   done
   update_between_markers "$CONTRIB" "PLUGIN TABLE" "$contrib_table"
   echo "Updated plugin table in $CONTRIB"
@@ -338,9 +348,10 @@ if [ -f "$CONTRIB" ]; then
   good_names+="**Good names** describe the capability:"
   for plugin_dir in plugins/*/ plugins/*/*/; do
     [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
+    plugin=$(basename "$plugin_dir")
+    is_listed "$plugin" || continue
     local_category=$(get_plugin_json_field "$plugin_dir" "category")
     [ "$local_category" = "workshop" ] && continue
-    plugin=$(basename "$plugin_dir")
     desc=$(get_plugin_desc "$plugin_dir")
     good_names+=$'\n'"- \`${plugin}\` — ${desc}"
   done
