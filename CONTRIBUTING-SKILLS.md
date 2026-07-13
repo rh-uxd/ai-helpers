@@ -1,5 +1,15 @@
 # How to Create and Contribute a Skill
 
+## Before you start: which repo?
+
+If your skill accesses any of these, it belongs in the [internal repo](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers) (VPN required):
+
+- Employee data (names, managers, reporting lines)
+- Internal APIs or MCP endpoints
+- Internal spreadsheets, Slack workspaces, or GitLab projects
+
+Everything else belongs here. If you're not sure, start here — PR review will catch it.
+
 ## Step 1: Create your skill locally
 
 Work in any project directory or an empty one — NOT in this repo.
