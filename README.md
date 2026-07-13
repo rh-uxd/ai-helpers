@@ -45,11 +45,11 @@ Add this repo as a third-party plugin source in Cursor's settings.
 <tr><td nowrap><b>patternfly</b></td><td>Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs</td></tr>
 <tr><td nowrap><b>uxd-workshop</b></td><td>UXD team tools and skill incubator — prototyping, research, design review, team workflows</td></tr>
 <tr><td nowrap><b>pf-design-audit</b></td><td>Design audit — validate existing code and designs against PatternFly standards</td></tr>
-<tr><td nowrap><b>pf-design-guide</b></td><td>Design guide — component selection, interaction patterns, AI experience patterns</td></tr>
-<tr><td nowrap><b>pf-mcp</b></td><td>PatternFly MCP server — component docs and design tokens via MCP</td></tr>
-<tr><td nowrap><b>pf-migration</b></td><td>PF version migration — breaking change detection, upgrade planning</td></tr>
+<tr><td nowrap><b>pf-design-guide</b></td><td>Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation</td></tr>
+<tr><td nowrap><b>pf-mcp</b></td><td>PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol</td></tr>
+<tr><td nowrap><b>pf-migration</b></td><td>PF version migration — breaking change detection, class scanning, upgrade planning</td></tr>
 <tr><td nowrap><b>pf-react</b></td><td>React component development — coding standards, testing, and structure</td></tr>
-<tr><td nowrap><b>pf-workshop</b></td><td>PatternFly team tools — issue triage, release management, skill incubation</td></tr>
+<tr><td nowrap><b>pf-workshop</b></td><td>PatternFly team tools and skill incubation — issue triage, release management, codebase auditing, new skill development</td></tr>
 </table>
 <!-- END PLUGIN TABLE -->
 

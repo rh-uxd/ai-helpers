@@ -233,15 +233,16 @@ HEADER
         skill_file="${skill_dir}SKILL.md"
         [ -f "$skill_file" ] || continue
         if [ "$has_skills" = false ]; then
-          echo "| Skill | Description |"
-          echo "|-------|-------------|"
+          echo "<table>"
+          echo "<tr><th>Skill</th><th>Description</th></tr>"
           has_skills=true
         fi
         skill_name=$(basename "$skill_dir")
         skill_desc=$(get_description "$skill_file")
         short_desc=$(get_desc_first_sentence "$skill_desc")
-        echo "| \`${skill_name}\` | ${short_desc} |"
+        echo "<tr><td nowrap><code>${skill_name}</code></td><td>${short_desc}</td></tr>"
       done
+      echo "</table>"
     fi
 
     has_agents=false
@@ -250,15 +251,16 @@ HEADER
         [ -f "$agent_file" ] || continue
         if [ "$has_agents" = false ]; then
           if [ "$has_skills" = true ]; then echo ""; fi
-          echo "| Agent | Description |"
-          echo "|-------|-------------|"
+          echo "<table>"
+          echo "<tr><th>Agent</th><th>Description</th></tr>"
           has_agents=true
         fi
         agent_name=$(basename "$agent_file" .md)
         agent_desc=$(get_description "$agent_file")
         short_desc=$(get_desc_first_sentence "$agent_desc")
-        echo "| \`${agent_name}\` | ${short_desc} |"
+        echo "<tr><td nowrap><code>${agent_name}</code></td><td>${short_desc}</td></tr>"
       done
+      echo "</table>"
     fi
 
     if [ "$has_skills" = false ] && [ "$has_agents" = false ]; then
@@ -309,15 +311,16 @@ if [ -f "$README" ]; then
 
   # Update plugin table
   table_content=""
-  table_content+="| Plugin | Description |"$'\n'
-  table_content+="|--------|-------------|"
+  table_content+="<table>"$'\n'
+  table_content+="<tr><th>Plugin</th><th>Description</th></tr>"
   for plugin_dir in plugins/*/ plugins/*/*/; do
     [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
     plugin=$(basename "$plugin_dir")
     is_listed "$plugin" || continue
     desc=$(get_plugin_desc "$plugin_dir")
-    table_content+=$'\n'"| <nobr>**${plugin}**</nobr> | ${desc} |"
+    table_content+=$'\n'"<tr><td nowrap><b>${plugin}</b></td><td>${desc}</td></tr>"
   done
+  table_content+=$'\n'"</table>"
   update_between_markers "$README" "PLUGIN TABLE" "$table_content"
   echo "Updated plugin table in $README"
 fi
@@ -330,16 +333,17 @@ CONTRIB="CONTRIBUTING-SKILLS.md"
 if [ -f "$CONTRIB" ]; then
   # Plugin table
   contrib_table=""
-  contrib_table+="| Plugin | What it does | Example skills |"$'\n'
-  contrib_table+="|--------|-------------|----------------|"
+  contrib_table+="<table>"$'\n'
+  contrib_table+="<tr><th>Plugin</th><th>What it does</th><th>Example skills</th></tr>"
   for plugin_dir in plugins/*/ plugins/*/*/; do
     [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
     plugin=$(basename "$plugin_dir")
     is_listed "$plugin" || continue
     desc=$(get_plugin_desc "$plugin_dir")
     examples=$(get_example_skills "$plugin_dir" 3)
-    contrib_table+=$'\n'"| **${plugin}** | ${desc} | ${examples} |"
+    contrib_table+=$'\n'"<tr><td nowrap><b>${plugin}</b></td><td>${desc}</td><td>${examples}</td></tr>"
   done
+  contrib_table+=$'\n'"</table>"
   update_between_markers "$CONTRIB" "PLUGIN TABLE" "$contrib_table"
   echo "Updated plugin table in $CONTRIB"
 
