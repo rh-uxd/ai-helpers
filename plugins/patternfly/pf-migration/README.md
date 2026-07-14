@@ -10,3 +10,4 @@ PF version migration — breaking change detection, class scanning, upgrade plan
 
 - **PF CSS Migration Scan** (`/pf-migration:pf-css-migration-scan`) — Scan code for legacy PatternFly CSS classes and recommend PF6-safe replacements.
 - **PF React Migration Scan** (`/pf-migration:pf-react-migration-scan`) — Scan code for @patternfly/react-* API breaking changes and produce a markdown report.
+- **PF Release Candidate Update** (`/pf-migration:pf-release-candidate-update`) — Update @patternfly/* npm dependencies to the latest release candidate versions.
