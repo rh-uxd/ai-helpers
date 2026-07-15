@@ -55,8 +55,8 @@ Design audit — validate existing code and designs against PatternFly standards
 
 <table>
 <tr><th>Skill</th><th>Description</th></tr>
-<tr><td nowrap><code>pf-code-token-check</code></td><td>Detect hardcoded color, spacing, typography, border radius and shadow values that have PF token equivalents and suggest the correct design token replacements.</td></tr>
 <tr><td nowrap><code>pf-color-scan</code></td><td>Find raw color values (hex, rgb, hsl) in code and suggest PatternFly design token replacements.</td></tr>
+<tr><td nowrap><code>pf-css-token-check</code></td><td>Detect hardcoded color, spacing, typography, border radius and shadow values that have PF token equivalents and suggest the correct design token replacements.</td></tr>
 <tr><td nowrap><code>pf-figma-check</code></td><td>Check Figma designs against PatternFly v6 standards for colors, typography, spacing, and component usage.</td></tr>
 <tr><td nowrap><code>pf-figma-token-check</code></td><td>Audit designs against the PatternFly 6 token architecture and bridge Figma styles to PF semantic tokens.</td></tr>
 <tr><td nowrap><code>pf-icon-finder</code></td><td>Identify PatternFly icons in Figma mockups and provide the correct React import statements.</td></tr>

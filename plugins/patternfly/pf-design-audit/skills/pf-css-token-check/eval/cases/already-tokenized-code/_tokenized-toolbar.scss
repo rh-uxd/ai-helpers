@@ -1,0 +1,26 @@
+.app-toolbar {
+  background-color: var(--pf-t--global--background--color--primary--default);
+  padding: var(--pf-t--global--spacer--md) var(--pf-t--global--spacer--lg);
+  border-bottom: var(--pf-t--global--border--width--default) solid var(--pf-t--global--border--color--default);
+  display: flex;
+  align-items: center;
+  gap: var(--pf-t--global--spacer--gap--action-to-action--default);
+
+  &__title {
+    font-size: var(--pf-t--global--font--size--heading--h4);
+    font-weight: var(--pf-t--global--font--weight--heading--default);
+    color: var(--pf-t--global--text--color--regular);
+    line-height: var(--pf-t--global--font--line-height--heading);
+  }
+
+  &__actions {
+    margin-inline-start: auto;
+    display: flex;
+    gap: var(--pf-t--global--spacer--gap--action-to-action--default);
+  }
+
+  &__divider {
+    border-inline-start: var(--pf-t--global--border--width--default) solid var(--pf-t--global--border--color--default);
+    height: var(--pf-t--global--icon--size--md);
+  }
+}

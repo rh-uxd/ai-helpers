@@ -2,7 +2,7 @@
 
 [![License](https://img.shields.io/github/license/rh-uxd/ai-helpers)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
-[![Plugins](https://img.shields.io/badge/plugins-8-blueviolet)](./PLUGINS.md)
+[![Plugins](https://img.shields.io/badge/plugins-7-blueviolet)](./PLUGINS.md)
 [![Skills](https://img.shields.io/badge/skills-39-blue)](./PLUGINS.md)
 
 AI skills for PatternFly and UXD teams — component development, design, accessibility, and migration. Plugins work in both **Claude Code** and **Cursor**.
@@ -46,7 +46,6 @@ Add this repo as a third-party plugin source in Cursor's settings.
 <tr><td nowrap><b>uxd-workshop</b></td><td>UXD team tools and skill incubator — prototyping, research, design review, team workflows</td></tr>
 <tr><td nowrap><b>pf-design-audit</b></td><td>Design audit — validate existing code and designs against PatternFly standards</td></tr>
 <tr><td nowrap><b>pf-design-guide</b></td><td>Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation</td></tr>
-<tr><td nowrap><b>pf-mcp</b></td><td>PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol</td></tr>
 <tr><td nowrap><b>pf-migration</b></td><td>PF version migration — breaking change detection, class scanning, upgrade planning</td></tr>
 <tr><td nowrap><b>pf-react</b></td><td>React component development — coding standards, testing, and structure</td></tr>
 <tr><td nowrap><b>pf-workshop</b></td><td>PatternFly team tools and skill incubation — issue triage, release management, codebase auditing, new skill development</td></tr>

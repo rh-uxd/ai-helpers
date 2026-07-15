@@ -96,6 +96,15 @@ is_listed() {
   grep -q "\"name\": *\"$plugin\"" .claude-plugin/marketplace.json 2>/dev/null
 }
 
+# Plugins that exist in marketplace.json for dependency resolution
+# but should not appear in consumer-facing tables (README, CONTRIBUTING-SKILLS)
+INFRA_PLUGINS="pf-mcp"
+
+is_infra() {
+  local plugin="$1"
+  echo "$INFRA_PLUGINS" | grep -qw "$plugin"
+}
+
 # Generate markdown sources list from plugin.json sources array
 get_plugin_sources_md() {
   local plugin_dir="${1%/}"
@@ -247,8 +256,16 @@ HEADER
 
     has_agents=false
     if [ -d "${plugin_dir}agents" ]; then
-      for agent_file in "${plugin_dir}agents"/*.md; do
-        [ -f "$agent_file" ] || continue
+      agent_files=()
+      for f in "${plugin_dir}agents"/*.md; do
+        [ -f "$f" ] && agent_files+=("$f")
+      done
+      for d in "${plugin_dir}agents"/*/; do
+        [ -d "$d" ] || continue
+        dname=$(basename "$d")
+        [ -f "${d}${dname}.md" ] && agent_files+=("${d}${dname}.md")
+      done
+      for agent_file in "${agent_files[@]}"; do
         if [ "$has_agents" = false ]; then
           if [ "$has_skills" = true ]; then echo ""; fi
           echo "<table>"
@@ -260,7 +277,7 @@ HEADER
         short_desc=$(get_desc_first_sentence "$agent_desc")
         echo "<tr><td nowrap><code>${agent_name}</code></td><td>${short_desc}</td></tr>"
       done
-      echo "</table>"
+      if [ "$has_agents" = true ]; then echo "</table>"; fi
     fi
 
     if [ "$has_skills" = false ] && [ "$has_agents" = false ]; then
@@ -291,6 +308,7 @@ if [ -f "$README" ]; then
     [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
     plugin=$(basename "$plugin_dir")
     is_listed "$plugin" || continue
+    is_infra "$plugin" && continue
     plugin_count=$((plugin_count + 1))
     if [ -d "${plugin_dir}skills" ]; then
       for skill_dir in "${plugin_dir}skills"/*/; do
@@ -317,6 +335,7 @@ if [ -f "$README" ]; then
     [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
     plugin=$(basename "$plugin_dir")
     is_listed "$plugin" || continue
+    is_infra "$plugin" && continue
     desc=$(get_plugin_desc "$plugin_dir")
     table_content+=$'\n'"<tr><td nowrap><b>${plugin}</b></td><td>${desc}</td></tr>"
   done
@@ -339,6 +358,7 @@ if [ -f "$CONTRIB" ]; then
     [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
     plugin=$(basename "$plugin_dir")
     is_listed "$plugin" || continue
+    is_infra "$plugin" && continue
     desc=$(get_plugin_desc "$plugin_dir")
     examples=$(get_example_skills "$plugin_dir" 3)
     contrib_table+=$'\n'"<tr><td nowrap><b>${plugin}</b></td><td>${desc}</td><td>${examples}</td></tr>"
@@ -408,8 +428,16 @@ for plugin_dir in plugins/*/ plugins/*/*/; do
     has_agents=false
     agent_content=""
     if [ -d "${plugin_dir}agents" ]; then
-      for agent_file in "${plugin_dir}agents"/*.md; do
-        [ -f "$agent_file" ] || continue
+      agent_files=()
+      for f in "${plugin_dir}agents"/*.md; do
+        [ -f "$f" ] && agent_files+=("$f")
+      done
+      for d in "${plugin_dir}agents"/*/; do
+        [ -d "$d" ] || continue
+        dname=$(basename "$d")
+        [ -f "${d}${dname}.md" ] && agent_files+=("${d}${dname}.md")
+      done
+      for agent_file in "${agent_files[@]}"; do
         has_agents=true
         agent_name=$(basename "$agent_file" .md)
         agent_display=$(to_display_name "$agent_name")

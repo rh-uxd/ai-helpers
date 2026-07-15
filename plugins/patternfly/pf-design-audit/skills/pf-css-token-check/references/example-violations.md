@@ -2,7 +2,7 @@
 
 ## Test Snippets
 
-Use these to test `/pf-code-token-check`:
+Use these to test `/pf-css-token-check`:
 
 ### SCSS
 ```scss

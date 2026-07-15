@@ -1,0 +1,2 @@
+prompt: "Check this SCSS file for any hardcoded values that should be replaced with PatternFly design tokens."
+fixture: _tokenized-toolbar.scss

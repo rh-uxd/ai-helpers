@@ -1,0 +1,22 @@
+.branded-banner {
+  background-color: var(--pf-t--global--color--brand--default);
+  color: var(--pf-t--global--text--color--regular);
+  padding: var(--pf-t--global--spacer--lg) var(--pf-t--global--spacer--xl);
+
+  &__title {
+    font-size: var(--pf-t--global--font--size--heading--h2);
+    font-weight: var(--pf-t--global--font--weight--heading--default);
+    color: var(--pf-t--global--text--color--regular);
+  }
+
+  &__subtitle {
+    font-size: var(--pf-t--global--font--size--body--lg);
+    color: var(--pf-t--global--text--color--subtle);
+  }
+
+  &__cta {
+    background-color: var(--pf-t--global--color--brand--accent);
+    color: var(--pf-t--global--text--color--on-brand--default);
+    padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--lg);
+  }
+}

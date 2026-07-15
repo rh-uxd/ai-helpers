@@ -1,0 +1,2 @@
+prompt: "Audit these status badge styles for Figma-to-code token compliance. Check whether the token choices follow the semantic token hierarchy and flag any palette-level tokens that should use semantic equivalents."
+fixture: _status-badges.scss

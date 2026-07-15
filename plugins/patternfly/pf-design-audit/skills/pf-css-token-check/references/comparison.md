@@ -1,14 +1,14 @@
-# Comparison: pf-code-token-check vs pf-color-scan
+# Comparison: pf-css-token-check vs pf-color-scan
 
 ## Overview
 
-`pf-code-token-check` is a comprehensive replacement for `pf-color-scan` with expanded scope and better token recommendations.
+`pf-css-token-check` is a comprehensive replacement for `pf-color-scan` with expanded scope and better token recommendations.
 
 ## Key Differences
 
 ### Scope
 
-| Feature | pf-color-scan | pf-code-token-check |
+| Feature | pf-color-scan | pf-css-token-check |
 |---------|-------------------|----------------------|
 | Colors | ✅ | ✅ |
 | Spacing | ❌ | ✅ |
@@ -23,7 +23,7 @@
 - No token hierarchy
 - No specific token suggestions
 
-**pf-code-token-check:**
+**pf-css-token-check:**
 - Shows full token hierarchy: Raw → Palette → Base → Semantic
 - Always recommends semantic tokens when they exist
 - Suggests semantic token names with PatternFly conventions when they don't exist
@@ -48,7 +48,7 @@ Both support:
 - Recommendation: "Replace with a semantic or primitive design token"
 ```
 
-**pf-code-token-check:**
+**pf-css-token-check:**
 ```
 ### 1. Button.scss
 
@@ -76,7 +76,7 @@ Both support:
 
 Both skills are available for design token auditing, with different levels of coverage.
 
-**pf-code-token-check advantages:**
+**pf-css-token-check advantages:**
 - Comprehensive coverage across colors, spacing, typography, shadows, and border radius
 - Full token hierarchy with specific recommendations
 - Semantic token suggestions following PatternFly conventions
@@ -87,7 +87,7 @@ Both skills are available for design token auditing, with different levels of co
 
 ## When to Use Each
 
-**Use pf-code-token-check when:**
+**Use pf-css-token-check when:**
 - You need comprehensive coverage (colors, spacing, typography, shadows, border radius)
 - You want specific token recommendations with full hierarchy
 - You're refactoring to PatternFly v6

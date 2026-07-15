@@ -1,0 +1,2 @@
+prompt: "Audit this SCSS file for design token compliance. I want to make sure we're using the right level of the token hierarchy — semantic tokens where available, not just palette or base tokens."
+fixture: _alert-overrides.scss

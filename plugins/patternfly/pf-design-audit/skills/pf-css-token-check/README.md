@@ -1,4 +1,4 @@
-# pf-code-token-check
+# pf-css-token-check
 
 Detect hardcoded CSS values (colors, spacing, typography, shadows, border radius) and suggest PatternFly design token replacements. Works across CSS, SCSS, CSS-in-JS, and React inline styles.
 
@@ -12,13 +12,13 @@ Detect hardcoded CSS values (colors, spacing, typography, shadows, border radius
 
 ```bash
 # Scan a single file
-/pf-code-token-check src/components/Button/Button.scss
+/pf-css-token-check src/components/Button/Button.scss
 
 # Scan multiple files
-/pf-code-token-check src/components/**/*.scss
+/pf-css-token-check src/components/**/*.scss
 
 # Scan React components
-/pf-code-token-check src/components/Card.tsx
+/pf-css-token-check src/components/Card.tsx
 ```
 
 ## What It Detects
@@ -50,4 +50,4 @@ See [SKILL.md](SKILL.md) for complete documentation.
 ## References
 
 - [PatternFly Design Tokens Documentation](https://www.patternfly.org/tokens)
-- [Issue #101: Create pf-code-token-check skill](https://github.com/rh-uxd/ai-helpers/issues/101)
+- [Issue #101: Create pf-css-token-check skill](https://github.com/rh-uxd/ai-helpers/issues/101)

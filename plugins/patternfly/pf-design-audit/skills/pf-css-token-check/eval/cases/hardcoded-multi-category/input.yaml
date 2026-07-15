@@ -1,0 +1,2 @@
+prompt: "Scan this SCSS file for hardcoded values that should use PatternFly design tokens. Check all categories: colors, spacing, typography, shadows, and border radius."
+fixture: _sidebar-styles.scss

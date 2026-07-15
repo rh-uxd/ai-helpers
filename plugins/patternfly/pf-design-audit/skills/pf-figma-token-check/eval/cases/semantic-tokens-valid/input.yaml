@@ -1,0 +1,2 @@
+prompt: "Check this navigation component for Figma-to-code token compliance. Verify all token choices are semantically correct."
+fixture: _compliant-nav.scss

@@ -1,0 +1,4 @@
+expect_violations: true
+has_color_violations: true
+has_spacing_violations: true
+has_typography_violations: true

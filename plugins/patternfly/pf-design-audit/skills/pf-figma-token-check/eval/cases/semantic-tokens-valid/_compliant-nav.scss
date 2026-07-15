@@ -1,0 +1,30 @@
+.app-nav {
+  background-color: var(--pf-t--global--background--color--primary--default);
+  border-inline-end: var(--pf-t--global--border--width--default) solid var(--pf-t--global--border--color--default);
+  padding: var(--pf-t--global--spacer--md);
+
+  &__item {
+    color: var(--pf-t--global--text--color--regular);
+    padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md);
+    border-radius: var(--pf-t--global--border--radius--small);
+    font-size: var(--pf-t--global--font--size--body--default);
+    font-weight: var(--pf-t--global--font--weight--body--default);
+
+    &:hover {
+      background-color: var(--pf-t--global--background--color--primary--hover);
+    }
+
+    &--active {
+      background-color: var(--pf-t--global--background--color--primary--clicked);
+      color: var(--pf-t--global--text--color--brand--default);
+      font-weight: var(--pf-t--global--font--weight--body--bold);
+    }
+  }
+
+  &__section-title {
+    font-size: var(--pf-t--global--font--size--body--sm);
+    font-weight: var(--pf-t--global--font--weight--heading--default);
+    color: var(--pf-t--global--text--color--subtle);
+    padding: var(--pf-t--global--spacer--md) var(--pf-t--global--spacer--md) var(--pf-t--global--spacer--xs);
+  }
+}

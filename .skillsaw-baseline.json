@@ -502,7 +502,7 @@
     {
       "fingerprint": "3beaa578f28be07a",
       "rule_id": "context-budget",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-code-token-check/SKILL.md",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-css-token-check/SKILL.md",
       "message": "Estimated 3,030 tokens exceeds skill warn limit of 3,000",
       "severity": "warning",
       "value": 3030,

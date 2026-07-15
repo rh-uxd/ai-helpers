@@ -1,0 +1,138 @@
+name: pf-figma-token-check-eval
+description: Evaluate pf-figma-token-check's Figma-to-code token validation and finding statuses
+
+skill: pf-design-audit:pf-figma-token-check
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-design-audit
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: expect_violations (true/false), violation_type
+    - An SCSS fixture file the prompt references
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces a findings report with statuses per token usage
+      (VALIDATED, COMPOSITE FOUND, CONTEXT MISMATCH, etc.)
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: rejects_palette_tokens
+    description: Identifies palette tokens and recommends semantic alternatives
+    if: "annotations.get('violation_type') == 'palette-usage'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      palette_ref = re.compile(r'--pf-t--color--(red|green|blue|orange)--\d+')
+      has_palette = palette_ref.search(text)
+      reject_language = re.compile(
+          r'(REJECT|reject|violation|flag|issue|problem|incorrect|should\s+not|avoid|palette)',
+          re.IGNORECASE
+      )
+      semantic_alt = re.compile(r'--pf-t--global--(text|background|border|icon|color--).*--(status|success|danger|warning|info|brand|link|default)')
+      if not has_palette:
+          return False, "Did not identify palette tokens from the fixture"
+      if not reject_language.search(text):
+          return False, "Found palette tokens but did not flag them as issues"
+      if not semantic_alt.search(text):
+          return False, "Flagged palette tokens but did not suggest semantic alternatives"
+      return True, "Correctly rejects palette tokens and recommends semantic alternatives"
+
+  - name: flags_context_mismatch
+    description: Detects when tokens are used in the wrong semantic context
+    if: "annotations.get('violation_type') == 'context-mismatch'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      mismatch_keyword = re.compile(
+          r'(mismatch|incorrect.{0,20}context|wrong.{0,20}context|misuse|inappropriate|REJECT|reject|violation|pairing)',
+          re.IGNORECASE | re.DOTALL
+      )
+      specific_tokens = re.compile(
+          r'(text--color|background--color|border--color|on-brand|brand--(default|accent)|color--brand)',
+          re.IGNORECASE
+      )
+      has_mismatch = mismatch_keyword.search(text)
+      has_tokens = specific_tokens.search(text)
+      if not has_mismatch:
+          return False, "Did not flag context mismatch issues"
+      if not has_tokens:
+          return False, "Flagged mismatch but did not reference the specific token combinations"
+      return True, "Correctly identifies token context mismatch with specific token references"
+
+  - name: uses_finding_statuses
+    description: Uses status labels to categorize findings
+    if: "annotations.get('expect_violations') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      statuses = [
+          "REJECT", "WARN", "VALIDATED", "COMPOSITE FOUND",
+          "CONTEXT MISMATCH", "IMPLEMENTATION DRIFT", "SYNC REQUIRED",
+          "FIGMA FIX NEEDED", "ESCALATION RECOMMENDED"
+      ]
+      found = []
+      for s in statuses:
+          if re.search(re.escape(s), text, re.IGNORECASE):
+              found.append(s)
+      if not found:
+          return False, "Did not use any status labels (REJECT, WARN, VALIDATED, etc.)"
+      return True, f"Used finding statuses: {', '.join(found)}"
+
+  - name: no_false_positives
+    description: Does not flag valid semantic token usage as violations
+    if: "annotations.get('expect_violations') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      negative_signals = [
+          "REJECT", "CONTEXT MISMATCH", "IMPLEMENTATION DRIFT",
+          "SYNC REQUIRED", "FIGMA FIX NEEDED", "ESCALATION RECOMMENDED"
+      ]
+      for signal in negative_signals:
+          if re.search(re.escape(signal), text):
+              return False, f"False positive — reported '{signal}' for valid semantic tokens"
+      return True, "No false positives for correctly-used semantic tokens"
+
+thresholds:
+  rejects_palette_tokens:
+    min_pass_rate: 0.67
+  flags_context_mismatch:
+    min_pass_rate: 0.67
+  uses_finding_statuses:
+    min_pass_rate: 0.67
+  no_false_positives:
+    min_pass_rate: 1.0

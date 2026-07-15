@@ -1,0 +1,156 @@
+name: pf-css-token-check-eval
+description: Evaluate pf-css-token-check's detection of hardcoded values and token hierarchy guidance
+
+skill: pf-design-audit:pf-css-token-check
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-design-audit
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: expect_violations (true/false), violation categories, violation_type
+    - An SCSS fixture file the prompt references
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces a report listing violations per category
+      with token hierarchy recommendations (raw → palette → base → semantic).
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: detects_hardcoded_colors
+    description: Flags hardcoded hex/rgb color values and suggests PF color tokens
+    if: "annotations.get('expect_violations') == True and annotations.get('has_color_violations') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      hex_pattern = re.compile(r'#[A-Fa-f0-9]{3,8}\b')
+      has_hex = hex_pattern.search(text)
+      pf_color_token = re.compile(r'--pf-(t--global--(text|background|border|icon|color)|t--color--|v6-c-).*color')
+      has_token = pf_color_token.search(text)
+      if not has_hex:
+          return False, "Did not reference any hardcoded hex values from the fixture"
+      if not has_token:
+          return False, "Referenced hex values but did not suggest PF color tokens"
+      return True, "Detected hardcoded colors and suggests PF color tokens"
+
+  - name: detects_hardcoded_spacing
+    description: Flags hardcoded spacing values and suggests PF spacer tokens
+    if: "annotations.get('expect_violations') == True and annotations.get('has_spacing_violations') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      spacing_props = re.compile(r'(padding|margin|gap).{0,40}\d+px', re.IGNORECASE | re.DOTALL)
+      spacer_token = re.compile(r'--pf-t--global--spacer--')
+      has_spacing = spacing_props.search(text)
+      has_token = spacer_token.search(text)
+      if not has_spacing:
+          return False, "Did not flag hardcoded spacing values (padding/margin with px)"
+      if not has_token:
+          return False, "Flagged spacing but did not suggest PF spacer tokens (--pf-t--global--spacer--)"
+      return True, "Detected hardcoded spacing and suggests PF spacer tokens"
+
+  - name: detects_hardcoded_typography
+    description: Flags hardcoded font values and suggests PF font tokens
+    if: "annotations.get('expect_violations') == True and annotations.get('has_typography_violations') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      font_ref = re.compile(r'(font-size|font-weight|font-family|line-height).{0,40}\b(px|rem|\d{3}|Helvetica|Arial)', re.IGNORECASE | re.DOTALL)
+      font_token = re.compile(r'--pf-t--global--font--')
+      has_font = font_ref.search(text)
+      has_token = font_token.search(text)
+      if not has_font:
+          return False, "Did not flag hardcoded typography values"
+      if not has_token:
+          return False, "Flagged typography but did not suggest PF font tokens (--pf-t--global--font--)"
+      return True, "Detected hardcoded typography and suggests PF font tokens"
+
+  - name: recommends_semantic_over_palette
+    description: Recommends semantic tokens over palette tokens for wrong-tier violations
+    if: "annotations.get('violation_type') == 'wrong-tier'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      palette_ref = re.compile(r'--pf-t--color--(red|green|blue)--\d+')
+      has_palette = palette_ref.search(text)
+      semantic_token = re.compile(r'--pf-(t--global|v6-c-).*--(color|background|border|text)--')
+      hierarchy_ref = re.compile(r'(hierarchy|tier|level|palette.{0,40}semantic|raw.{0,40}semantic)', re.IGNORECASE | re.DOTALL)
+      upgrade_language = re.compile(
+          r'(semantic|upgrade|prefer|recommend|use\s+instead|should\s+use|replace\s+with)',
+          re.IGNORECASE
+      )
+      if not has_palette:
+          return False, "Did not identify palette tokens (--pf-t--color--*--N) in the fixture"
+      if not semantic_token.search(text):
+          return False, "Identified palette tokens but did not suggest any semantic token alternatives"
+      if not upgrade_language.search(text) and not hierarchy_ref.search(text):
+          return False, "Found both palette and semantic tokens but did not recommend upgrading to semantic tier"
+      return True, "Recommends semantic token tier over palette tokens"
+
+  - name: no_false_positives
+    description: Does not flag already-tokenized values as violations
+    if: "annotations.get('expect_violations') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      violation_header = re.compile(r'Design Token Violations Found:\s*[1-9]', re.IGNORECASE)
+      if violation_header.search(text):
+          return False, "False positive — reported violations for already-tokenized code"
+      hardcoded_ref = re.compile(
+          r'(hardcoded|raw value|replace).{0,120}#[a-fA-F0-9]{3,8}',
+          re.IGNORECASE | re.DOTALL
+      )
+      hardcoded_ref_rev = re.compile(
+          r'#[a-fA-F0-9]{3,8}.{0,120}(hardcoded|raw value|replace)',
+          re.IGNORECASE | re.DOTALL
+      )
+      if hardcoded_ref.search(text) or hardcoded_ref_rev.search(text):
+          return False, "False positive — flagged hex values in tokenized code"
+      return True, "No false positives for already-tokenized code"
+
+thresholds:
+  detects_hardcoded_colors:
+    min_pass_rate: 0.67
+  detects_hardcoded_spacing:
+    min_pass_rate: 0.67
+  detects_hardcoded_typography:
+    min_pass_rate: 0.67
+  recommends_semantic_over_palette:
+    min_pass_rate: 0.67
+  no_false_positives:
+    min_pass_rate: 1.0

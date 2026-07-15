@@ -1,0 +1,39 @@
+.app-sidebar {
+  background-color: #151515;
+  color: #ffffff;
+  width: 250px;
+  padding: 16px 12px;
+  font-family: 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  border-right: 1px solid #3c3f42;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.2);
+
+  &__nav-item {
+    padding: 8px 16px;
+    margin-bottom: 4px;
+    border-radius: 3px;
+    color: #e0e0e0;
+    font-size: 14px;
+    font-weight: 400;
+
+    &:hover {
+      background-color: #292e34;
+    }
+
+    &--active {
+      background-color: #0066cc;
+      color: #ffffff;
+      font-weight: 700;
+    }
+  }
+
+  &__section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8a8d90;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 16px 16px 8px;
+  }
+}

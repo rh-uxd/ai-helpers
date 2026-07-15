@@ -1,0 +1,24 @@
+.custom-alert {
+  &--danger {
+    background-color: var(--pf-t--color--red--50);
+    border-color: var(--pf-t--color--red--100);
+    color: var(--pf-t--color--red--300);
+
+    .custom-alert__icon {
+      color: var(--pf-t--color--red--200);
+    }
+  }
+
+  &--success {
+    background-color: var(--pf-t--color--green--50);
+    border-color: var(--pf-t--color--green--100);
+    color: var(--pf-t--color--green--300);
+  }
+
+  &--info {
+    background-color: var(--pf-t--color--blue--50);
+    border-color: var(--pf-t--color--blue--100);
+    padding: var(--pf-t--global--spacer--md);
+    font-size: var(--pf-t--global--font--size--body--default);
+  }
+}

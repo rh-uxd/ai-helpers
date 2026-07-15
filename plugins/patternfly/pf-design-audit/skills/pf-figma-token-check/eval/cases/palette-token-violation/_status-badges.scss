@@ -1,0 +1,30 @@
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--pf-t--global--spacer--sm);
+  padding: var(--pf-t--global--spacer--xs) var(--pf-t--global--spacer--sm);
+  border-radius: var(--pf-t--global--border--radius--pill);
+  font-size: var(--pf-t--global--font--size--body--sm);
+
+  &--success {
+    background-color: var(--pf-t--color--green--50);
+    color: var(--pf-t--color--green--400);
+    border: 1px solid var(--pf-t--color--green--100);
+  }
+
+  &--danger {
+    background-color: var(--pf-t--color--red--50);
+    color: var(--pf-t--color--red--400);
+    border: 1px solid var(--pf-t--color--red--100);
+  }
+
+  &--warning {
+    background-color: var(--pf-t--color--orange--50);
+    color: var(--pf-t--color--orange--400);
+    border: 1px solid var(--pf-t--color--orange--100);
+  }
+
+  &__icon {
+    font-size: var(--pf-t--global--icon--size--sm);
+  }
+}

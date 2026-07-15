@@ -1,0 +1,2 @@
+prompt: "Review the branded banner component in _branded-banner.scss for token context correctness. Check whether text and background tokens are used in the right semantic contexts — e.g., text tokens on text elements, background tokens on containers, and brand tokens used appropriately."
+fixture: _branded-banner.scss
