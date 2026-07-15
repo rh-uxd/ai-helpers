@@ -126,7 +126,7 @@ git remote add origin {remote-url} && git push -u origin main
 
 ### Target: public
 
-Deploy a sanitized copy to a public GitHub repository with GitHub Pages. This is the workflow for sharing prototypes externally — it strips all internal/sensitive files before pushing.
+Deploy a sanitized copy to a public GitHub repo with GitHub Pages. This is the workflow for sharing prototypes externally — it strips all internal/sensitive files before pushing.
 
 **Step 3a: GitHub Repository**
 

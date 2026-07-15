@@ -44,10 +44,11 @@ Show me variables for the vertical modifier in tabs
 
 ## How It Works
 
-The skill uses two Node.js scripts in `$CLAUDE_SKILL_DIR`:
+The skill uses two Node.js scripts and a bash wrapper in `$CLAUDE_SKILL_DIR`:
 
-1. **css-var-analyzer.js** - Parses SCSS files, extracts variable definitions/usages, builds redefinition chains, detects issues
-2. **format-css-report.js** - Formats the analysis JSON into readable Markdown reports
+1. **css-var-analyzer.js** — Parses SCSS files, extracts variable definitions/usages, builds redefinition chains, detects issues
+2. **format-css-report.js** — Formats the analysis JSON into readable Markdown reports
+3. **[scripts/analyze-css-vars.sh](scripts/analyze-css-vars.sh)** — Wrapper with runtime validation
 
 The analyzer categorizes definitions by context: root (`@include pf-root`), modifier (`.pf-m-*`), state (`:hover`, `:focus`), media query, breakpoint, and nested selectors.
 

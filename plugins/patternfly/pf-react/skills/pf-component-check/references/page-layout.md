@@ -199,7 +199,7 @@ Application header component.
 - `MastheadLogo` — the logo itself (needs `component` prop for element type)
 - `MastheadContent` — right-aligned container for nav, search, user menu
 
-**Important:** Masthead consumes `PageContext` for breakpoint info. It should be used within a `Page` component for responsive behavior to work correctly.
+**Important:** Masthead consumes `PageContext` for breakpoint info. It should be used within a `Page` component for responsive behavior to work.
 
 ### Anti-pattern: skipping MastheadMain
 

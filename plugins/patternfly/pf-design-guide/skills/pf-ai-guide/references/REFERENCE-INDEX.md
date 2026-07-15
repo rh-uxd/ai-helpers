@@ -108,9 +108,9 @@ Use as buttons or on buttons.
 **Icon don'ts - Part 1**
 
 Three things NOT to do:
-1. ❌ Don't create new UI icons with sparkles - Request via #help-brand
-2. ❌ Don't use brains or robots for AI features (robots only for chatbots)
-3. ❌ Don't change icon colors or modify them
+1. ❌ Don't create new UI icons with sparkles — instead, request via #help-brand
+2. ❌ Don't use brains or robots for AI features — use approved AI icons (robots only for chatbots)
+3. ❌ Don't change icon colors or modify them — use icons as provided
 
 ### `icons-dont-use-without-disclosure.png` (Page 20)
 **Icon don'ts - Part 2**
@@ -131,7 +131,7 @@ Two-column explanation:
 - Avoids overwhelming UI when AI is ubiquitous
 - Color palette designed for status and accessibility
 
-**Do not use gradients and color coding:**
+**Use standard PatternFly colors instead of gradients and color coding:**
 - Avoids conflicting with status colors
 - Avoids accessibility challenges
 - Avoids confusion with marketing materials

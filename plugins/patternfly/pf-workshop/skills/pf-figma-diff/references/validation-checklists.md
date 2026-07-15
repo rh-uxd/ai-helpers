@@ -107,14 +107,14 @@ After running the sync, validate the generated reports and data.
 
 ### Priority Assignment
 - [ ] Breaking changes marked as High Priority
-- [ ] Minor adjustments marked appropriately
+- [ ] Minor adjustments marked as Low Priority
 - [ ] Design-only updates clearly identified
 - [ ] Verification-needed items have clear next steps
 
 ### Cross-References
 - [ ] Figma links work and point to correct file
 - [ ] PatternFly.org links are valid (not 404)
-- [ ] GitHub issue links resolve correctly
+- [ ] GitHub issue links resolve (not 404)
 - [ ] File paths exist in codebase
 
 ---
@@ -208,7 +208,7 @@ Before releasing changes based on Figma sync, ensure quality and completeness.
 - [ ] Design team approves changes
 - [ ] Product team aware of changes
 - [ ] Breaking changes communicated
-- [ ] Release scheduled appropriately
+- [ ] Release scheduled with the team
 
 ### Post-Release
 - [ ] Monitor error tracking for issues
@@ -227,7 +227,7 @@ Periodically review and improve your sync process.
 - [ ] Sync time is acceptable (< 5 minutes ideal)
 - [ ] False positives are minimal
 - [ ] Token mappings are up to date
-- [ ] Automation is working correctly
+- [ ] Automation produces expected output
 - [ ] Team is using reports effectively
 
 ### Data Quality

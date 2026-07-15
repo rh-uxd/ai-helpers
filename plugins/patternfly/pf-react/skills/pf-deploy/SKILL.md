@@ -38,7 +38,7 @@ test -f package.json && git remote get-url origin
 gh auth status
 ```
 
-If there is no GitHub remote, run `pfcli init` in the project directory and follow its prompts to create or connect a repository.
+If there is no GitHub remote, run `pfcli init` in the project directory and follow its prompts to create or connect a repo.
 
 If the user has uncommitted changes they want on GitHub before deploying, run `pfcli save` first.
 
@@ -54,7 +54,7 @@ Common options:
 
 | Flag | Purpose |
 |------|---------|
-| `-d, --dist-dir <dir>` | Output folder (default: `dist`) |
+| `-d, --dist-dir <dir>` | Output directory (default: `dist`) |
 | `--no-build` | Deploy existing build output only |
 | `-b, --branch <branch>` | Deploy branch (default: `gh-pages`) |
 | `--base <path>` | Override public asset path (default: derived from repo name) |
@@ -95,7 +95,7 @@ Tell the user the URL may take a minute to update on first deploy. If Pages is n
 | `Please save your changes first...` | No `origin` remote | Run `pfcli init` or add `git remote add origin ...` |
 | `No package.json found` | Wrong directory | `cd` to project root or pass the path |
 | `No "build" script found` | Missing build script | Add `"build"` to `package.json` or use `--no-build -d <dir>` |
-| `Build output directory "dist" does not exist` | Wrong output dir or failed build | Fix the build or pass `-d` with the correct folder |
+| `Build output directory "dist" does not exist` | Wrong output dir or failed build | Fix the build or pass `-d` with the correct directory |
 | Blank page or missing assets | Wrong base path | Re-deploy; for custom hosting use `--base /<repo>/` |
 | `gh auth` failures | GitHub CLI not authenticated | Run `gh auth login` |
 

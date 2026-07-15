@@ -20,32 +20,24 @@ Content should be clear, on-brand, and cross-linked where helpful. For **compone
 
 ## Workflow
 
-1. **Gather context**
-   - Identify the file type: **component examples** (`.../components/*/examples/*.md`) or **demos** (`.../demos/**/*.md`), and the specific example or demo (heading + ts file).
-   - Read the example’s or demo’s TSX/implementation if needed to understand what it shows and which props/features are used.
-   - Read any existing description and nearby examples/demos in the same MD file for tone and length.
+### Step 1: Gather context
 
-2. **Align with PatternFly content guidelines**
-   - Call the **PatternFly MCP** to load current guidance:
-     - Use `searchPatternFlyDocs` with `searchQuery: "writing"` (or `"patternfly design guidelines"` or `"content design"`) to find content design resources.
-     - Use `usePatternFlyDocs` with `name: "Writing"` (or `"content design"` or the returned resource names/URLs) to fetch:
-       - **Brand voice and tone** – friendly, approachable, collaborative, inventive; avoid jargon and fluff.
-       - **Best practices** – clear, concise, user-focused; lead with benefit; positive, action-oriented language.
-       - **PatternFly design guidelines** – present tense; second person ("you"); active voice; sentence-case headings; descriptive hyperlinks; relative URLs for PatternFly pages. (Note: bolding component names on first use applies to design guidelines pages, not example documentation—do not bold component names in example descriptions.)
-       - **Accessibility and localization** – plain language, short sentences, consistent terminology.
-   - Apply these when drafting or revising the example or demo description.
+- Identify the file type: **component examples** (`.../components/*/examples/*.md`) or **demos** (`.../demos/**/*.md`), and the specific example or demo (heading + ts file).
+- Read the example’s or demo’s TSX/implementation if needed to understand what it shows and which props/features are used.
+- Read any existing description and nearby examples/demos in the same MD file for tone and length.
 
-3. **Draft the description**
+### Step 2: Load PatternFly content guidelines
+
+Call the **PatternFly MCP** to load current guidance:
+- Use `searchPatternFlyDocs` with `searchQuery: "writing"` to find content design resources.
+- Use `usePatternFlyDocs` with `name: "Writing"` to fetch brand voice, best practices, design guidelines, and accessibility guidance.
+- Apply these when drafting or revising the description.
+
+### Step 3: Draft the description
    - **For component examples:** **When the example introduces unique functionality or the primary use** (e.g. Basic): use a **concept intro sentence** ("A [component] gives users…") then **technical implementation sentence(s)**. **When the example is a variation or follow-on** (e.g. "Without home link", "With dropdown"): skip the concept intro and start with the benefit/implementation—e.g. "To remove the home link, use…" or "To add a dropdown to a breadcrumb item, use…". Always lead with the benefit in the first sentence the reader sees; keep concept and implementation in separate sentences when you use a concept intro. Do **not** bold component names in example descriptions.
    - **For demos:** Use the demo-specific structure below (opening sentence + "In this demo:" + bullet list of props/features). Mention what the demo shows and how key props or features are used.
    - In both cases: Use "you" and active voice, and be direct and concise. **Punctuation:** Avoid semicolons. Prefer commas or new sentences to join ideas. Use em dashes occasionally if they improve clarity. Use backticks for prop/attribute names (e.g. `isExpanded`). **Example and demo headings (h3):** Use sentence case—only the first word and proper nouns capitalized (e.g. "Read only", "Expanded with array", "Inline compact with truncation"). **Component names:** Do not capitalize component names unless at the beginning of a sentence. When referring to the React component in a code way, use angle-bracket form: `<ComponentName>`. **Only mention the React component (e.g. `<DataList>`) when multiple components are involved or it helps clarify the sentence**—otherwise just "use `propName`" or "set `propName`" is enough (e.g. "To reduce vertical spacing between rows, use `isCompact`." not "set `isCompact` on `<DataList>`"). In running prose, use lowercase: "the page component," "the notification drawer."
-   - Add **cross-links** only when **directly relevant**—e.g. when referencing a specific example of another component, or when the reader would likely want to cross-check. Generally, linking to other components or patterns mentioned in the description is usually relevant. When building component links:
-     - **Nested components**: If the target component’s MD file has a `subsection` in its frontmatter, use `/components/<subsection>/<id-lowercase>` (e.g. Form with `subsection: forms` → `/components/forms/form`). Otherwise use `/components/<id-lowercase>` (e.g. `/components/button`, `/components/card`).
-     - Use `[Component label](/components/...)` or `/components/.../design-guidelines` when pointing to design/usage.
-     - **Pattern**: `[Pattern label](/patterns/pattern-name)`.
-     - **Same-page example**: `[link text](#anchor)`. Anchor = heading text lowercased, spaces to hyphens (e.g. `#selectable`, `#cards-as-tiles`).
-     - **Content design**: `/content-design/overview` as a generic landing, or specific paths like `/content-design/writing-guides/tooltips`. Paths here can be less consistent; use overview when unsure.
-     - **Foundations and styles**: e.g. `/foundations-and-styles/iconography`, `/foundations-and-styles/design-tokens/overview`.
+   - Add **cross-links** only when **directly relevant** — see the "Link conventions" table below for path formats.
    - Use **relative** paths only; use descriptive link text (not "click here").
 
 ### Lead with the benefit (component examples)
@@ -117,7 +109,7 @@ Use lowercase for component names in prose ("the page component"); use `<Compone
 
 Keep bullets concise; use backticks for prop/component names. **Length:** A very simple demo may need only an opening sentence (no bullets). Other demos may have multiple sentences and lists of 5+ bullets—that’s fine. What matters is capturing the **unique aspects** of the demo, **why the demo matters**, and **what it is showing to users**. Cross-link to components or patterns when directly relevant (same rules as component examples).
 
-4. **Present and iterate**
+### Step 4: Present and iterate
    - **Share the suggested description in raw markdown** (e.g. in a fenced code block or clearly formatted block) so the user can easily copy and paste. Write the example description in markdown (links, backticks for props, etc.).
    - Ask the user to either:
      - **Accept** the suggestion (then insert it into the MD file), or
@@ -125,7 +117,7 @@ Keep bullets concise; use backticks for prop/component names. **Length:** A very
    - If they request changes, revise and show again; repeat until they accept or are satisfied.
    - Optionally, once done: "Do you want me to check this file for other opportunities?" (e.g. other examples missing descriptions). Do not over-suggest this; ask at most once per interaction.
 
-5. **Apply the final text**
+### Step 5: Apply the final text
    - **Component examples:** Insert or replace the description after the `### Example name` line and before the ` ```ts file='./...' ``` ` block.
    - **Demos:** Insert or replace the description after the `### Demo name` line and before the ` ```ts file='./...' ``` ` block (demos may use `isFullscreen` on the code block).
    - **Rewriting vs updating:** If the user is **rewriting** (replacing) existing content, the new description can **override** existing content, including tables—but **make the user aware** that you removed or replaced something (e.g. "I replaced the previous paragraph and the table with the description below."). If they are **updating or adding** (not doing a full rewrite), tack the new content on where appropriate; do not replace existing prose or tables unless they asked for a rewrite.

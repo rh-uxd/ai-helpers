@@ -95,7 +95,7 @@ curl -s -u "$ATLASSIAN_EMAIL:$ATLASSIAN_API_TOKEN" \
   }'
 ```
 
-2. **Check for duplicate links (CRITICAL for all epics):**
+2. **Check for duplicate links — applies to all epics including closed:**
 ```bash
 # Check EVERY epic for cross-project duplicate links
 curl -s -u "$ATLASSIAN_EMAIL:$ATLASSIAN_API_TOKEN" \
@@ -126,7 +126,7 @@ curl -s -u "$ATLASSIAN_EMAIL:$ATLASSIAN_API_TOKEN" \
   }'
 ```
 
-**IMPORTANT:** Combine direct children + linked epic children for total metrics. Many cross-project initiatives track significant work via duplicate links (e.g., AAP, MTV, CONSOLE, SAT projects).
+Combine direct children + linked epic children for total metrics. Many cross-project initiatives track significant work via duplicate links (e.g., AAP, MTV, CONSOLE, SAT projects).
 
 ### Step 3: Calculate Aggregate Metrics
 

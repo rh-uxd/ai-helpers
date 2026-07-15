@@ -1,309 +1,8 @@
 {
   "version": "1",
   "generated_by": "skillsaw 0.16.0",
-  "generated_at": "2026-07-11T04:02:34.635695+00:00",
+  "generated_at": "2026-07-15T14:54:33.559979+00:00",
   "violations": [
-    {
-      "fingerprint": "677aa24042d6ed7c",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-evaluate/references/ux-rubric.yaml",
-      "message": "'references/ux-rubric.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "064213fb60435023",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/eval/eval.yaml",
-      "message": "'eval/eval.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "50db3fa205006451",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/eval/cases/consumer-with-children/ServiceCard.tsx",
-      "message": "'eval/cases/consumer-with-children/ServiceCard.tsx' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "617c341ebd1c76a2",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/eval/cases/consumer-with-children/annotations.yaml",
-      "message": "'eval/cases/consumer-with-children/annotations.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "efecac46a1252e88",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/eval/cases/consumer-with-children/input.yaml",
-      "message": "'eval/cases/consumer-with-children/input.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "0cd34917e60585e3",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/eval/cases/library-tooltip/Tooltip.tsx",
-      "message": "'eval/cases/library-tooltip/Tooltip.tsx' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "fe97e004a213514d",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/eval/cases/library-tooltip/annotations.yaml",
-      "message": "'eval/cases/library-tooltip/annotations.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "fe3fd50b222a2030",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/eval/cases/library-tooltip/input.yaml",
-      "message": "'eval/cases/library-tooltip/input.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "051dbfc36efb5dd2",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/eval/cases/library-wizard-orchestration/Wizard.tsx",
-      "message": "'eval/cases/library-wizard-orchestration/Wizard.tsx' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "71cf0e1fa04bec60",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/eval/cases/library-wizard-orchestration/annotations.yaml",
-      "message": "'eval/cases/library-wizard-orchestration/annotations.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "a315f4291efc7b2e",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/eval/cases/library-wizard-orchestration/input.yaml",
-      "message": "'eval/cases/library-wizard-orchestration/input.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "4e26955783927eb2",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/eval/eval.yaml",
-      "message": "'eval/eval.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "439fc00007bda410",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/eval/cases/invalid-charts-import/ChartsDashboard.tsx",
-      "message": "'eval/cases/invalid-charts-import/ChartsDashboard.tsx' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "6aff72cff930e91d",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/eval/cases/invalid-charts-import/annotations.yaml",
-      "message": "'eval/cases/invalid-charts-import/annotations.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "b565a481020f489a",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/eval/cases/invalid-charts-import/input.yaml",
-      "message": "'eval/cases/invalid-charts-import/input.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "91c90ef368213b1e",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/eval/cases/invalid-chatbot-import/AssistantPanel.tsx",
-      "message": "'eval/cases/invalid-chatbot-import/AssistantPanel.tsx' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "e0efe8732882773e",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/eval/cases/invalid-chatbot-import/annotations.yaml",
-      "message": "'eval/cases/invalid-chatbot-import/annotations.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "2e5f2ed352e89a1b",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/eval/cases/invalid-chatbot-import/input.yaml",
-      "message": "'eval/cases/invalid-chatbot-import/input.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "a7ad1fe8bf971000",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/eval/cases/valid-pf6-imports/SettingsPage.tsx",
-      "message": "'eval/cases/valid-pf6-imports/SettingsPage.tsx' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "b458ecc0730771ff",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/eval/cases/valid-pf6-imports/annotations.yaml",
-      "message": "'eval/cases/valid-pf6-imports/annotations.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "393a12025e08dff7",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/eval/cases/valid-pf6-imports/input.yaml",
-      "message": "'eval/cases/valid-pf6-imports/input.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "e60d5037289487b9",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/eval/eval.yaml",
-      "message": "'eval/eval.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "d9a194c554d4d94e",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/eval/cases/already-tokenized/_dashboard.scss",
-      "message": "'eval/cases/already-tokenized/_dashboard.scss' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "3176101db8dac5d6",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/eval/cases/already-tokenized/annotations.yaml",
-      "message": "'eval/cases/already-tokenized/annotations.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "851a989b842ae667",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/eval/cases/already-tokenized/input.yaml",
-      "message": "'eval/cases/already-tokenized/input.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "635f1b7f6f62424e",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/eval/cases/raw-hex-in-styles/_card-styles.scss",
-      "message": "'eval/cases/raw-hex-in-styles/_card-styles.scss' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "48450e3158229529",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/eval/cases/raw-hex-in-styles/annotations.yaml",
-      "message": "'eval/cases/raw-hex-in-styles/annotations.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "83d3a9b3b057bf82",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/eval/cases/raw-hex-in-styles/input.yaml",
-      "message": "'eval/cases/raw-hex-in-styles/input.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "7e1c63f4d022f166",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/eval/cases/token-declaration-exception/_token-definitions.scss",
-      "message": "'eval/cases/token-declaration-exception/_token-definitions.scss' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "41a7c4ce89e702bd",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/eval/cases/token-declaration-exception/annotations.yaml",
-      "message": "'eval/cases/token-declaration-exception/annotations.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "9a9355454f5a7d8e",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/eval/cases/token-declaration-exception/input.yaml",
-      "message": "'eval/cases/token-declaration-exception/input.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "5f9bfc573ca80aae",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/eval/eval.yaml",
-      "message": "'eval/eval.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "8e9f10291110e323",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/eval/cases/legacy-token-patterns/_legacy-overrides.scss",
-      "message": "'eval/cases/legacy-token-patterns/_legacy-overrides.scss' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "3be5184128ea0291",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/eval/cases/legacy-token-patterns/annotations.yaml",
-      "message": "'eval/cases/legacy-token-patterns/annotations.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "1ab790bcbe19670e",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/eval/cases/legacy-token-patterns/input.yaml",
-      "message": "'eval/cases/legacy-token-patterns/input.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "3234c6865b1e8e4e",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/eval/cases/legacy-versioned-classes/LegacyNavbar.tsx",
-      "message": "'eval/cases/legacy-versioned-classes/LegacyNavbar.tsx' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "375c95639a7ae4c1",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/eval/cases/legacy-versioned-classes/annotations.yaml",
-      "message": "'eval/cases/legacy-versioned-classes/annotations.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "679cbfede29faeba",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/eval/cases/legacy-versioned-classes/input.yaml",
-      "message": "'eval/cases/legacy-versioned-classes/input.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "ee71cb9e93b10662",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/eval/cases/valid-pf6-code/ModernCard.tsx",
-      "message": "'eval/cases/valid-pf6-code/ModernCard.tsx' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "33a0fe8dbe8978d9",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/eval/cases/valid-pf6-code/annotations.yaml",
-      "message": "'eval/cases/valid-pf6-code/annotations.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "996531bee2ae173b",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/eval/cases/valid-pf6-code/input.yaml",
-      "message": "'eval/cases/valid-pf6-code/input.yaml' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "6fee910cf37db12e",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-workshop/skills/pf-create-issue/EXAMPLE.md",
-      "message": "'EXAMPLE.md' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "21e0146efc298c66",
-      "rule_id": "agentskill-unreferenced-files",
-      "file_path": "plugins/patternfly/pf-workshop/skills/pf-css-var-scan/scripts/analyze-css-vars.sh",
-      "message": "'scripts/analyze-css-vars.sh' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
-      "severity": "warning"
-    },
     {
       "fingerprint": "34d9d2f90ed49481",
       "rule_id": "content-broken-internal-reference",
@@ -337,62 +36,6 @@
       "severity": "warning"
     },
     {
-      "fingerprint": "ad03747c0be4563a",
-      "rule_id": "content-critical-position",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-token-check/SKILL.md",
-      "line": 74,
-      "message": "'REQUIRED' instruction at line 69 is in the attention dead zone (20-80%) \u2014 Move to the first 20% or last 20% of the file for better attention",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "b5a373ff0f6b1924",
-      "rule_id": "content-critical-position",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-token-check/SKILL.md",
-      "line": 92,
-      "message": "'REQUIRED' instruction at line 87 is in the attention dead zone (20-80%) \u2014 Move to the first 20% or last 20% of the file for better attention",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "c3801d4317af53fa",
-      "rule_id": "content-critical-position",
-      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-token-check/SKILL.md",
-      "line": 135,
-      "message": "'REQUIRED' instruction at line 130 is in the attention dead zone (20-80%) \u2014 Move to the first 20% or last 20% of the file for better attention",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "ffc5efcc3f206ab2",
-      "rule_id": "content-critical-position",
-      "file_path": "plugins/patternfly/pf-workshop/skills/pf-quarterly-report-gen/SKILL.md",
-      "line": 98,
-      "message": "'CRITICAL' instruction at line 93 is in the attention dead zone (20-80%) \u2014 Move to the first 20% or last 20% of the file for better attention",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "c8e349f528c8a680",
-      "rule_id": "content-critical-position",
-      "file_path": "plugins/patternfly/pf-workshop/skills/pf-quarterly-report-gen/SKILL.md",
-      "line": 129,
-      "message": "'IMPORTANT' instruction at line 124 is in the attention dead zone (20-80%) \u2014 Move to the first 20% or last 20% of the file for better attention",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "d9edba4de4442f5e",
-      "rule_id": "content-negative-only",
-      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-ai-guide/references/REFERENCE-INDEX.md",
-      "line": 112,
-      "message": "Negative-only instruction without alternative: '2. \u274c Don't use brains or robots for AI features (robots only for chatbots)'",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "49d9250ebb452ab6",
-      "rule_id": "content-negative-only",
-      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-ai-guide/references/REFERENCE-INDEX.md",
-      "line": 134,
-      "message": "Negative-only instruction without alternative: '**Do not use gradients and color coding:**'",
-      "severity": "warning"
-    },
-    {
       "fingerprint": "fb697ca3ac739977",
       "rule_id": "content-placeholder-text",
       "file_path": "plugins/patternfly/pf-workshop/skills/pf-figma-diff/references/template-detailed-report.md",
@@ -417,68 +60,12 @@
       "severity": "warning"
     },
     {
-      "fingerprint": "fffa6fc495747154",
-      "rule_id": "content-weak-language",
-      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-evaluate/SKILL.md",
-      "line": 239,
-      "message": "Weak language (non-actionable): 'Note that' \u2014 Restructure \u2014 state the constraint directly",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "58b285fc917672ee",
-      "rule_id": "content-weak-language",
-      "file_path": "plugins/patternfly/pf-react/agents/pf-unit-test-standards.md",
-      "line": 31,
-      "message": "Weak language (vagueness): 'correctly' \u2014 Remove 'correctly' \u2014 describe what correct behavior looks like",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "26639bd507ee5a84",
-      "rule_id": "content-weak-language",
-      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/SKILL.md",
-      "line": 92,
-      "message": "Weak language (vagueness): 'correctly' \u2014 Remove 'correctly' \u2014 describe what correct behavior looks like",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "9e945e8650baeda2",
-      "rule_id": "content-weak-language",
-      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-figma-design-mode/SKILL.md",
-      "line": 90,
-      "message": "Weak language (hedging): 'where possible' \u2014 Remove 'where possible' \u2014 be specific about when",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "6d2e057d4727a088",
-      "rule_id": "content-weak-language",
-      "file_path": "plugins/patternfly/pf-workshop/agents/pf-voice-and-tone.md",
-      "line": 171,
-      "message": "Weak language (vagueness): 'correctly' \u2014 Remove 'correctly' \u2014 describe what correct behavior looks like",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "f0861cd9917b7996",
-      "rule_id": "content-weak-language",
-      "file_path": "plugins/patternfly/pf-workshop/skills/pf-create-issue/SKILL.md",
-      "line": 177,
-      "message": "Weak language (vagueness): 'gracefully' \u2014 Replace 'gracefully' with specific error handling behavior",
-      "severity": "warning"
-    },
-    {
-      "fingerprint": "52ca8945101009ee",
-      "rule_id": "content-weak-language",
-      "file_path": "plugins/patternfly/pf-workshop/skills/pf-summarize-jira-issues/SKILL.md",
-      "line": 73,
-      "message": "Weak language (non-actionable): 'Be aware' \u2014 Replace 'be aware' with an actionable instruction",
-      "severity": "warning"
-    },
-    {
       "fingerprint": "895e14a1f6d9b680",
       "rule_id": "context-budget",
       "file_path": "plugins/uxd-workshop/skills/uxd-research-heuristic-eval/SKILL.md",
-      "message": "Estimated 3,258 tokens exceeds skill warn limit of 3,000",
+      "message": "Estimated 3,459 tokens exceeds skill warn limit of 3,000",
       "severity": "warning",
-      "value": 3258,
+      "value": 3459,
       "baseline_mode": "ceiling"
     },
     {
@@ -494,9 +81,9 @@
       "fingerprint": "f04deba53e0b090c",
       "rule_id": "context-budget",
       "file_path": "plugins/patternfly/pf-react/agents/pf-unit-test-standards.md",
-      "message": "Estimated 3,272 tokens exceeds agent warn limit of 2,000",
+      "message": "Estimated 3,270 tokens exceeds agent warn limit of 2,000",
       "severity": "warning",
-      "value": 3272,
+      "value": 3270,
       "baseline_mode": "ceiling"
     },
     {
@@ -505,34 +92,34 @@
       "file_path": "plugins/patternfly/pf-design-audit/skills/pf-css-token-check/SKILL.md",
       "message": "Estimated 3,030 tokens exceeds skill warn limit of 3,000",
       "severity": "warning",
-      "value": 3030,
+      "value": 3003,
       "baseline_mode": "ceiling"
     },
     {
       "fingerprint": "1f37bb83e647b4ab",
       "rule_id": "context-budget",
       "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-token-check/SKILL.md",
-      "message": "Estimated 3,251 tokens exceeds skill warn limit of 3,000",
+      "message": "Estimated 3,249 tokens exceeds skill warn limit of 3,000",
       "severity": "warning",
-      "value": 3251,
+      "value": 3249,
       "baseline_mode": "ceiling"
     },
     {
       "fingerprint": "63473b4bfc99869b",
       "rule_id": "context-budget",
       "file_path": "plugins/patternfly/pf-workshop/agents/pf-voice-and-tone.md",
-      "message": "Estimated 2,461 tokens exceeds agent warn limit of 2,000",
+      "message": "Estimated 2,458 tokens exceeds agent warn limit of 2,000",
       "severity": "warning",
-      "value": 2461,
+      "value": 2458,
       "baseline_mode": "ceiling"
     },
     {
       "fingerprint": "a3e9ae6860929108",
       "rule_id": "context-budget",
       "file_path": "plugins/patternfly/pf-workshop/skills/pf-write-example-description/SKILL.md",
-      "message": "Estimated 4,378 tokens exceeds skill warn limit of 3,000",
+      "message": "Estimated 3,906 tokens exceeds skill warn limit of 3,000",
       "severity": "warning",
-      "value": 4378,
+      "value": 3906,
       "baseline_mode": "ceiling"
     }
   ]

@@ -105,7 +105,7 @@ Nav (context provider)
 1. **NavList is required** — items directly under Nav won't work
 2. **NavGroup creates its own NavList** — don't nest NavList inside NavGroup
 3. **NavItem cannot have both `to` and `flyout`** — will cause console errors
-4. **NavExpandable requires `title`** — won't render properly without it
+4. **NavExpandable requires `title`** — won't render without it
 
 ### Anti-pattern: NavItem directly under Nav
 

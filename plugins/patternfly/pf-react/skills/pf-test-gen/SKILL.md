@@ -89,7 +89,7 @@ Exception: don't mock when the parent-child interaction is the behavior being te
 2. Prop variations — each prop value produces expected output
 3. Custom className — merges with internal classes
 4. Spread props — extra props forwarded to root element
-5. Children — renders children correctly
+5. Children — renders provided children
 6. Callbacks — event handlers fire with correct arguments
 7. Conditional rendering — elements show/hide based on props
 8. Accessibility — ARIA roles, labels, keyboard interaction

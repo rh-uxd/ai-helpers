@@ -104,7 +104,7 @@ When suggesting token replacements, follow this priority order:
 Before searching PatternFly token files, check if the current file already has a matching token defined or imported.
 
 #### Step 2: Search PatternFly Token Files
-Look in `patternfly/base/tokens/` directory, in the node_modules/@patternfly/patternfly/base/tokens directory, or any additional tokens folder present in the users working directories:
+Look in `patternfly/base/tokens/` directory, in the node_modules/@patternfly/patternfly/base/tokens directory, or any additional tokens directory present in the users working directories:
 - `tokens-default.scss` - Default token definitions
 - `tokens-dark.scss` - Dark theme tokens
 - `tokens-felt.scss` - Felt token definitions
@@ -120,14 +120,14 @@ Look in `patternfly/base/tokens/` directory, in the node_modules/@patternfly/pat
 - Component-specific token files
 
 #### Step 2.5: Token Category Mapping
-When searching for tokens, use the appropriate token category based on the CSS property. PatternFly uses specific token naming patterns for different property types:
+When searching for tokens, use the appropriate token category based on the CSS property. PatternFly uses specific token naming patterns for different property types.
 
-**Spacing Properties** → Use `--spacer` tokens:
+##### Spacing → `--spacer` tokens
 - Properties: `padding`, `padding-*`, `margin`, `margin-*`, `gap`, `column-gap`, `row-gap`, `inset`, `inset-*`, `top`, `right`, `bottom`, `left`, `outline-offset`
 - Token pattern: `--pf-t--global--spacer--{size}` or `--pf-v6-c-{component}--{property}` referencing spacer tokens
 - Examples: `--pf-t--global--spacer--md`, `--pf-t--global--spacer--lg`, `--pf-v6-c-button--PaddingInline`
 
-**Text/Typography Properties** → Use `--text` or `--font` tokens:
+##### Text/Typography → `--text` / `--font` tokens
 - Properties: `font-size`, `font-weight`, `line-height`, `letter-spacing`, `font-family`
 - Token patterns:
   - Font size: `--pf-t--global--font--size--{scale}`
@@ -136,17 +136,17 @@ When searching for tokens, use the appropriate token category based on the CSS p
   - Font family: `--pf-t--global--font--family--{type}`
 - Examples: `--pf-t--global--font--size--body--default`, `--pf-t--global--font--weight--bold`
 
-**Motion/Animation Properties** → Use `--motion` tokens:
+##### Motion/Animation → `--motion` tokens
 - Properties: `animation`, `animation-duration`, `animation-timing-function`, `transition`, `transition-duration`, `transition-timing-function`, `transform`
 - Token pattern: `--pf-t--global--motion--{property}`
 - Examples: `--pf-t--global--motion--duration--default`, `--pf-t--global--motion--timing-function--ease-in`
 
-**Icon Properties** → Use `--icon` tokens:
+##### Icon → `--icon` tokens
 - Properties: `width`, `height` (when applied to icon elements), `font-size` (for icon fonts)
 - Token pattern: `--pf-t--global--icon--size--{scale}` or `--pf-v6-c-{component}__icon--FontSize`
 - Examples: `--pf-t--global--icon--size--md`, `--pf-v6-c-button__icon--FontSize`
 
-**Color Properties** → Use `--color` tokens:
+##### Color → `--color` tokens
 - Properties: `color`, `background-color`, `border-color`, `fill`, `stroke`, `outline-color`
 - Token patterns:
   - Palette: `--pf-t--color--{color}--{shade}`
@@ -154,24 +154,25 @@ When searching for tokens, use the appropriate token category based on the CSS p
   - Semantic: `--pf-v6-c-{component}--{property}`
 - Examples: `--pf-t--global--color--brand--default`, `--pf-v6-c-button--BackgroundColor`
 
-**Border/Shape Properties** → Use `--border` tokens:
+##### Border/Shape → `--border` tokens
 - Properties: `border-width`, `border-radius`, `border-style`
 - Token patterns:
   - Border width: `--pf-t--global--border--width--{scale}`
   - Border radius: `--pf-t--global--border--radius--{scale}`
 - Examples: `--pf-t--global--border--width--default`, `--pf-t--global--border--radius--medium`
 
-**Shadow Properties** → Use `--shadow` or `--box-shadow` tokens:
+##### Shadow → `--shadow` / `--box-shadow` tokens
 - Properties: `box-shadow`, `text-shadow`
 - Token pattern: `--pf-t--global--shadow--{scale}` or `--pf-v6-c-{component}--BoxShadow`
 - Examples: `--pf-t--global--shadow--sm`, `--pf-v6-c-card--BoxShadow`
 
-**Z-index Properties** → Use `--z-index` tokens:
+##### Z-index → `--z-index` tokens
 - Properties: `z-index`
 - Token pattern: `--pf-t--global--z-index--{layer}`
 - Examples: `--pf-t--global--z-index--modal`, `--pf-t--global--z-index--tooltip`
 
-**Important:** When recommending tokens, always use the category-appropriate token type. For example:
+##### Category matching rules
+When recommending tokens, always use the category-appropriate token type:
 - ❌ Don't suggest a generic spacing value for padding
 - ✅ Do suggest a `--spacer` token for padding
 - ❌ Don't suggest a color token for animation timing

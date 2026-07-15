@@ -168,7 +168,7 @@ Within each section:
 - [ ] No "click here," "learn more," or "read more" — descriptive link text only
 - [ ] First word of UI labels is meaningful — not "a," "the," or "for"
 - [ ] Heading levels not skipped (h2 → h3, not h2 → h4)
-- [ ] Emphasis used correctly: bold sparingly, underlines = links only, no all-caps for emphasis
+- [ ] Emphasis rules: bold sparingly, underlines = links only, no all-caps for emphasis
 - [ ] No exclamation marks except genuine excitement, and brief
 - [ ] Instructions lead with the benefit ("To [goal], [action]")
 - [ ] Oxford comma
