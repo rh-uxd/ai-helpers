@@ -16,7 +16,7 @@ If the RFE describes backend/API work with no UI component:
 
 1. Ask: "This looks like an API-only ticket. Should I prototype the UI that would consume this API?"
 2. If yes, infer the UI from the API shape (CRUD operations → list/detail/create screens)
-3. If no, stop gracefully
+3. If no, stop and tell the user no UI prototype will be created because the ticket is API-only
 
 ## Multiple Composing RFEs
 
