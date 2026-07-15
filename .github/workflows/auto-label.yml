@@ -3,6 +3,14 @@ name: Auto-Label PRs
 on:
   pull_request:
     types: [opened, reopened, synchronize]
+    paths:
+      - 'plugins/**'
+      - 'scripts/**'
+      - 'CONTRIBUTING*'
+      - 'GOVERNANCE*'
+      - 'MIGRATION*'
+      - 'SETUP*'
+      - 'CLAUDE*'
 
 permissions:
   issues: write
