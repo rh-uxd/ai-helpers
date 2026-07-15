@@ -43,8 +43,12 @@ resolve_release_candidate() {
     return 0
   fi
 
-  version=$(npm view "$pkg" versions --json 2>/dev/null | node -e "
+  version=$( { npm view "$pkg" versions --json 2>/dev/null || echo '[]'; } | node -e "
     const versions = JSON.parse(require('fs').readFileSync(0, 'utf8'));
+    if (!Array.isArray(versions) || versions.length === 0) {
+      process.stderr.write('warning: no versions found for ${pkg}\n');
+      process.exit(0);
+    }
     const candidates = versions.filter((v) => v.includes('-'));
     if (candidates.length === 0) {
       process.stderr.write('warning: no release candidate found for ${pkg}; using latest stable\n');
@@ -94,7 +98,14 @@ update_package_json() {
     const fs = require('fs');
     const path = process.argv[1];
     const versions = JSON.parse(process.argv[2]);
-    const pkg = JSON.parse(fs.readFileSync(path, 'utf8'));
+    const raw = fs.readFileSync(path, 'utf8');
+    const pkg = JSON.parse(raw);
+
+    let indent = 2;
+    const indentMatch = raw.match(/\n([ \t]+)\"/);
+    if (indentMatch) {
+      indent = indentMatch[1].includes('\t') ? '\t' : indentMatch[1].length;
+    }
 
     const sections = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];
     let updated = 0;
@@ -119,7 +130,7 @@ update_package_json() {
       }
     }
 
-    fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + '\n');
+    fs.writeFileSync(path, JSON.stringify(pkg, null, indent) + '\n');
     console.log('Updated ' + updated + ' PatternFly entries in ' + path);
   " "$file" "$versions_json"
 }

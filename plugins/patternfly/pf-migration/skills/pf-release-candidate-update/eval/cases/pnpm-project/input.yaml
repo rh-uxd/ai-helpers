@@ -1,0 +1,2 @@
+prompt: "Bump all PatternFly packages in this project to the latest release candidates."
+fixture: package.json

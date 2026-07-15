@@ -26,7 +26,7 @@ command -v node >/dev/null 2>&1 || { echo "Error: This skill requires Node.js." 
 
 ## Workflow checklist
 
-```
+```text
 - [ ] Step 1: Resolve latest release candidate versions
 - [ ] Step 2: Update package.json
 - [ ] Step 3: Install dependencies
@@ -127,7 +127,7 @@ When build or tests fail after the upgrade, fix the project code — do not pin 
 
 ### Fix loop
 
-```
+```text
 build → fail? → fix → build
 test  → fail? → fix → test
 ```
