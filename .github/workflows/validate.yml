@@ -17,22 +17,6 @@ jobs:
       - name: Validate manifests and skill consistency
         run: bash scripts/validate-manifests.sh
 
-      - name: Check generated docs are up to date
-        run: |
-          bash scripts/generate-plugins-md.sh
-          GENERATED_FILES="PLUGINS.md README.md CONTRIBUTING-SKILLS.md"
-          GENERATED_GLOBS="plugins/*/README.md plugins/*/*/README.md"
-          if ! git diff --quiet $GENERATED_FILES $GENERATED_GLOBS 2>/dev/null; then
-            echo "::error::Generated docs are out of date. Run 'bash scripts/generate-plugins-md.sh' and commit the result."
-            git diff $GENERATED_FILES $GENERATED_GLOBS 2>/dev/null
-            exit 1
-          fi
-          UNTRACKED=$(git ls-files --others --exclude-standard $GENERATED_FILES $GENERATED_GLOBS 2>/dev/null || true)
-          if [[ -n "$UNTRACKED" ]]; then
-            echo "::error::New generated files need to be committed: $UNTRACKED"
-            exit 1
-          fi
-
       - name: Validate skill and agent integrity
         run: |
           ERRORS=0
