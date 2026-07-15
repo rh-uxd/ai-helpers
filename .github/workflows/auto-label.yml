@@ -1,7 +1,7 @@
 name: Auto-Label PRs
 
 on:
-  pull_request:
+  pull_request_target:
     types: [opened, reopened, synchronize]
     paths:
       - 'plugins/**'
@@ -18,11 +18,8 @@ permissions:
 
 jobs:
   label:
-    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
       - name: Apply labels based on changed paths
         uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
         with:
@@ -59,17 +56,9 @@ jobs:
 
             if (labels.size === 0) return;
 
-            try {
-              await github.rest.issues.addLabels({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: context.issue.number,
-                labels: [...labels],
-              });
-            } catch (err) {
-              if (err.status === 403) {
-                core.info('Skipping labels — insufficient permissions (expected for fork PRs)');
-                return;
-              }
-              throw err;
-            }
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [...labels],
+            });
