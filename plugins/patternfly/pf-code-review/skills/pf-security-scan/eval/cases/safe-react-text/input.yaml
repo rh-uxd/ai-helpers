@@ -1,0 +1,2 @@
+prompt: "Scan this component for PatternFly security anti-patterns."
+fixture: SafeLabels.tsx

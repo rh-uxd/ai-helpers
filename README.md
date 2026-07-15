@@ -45,6 +45,7 @@ Add this repo as a third-party plugin source in Cursor's settings.
 <tr><th>Plugin</th><th>Description</th></tr>
 <tr><td nowrap><b>patternfly</b></td><td>Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs</td></tr>
 <tr><td nowrap><b>uxd-workshop</b></td><td>UXD team tools and skill incubator — prototyping, research, design review, team workflows</td></tr>
+<tr><td nowrap><b>pf-code-review</b></td><td>Code review and quality — adversarial review, security patterns</td></tr>
 <tr><td nowrap><b>pf-design-audit</b></td><td>Design audit — validate existing code and designs against PatternFly standards</td></tr>
 <tr><td nowrap><b>pf-design-guide</b></td><td>Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation</td></tr>
 <tr><td nowrap><b>pf-migration</b></td><td>PF version migration — breaking change detection, class scanning, upgrade planning</td></tr>

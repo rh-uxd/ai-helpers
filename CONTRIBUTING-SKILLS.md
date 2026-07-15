@@ -96,6 +96,7 @@ Plugin names must tell a user exactly what the plugin helps them do. A user brow
 **Good names** describe the capability:
 - `patternfly` — Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
 - `uxd-workshop` — UXD team tools and skill incubator — prototyping, research, design review, team workflows
+- `pf-code-review` — Code review and quality — adversarial review, security patterns
 - `pf-design-audit` — Design audit — validate existing code and designs against PatternFly standards
 - `pf-design-guide` — Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation
 - `pf-mcp` — PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol

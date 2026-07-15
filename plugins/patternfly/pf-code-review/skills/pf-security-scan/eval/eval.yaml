@@ -1,0 +1,97 @@
+name: pf-security-scan-eval
+description: Evaluate pf-security-scan's detection of PF-specific XSS and insecure URL patterns
+
+skill: code-review:pf-security-scan
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: expect_violations (true/false) and violation_type for conditional judges
+    - A .tsx fixture file the prompt references
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces a text report listing security findings with
+      file name, line number, severity, risk description, and fix guidance.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: flags_xss_risk
+    description: Identifies dangerouslySetInnerHTML or unsanitized user content in PF components
+    if: "annotations.get('expect_violations') == True and annotations.get('violation_type') == 'xss'"
+    check: |
+      text = outputs.get("conversation", "")
+      text_lower = text.lower()
+      xss_signals = [
+          "dangerouslysetinnerhtml", "xss", "unsanitized", "sanitize",
+          "dompurify", "__html", "tooltip", "popover"
+      ]
+      found = [s for s in xss_signals if s in text_lower]
+      if not found:
+          return False, "Did not identify XSS or unsanitized content risk"
+      return True, f"Identified XSS-related findings: {found}"
+
+  - name: flags_insecure_href
+    description: Identifies unvalidated or javascript: href patterns in PF link components
+    if: "annotations.get('expect_violations') == True and annotations.get('violation_type') == 'href'"
+    check: |
+      text = outputs.get("conversation", "")
+      text_lower = text.lower()
+      href_signals = [
+          "javascript:", "open redirect", "href", "unvalidated",
+          "searchparams", "redirect", "url validation", "allowlist"
+      ]
+      found = [s for s in href_signals if s in text_lower]
+      if not found:
+          return False, "Did not identify insecure href or redirect risk"
+      return True, f"Identified href-related findings: {found}"
+
+  - name: no_false_positives
+    description: Does not flag safe React text children as security violations
+    if: "annotations.get('expect_violations') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      false_positive = re.compile(
+          r'(critical|high|warn|violation|xss|unsanitized|javascript:).*'
+          r'(userdisplayname|trustedurl|rel="noopener)',
+          re.IGNORECASE
+      )
+      if false_positive.search(text):
+          return False, "False positive — flagged safe patterns as security violations"
+      critical_count = re.search(r'critical:\s*[1-9]', text, re.IGNORECASE)
+      if critical_count:
+          return False, "False positive — reported critical findings for safe code"
+      return True, "No false positives for safe PF patterns"
+
+thresholds:
+  flags_xss_risk:
+    min_pass_rate: 1.0
+  flags_insecure_href:
+    min_pass_rate: 1.0
+  no_false_positives:
+    min_pass_rate: 1.0

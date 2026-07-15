@@ -1,0 +1,2 @@
+prompt: "Review this component for insecure href patterns and open-redirect risks in PatternFly link components."
+fixture: RedirectMenu.tsx

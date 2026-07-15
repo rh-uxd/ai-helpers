@@ -6,6 +6,7 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 
 - [patternfly](#patternfly) — Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
 - [uxd-workshop](#uxd-workshop) — UXD team tools and skill incubator — prototyping, research, design review, team workflows
+- [pf-code-review](#pf-code-review) — Code review and quality — adversarial review, security patterns
 - [pf-design-audit](#pf-design-audit) — Design audit — validate existing code and designs against PatternFly standards
 - [pf-design-guide](#pf-design-guide) — Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation
 - [pf-mcp](#pf-mcp) — PatternFly MCP server — provides component documentation, design token lookup, and accessibility guidance via the Model Context Protocol
@@ -44,6 +45,18 @@ UXD team tools and skill incubator — prototyping, research, design review, tea
 <table>
 <tr><th>Agent</th><th>Description</th></tr>
 <tr><td nowrap><code>uxd-assist</code></td><td>UXD workflow routing — maps design review, research, prototyping, and evaluation needs to the right UXD sub-skills.</td></tr>
+</table>
+
+
+<br>
+
+### pf-code-review
+
+Code review and quality — adversarial review, security patterns
+
+<table>
+<tr><th>Skill</th><th>Description</th></tr>
+<tr><td nowrap><code>pf-security-scan</code></td><td>Scan PatternFly React code for security anti-patterns — XSS via dangerouslySetInnerHTML, unsanitized user input in tooltips/labels, and insecure href patterns.</td></tr>
 </table>
 
 
