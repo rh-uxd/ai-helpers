@@ -1,0 +1,7 @@
+prompt: >-
+  Using the uxd-prototype-publish skill, attempt to publish prototype DEMO
+  with --target public (no --force). The fixture tree is under
+  .artifacts/DEMO/ in this case directory (includes reviews/summary.md with a
+  Usability score of 0). Follow the skill's score gating. Do not actually push
+  or deploy.
+fixture: .artifacts/DEMO
