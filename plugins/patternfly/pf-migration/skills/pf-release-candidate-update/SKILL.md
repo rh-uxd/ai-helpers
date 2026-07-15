@@ -8,7 +8,7 @@ disable-model-invocation: true
 
 # PatternFly Release Candidate Update
 
-Update a consumer project's `package.json` to the latest PatternFly release candidates on npm, install dependencies, verify the project builds and tests pass, and fix any failures introduced by the upgrade.
+Update a consumer project's `package.json` to the latest PatternFly release candidates (e.g. patternfly, patternfly-react, etc.) on npm, install dependencies, verify the project builds and tests pass, and fix any failures introduced by the upgrade.
 
 ## Requirements
 
