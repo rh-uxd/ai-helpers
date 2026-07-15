@@ -1,0 +1,5 @@
+<!-- Simulated get_metadata response for a Figma page with two top-level frames -->
+<canvas id="0:1" name="Option A" x="0" y="0" width="2400" height="1200">
+  <frame id="16:1047" name="Settings - Default" x="0" y="0" width="1440" height="1024" />
+  <frame id="16:1048" name="Settings - Empty state" x="1600" y="0" width="1440" height="1024" />
+</canvas>
