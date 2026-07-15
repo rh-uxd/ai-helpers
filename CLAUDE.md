@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to AI coding agents working with this repository.
+This file provides guidance to AI coding agents working with this repo.
 
 ## Overview
 

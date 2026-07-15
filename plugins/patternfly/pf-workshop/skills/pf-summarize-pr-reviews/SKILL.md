@@ -94,7 +94,7 @@ For each priority PR, provide a detail block:
 
 ### Standard Reviews
 
-Remaining PRs in suggested review order. Table with PR number, repository, author, size, wait time, and notes. Detail blocks for each.
+Remaining PRs in suggested review order. Table with PR number, repo, author, size, wait time, and notes. Detail blocks for each.
 
 ### Quick Reviews (Small PRs)
 

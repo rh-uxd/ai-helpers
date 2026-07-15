@@ -11,7 +11,7 @@ Use the PatternFly MCP server as the primary source for up-to-date component API
 
 ## Recommended starting point
 
-Use the official PatternFly React seed repository first when possible.
+Use the official PatternFly React seed repo first when possible.
 
 ```bash
 git clone https://github.com/patternfly/patternfly-react-seed

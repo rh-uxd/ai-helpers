@@ -164,7 +164,7 @@ The Figma REST API has tiered rate limits:
 | Tier 2 | Comments, versions | Moderate |
 | Tier 3 | Metadata, components | Least restrictive |
 
-Batch node IDs into single requests where possible (comma-separated in `ids` param) rather than making one request per node.
+Batch node IDs into single requests (comma-separated in `ids` param) rather than making one request per node.
 
 ## Tips
 

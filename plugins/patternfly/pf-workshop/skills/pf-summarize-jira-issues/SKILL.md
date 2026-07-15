@@ -70,7 +70,7 @@ For issues where user is a contributor:
 | Category | Criteria | Action |
 |----------|----------|--------|
 | 👥 **Active Contributions** | In Progress items you're helping with | May need your input |
-| 📋 **Pending Contributions** | To Do items you'll contribute to | Be aware of upcoming work |
+| 📋 **Pending Contributions** | To Do items you'll contribute to | Plan for upcoming work |
 
 ### Backlog (Brief)
 

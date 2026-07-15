@@ -87,6 +87,6 @@ Use this skill when a request includes one or more of the following:
 ## Guardrails
 
 - Reuse approved library assets first; avoid duplicate ad-hoc components.
-- Bind variables/tokens where possible (color, type, spacing, radius).
+- Bind variables/tokens for color, type, spacing, and radius.
 - Keep names semantic and stable for handoff (frames, components, variants).
 - If requirements are ambiguous, ask a focused clarification question before making large edits.

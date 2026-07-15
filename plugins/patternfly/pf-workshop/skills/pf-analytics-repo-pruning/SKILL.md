@@ -9,7 +9,7 @@ Keep PatternFly Analytics from tracking **archived** repositories and repos with
 
 ## Plugin placement
 
-This skill lives under **pf-workshop** as **cross-repo / analytics inventory** work (repository health and maintenance).
+This skill lives under **pf-workshop** as **cross-repo / analytics inventory** work (repo health and maintenance).
 
 ## Input
 

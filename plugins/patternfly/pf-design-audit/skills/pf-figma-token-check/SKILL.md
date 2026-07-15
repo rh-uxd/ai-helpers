@@ -71,7 +71,7 @@ When Figma outputs individual shadow or glass properties, recommend the single c
 Sibling properties (background, border, text, icon) on the same element should share the same context. If a context-specific token does not yet exist in CSS, flag as ESCALATION RECOMMENDED. See pairing table in [token-reference.md](token-reference.md#contextual-token-pairing).
 
 #### Rule 7 — Figma-to-Code Drift Detection
-When a Figma variable value differs from its CSS token value, do NOT treat as an error. Figma is the upstream source of truth. Flag as **SYNC REQUIRED** and report both values.
+When a Figma variable value differs from its CSS token value, do NOT treat as an error. Figma is the upstream source of truth. Flag as **SYNC NEEDED** and report both values.
 
 #### Rule 8 — Unbound Figma Properties
 Hardcoded values not backed by a Figma variable need fixing in the Figma file. Only suggest semantic tokens as replacements — never base/numbered tokens. If no semantic token exists, state that explicitly and provide the closest matches.
@@ -89,7 +89,7 @@ When the design represents a known PatternFly component, compare the Figma token
 
 **Each finding should make clear:**
 
-- **Status** — One of: VALIDATED, COMPOSITE FOUND, CONTEXT MISMATCH, IMPLEMENTATION DRIFT, SYNC REQUIRED, FIGMA FIX NEEDED, ESCALATION RECOMMENDED.
+- **Status** — One of: VALIDATED, COMPOSITE FOUND, CONTEXT MISMATCH, IMPLEMENTATION DRIFT, SYNC NEEDED, FIGMA FIX NEEDED, ESCALATION RECOMMENDED.
 - **Where** — Layer name, node id(s), and an **Open in Figma** deep link to the **innermost** relevant node when the source is Figma ([link format](#figma-deep-links)).
 - **What & why** — Property, current vs recommended mapping, short reason, and quoted or cited token **descriptions** when they carry the argument.
 - **Visual grounding (issues)** — For non-passing Figma findings, include something that shows the problem (e.g. a crop or screenshot of that node)—enough that the issue is recognizable without opening the file.
@@ -132,7 +132,7 @@ Use `https://www.figma.com/design/{fileKey}/{fileSlug}?node-id={idWithHyphens}` 
 | FIGMA FIX NEEDED | Hardcoded value → recommended variable binding |
 | CONTEXT MISMATCH | Property rebound to the correct semantic context |
 | COMPOSITE FOUND | Primitives replaced by the composite token / variable |
-| SYNC REQUIRED | Variable value aligned with the agreed source of truth |
+| SYNC NEEDED | Variable value aligned with the agreed source of truth |
 
 VALIDATED, IMPLEMENTATION DRIFT, and ESCALATION RECOMMENDED are **out of scope** for file writes unless the user explicitly asks otherwise.
 

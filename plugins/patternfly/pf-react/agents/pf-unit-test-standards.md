@@ -28,7 +28,7 @@ Testing standards and patterns for PatternFly React components based on official
 - API calls and async operations
 
 **Don't test PatternFly internals:**
-- That a `<Button>` renders correctly
+- That a `<Button>` renders
 - That a `<Card>` has the right structure
 - PatternFly component styling or CSS classes
 

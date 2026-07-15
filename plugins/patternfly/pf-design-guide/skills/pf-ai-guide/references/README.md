@@ -1,6 +1,6 @@
 # AI Experience Pattern References
 
-This folder contains reference materials for building AI-powered experiences that follow Red Hat's official design language.
+This directory contains reference materials for building AI-powered experiences that follow Red Hat's official design language.
 
 ## Contents
 

@@ -174,5 +174,7 @@ When searching for duplicates or analyzing followup work, consider these depende
 - Pre-fill what you can from context
 - Filter followup changes to only what needs action in target repo
 - Search broadly for duplicates (component relationships, synonyms)
-- Fall back gracefully when gh CLI unavailable
+- Fall back to manual instructions when gh CLI is unavailable
 - Support both markdown and YAML templates
+
+See [EXAMPLE.md](EXAMPLE.md) for end-to-end usage examples.

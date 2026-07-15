@@ -47,7 +47,7 @@ Determine which scenario matches:
 
 **Fix:**
 - If the release was published: Merge the commits from that release into your release branch.
-- If no published release: Delete the conflicting tag locally and from the remote repository.
+- If no published release: Delete the conflicting tag locally and from the remote repo.
 
 ## 5. History Rewrite Recovery (after `git push --force`)
 
@@ -56,10 +56,10 @@ Determine which scenario matches:
 **Diagnosis:** Identify orphaned tags and notes that point to old (rewritten) commits.
 
 **Fix:** Recover in this order:
-1. Delete orphaned tags from both remote and local repositories
+1. Delete orphaned tags from both remote and local repos
 2. Re-create tags pointing to the corresponding new commits
 3. Re-create git notes for each tag with appropriate channel configuration (e.g., `{"channels":["beta"]}` for beta channel only, or `{"channels":[null,"beta"]}` for both default and beta channels)
-4. Force push the updated notes to the remote repository
+4. Force push the updated notes to the remote repo
 
 ## Reference
 

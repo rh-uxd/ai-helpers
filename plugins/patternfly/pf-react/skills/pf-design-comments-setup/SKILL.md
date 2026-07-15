@@ -22,7 +22,7 @@ Confirm before installing:
 - `src/app/` layout similar to [PatternFly React Seed](https://github.com/patternfly/patternfly-react-seed)
 - Peer deps present or installable: `@patternfly/react-core`, `@patternfly/react-icons`, `react-router-dom` v7
 
-If the project uses Vite, Create React App, or a different folder layout, warn the user that `npx design-comments init` may fail or need manual integration. Offer to scaffold with `pf-project-gen` first when starting from scratch.
+If the project uses Vite, Create React App, or a different directory layout, warn the user that `npx design-comments init` may fail or need manual integration. Offer to scaffold with `pf-project-gen` first when starting from scratch.
 
 ## Install workflow
 
@@ -30,7 +30,7 @@ If the project uses Vite, Create React App, or a different folder layout, warn t
 
 1. Read `package.json` for React, PatternFly, and router versions.
 2. Confirm `src/app/index.tsx`, `src/app/routes.tsx`, and `src/app/AppLayout/AppLayout.tsx` exist (or note gaps).
-3. Confirm `webpack.dev.js` exists at the project root or under a config folder the dev script uses.
+3. Confirm `webpack.dev.js` exists at the project root or under a config directory the dev script uses.
 
 ### Step 2: Install the package
 

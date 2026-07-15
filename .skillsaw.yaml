@@ -12,6 +12,15 @@
 version: "0.16.0"
 
 rules:
+  # Git SHA versioning — no version field in plugin.json by design.
+  # Only warn on missing name/description, not version.
+  plugin-json-valid:
+    enabled: auto
+    severity: error
+    recommended-fields:
+      - name
+      - description
+
   # Eval files live alongside skills but aren't referenced from SKILL.md — by design.
   # Without this exclude, every eval file triggers an unreferenced-files warning.
   agentskill-unreferenced-files:

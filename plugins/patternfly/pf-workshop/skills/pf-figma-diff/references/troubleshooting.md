@@ -259,7 +259,7 @@ gh search issues "Button" --repo=patternfly/patternfly-react --state=all
 
 **Solutions**:
 ```bash
-# 1. Verify you're in correct repository
+# 1. Verify you're in correct repo
 pwd
 # Should be in patternfly-react or similar
 

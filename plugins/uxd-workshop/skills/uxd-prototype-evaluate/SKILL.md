@@ -55,6 +55,8 @@ If the user asks to evaluate without specifying a depth or flags:
 
 # Rubric Review
 
+Score each dimension using the rubric definitions in [references/ux-rubric.yaml](references/ux-rubric.yaml).
+
 ## Step 1: Load the Prototype and RFE
 
 **Workspace mode:** Read `changeset.md` for modified files, `workspace-analysis.json` for context, all prototype files, and the RFE source.
@@ -236,7 +238,7 @@ Aggregates all prototype reviews into a single dashboard.
 | No user stories in RFE | Infer from problem description. Note inference. |
 | Many screens (10+) | Group into flows, evaluate representative samples. |
 | Happy path only | Flag in Completeness. Create edge-case scenarios anyway. |
-| No research context | Use default personas. Note that live research should validate. |
+| No research context | Use default personas. Live research should validate. |
 | Purely functional (no styling) | Skip full evaluation. Focus usability on flow and IA. |
 
 ---
