@@ -151,7 +151,7 @@ PatternFly team tools and skill incubation — issue triage, release management,
 <tr><td nowrap><code>pf-semantic-release-debug</code></td><td>Diagnose and fix semantic-release issues when a specific version is not being released.</td></tr>
 <tr><td nowrap><code>pf-summarize-jira-issues</code></td><td>Summarize your current sprint workload from Jira — assigned issues, contributor roles, and priorities.</td></tr>
 <tr><td nowrap><code>pf-summarize-pr-reviews</code></td><td>Summarize GitHub pull requests awaiting your review with status, age, and priority.</td></tr>
-<tr><td nowrap><code>pf-token-build</code></td><td>Build CSS design tokens for PatternFly core and copy them to the PatternFly repository.</td></tr>
+<tr><td nowrap><code>pf-token-build</code></td><td>Build CSS design tokens for PatternFly core and copy them to the PatternFly repo.</td></tr>
 <tr><td nowrap><code>pf-write-example-description</code></td><td>Write and refine example descriptions for PatternFly.org component and demo pages.</td></tr>
 </table>
 
