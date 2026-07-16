@@ -1,0 +1,49 @@
+name: Collect Adoption Metrics
+
+on:
+  schedule:
+    - cron: '17 8 * * 1'  # Weekly on Monday at 8:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Collect metrics
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO="${{ github.repository }}"
+          DATE=$(date -u +%Y-%m-%d)
+
+          STARS=$(gh api "repos/${REPO}" --jq '.stargazers_count')
+          FORKS=$(gh api "repos/${REPO}" --jq '.forks_count')
+
+          CLONES=$(gh api "repos/${REPO}/traffic/clones" --jq '.count // 0' 2>/dev/null || echo 0)
+          VISITORS=$(gh api "repos/${REPO}/traffic/views" --jq '.uniques // 0' 2>/dev/null || echo 0)
+
+          EXTERNAL_ISSUES=$(gh api "search/issues?q=repo:${REPO}+is:issue+is:open+-author:jpuzzo+-author:dlabaj+-author:mcoker+-author:jakebrownscombe" --jq '.total_count // 0' 2>/dev/null || echo 0)
+          EXTERNAL_PRS=$(gh api "search/issues?q=repo:${REPO}+is:pr+-author:jpuzzo+-author:dlabaj+-author:mcoker+-author:jakebrownscombe" --jq '.total_count // 0' 2>/dev/null || echo 0)
+
+          PLUGINS=$(find plugins -name 'plugin.json' -path '*/.claude-plugin/*' | wc -l | tr -d ' ')
+          SKILLS=$(find plugins -name 'SKILL.md' | wc -l | tr -d ' ')
+          AGENTS=$(find plugins -path '*/agents/*.md' -not -path '*/agents/*/*.md' | wc -l | tr -d ' ')
+
+          echo "${DATE},${STARS},${FORKS},${CLONES},${VISITORS},${EXTERNAL_ISSUES},${EXTERNAL_PRS},${PLUGINS},${SKILLS},${AGENTS}" >> metrics/adoption-metrics.csv
+
+      - name: Commit updated metrics
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add metrics/adoption-metrics.csv
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore: collect weekly adoption metrics"
+            git push
+          fi

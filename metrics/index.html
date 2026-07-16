@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Skills Marketplace — Adoption Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #333; padding: 24px; }
+    h1 { font-size: 1.5rem; margin-bottom: 4px; }
+    .subtitle { color: #666; font-size: 0.875rem; margin-bottom: 24px; }
+    .stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 24px; }
+    .stat { background: #fff; border-radius: 8px; padding: 16px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-width: 120px; }
+    .stat-value { font-size: 2rem; font-weight: 700; }
+    .stat-label { font-size: 0.75rem; color: #666; text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-delta { font-size: 0.75rem; margin-top: 2px; }
+    .stat-delta.positive { color: #16a34a; }
+    .stat-delta.negative { color: #dc2626; }
+    .stat-delta.neutral { color: #666; }
+    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+    .chart-card { background: #fff; border-radius: 8px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+    .chart-card h2 { font-size: 0.875rem; color: #666; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+    canvas { width: 100% !important; }
+    .footer { color: #999; font-size: 0.75rem; text-align: center; margin-top: 24px; }
+    .empty-state { text-align: center; padding: 80px 24px; color: #666; }
+    .empty-state h2 { margin-bottom: 8px; }
+    @media (max-width: 768px) { .charts { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <h1>AI Skills Marketplace</h1>
+  <p class="subtitle">Adoption Dashboard — <span id="repo-name">rh-uxd/ai-helpers</span></p>
+
+  <div id="content" style="display:none">
+    <div class="stats" id="stats"></div>
+    <div class="charts">
+      <div class="chart-card">
+        <h2>Growth</h2>
+        <canvas id="growth-chart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h2>Weekly Interest</h2>
+        <canvas id="interest-chart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h2>Engagement</h2>
+        <canvas id="engagement-chart"></canvas>
+      </div>
+      <div class="chart-card">
+        <h2>Portfolio</h2>
+        <canvas id="portfolio-chart"></canvas>
+      </div>
+    </div>
+    <p class="footer">Updated <span id="last-updated"></span> — data collected weekly by GitHub Actions</p>
+  </div>
+
+  <div id="empty-state" class="empty-state" style="display:none">
+    <h2>No data yet</h2>
+    <p>Metrics will appear after the first weekly collection run.</p>
+    <p>Trigger manually: Actions &rarr; Collect Adoption Metrics &rarr; Run workflow</p>
+  </div>
+
+  <script>
+    const CSV_PATH = 'adoption-metrics.csv';
+
+    async function loadCSV() {
+      const resp = await fetch(CSV_PATH);
+      const text = await resp.text();
+      const lines = text.trim().split('\n');
+      if (lines.length < 2) return null;
+
+      const headers = lines[0].split(',');
+      const rows = lines.slice(1).map(line => {
+        const vals = line.split(',');
+        const obj = {};
+        headers.forEach((h, i) => { obj[h.trim()] = vals[i]?.trim(); });
+        return obj;
+      });
+      return rows;
+    }
+
+    function delta(current, previous) {
+      const diff = current - previous;
+      if (diff > 0) return { text: `+${diff}`, cls: 'positive' };
+      if (diff < 0) return { text: `${diff}`, cls: 'negative' };
+      return { text: '—', cls: 'neutral' };
+    }
+
+    function renderStats(rows) {
+      const latest = rows[rows.length - 1];
+      const prev = rows.length > 1 ? rows[rows.length - 2] : latest;
+      const container = document.getElementById('stats');
+
+      const metrics = [
+        { label: 'Stars', value: latest.stars, prev: prev.stars },
+        { label: 'Forks', value: latest.forks, prev: prev.forks },
+        { label: 'Plugins', value: latest.plugins, prev: prev.plugins },
+        { label: 'Skills', value: latest.skills, prev: prev.skills },
+        { label: 'Agents', value: latest.agents, prev: prev.agents },
+        { label: 'Clones (14d)', value: latest.clones_14d, prev: prev.clones_14d },
+        { label: 'Visitors (14d)', value: latest.unique_visitors_14d, prev: prev.unique_visitors_14d },
+      ];
+
+      metrics.forEach(m => {
+        const d = delta(parseInt(m.value), parseInt(m.prev));
+        const div = document.createElement('div');
+        div.className = 'stat';
+        div.innerHTML = `
+          <div class="stat-value">${parseInt(m.value).toLocaleString()}</div>
+          <div class="stat-label">${m.label}</div>
+          <div class="stat-delta ${d.cls}">${d.text} from last week</div>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById('last-updated').textContent = latest.date;
+    }
+
+    function chartDefaults() {
+      return {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } },
+        scales: { y: { beginAtZero: true } },
+      };
+    }
+
+    function renderCharts(rows) {
+      const labels = rows.map(r => r.date);
+
+      new Chart(document.getElementById('growth-chart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Stars', data: rows.map(r => parseInt(r.stars)), borderColor: '#f59e0b', tension: 0.3 },
+            { label: 'Forks', data: rows.map(r => parseInt(r.forks)), borderColor: '#6366f1', tension: 0.3 },
+          ],
+        },
+        options: chartDefaults(),
+      });
+
+      new Chart(document.getElementById('interest-chart'), {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [
+            { label: 'Clones (14d)', data: rows.map(r => parseInt(r.clones_14d)), backgroundColor: '#3b82f6' },
+            { label: 'Visitors (14d)', data: rows.map(r => parseInt(r.unique_visitors_14d)), backgroundColor: '#93c5fd' },
+          ],
+        },
+        options: chartDefaults(),
+      });
+
+      new Chart(document.getElementById('engagement-chart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label: 'External PRs', data: rows.map(r => parseInt(r.prs_external_total)), borderColor: '#16a34a', tension: 0.3 },
+            { label: 'External Issues', data: rows.map(r => parseInt(r.open_issues_external)), borderColor: '#dc2626', tension: 0.3 },
+          ],
+        },
+        options: chartDefaults(),
+      });
+
+      const latest = rows[rows.length - 1];
+      new Chart(document.getElementById('portfolio-chart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Skills', 'Agents', 'Plugins'],
+          datasets: [{
+            data: [parseInt(latest.skills), parseInt(latest.agents), parseInt(latest.plugins)],
+            backgroundColor: ['#3b82f6', '#f59e0b', '#6366f1'],
+          }],
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } } },
+      });
+    }
+
+    (async () => {
+      const rows = await loadCSV();
+      if (!rows || rows.length === 0) {
+        document.getElementById('empty-state').style.display = 'block';
+        return;
+      }
+      document.getElementById('content').style.display = 'block';
+      renderStats(rows);
+      renderCharts(rows);
+    })();
+  </script>
+</body>
+</html>
