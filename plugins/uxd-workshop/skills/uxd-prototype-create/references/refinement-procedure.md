@@ -54,7 +54,7 @@ Plan 3-7 refinements per iteration, prioritized: critical first, then major, the
 
 If `--mode=decide` and any refinement involves a non-trivial design choice:
 
-1. Generate a decision page using `${SKILL_DIR}/templates/decision-pages/decision-template.html`
+1. Generate a decision page using `${CLAUDE_SKILL_DIR}/templates/decision-pages/decision-template.html`
 2. Present to user, ask for choice
 3. Record in `decisions.json`
 
@@ -74,7 +74,7 @@ For each refinement: read target file, make the specific change, verify it doesn
 Increment iteration and record history:
 
 ```bash
-python3 "${SKILL_DIR}/scripts/frontmatter.py" set ".artifacts/{ID}/rfe-snapshot.md" \
+python3 "${CLAUDE_SKILL_DIR}/scripts/frontmatter.py" set ".artifacts/{ID}/rfe-snapshot.md" \
   status="refined" iteration="{N+1}" updated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ```
 

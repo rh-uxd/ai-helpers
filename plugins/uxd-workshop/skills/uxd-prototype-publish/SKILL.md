@@ -139,7 +139,7 @@ gh repo create <repo-name> --public --description "UX Prototype — {title}"
 **Step 3b: Run the Publish Script**
 
 ```bash
-bash "${SKILL_DIR}/scripts/publish-github-pages.sh" \
+bash "${CLAUDE_SKILL_DIR}/scripts/publish-github-pages.sh" \
   --repo "<owner/repo>" \
   --source "<path-to-prototype>"
 ```
@@ -182,7 +182,7 @@ If the project doesn't exist yet, the script can create it via the GitLab API (r
 **Step 3b: Run the Publish Script**
 
 ```bash
-bash "${SKILL_DIR}/scripts/publish-gitlab-pages.sh" \
+bash "${CLAUDE_SKILL_DIR}/scripts/publish-gitlab-pages.sh" \
   --project "<namespace/project>" \
   --source "<path-to-prototype>" \
   [--gitlab-url "<https://gitlab.example.com>"] \
@@ -214,7 +214,7 @@ Ask the user if they have an existing Vercel project or should deploy fresh:
 **Step 3b: Run the Publish Script**
 
 ```bash
-bash "${SKILL_DIR}/scripts/publish-vercel.sh" \
+bash "${CLAUDE_SKILL_DIR}/scripts/publish-vercel.sh" \
   --source "<path-to-prototype>" \
   [--project-name "<vercel-project-name>"]
 ```
@@ -260,7 +260,7 @@ Update `.artifacts/{ID}/metadata.json` with submission record:
 Update frontmatter:
 
 ```bash
-python3 "${SKILL_DIR}/scripts/frontmatter.py" set ".artifacts/{ID}/rfe-snapshot.md" \
+python3 "${CLAUDE_SKILL_DIR}/scripts/frontmatter.py" set ".artifacts/{ID}/rfe-snapshot.md" \
   status="submitted" updated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ```
 

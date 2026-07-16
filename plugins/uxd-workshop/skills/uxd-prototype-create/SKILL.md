@@ -90,7 +90,7 @@ Prototype Plan:
 Try these in order:
 
 1. **Jira MCP** (preferred): `mcp__atlassian__getJiraIssue` with the issue key.
-2. **Fetch script** (fallback): `python3 "${SKILL_DIR}/scripts/fetch_jira.py" PROJ-298 --json` (requires `JIRA_SERVER`, `JIRA_USER`, `JIRA_TOKEN` env vars).
+2. **Fetch script** (fallback): `python3 "${CLAUDE_SKILL_DIR}/scripts/fetch_jira.py" PROJ-298 --json` (requires `JIRA_SERVER`, `JIRA_USER`, `JIRA_TOKEN` env vars).
 3. **User-provided description** (final fallback): Ask the user for title, user stories, acceptance criteria, and product context.
 
 ## Step 2: Select RFEs
@@ -102,7 +102,7 @@ If multiple related issues exist, present them and let the user select which to 
 Save each RFE with YAML frontmatter using the frontmatter utility:
 
 ```bash
-python3 "${SKILL_DIR}/scripts/frontmatter.py" set ".artifacts/{ID}/rfe-snapshot.md" \
+python3 "${CLAUDE_SKILL_DIR}/scripts/frontmatter.py" set ".artifacts/{ID}/rfe-snapshot.md" \
   prototype_id="{ID}" source_rfe="{KEY}" \
   mode="{MODE}" status="draft" iteration="0" \
   created_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -123,7 +123,7 @@ Parse user stories from the RFE. For each, identify actor, action, goal, and acc
 **Workspace mode:** Use the resolve script:
 
 ```bash
-python3 "${SKILL_DIR}/scripts/resolve_workspace.py" "<path-or-url>" \
+python3 "${CLAUDE_SKILL_DIR}/scripts/resolve_workspace.py" "<path-or-url>" \
   --rfe-key "{KEY}" [--branch "{BRANCH}"]
 ```
 
@@ -139,7 +139,7 @@ Save to `.artifacts/{ID}/workspace-analysis.json`.
 
 ## Step 7: Design Decisions
 
-Design decisions are planned dynamically based on the RFE and codebase context. See `${SKILL_DIR}/references/decision-points.yaml` for reference categories.
+Design decisions are planned dynamically based on the RFE and codebase context. See `${CLAUDE_SKILL_DIR}/references/decision-points.yaml` for reference categories.
 
 **Plan decisions:** Analyze user stories and codebase to identify decisions with real tradeoffs. Count is determined by `--depth` (under: 2-3, normal: 4-5, over: 6-8).
 
@@ -202,7 +202,7 @@ If Jira is available (MCP or REST credentials), add label `prototype-creator-dra
 
 Print a summary showing ID, title, mode, screens, workspace, status, and artifact paths.
 
-Suggest: run `uxd-prototype-evaluate` to score, re-invoke this skill for refinement, or use `${SKILL_DIR}/scripts/submit_to_repo.py` to push as a merge request.
+Suggest: run `uxd-prototype-evaluate` to score, re-invoke this skill for refinement, or use `${CLAUDE_SKILL_DIR}/scripts/submit_to_repo.py` to push as a merge request.
 
 ---
 

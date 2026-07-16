@@ -121,7 +121,7 @@ Instructions: List every UI component, map to PF6 equivalent, flag custom needs.
 For each dimension, write `.artifacts/{ID}/reviews/{dimension}.md` with frontmatter:
 
 ```bash
-python3 ${SKILL_DIR}/scripts/frontmatter.py set .artifacts/{ID}/reviews/{dimension}.md \
+python3 ${CLAUDE_SKILL_DIR}/scripts/frontmatter.py set .artifacts/{ID}/reviews/{dimension}.md \
   prototype_id={ID} dimension={dimension} score={score} \
   verdict={verdict} reviewed_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 ```
@@ -162,7 +162,7 @@ not "Improve completeness."}
 Run the scoring script:
 
 ```bash
-python3 ${SKILL_DIR}/scripts/score_prototype.py {ID}
+python3 ${CLAUDE_SKILL_DIR}/scripts/score_prototype.py {ID}
 ```
 
 Writes `.artifacts/{ID}/reviews/summary.md` with per-dimension scores, total, verdict, key findings, and recommendations.
@@ -220,7 +220,7 @@ Evaluates aesthetic and emotional impact using methods adapted from the Microsof
 After completing evaluation at any depth, generate the HTML pipeline report:
 
 ```bash
-python3 ${SKILL_DIR}/scripts/generate-report.py --output .artifacts/pipeline-report.html
+python3 ${CLAUDE_SKILL_DIR}/scripts/generate-report.py --output .artifacts/pipeline-report.html
 ```
 
 Aggregates all prototype reviews into a single dashboard.
