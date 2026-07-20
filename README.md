@@ -28,8 +28,6 @@ That's it. All PatternFly skills are now available:
 /pf-design-audit:pf-color-scan # Scan for hardcoded colors that should be tokens
 ```
 
-**Power users:** Install individual plugins for granular control (e.g., `claude plugins install pf-react@uxd-ai-helpers`).
-
 Enable auto-update to receive new skills as they're merged:
 
 `/plugin` → Marketplaces → enable auto-update
