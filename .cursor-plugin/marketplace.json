@@ -12,32 +12,8 @@
     {
       "name": "uxd-workshop",
       "source": "./plugins/uxd-workshop",
-      "description": "UXD team tools — prototyping, research, design review"
-    },
-    {
-      "name": "pf-react",
-      "source": "./plugins/patternfly/pf-react",
-      "description": "React component development — coding standards, testing, and structure"
-    },
-    {
-      "name": "pf-design-guide",
-      "source": "./plugins/patternfly/pf-design-guide",
-      "description": "Design guide — component selection, interaction patterns, AI experience patterns"
-    },
-    {
-      "name": "pf-design-audit",
-      "source": "./plugins/patternfly/pf-design-audit",
-      "description": "Design audit — validate designs against PatternFly standards"
-    },
-    {
-      "name": "pf-migration",
-      "source": "./plugins/patternfly/pf-migration",
-      "description": "PF version migration — breaking change detection, upgrade planning"
-    },
-    {
-      "name": "pf-mcp",
-      "source": "./plugins/patternfly/pf-mcp",
-      "description": "PatternFly MCP server — component docs and design tokens via MCP"
+      "description": "UXD team tools — prototyping, research, design review",
+      "category": "workshop"
     },
     {
       "name": "pf-workshop",

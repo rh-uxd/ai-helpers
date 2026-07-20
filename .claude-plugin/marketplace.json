@@ -12,7 +12,8 @@
     {
       "name": "uxd-workshop",
       "source": "./plugins/uxd-workshop",
-      "description": "UXD team tools — prototyping, research, design review"
+      "description": "UXD team tools — prototyping, research, design review",
+      "category": "workshop"
     },
     {
       "name": "pf-react",

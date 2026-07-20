@@ -11,13 +11,49 @@ fail() {
 }
 
 # 1. Marketplace-level manifest parity
+#
+# Cursor may list fewer plugins than Claude (e.g. when a meta-plugin bundles
+# sub-plugins via explicit paths instead of listing them individually).
+# Rules: metadata (name, owner) must match; every Cursor plugin must also
+# appear in the Claude manifest; Claude may have extras.
 echo "=== Marketplace manifests ==="
 if [ -f .claude-plugin/marketplace.json ] && [ -f .cursor-plugin/marketplace.json ]; then
-  if ! diff -q .claude-plugin/marketplace.json .cursor-plugin/marketplace.json > /dev/null 2>&1; then
-    fail "Marketplace manifests differ between .claude-plugin/ and .cursor-plugin/"
-    diff --unified .claude-plugin/marketplace.json .cursor-plugin/marketplace.json || true
-  else
+  if diff -q .claude-plugin/marketplace.json .cursor-plugin/marketplace.json > /dev/null 2>&1; then
     echo "  OK: marketplace.json files are identical"
+  elif ! python3 - .claude-plugin/marketplace.json .cursor-plugin/marketplace.json <<'PY'
+import json, sys
+with open(sys.argv[1]) as f:
+    claude = json.load(f)
+with open(sys.argv[2]) as f:
+    cursor = json.load(f)
+# Metadata must match
+for key in ("name", "owner"):
+    if claude.get(key) != cursor.get(key):
+        print(f"  FAIL: marketplace.json '{key}' differs", file=sys.stderr)
+        sys.exit(1)
+# Every Cursor plugin must exist in Claude's list
+claude_names = {p["name"] for p in claude.get("plugins", [])}
+for plugin in cursor.get("plugins", []):
+    if plugin["name"] not in claude_names:
+        print(f"  FAIL: Cursor marketplace lists '{plugin['name']}' which is not in Claude marketplace", file=sys.stderr)
+        sys.exit(1)
+# Find matching plugins and verify shared fields match
+claude_plugins = {p["name"]: p for p in claude.get("plugins", [])}
+for plugin in cursor.get("plugins", []):
+    claude_plugin = claude_plugins[plugin["name"]]
+    if plugin != claude_plugin:
+        print(f"  FAIL: marketplace plugin '{plugin['name']}' differs between Claude and Cursor", file=sys.stderr)
+        sys.exit(1)
+c_count = len(cursor.get("plugins", []))
+d_count = len(claude.get("plugins", []))
+if c_count < d_count:
+    print(f"  OK: Cursor marketplace is a subset ({c_count}/{d_count} plugins) — meta-plugin bundles the rest")
+else:
+    print(f"  OK: marketplace.json plugins match ({c_count} plugins)")
+PY
+  then
+    fail "Marketplace manifests differ incompatibly"
+    diff --unified .claude-plugin/marketplace.json .cursor-plugin/marketplace.json || true
   fi
   CHECKED=$((CHECKED + 1))
 fi
