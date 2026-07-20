@@ -1,0 +1,5 @@
+expect_violations: false
+prompt_style: negative
+required_wrapper: ""
+parent_component: ""
+pf_signals: []

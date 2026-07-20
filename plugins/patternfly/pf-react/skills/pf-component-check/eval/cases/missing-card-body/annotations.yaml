@@ -1,0 +1,7 @@
+expect_violations: true
+prompt_style: explicit
+required_wrapper: CardBody
+parent_component: Card
+pf_signals:
+  - CardBody
+  - Card

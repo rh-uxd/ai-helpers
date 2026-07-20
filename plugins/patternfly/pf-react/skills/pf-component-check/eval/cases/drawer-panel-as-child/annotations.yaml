@@ -1,0 +1,8 @@
+expect_violations: true
+prompt_style: implicit
+required_wrapper: panelContent
+parent_component: DrawerContent
+pf_signals:
+  - panelContent
+  - DrawerPanelContent
+  - DrawerContentBody

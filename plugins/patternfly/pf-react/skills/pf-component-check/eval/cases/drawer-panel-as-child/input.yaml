@@ -1,0 +1,2 @@
+prompt: "The details panel in DetailsDrawer.tsx never shows up correctly next to the main content. Can you check how the drawer is composed?"
+fixture: DetailsDrawer.tsx
