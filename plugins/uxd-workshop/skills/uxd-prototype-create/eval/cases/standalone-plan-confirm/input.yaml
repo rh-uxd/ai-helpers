@@ -1,0 +1,10 @@
+prompt: >-
+  Using the uxd-prototype-create skill with these answers already decided:
+  - Source: plain-text feature — "A user settings page with profile fields and a save button"
+  - Workspace: standalone
+  - Mode: auto
+  - Depth: normal (default; only relevant for decide mode)
+
+  Print the Prototype Plan summary (Source, Workspace, Mode, and Depth if shown)
+  and ask for confirmation. After printing the plan, STOP — do not generate the
+  prototype or write any files.

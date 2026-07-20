@@ -1,0 +1,106 @@
+name: uxd-prototype-create-eval
+description: Evaluate uxd-prototype-create's conversational onboarding and plan confirmation
+
+skill: uxd-workshop:uxd-prototype-create
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: case_type for conditional judges
+
+outputs:
+  - path: artifacts
+    schema: |
+      For onboarding cases, judges expect clarifying questions in the
+      conversation and no premature HTML/.artifacts generation.
+      For plan-confirm cases, judges expect a Prototype Plan summary.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: asks_before_building
+    description: Asks clarifying onboarding questions before writing prototype files
+    if: "annotations.get('case_type') == 'onboarding-before-build'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      files = outputs.get("files", {}) or {}
+      asks_workspace = re.search(
+          r"standalone|existing codebase|workspace|integrate",
+          text,
+          re.IGNORECASE,
+      )
+      asks_mode = re.search(
+          r"\bauto\b|\bdecide\b|design decisions",
+          text,
+          re.IGNORECASE,
+      )
+      asks_source = re.search(
+          r"Jira|Figma|what (would you like|are we)|prototype\?",
+          text,
+          re.IGNORECASE,
+      )
+      if not (asks_workspace or asks_mode or asks_source):
+          return False, "Did not ask onboarding clarifying questions"
+      wrote_html = any(
+          path.endswith(".html") or "patternfly.min.css" in (content or "")
+          for path, content in files.items()
+      )
+      wrote_artifacts = any(".artifacts/" in path for path in files)
+      if wrote_html or wrote_artifacts:
+          return False, "Built prototype files before finishing onboarding questions"
+      premature = re.search(
+          r"<html[\s>]|patternfly\.min\.css",
+          text,
+          re.IGNORECASE,
+      )
+      if premature and not re.search(r"(ask|before|confirm|question)", text, re.IGNORECASE):
+          return False, "Appears to emit HTML before asking clarifying questions"
+      return True, "Asked clarifying questions before building"
+
+  - name: prints_prototype_plan
+    description: Prints a Prototype Plan summary with Source/Workspace/Mode before generating
+    if: "annotations.get('case_type') == 'standalone-plan-confirm'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      has_plan = re.search(r"Prototype Plan", text, re.IGNORECASE)
+      has_source = re.search(r"Source\s*:", text, re.IGNORECASE)
+      has_workspace = re.search(r"Workspace\s*:\s*standalone", text, re.IGNORECASE)
+      has_mode = re.search(r"Mode\s*:\s*auto", text, re.IGNORECASE)
+      if not has_plan:
+          return False, "Missing 'Prototype Plan' summary"
+      if not (has_source and has_workspace and has_mode):
+          return False, "Prototype Plan missing Source, Workspace: standalone, and/or Mode: auto"
+      wrote_files = bool(outputs.get("files"))
+      if wrote_files:
+          return False, "Wrote files after plan — should stop and wait for confirmation"
+      return True, "Printed Prototype Plan with Source, Workspace, and Mode"
+
+thresholds:
+  asks_before_building:
+    min_pass_rate: 1.0
+  prints_prototype_plan:
+    min_pass_rate: 1.0

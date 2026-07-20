@@ -1,0 +1,4 @@
+prompt: >-
+  Using the uxd-prototype-create skill: I want a settings page prototype.
+  Start the skill workflow. Ask only the next onboarding question(s) you need —
+  do not generate HTML, PatternFly markup, or any .artifacts/ files yet.

@@ -1,0 +1,5 @@
+prompt: >-
+  Using the uxd-prototype-publish skill: my prototype DEMO is ready — share it /
+  publish it. I have not chosen a destination. Ask where it should go; do not
+  publish yet. List the available targets (merge request / GitHub Pages /
+  GitLab Pages / Vercel).

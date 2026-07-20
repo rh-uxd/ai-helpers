@@ -1,0 +1,7 @@
+prompt: >-
+  Using the uxd-prototype-publish skill, attempt to publish prototype DEMO
+  with --target public (no --force). The fixture tree is under
+  .artifacts/DEMO/ in this case directory. It includes evaluation-report.csv
+  with at least one FAIL acceptance-criteria verdict. Follow the skill's AC
+  gating (block unless --force). Do not actually push or deploy.
+fixture: .artifacts/DEMO

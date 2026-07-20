@@ -1,0 +1,6 @@
+prompt: >-
+  Using the uxd-prototype-publish skill with --dry-run --target public, validate
+  prototype INCOMPLETE. The fixture is under .artifacts/INCOMPLETE/ in this case
+  directory — it has no metadata.json and no prototype/index.html. Report what
+  is missing; do not publish.
+fixture: .artifacts/INCOMPLETE

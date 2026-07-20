@@ -1,0 +1,6 @@
+prompt: >-
+  Using the uxd-prototype-evaluate skill: explain the orchestration plan for
+  evaluating DEMO at http://localhost:3000 with --no-fix --max-iterations=1.
+  Describe Phase A and Phase B (and whether Phase B still runs after Phase A
+  exits). Do not install dependencies, launch Playwright, or mutate files —
+  planning only.

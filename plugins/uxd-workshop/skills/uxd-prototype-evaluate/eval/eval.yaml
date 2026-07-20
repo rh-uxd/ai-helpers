@@ -1,0 +1,140 @@
+name: uxd-prototype-evaluate-eval
+description: Evaluate uxd-prototype-evaluate's input gating, review mode, and two-phase orchestration contract
+
+skill: uxd-workshop:uxd-prototype-evaluate
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: case_type for conditional judges
+    - Optional .artifacts/ fixture tree for review-mode cases
+
+outputs:
+  - path: artifacts
+    schema: |
+      Judges check conversation text for required-input prompts,
+      review-mode summaries without Playwright re-runs, and
+      two-phase (Phase A / Phase B) orchestration awareness.
+      Cases must not perform live publishes or long Playwright loops.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: asks_required_inputs
+    description: Asks for missing Jira key and/or prototype URL before evaluating
+    if: "annotations.get('case_type') == 'asks-required-inputs'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      asks_key = re.search(
+          r"Jira|story key|issue key|ticket|PROJ-",
+          text,
+          re.IGNORECASE,
+      )
+      asks_url = re.search(
+          r"URL|localhost|http|prototype (URL|address|endpoint)",
+          text,
+          re.IGNORECASE,
+      )
+      if not (asks_key or asks_url):
+          return False, "Did not ask for missing Jira key or prototype URL"
+      launched = re.search(
+          r"npx playwright|playwright test|eval-journey|Phase A",
+          text,
+          re.IGNORECASE,
+      )
+      if launched and not re.search(r"(need|missing|provide|require|before)", text, re.IGNORECASE):
+          return False, "Appears to start evaluation without required inputs"
+      return True, "Asked for required evaluate inputs"
+
+  - name: review_summarizes_without_rerun
+    description: Review mode summarizes artifacts and does not re-run Playwright
+    if: "annotations.get('case_type') == 'review-mode-no-rerun'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      mentions_results = re.search(
+          r"FAIL|PASS|FLAGGED|acceptance|Eval results|needs attention",
+          text,
+          re.IGNORECASE,
+      )
+      if not mentions_results:
+          return False, "Did not summarize AC verdicts / eval results"
+      mentions_ac2 = re.search(r"AC-2|save profile|Save button", text, re.IGNORECASE)
+      if not mentions_ac2:
+          return False, "Did not surface the FAIL criterion from the fixture"
+      reran = re.search(
+          r"(npx playwright|playwright install|launching browser|starting Phase A|eval-extract)",
+          text,
+          re.IGNORECASE,
+      )
+      if reran:
+          return False, "Appears to re-run Playwright / full eval in review mode"
+      offers_help = re.search(
+          r"fix|re-run|tell me more|looks good|how can I help",
+          text,
+          re.IGNORECASE,
+      )
+      if not offers_help:
+          return False, "Did not offer review-mode next actions"
+      return True, "Summarized prior eval results without re-running"
+
+  - name: describes_two_phase_flow
+    description: Describes Phase A (AC x-ray) then Phase B (usability) orchestration
+    if: "annotations.get('case_type') == 'two-phase-orchestration'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      phase_a = re.search(
+          r"Phase A|x-?ray|acceptance criteria|AC validation|eval-classify|eval-journey",
+          text,
+          re.IGNORECASE,
+      )
+      phase_b = re.search(
+          r"Phase B|usability|persona|discovery|walkthrough",
+          text,
+          re.IGNORECASE,
+      )
+      if not phase_a:
+          return False, "Did not describe Phase A / AC validation"
+      if not phase_b:
+          return False, "Did not describe Phase B / usability walkthroughs"
+      always_b = re.search(
+          r"(Phase B|usability).{0,60}(always|still|regardless)|always.{0,40}(Phase B|usability)",
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      # Soft signal — unique skill contract is that Phase B always fires
+      if not always_b and not re.search(r"Phase B", text, re.IGNORECASE):
+          return False, "Missing Phase B contract in orchestration description"
+      return True, "Described two-phase evaluate orchestration"
+
+thresholds:
+  asks_required_inputs:
+    min_pass_rate: 1.0
+  review_summarizes_without_rerun:
+    min_pass_rate: 1.0
+  describes_two_phase_flow:
+    min_pass_rate: 1.0
