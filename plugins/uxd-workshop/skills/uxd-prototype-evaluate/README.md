@@ -1,53 +1,90 @@
 # uxd-prototype-evaluate
 
-Evaluates a prototype's quality through structured scoring, simulated usability testing, and desirability analysis. Choose the depth that fits your workflow — from a quick rubric pass/fail gate to running every evaluation.
+Evaluate a **running** prototype against Jira acceptance criteria with Playwright, optionally apply fixes, then run persona-based usability walkthroughs. Produces an HTML evidence report.
 
-## Evaluation Depths
+## Quick start
 
-| Depth | What it does | When to use |
-|-------|-------------|-------------|
-| **Quick** | 3-dimension rubric scoring (0-2 each, max 6). Pass threshold: 5+ with no zeros. | Fast quality gate after creation. Default in the pipeline. |
-| **Standard** | Rubric + simulated usability testing with personas and task scenarios. | Recommended for most prototypes before sharing with stakeholders. |
-| **Full** | Rubric + usability + desirability study (word association, emotional mapping, preference comparison). Runs every evaluation. | When the design direction matters and you want to validate the "feel." |
+```bash
+# One-time setup (from this skill directory)
+cd "$(dirname "$0")"   # or use $CLAUDE_SKILL_DIR when invoked
+npm install
+npx playwright install chromium
 
-## Inputs
+# Optional context (personas + design consistency guidelines)
+# Point these at your own git URLs — nothing is hardcoded.
+export USABILITY_TESTING_REPO="git@example.com:org/usability-testing.git"
+export CONSISTENCY_CHECKER_REPO="git@example.com:org/consistency-checker.git"
+bash scripts/bootstrap-usability-testing.sh
+bash scripts/bootstrap-consistency-checker.sh
+```
 
-| Input type | Location | Required |
-|------------|----------|----------|
-| Prototype files | `.artifacts/{ID}/prototype/` (standalone) or target workspace (workspace mode) | Yes |
-| RFE snapshot | `.artifacts/{ID}/rfe-snapshot.md` | Yes (for rubric scoring) |
-| Metadata | `.artifacts/{ID}/metadata.json` | Yes |
-| Changeset manifest | `.artifacts/{ID}/changeset.md` | Yes (workspace mode) |
-| Research context | `.context/research-context/` (personas, JTBD) | Optional (for usability testing) |
+Edit `config/product-overlay.yaml` for your product (Jira prefixes, repo URLs). Personas come from the plugin catalog at `plugins/uxd-workshop/knowledge/personas/` — not product overlays. Optional designer ground truth: copy `config/ground-truth.example.json` → `config/ground-truth.json`.
+
+Start the prototype locally, then:
+
+```
+/uxd-prototype-evaluate PROJ-298 http://localhost:3000 --workspace=/path/to/prototype
+```
+
+Review a previous run:
+
+```
+/uxd-prototype-evaluate review PROJ-298
+```
+
+## What it does
+
+**Phase A — AC validation (x-ray)**  
+Verifies each acceptance criterion from the Jira ticket using Playwright with full source access. Failed criteria can enter a fix loop (`eval-fix`) up to `--max-iterations` (default 3). Use `--no-fix` for findings-only.
+
+**Phase B — Usability (discovery)**  
+Per-persona Playwright walkthroughs with think-aloud traces and 7-dimension scoring. Always runs after Phase A exits.
+
+**Report**  
+Self-contained HTML at `.artifacts/<KEY>/evaluation-report.html` plus CSV/JSON evidence artifacts.
+
+## Flags
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--workspace=PATH` | — | Prototype repo (enables code fixes) |
+| `--max-iterations=N` | 3 | Max Phase A fix-loop iterations |
+| `--no-iterate` | Off | Single Phase A pass, no loop |
+| `--no-fix` | Off | Evaluate only — do not apply fixes |
+| `--reset` | Off | Hard-reset workspace to origin branch HEAD before eval |
+| `--fresh` | Off | Delete `.artifacts/<KEY>/` before starting |
 
 ## Outputs
 
-| Output | Format | Location |
-|--------|--------|----------|
-| Dimension reviews | Markdown with frontmatter (one per dimension) | `.artifacts/{ID}/reviews/{dimension}.md` |
-| Review summary | Markdown with aggregate scores and verdict | `.artifacts/{ID}/reviews/summary.md` |
-| Usability report | Markdown with personas, task walkthroughs, severity-ranked issues | `.artifacts/{ID}/report-usability.md` |
-| Desirability report | Markdown with word associations, emotional map, preference ranking, score | `.artifacts/{ID}/report-desirability.md` |
-| Pipeline report | HTML dashboard summarizing all prototypes | `.artifacts/pipeline-report.html` |
+| File | Description |
+|------|-------------|
+| `.artifacts/<KEY>/evaluation-report.html` | HTML report |
+| `.artifacts/<KEY>/evaluation-report.csv` | AC verdicts + usability scores |
+| `.artifacts/<KEY>/journey-log.json` | Playwright steps + screenshots metadata |
+| `.artifacts/<KEY>/refinement-suggestions.json` | Suggested fixes |
+| `.artifacts/<KEY>/iteration-log.json` | Per-iteration pass/fail counts |
 
-## Rubric Dimensions
+## Pass / fail for downstream skills
 
-| Dimension | Question |
-|-----------|----------|
-| **Completeness** | Does the prototype cover the RFE's user stories and acceptance criteria? |
-| **Usability** | Is the interaction pattern clear and free of obvious friction? |
-| **Feasibility** | Can this be built with the target design system (PatternFly)? |
+- **Phase A pass for publish:** zero `FAIL` verdicts in `evaluation-report.csv` Section 1 (FLAGGED is OK — needs human review).
+- `uxd-prototype-create` refinement and `uxd-prototype-publish` read these artifacts (not the old rubric `reviews/summary.md`).
 
-Each scored 0 (fail), 1 (partial), or 2 (pass). Total of 5+ with no zeros = pass.
+## Optional Google Sheet sync
 
-## Quick Start
+Set `tracking.sheet_id` in `config/product-overlay.yaml` (or `EVAL_SHEET_ID`). Leave empty to disable. Requires `gcloud auth login --enable-gdrive-access`.
 
-- "Review the prototype for PROJ-298"
-- "Run a usability test on what we just built"
-- "How does this prototype feel? Run a desirability study."
-- "Score all unreviewed prototypes in .artifacts/"
+## Phase procedures
 
-## Related
+Orchestration is in `SKILL.md`. Detailed phase instructions:
 
-- **uxd-prototype-create** — Create or refine prototypes (refinement uses evaluation feedback)
-- **uxd-prototype-pipeline** (agent) — Automated create-review-refine loop
+| Reference | Role |
+|-----------|------|
+| `references/phases/eval-extract.md` | Jira context, ACs, MR delta |
+| `references/phases/eval-classify.md` | AC tier classification |
+| `references/phases/eval-journey.md` | Phase A Playwright (x-ray) |
+| `references/phases/eval-fix.md` | Apply refinement suggestions |
+| `references/phases/eval-consistency.md` | PatternFly guideline checks |
+| `references/phases/eval-hint.md` | Navigation hints for personas |
+| `references/phases/eval-usability.md` | Phase B persona walkthroughs |
+| `references/phases/eval-report.md` | Render HTML report |
+| `references/phases/eval-review.md` | Conversational review of results |

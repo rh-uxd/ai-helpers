@@ -1,0 +1,83 @@
+{
+  "images": [
+    {
+      "file": "images/chart-quarterly-revenue.png",
+      "use_when": "vision, image analysis, data visualization, chart, describe",
+      "description": "Bar chart showing quarterly revenue with labeled axes and values",
+      "content_hint": "Q1=$2.1M, Q2=$3.4M, Q3=$2.8M, Q4=$4.8M. Blue/green/orange/red bars on white background."
+    },
+    {
+      "file": "images/diagram-architecture.png",
+      "use_when": "vision, system diagram, architecture, explain structure",
+      "description": "System architecture diagram with 4 service boxes connected by arrows",
+      "content_hint": "API Gateway (blue) connects to Auth Service (green) and Data Store (orange). Both connect to ML Engine (purple)."
+    },
+    {
+      "file": "images/photo-workspace.jpg",
+      "use_when": "general vision, photo description, object detection, scene",
+      "description": "Synthetic workspace desk with laptop showing terminal output, coffee mug, notebook, and pen",
+      "content_hint": "Wooden desk surface. Laptop displaying green terminal text (python train.py). White coffee mug with brown liquid. Lined notebook with writing. Black pen."
+    },
+    {
+      "file": "images/oversized-test.png",
+      "use_when": "file size error testing, upload validation, size limit",
+      "description": "Random noise image intentionally >20MB to trigger file size validation",
+      "size_mb": 20.6,
+      "triggers_error": true
+    }
+  ],
+  "audio": [
+    {
+      "file": "audio/speech-sample.wav",
+      "use_when": "audio transcription, speech-to-text, voice input, WAV upload",
+      "description": "Tone pattern WAV file (morse-like sequence + frequency sweep) for transcription testing",
+      "duration_seconds": 4,
+      "expected_behavior": "Audio file accepted by upload. Transcription response expected (may be empty for tone-only input on real models)."
+    }
+  ],
+  "documents": [
+    {
+      "file": "documents/invoice-sample.pdf",
+      "use_when": "PDF upload, document analysis, OCR, vision, extract data",
+      "description": "Single-page invoice from Acme Technology Corp to DataFlow Inc",
+      "content_hint": "Invoice #INV-1042, dated June 15 2025. 3 line items: ML Pipeline Setup ($2,500), Custom Model Training 40x$35 ($1,400), Production Deployment ($350). Total: $4,250.00."
+    }
+  ],
+  "text_prompts": [
+    {
+      "file": "text/prompt-analyze-image.txt",
+      "use_when": "vision model chat, image description, multimodal, after image upload",
+      "description": "Prompt asking model to describe and analyze an uploaded image"
+    },
+    {
+      "file": "text/prompt-code-explain.txt",
+      "use_when": "code generation, code explanation, developer tools, text-only model",
+      "description": "Code explanation request with a sliding window substring function"
+    },
+    {
+      "file": "text/prompt-summarize.txt",
+      "use_when": "summarization, text processing, general chat, text-only model",
+      "description": "Research findings summary request — realistic enterprise UX research paragraph"
+    }
+  ],
+  "sequences": {
+    "multi-image-conversation": {
+      "description": "For AC-7: upload multiple images in sequence to test conversation context retention",
+      "steps": [
+        {
+          "action": "upload_image",
+          "file": "images/chart-quarterly-revenue.png",
+          "prompt": "text/prompt-analyze-image.txt",
+          "note": "First image: user uploads chart and asks for analysis"
+        },
+        {
+          "action": "upload_image",
+          "file": "images/diagram-architecture.png",
+          "prompt": "Now look at this second image. How does the system architecture relate to the revenue data from the previous chart?",
+          "note": "Second image: user uploads diagram and asks model to reference BOTH images"
+        }
+      ],
+      "success_criteria": "Both images visible in conversation history. Model response references content from both (revenue numbers AND service names)."
+    }
+  }
+}
