@@ -23,9 +23,13 @@ if [ -f .claude-plugin/marketplace.json ] && [ -f .cursor-plugin/marketplace.jso
 fi
 
 # 2. Plugin-level manifest parity (handles both flat and nested plugins)
+#
+# Cursor may add path-override / MCP fields that Claude does not use
+# (skills, agents, commands, rules, hooks, mcpServers). Shared fields must
+# still match so Claude deps and metadata stay in sync.
 echo ""
 echo "=== Plugin manifests ==="
-find plugins -name 'plugin.json' -path '*/.claude-plugin/*' | while read -r claude_manifest; do
+while read -r claude_manifest; do
   plugin_dir=$(dirname "$(dirname "$claude_manifest")")
   cursor_manifest="${plugin_dir}/.cursor-plugin/plugin.json"
   plugin_name=$(basename "$plugin_dir")
@@ -37,11 +41,39 @@ find plugins -name 'plugin.json' -path '*/.claude-plugin/*' | while read -r clau
     continue
   fi
 
-  if ! diff -q "$claude_manifest" "$cursor_manifest" > /dev/null 2>&1; then
-    fail "${plugin_name}: .claude-plugin/plugin.json and .cursor-plugin/plugin.json differ"
+  if diff -q "$claude_manifest" "$cursor_manifest" > /dev/null 2>&1; then
+    continue
+  fi
+
+  # Allow Cursor-only component path / MCP fields; compare the rest.
+  if ! python3 - "$claude_manifest" "$cursor_manifest" "$plugin_name" <<'PY'
+import json, sys
+claude_path, cursor_path, name = sys.argv[1:4]
+cursor_only = {"skills", "agents", "commands", "rules", "hooks", "mcpServers"}
+with open(claude_path) as f:
+    claude = json.load(f)
+with open(cursor_path) as f:
+    cursor = json.load(f)
+claude_extra = set(claude) - set(cursor)
+cursor_shared = {k: v for k, v in cursor.items() if k not in cursor_only}
+claude_shared = {k: v for k, v in claude.items() if k not in cursor_only}
+# Claude should not carry Cursor-only path overrides (keep Claude lean).
+if set(claude) & cursor_only:
+    print(f"  FAIL: {name}: .claude-plugin/plugin.json has Cursor-only fields: {sorted(set(claude) & cursor_only)}", file=sys.stderr)
+    sys.exit(1)
+if claude_shared != cursor_shared:
+    print(f"  FAIL: {name}: shared plugin.json fields differ between Claude and Cursor", file=sys.stderr)
+    sys.exit(1)
+if claude_extra:
+    print(f"  FAIL: {name}: Claude has keys missing from Cursor: {sorted(claude_extra)}", file=sys.stderr)
+    sys.exit(1)
+print(f"  OK: {name}: Cursor adds path overrides; shared fields match")
+PY
+  then
+    fail "${plugin_name}: .claude-plugin/plugin.json and .cursor-plugin/plugin.json differ incompatibly"
     diff --unified "$claude_manifest" "$cursor_manifest" || true
   fi
-done
+done < <(find plugins -name 'plugin.json' -path '*/.claude-plugin/*')
 CHECKED=$((CHECKED + $(find plugins -name 'plugin.json' -path '*/.claude-plugin/*' | wc -l | tr -d ' ')))
 
 # 3. JSON validity
