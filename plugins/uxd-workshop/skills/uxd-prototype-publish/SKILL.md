@@ -15,7 +15,7 @@ Publishes a completed prototype so others can see it. Supports four publishing t
 - **GitLab** — Deploy a sanitized copy to a GitLab instance with GitLab Pages. Supports both self-hosted (behind VPN) and gitlab.com. Same sanitization as public.
 - **Vercel** — Deploy a sanitized copy to Vercel. Same sensitive-file stripping as public. Best for preview deployments and projects using Vercel.
 
-Also updates the source Jira ticket with a link, quality score, and status labels.
+Also updates the source Jira ticket with a link, eval summary (AC FAIL count / Pages preview), and status labels.
 
 ## Conversational Guidance
 
@@ -36,7 +36,8 @@ If the user says "share", "publish", "deploy", "submit", or "I'm done" without s
 | `metadata.json` | `.artifacts/{ID}/metadata.json` | Yes |
 | Changeset manifest | `.artifacts/{ID}/changeset.md` | Yes (workspace mode) |
 | Workspace analysis | `.artifacts/{ID}/workspace-analysis.json` | Yes (repo target, workspace mode) |
-| Review summary | `.artifacts/{ID}/reviews/summary.md` | Recommended |
+| Eval report | `.artifacts/{ID}/evaluation-report.csv` | Recommended |
+| Pages base URL | `--pages-base-url` or product config | Optional (repo target) |
 
 ## Flags
 
@@ -45,9 +46,11 @@ If the user says "share", "publish", "deploy", "submit", or "I'm done" without s
 | `--target` | `repo`, `public`, `gitlab`, `vercel` | `public` | Where to publish |
 | `--remote` | Git URL | workspace origin | Remote URL override for repo target |
 | `--repo` | `owner/repo` or GitHub URL | — | GitHub repo for public target |
+| `--pages-base-url` | URL | — | GitLab Pages base for MR preview polling (repo) |
+| `--pages-timeout` | seconds | `600` | Pages poll timeout |
 | `--dry-run` | flag | Off | Preview without external writes |
 | `--skip-jira` | flag | Off | Skip Jira comment and label update |
-| `--force` | flag | Off | Submit even if rubric score fails |
+| `--force` | flag | Off | Submit even if eval has FAIL verdicts |
 | `--no-ssl-verify` | flag | Off | Skip SSL for git push (self-signed certs) |
 
 ---
@@ -67,15 +70,18 @@ Detect mode and verify required files:
 
 If validation fails: "Prototype `{ID}` is incomplete. Missing: [list]. Fix before publishing."
 
-## Step 2: Check Review Scores
+## Step 2: Check Eval Results
 
-Read `.artifacts/{ID}/reviews/summary.md` if it exists.
+Read `.artifacts/{ID}/evaluation-report.csv` from `uxd-prototype-evaluate` if it exists.
 
-- **Scores pass** (total >= 5, no zeros) → label: `rubric-pass`
-- **Scores fail** → label: `needs-attention`
-- **No review exists** → warn, recommend running `uxd-prototype-evaluate` first. In `--dry-run` or `--force` mode, proceed anyway.
+- **Pass** — zero `FAIL` verdicts in Section 1 (AC rows) → label: `rubric-pass` (or `eval-pass`)
+- **Needs attention** — one or more `FAIL` → label: `needs-attention`
+- **FLAGGED only** — warn for human review; do not block unless the user wants a clean report
+- **No eval exists** — warn; recommend serving the prototype and running `uxd-prototype-evaluate {ID} <URL>` first. In `--dry-run` or `--force` mode, proceed anyway.
 
-Unless `--force` is set, block submission if any dimension scored 0.
+Unless `--force` is set, **block submission when any AC verdict is FAIL**.
+
+Legacy fallback: if only `.artifacts/{ID}/reviews/summary.md` exists, use its verdict but prefer a fresh Playwright eval.
 
 ## Step 2b: Audit CI/CD Configs for Secrets
 
@@ -105,14 +111,17 @@ Before publishing to any target, scan existing CI/CD configuration files in the 
 
 Push prototype changes to a git repo and create a GitLab merge request.
 
-**Workspace mode:** Use `submit_to_repo.py` from `uxd-prototype-create`:
+**Workspace mode:** Use `submit_to_repo.py` from `uxd-prototype-create` (fork-aware `glab mr create`):
 
 ```bash
-python3 plugins/uxd-workshop/skills/uxd-prototype-create/scripts/submit_to_repo.py \
-  --rfe-key {ID} --title "{title}" [--remote {remote}] [--no-ssl-verify] [--dry-run]
+python3 "${CLAUDE_SKILL_DIR}/../uxd-prototype-create/scripts/submit_to_repo.py" \
+  --rfe-key {ID} --title "{title}" \
+  [--pages-base-url {url}] [--pages-timeout 600] \
+  [--jira-comment-id {id}] \
+  [--no-ssl-verify] [--dry-run]
 ```
 
-Read [references/repo-submit-details.md](references/repo-submit-details.md) for the full MR generation procedure, script output format, and workspace analysis requirements.
+Requires `glab` authenticated to the GitLab host. Read [references/repo-submit-details.md](references/repo-submit-details.md) for fork detection, MR verification, Pages polling, and JSON output.
 
 **Standalone mode:** Initialize and push as a standalone git repo:
 
@@ -237,8 +246,9 @@ https://<project-name>.vercel.app
 
 If Jira integration is available and `--skip-jira` is not set:
 
-1. Add a comment to the source issue linking to the published location, rubric score, and refinement count.
-2. Add labels: `prototype-created` plus the rubric verdict label (`rubric-pass` or `needs-attention`).
+1. Add a comment with the published location (MR and/or Pages preview), AC summary (`PASS`/`FAIL`/`FLAGGED` counts from `evaluation-report.csv`), and refinement count. Prefer wiki-markup hyperlinks: `[Preview|https://…]`, `[Merge request|https://…]`.
+2. If `submit_to_repo.py` returned `pages_url` after polling, include it (or update an existing comment via `--jira-comment-id`).
+3. Add labels: `prototype-created` plus `rubric-pass` / `needs-attention` from Step 2.
 
 Uses the Atlassian MCP if available, otherwise skips silently.
 
@@ -266,7 +276,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/frontmatter.py" set ".artifacts/{ID}/rfe-sn
 
 ## Step 6: Report
 
-Print a submission summary showing ID, target, rubric score, labels applied, Jira status, published location, and any warnings.
+Print a submission summary showing ID, target, eval FAIL count (or legacy rubric), labels applied, Jira status, MR/Pages URL, and any warnings.
 
 If `--dry-run`: Show what would happen without executing external writes.
 
@@ -280,7 +290,9 @@ To update a previously published prototype, run the same workflow again. The pub
 
 | Scenario | Handling |
 |----------|----------|
-| No review exists | Warn and recommend `uxd-prototype-evaluate`. Proceed with `--force`. |
+| No eval exists | Warn and recommend `uxd-prototype-evaluate {ID} <URL>`. Proceed with `--force`. |
+| Eval has FAIL | Block unless `--force`. |
+| Empty MR after push | `submit_to_repo.py` auto-recovers; if still failing, report `verification.verified: false`. |
 | Rubric score has zeros | Block unless `--force`. Label as `needs-attention`. |
 | No Jira key in metadata | Skip Jira update. Log warning. |
 | Prototype already submitted | Proceed (creates new submission record, doesn't overwrite). |
