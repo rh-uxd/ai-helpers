@@ -14,7 +14,9 @@ Creates a prototype based on various input sources and delivers output in multip
 
 Supports two workspace modes (integrate into an existing codebase or generate standalone HTML) and two decision modes (AI auto-resolves or presents interactive HTML decision pages for human selection).
 
-Also handles iterative refinement: after a prototype has been scored by `uxd-prototype-evaluate`, re-invoke this skill to apply targeted improvements based on the review feedback.
+Also handles iterative refinement: after `uxd-prototype-evaluate` (Playwright AC validation + usability), re-invoke this skill to apply targeted improvements from failed criteria and refinement suggestions.
+
+Supports **pipeline mode** (create → evaluate → optional refine → publish). See [references/pipeline-mode.md](references/pipeline-mode.md).
 
 ---
 
@@ -52,8 +54,8 @@ Default to auto.
 
 > How many design decisions should I surface?
 > - **Under** (2–3) — Quick exploration, simple features
-> - **Normal** (4–5) — Most prototypes
-> - **Over** (6–8) — Complex features, lots of creative latitude
+> - **Normal** (4–7) — Most prototypes
+> - **Over** (8–12) — Complex features, lots of creative latitude
 
 Default to normal.
 
@@ -77,9 +79,10 @@ Prototype Plan:
 |------|--------|---------|-------------|
 | `--workspace` | local path, git URL, or `standalone` | `standalone` | Where to build |
 | `--mode` | `auto`, `decide` | `auto` | Who makes design decisions |
-| `--depth` | `under`, `normal`, `over` | `normal` | Decision count (decide mode) |
+| `--depth` | `under`, `normal`, `over` | `normal` | Decision count: under 2–3, normal 4–7, over 8–12 |
 | `--branch` | branch name | auto-detected | Git branch to clone |
 | `--dry-run` | flag | off | Skip external writes |
+| `--pipeline` / `--speedrun` | flag | off | Run create → evaluate → refine → publish (see pipeline-mode.md) |
 
 **Dry run:** Fetches RFEs and creates all local artifacts under `.artifacts/` but skips git operations, Jira label updates, and any external writes.
 
@@ -87,15 +90,18 @@ Prototype Plan:
 
 ## Step 1: Fetch RFE Source
 
-Try these in order:
+Check for available sources:
 
-1. **Jira MCP** (preferred): `mcp__atlassian__getJiraIssue` with the issue key.
-2. **Fetch script** (fallback): `python3 "${CLAUDE_SKILL_DIR}/scripts/fetch_jira.py" PROJ-298 --json` (requires `JIRA_SERVER`, `JIRA_USER`, `JIRA_TOKEN` env vars).
-3. **User-provided description** (final fallback): Ask the user for title, user stories, acceptance criteria, and product context.
+1. **Local artifacts** — `.artifacts/*/rfe-snapshot.md` with valid frontmatter (may have been edited after a prior run).
+2. **Jira MCP** (preferred for live tickets): `getJiraIssue` with the issue key. Resolve `cloudId` from a full Jira URL hostname, or via `getAccessibleAtlassianResources` when only a key is given. Prefer `responseContentFormat: "markdown"`.
+3. **Fetch script** (fallback): `python3 "${CLAUDE_SKILL_DIR}/scripts/fetch_jira.py" PROJ-298 --json` (requires `JIRA_SERVER`, `JIRA_USER`, `JIRA_TOKEN` env vars).
+4. **User-provided description** (final fallback): Ask for title, user stories, acceptance criteria, and product context.
+
+**If both local artifacts and Jira are available:** Ask which to use. Local may be edited; Jira is canonical.
 
 ## Step 2: Select RFEs
 
-If multiple related issues exist, present them and let the user select which to include. For a single RFE (common case), proceed directly.
+If RFE IDs were provided explicitly in the prompt, process all of them — do not re-ask. Otherwise, if multiple related issues exist, present them and let the user select.
 
 ## Step 3: Save RFE Snapshots
 
@@ -112,7 +118,15 @@ Where `{ID}` is derived from the Jira key (e.g., `PROJ-298`) or a generated slug
 
 ## Step 4: Extract User Stories
 
-Parse user stories from the RFE. For each, identify actor, action, goal, and acceptance criteria. If no structured stories exist, synthesize from the description. Store in `.artifacts/{ID}/user-stories.json`.
+Parse from the RFE:
+
+1. **User stories** — actor, action, goal (normalize bullet requirements if needed)
+2. **Acceptance criteria** — Given/When/Then, checkboxes, or AC sections
+3. **Personas / roles** — prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` (e.g. `data-scientist`, `ml-engineer`, `mlops-operator`) when mapping audiences; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/` for experience, accessibility, regulation, or team size
+4. **Key entities** — nouns the UI manipulates (cluster, pipeline, key, …)
+5. **Flows** — verb phrases → screen sequence (create → configure → deploy)
+
+If the RFE is thin, document assumptions in `metadata.json`. Store structured stories in `.artifacts/{ID}/user-stories.json`.
 
 ---
 
@@ -120,7 +134,7 @@ Parse user stories from the RFE. For each, identify actor, action, goal, and acc
 
 **Standalone mode:** Create `.artifacts/{ID}/prototype/`. Skip to Step 6.
 
-**Workspace mode:** Use the resolve script:
+**Workspace mode:** Use the resolve script (needs elevated permissions for git clone — `required_permissions: ["all"]` in Cursor):
 
 ```bash
 python3 "${CLAUDE_SKILL_DIR}/scripts/resolve_workspace.py" "<path-or-url>" \
@@ -129,19 +143,26 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/resolve_workspace.py" "<path-or-url>" \
 
 Handles local paths, GitHub/GitLab URLs (extracts branch from URL patterns), SSL auto-retry, and shallow clones. Output JSON includes `type`, `clone_url`, `branch`, `clone_path`, `status`.
 
+**Preserve `branch` and `clone_url`** from this output in workspace analysis (Step 6) — `submit_to_repo.py` needs them for the MR target branch and push remote.
+
 ## Step 6: Analyze Target Codebase
 
-*Workspace mode only.*
+*Workspace mode only. Run inline — do not background; Steps 7–10 depend on results.*
 
-Analyze the workspace for: tech stack (framework, bundler, UI library, TypeScript), conventions (file naming, component patterns, routing), navigation structure, design system usage, and existing agent instructions (`.cursor/rules/`, `AGENTS.md`).
+Detect and record:
 
-Save to `.artifacts/{ID}/workspace-analysis.json`.
+1. Tech stack (framework, bundler, UI library, TypeScript)
+2. Conventions (file naming, component patterns, routing, tests)
+3. Navigation structure and design system usage
+4. Agent instructions (`.cursor/rules/`, `AGENTS.md`) — extract **verification commands** (lint, build, typecheck) for Step 10
+
+Save to `.artifacts/{ID}/workspace-analysis.json` including `clone_url`, `branch`, and `workspace_path`.
 
 ## Step 7: Design Decisions
 
 Design decisions are planned dynamically based on the RFE and codebase context. See `${CLAUDE_SKILL_DIR}/references/decision-points.yaml` for reference categories.
 
-**Plan decisions:** Analyze user stories and codebase to identify decisions with real tradeoffs. Count is determined by `--depth` (under: 2-3, normal: 4-5, over: 6-8).
+**Plan decisions:** Analyze user stories and codebase to identify decisions with real tradeoffs. Count is determined by `--depth` (under: 2–3, normal: 4–7, over: 8–12).
 
 **Decision workflow depends on mode:**
 
@@ -190,9 +211,14 @@ Read [references/output-formats.md](references/output-formats.md) for full schem
 
 ## Step 10: Post-Change Verification
 
-*Workspace mode only.*
+*Workspace mode only. Mandatory — do not skip.*
 
-Run lint, build, and type-check against the target workspace. Fix any errors introduced by the prototype. Record pass/fail in `.artifacts/{ID}/verification.json`.
+1. Read verification commands from `AGENTS.md` / package scripts discovered in Step 6
+2. Install dependencies if needed
+3. Lint changed files; fix errors introduced by the prototype
+4. Run build / type-check; fix failures
+5. If verification changes more files, update `changeset.md`
+6. Record pass/fail in `.artifacts/{ID}/verification.json`
 
 ## Step 11: Apply Labels in Jira (Optional)
 
@@ -202,17 +228,23 @@ If Jira is available (MCP or REST credentials), add label `prototype-creator-dra
 
 Print a summary showing ID, title, mode, screens, workspace, status, and artifact paths.
 
-Suggest: run `uxd-prototype-evaluate` to score, re-invoke this skill for refinement, or use `${CLAUDE_SKILL_DIR}/scripts/submit_to_repo.py` to push as a merge request.
+Suggest next steps:
+
+1. Serve the prototype and run `uxd-prototype-evaluate {ID} <URL> [--workspace=…]` (Playwright AC + usability)
+2. Re-invoke this skill to refine from FAIL / refinement-suggestions
+3. Publish via `uxd-prototype-publish` (or `${CLAUDE_SKILL_DIR}/scripts/submit_to_repo.py` for repo MR)
+
+If `--pipeline` / `--speedrun` was set, continue with [references/pipeline-mode.md](references/pipeline-mode.md).
 
 ---
 
 ## Refinement
 
-After a prototype has been evaluated, this section handles iterative improvement based on the review feedback.
+After Playwright evaluation, apply targeted improvements from failed ACs and suggestions.
 
-Read [references/refinement-procedure.md](references/refinement-procedure.md) when the user asks to refine a prototype or when running the automated refine-review loop.
+Read [references/refinement-procedure.md](references/refinement-procedure.md) when the user asks to refine or when running the automated refine→eval loop.
 
-**Quick summary:** Refinement reads `.artifacts/{ID}/reviews/summary.md`, plans targeted fixes by dimension (completeness, usability, feasibility), applies changes without full rewrite, and increments the iteration counter. Default max: 3 cycles.
+**Quick summary:** Reads `evaluation-report.csv` + `refinement-suggestions.json`, plans fixes for FAIL criteria, applies without full rewrite, increments iteration. Pass = zero FAIL. Default max: 3 cycles.
 
 **Invocation:**
 
@@ -220,7 +252,13 @@ Read [references/refinement-procedure.md](references/refinement-procedure.md) wh
 /uxd-prototype-create refine {ID} [--mode auto|decide] [--headless] [--max-cycles 3]
 ```
 
-**Headless auto-loop:** With `--headless`, runs refine→review→check scores→refine again until scores pass (5+/6 with no zeros), max cycles reached, or score plateaus.
+**Headless auto-loop:** With `--headless`, runs refine → `uxd-prototype-evaluate` → check FAIL count → refine again until zero FAIL, max cycles, or plateau.
+
+---
+
+## Pipeline Mode
+
+When the user wants the full create → evaluate → publish flow, read [references/pipeline-mode.md](references/pipeline-mode.md) and orchestrate those skills.
 
 ---
 

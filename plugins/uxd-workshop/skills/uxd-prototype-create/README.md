@@ -1,6 +1,6 @@
 # uxd-prototype-create
 
-Creates UX prototypes from various inputs and delivers them in multiple formats. Guides users conversationally through what to build and where to put it.
+Creates UX prototypes from various inputs and delivers them in multiple formats. Guides users conversationally through what to build and where to put it. Also handles refinement after Playwright evaluation and optional end-to-end pipeline mode.
 
 ## Inputs
 
@@ -14,6 +14,7 @@ The skill accepts any combination of these — it asks clarifying questions to f
 | Existing codebase | Local path or git URL to build on top of (workspace mode) |
 | Research context | Personas, JTBD, user stories in `.context/research-context/` |
 | Prior decisions | Existing `.artifacts/{ID}/decisions/` from an earlier run |
+| Eval feedback | `evaluation-report.csv` + `refinement-suggestions.json` for refine |
 
 ## Outputs
 
@@ -26,7 +27,6 @@ The skill accepts any combination of these — it asks clarifying questions to f
 | Workspace analysis | JSON with tech stack, conventions, verification commands | `.artifacts/{ID}/workspace-analysis.json` |
 | Metadata | JSON with mode, source, assumptions | `.artifacts/{ID}/metadata.json` |
 
-
 ## Decision Modes
 
 | Mode | Behavior |
@@ -34,18 +34,21 @@ The skill accepts any combination of these — it asks clarifying questions to f
 | **auto** | AI makes all design decisions based on best practices. Fast, no pauses. |
 | **decide** | Generates HTML decision pages with visual previews and tradeoffs. User picks each direction. |
 
-Decision depth (`--depth`) controls how many decisions are surfaced: `under` (2-3), `normal` (4-7), `over` (8-12).
+Decision depth (`--depth`): `under` (2–3), `normal` (4–7), `over` (8–12).
+
+## Pipeline mode
+
+Pass `--pipeline` / `--speedrun` or ask for a full run. Sequence: create → serve → `uxd-prototype-evaluate` → optional refine → `uxd-prototype-publish`. See `references/pipeline-mode.md`.
 
 ## Quick Start
-
-Just tell the agent what you want to prototype — it asks the rest conversationally:
 
 - "Prototype PROJ-298"
 - "Create a prototype from this Figma design: https://figma.com/design/..."
 - "I have an idea for a settings page — let's prototype it"
 - "Build on top of my existing repo at /path/to/project"
+- "Run the full pipeline for PROJ-298 and open an MR"
 
 ## Related
 
-- **uxd-prototype-evaluate** — Score and test the prototype after creation
-- **uxd-prototype-pipeline** (agent) — Run the full create-review-refine-submit pipeline end-to-end
+- **uxd-prototype-evaluate** — Playwright AC validation + persona usability + HTML report
+- **uxd-prototype-publish** — MR, GitHub/GitLab Pages, or Vercel
