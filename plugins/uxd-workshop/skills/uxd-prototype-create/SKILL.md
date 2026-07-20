@@ -1,11 +1,10 @@
 ---
 name: uxd-prototype-create
 description: >-
-  Create or refine a UX prototype from various input sources — a Jira ticket,
-  Figma design, feature description, or just an idea. Guides the user
-  conversationally through workspace and decision mode choices.
-  Can target an existing codebase or generate standalone HTML. Also handles
-  iterative refinement based on evaluation feedback.
+  Create or refine a UX prototype from a Jira ticket, Figma design, feature
+  description, or rough idea. Use when starting a new prototype, integrating
+  into an existing codebase, generating standalone HTML, or applying evaluation
+  feedback.
 ---
 
 # Prototype Creator

@@ -1,9 +1,9 @@
 ---
 name: uxd-prototype-publish
 description: >-
-  Publish a prototype to a target destination — push to a git repo as a merge
-  request, or deploy a sanitized copy to GitHub Pages, GitLab Pages, or Vercel.
-  Handles sensitive file removal, Jira status updates, and submission tracking.
+  Publish a prototype to a git merge request, GitHub Pages, GitLab Pages, or
+  Vercel. Use when sharing a finished prototype for review, deploying a
+  sanitized public copy, or updating Jira with submission links.
 ---
 
 # Publish Prototype
