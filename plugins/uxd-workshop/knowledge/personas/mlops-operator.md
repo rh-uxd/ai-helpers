@@ -2,9 +2,10 @@
 id: mlops-operator
 display_name: Maude
 role: MLOps / platform operator
-audiences:
+aliases:
   - mlops
-  - platform-operator
+  - ml ops
+  - platform operator
 default_experience:
   - junior
   - experienced

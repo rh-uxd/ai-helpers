@@ -2,7 +2,7 @@
 id: accessibility
 display_name: Accessibility
 kind: context
-audiences:
+aliases:
   - accessibility
   - a11y
   - screen reader

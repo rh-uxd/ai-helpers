@@ -13,14 +13,14 @@ Composition rules live in the parent [`../README.md`](../README.md) — every ov
 
 ## Source of truth
 
-1. **[`catalog.yaml`](catalog.yaml)** — overlay IDs, levels, audience tags
+1. **[`catalog.yaml`](catalog.yaml)** — overlay IDs, levels, aliases
 2. **Overlay cards** — markdown matching [`TEMPLATE.md`](TEMPLATE.md)
 
 ## Card format
 
 Copy [`TEMPLATE.md`](TEMPLATE.md). Required shape:
 
-1. YAML front matter (`id`, `display_name`, `kind`, optional `levels` / `audiences`)
+1. YAML front matter (`id`, `display_name`, `kind`, optional `levels` / `aliases`)
 2. `#` title
 3. One short intro paragraph
 4. `## Lens`
@@ -32,12 +32,11 @@ Copy [`TEMPLATE.md`](TEMPLATE.md). Required shape:
 | `id` | Stable overlay ID (matches filename stem) |
 | `display_name` | Human label |
 | `kind` | `slider` (leveled) or `context` (on/off lens) |
-| `levels` | Level ids/labels for sliders (composed as `+{level-id}`) |
-| `audiences` | Free-text match tags (optional) |
+| `levels` | Level ids/labels for sliders (composed as `+{level-id}`); levels may have their own `aliases` |
+| `aliases` | Also-known-as phrases that select this overlay (context overlays); singular only |
 
 ## Adding an overlay
 
 1. Copy [`TEMPLATE.md`](TEMPLATE.md) to `{id}.md` and fill it in
-2. Add an entry to `catalog.yaml`
-3. Update `audience_map` if free-text matching should select it
-4. Keep composition docs in the parent personas README only
+2. Add an entry to `catalog.yaml` with `aliases` (context) or level `aliases` (slider)
+3. Keep composition docs in the parent personas README only

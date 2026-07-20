@@ -121,7 +121,7 @@ Parse from the RFE:
 
 1. **User stories** — actor, action, goal (normalize bullet requirements if needed)
 2. **Acceptance criteria** — Given/When/Then, checkboxes, or AC sections
-3. **Personas / roles** — prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` (e.g. `data-scientist`, `ml-engineer`, `mlops-operator`) when mapping audiences; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/` for experience, accessibility, regulation, or team size
+3. **Personas / roles** — prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` when mapping roles via `aliases`; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/` for experience, accessibility, regulation, or team size
 4. **Key entities** — nouns the UI manipulates (cluster, pipeline, key, …)
 5. **Flows** — verb phrases → screen sequence (create → configure → deploy)
 

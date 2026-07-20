@@ -2,9 +2,13 @@
 id: platform-engineer
 display_name: Paula
 role: Platform / infrastructure engineer
-audiences:
-  - platform-admin
-  - infrastructure
+aliases:
+  - platform engineer
+  - platform admin
+  - devops/platform engineer
+  - infrastructure engineer
+  - sre
+  - site reliability
 default_experience:
   - experienced
 ---

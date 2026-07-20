@@ -12,17 +12,17 @@ Prefer grounding in specific people and research when you have it. Treat these c
 
 ## Source of truth
 
-1. **[`catalog.yaml`](catalog.yaml)** — IDs, display names, roles, audience tags, default experience
+1. **[`catalog.yaml`](catalog.yaml)** — IDs, display names, roles, aliases, default experience
 2. **Persona cards** — role-named markdown matching [`TEMPLATE.md`](TEMPLATE.md)
 3. **[`overlays/`](overlays/)** — persona overlays (same `+` composition rules below)
 
-Skills that need personas should **read the catalog first**, then load the card from `card:` (and optional deep behavioral YAML under `.context/` if present). Load overlays from `overlays/` when audience language or eval goals call for them.
+Skills that need personas should **read the catalog first**, then load the card from `card:` (and optional deep behavioral YAML under `.context/` if present). Load overlays from `overlays/` when alias language or eval goals call for them.
 
 ## Card format
 
 Copy [`TEMPLATE.md`](TEMPLATE.md). Required shape:
 
-1. YAML front matter (`id`, `display_name`, `role`, `audiences`, `default_experience`)
+1. YAML front matter (`id`, `display_name`, `role`, `aliases`, `default_experience`)
 2. `#` title matching the role
 3. `## Who`
 4. `## When to use`
@@ -32,8 +32,14 @@ Copy [`TEMPLATE.md`](TEMPLATE.md). Required shape:
 | `id` | Stable role ID (matches filename stem) |
 | `display_name` | Human label for reports / conversation |
 | `role` | Short role title |
-| `audiences` | Tags for audience matching |
+| `aliases` | Also-known-as phrases for the same role (matching + human labels); singular only |
 | `default_experience` | Which experience overlay levels to pair for eval |
+
+## Aliases (matching)
+
+`aliases` are near-synonyms for the same role hat — not distinct personas. Skills match free-text target-audience language against each persona’s `id`, `role`, and `aliases` (case-insensitive substring). Prefer longer / more specific matches when several apply. Overlay matching uses aliases on overlays (and on slider levels) in [`overlays/catalog.yaml`](overlays/catalog.yaml).
+
+**Write aliases in the singular.** Do not add plural variants (`data scientist`, not `data scientists`). Substring matching already covers common plurals.
 
 ## File naming
 
@@ -45,6 +51,12 @@ Cards and IDs are named by **role**:
 | `ml-engineer.md` | `ml-engineer` | Alex |
 | `mlops-operator.md` | `mlops-operator` | Maude |
 | `platform-engineer.md` | `platform-engineer` | Paula |
+| `system-admin.md` | `system-admin` | Sam |
+| `security-compliance.md` | `security-compliance` | Priya |
+| `infrastructure-architect.md` | `infrastructure-architect` | Ira |
+| `automation-developer.md` | `automation-developer` | Avery |
+| `automation-admin.md` | `automation-admin` | Adrian |
+| `app-developer.md` | `app-developer` | Dana |
 
 ## Composition with overlays
 
@@ -68,11 +80,10 @@ Rules:
 
 ## Optional deep profiles
 
-If `.context/usability-testing/personas/<composed-id>.yaml` exists (from bootstrap), use it for patience, constraints, and domain_knowledge. The catalog still owns IDs, display names, and audience mapping.
+If `.context/usability-testing/personas/<composed-id>.yaml` exists (from bootstrap), use it for patience, constraints, and domain_knowledge. The catalog still owns IDs, display names, and aliases.
 
 ## Adding a persona
 
 1. Copy [`TEMPLATE.md`](TEMPLATE.md) to `{id}.md` and fill it in
-2. Add an entry to `catalog.yaml` with matching `id` and `card:`
-3. Update `audience_map` if needed
-4. Optionally add matching deep YAML under your local `.context/` for evaluate Phase B
+2. Add an entry to `catalog.yaml` with matching `id`, `aliases`, and `card:`
+3. Optionally add matching deep YAML under your local `.context/` for evaluate Phase B

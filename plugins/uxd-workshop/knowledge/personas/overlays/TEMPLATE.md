@@ -5,7 +5,10 @@ kind: context # context | slider
 # levels:           # include only for kind: slider
 #   - id: example-level
 #     label: Example level
-audiences:
+#     aliases:
+#       - example level phrase
+# Singular only — substring matching covers plurals; do not add "…s" variants
+aliases:
   - example match phrase
 ---
 
@@ -27,5 +30,5 @@ What changes when this overlay is on: constraints, expectations, or friction the
 
 ## When to apply
 
-- Audience or research language that should attach this overlay
+- Research or requirements language that should attach this overlay
 - Situations where the same role would behave differently under this context

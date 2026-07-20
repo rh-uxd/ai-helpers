@@ -2,8 +2,10 @@
 id: example-role
 display_name: Example
 role: Example role title
-audiences:
-  - example-audience
+# Singular only — substring matching covers plurals; do not add "…s" variants
+aliases:
+  - example role
+  - example practitioner
 default_experience:
   - junior
   - senior
@@ -17,5 +19,5 @@ One short paragraph: what this role does day to day, what they know well, and wh
 
 ## When to use
 
-- Audience or research language that should select this role
+- Research or requirements language that should select this role
 - Product flows or surfaces where this role is the primary actor

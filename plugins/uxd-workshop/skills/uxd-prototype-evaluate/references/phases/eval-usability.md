@@ -51,10 +51,10 @@ ${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml
 (Fallback: `${CLAUDE_SKILL_DIR}/../../knowledge/...`)
 
 1. Read `extract-state.json > persona_selection.target_audience_text`
-2. Match against `audience_map` in the personas catalog (case-insensitive substring)
-3. Use `defaults.pair` when no audience match
+2. Match against each persona's `id`, `role`, and `aliases` in the personas catalog (case-insensitive substring). Aliases are singular; substring matching covers plurals. Prefer longer / more specific matches when several apply.
+3. Use `defaults.pair` when no alias match
 4. Compose with experience overlays from each persona's `default_experience` (prefer one junior + one senior/experienced)
-5. If audience language matches overlays `audience_map` (accessibility, regulation), attach those context overlays onto the selected role personas — do **not** treat them as standalone personas
+5. If language matches overlay `aliases` (or slider level `aliases`) in the overlays catalog — e.g. accessibility, regulation, team size — attach those overlays onto the selected role personas; do **not** treat overlays as standalone personas
 6. Read matching persona cards under `knowledge/personas/<card>` and any overlay cards under `knowledge/personas/overlays/<id>.md`
 
 Do **not** invent new persona names when a catalog entry fits. If you must add a temporary persona, note it in `persona_selection.considered_but_rejected` / reasoning and prefer proposing a catalog update.

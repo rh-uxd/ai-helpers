@@ -3,8 +3,13 @@
 #
 # Overlays are contexts/lenses, not job roles. A data scientist can also be
 # evaluated under accessibility, regulation, team size, and/or experience level.
+#
+# aliases: also-known-as phrases that select this overlay (or level). Use singular
+# forms only — substring matching covers plurals. Skills match free-text language
+# against overlay aliases and, for sliders, level aliases (case-insensitive
+# substring). Applied in addition to a role persona.
 
-version: "1.0"
+version: "1.1"
 
 overlays:
   - id: experience
@@ -17,10 +22,19 @@ overlays:
     levels:
       - id: junior
         label: Junior
+        aliases:
+          - junior
+          - early career
+          - novice
       - id: senior
         label: Senior
+        aliases:
+          - senior
       - id: experienced
         label: Experienced
+        aliases:
+          - experienced
+          - expert
 
   - id: accessibility
     display_name: Accessibility
@@ -28,7 +42,7 @@ overlays:
     summary: >-
       Keyboard, assistive tech, and clear structure. Layer onto a role persona;
       do not use as the only evaluator.
-    audiences:
+    aliases:
       - accessibility
       - a11y
       - screen reader
@@ -40,10 +54,12 @@ overlays:
     summary: >-
       Compliance, air-gap, or strict change-control constraints. Layer onto a
       role persona; do not use as a standalone job role.
-    audiences:
+    aliases:
       - regulated
       - air-gapped
+      - air gapped
       - compliance
+      - fedramp
     card: regulation.md
 
   - id: team
@@ -56,47 +72,21 @@ overlays:
     levels:
       - id: small-team
         label: Small team
+        aliases:
+          - small team
+          - small-team
+          - startup
+          - early stage
       - id: medium-team
         label: Medium team
+        aliases:
+          - medium team
+          - mid-size team
+          - mid size team
       - id: large-team
         label: Large team
-
-# Free-text audience language → overlay IDs (applied in addition to a persona).
-# For team size, match also implies a default level when composing.
-audience_map:
-  - match:
-      - accessibility
-      - a11y
-      - screen reader
-    overlays: [accessibility]
-
-  - match:
-      - regulated
-      - air-gapped
-      - air gapped
-      - compliance
-      - fedramp
-    overlays: [regulation]
-
-  - match:
-      - small team
-      - small-team
-      - startup
-      - early stage
-    overlays: [team]
-    level: small-team
-
-  - match:
-      - medium team
-      - mid-size team
-      - mid size team
-    overlays: [team]
-    level: medium-team
-
-  - match:
-      - large team
-      - large-team
-      - enterprise
-      - platform org
-    overlays: [team]
-    level: large-team
+        aliases:
+          - large team
+          - large-team
+          - enterprise
+          - platform org

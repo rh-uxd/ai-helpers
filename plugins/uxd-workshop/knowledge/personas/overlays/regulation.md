@@ -2,10 +2,12 @@
 id: regulation
 display_name: Regulated environment
 kind: context
-audiences:
+aliases:
   - regulated
   - air-gapped
+  - air gapped
   - compliance
+  - fedramp
 ---
 
 # Regulated environment

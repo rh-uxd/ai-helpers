@@ -6,10 +6,17 @@
 # Card files and IDs are role-based (data-scientist). Personal names (Deena, …)
 # are display_name labels for reports/conversation.
 #
+# aliases: also-known-as phrases for the same role (not distinct personas).
+# Use singular forms only — substring matching covers plurals (e.g. "data
+# scientist" matches "data scientists"). Skills match free-text target-audience
+# language against id, role, and aliases (case-insensitive substring). Prefer
+# longer / more specific matches when several apply. Overlay aliases live in
+# overlays/catalog.yaml.
+#
 # Experience, accessibility, regulation, and team size are persona overlays — see
 # ${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml
 
-version: "1.1"
+version: "1.3"
 
 personas:
   - id: data-scientist
@@ -18,9 +25,9 @@ personas:
     summary: >-
       Works in notebooks and model workflows. Comfortable with ML concepts;
       less so with platform/infra jargon.
-    audiences:
-      - data-scientist
-      - ml-practitioner
+    aliases:
+      - data scientist
+      - ml practitioner
     default_experience:
       - junior
       - senior
@@ -32,9 +39,11 @@ personas:
     summary: >-
       Builds and integrates model-serving and app code. Expects clear APIs,
       logs, and developer-oriented flows.
-    audiences:
-      - ml-engineer
-      - developer
+    aliases:
+      - ai/ml engineer
+      - ai engineer
+      - ml engineer
+      - generative ai engineer
     default_experience:
       - junior
       - senior
@@ -46,9 +55,10 @@ personas:
     summary: >-
       Operates pipelines, deployments, and day-2 concerns. Values reliability,
       observability, and operational clarity.
-    audiences:
+    aliases:
       - mlops
-      - platform-operator
+      - ml ops
+      - platform operator
     default_experience:
       - junior
       - experienced
@@ -60,45 +70,118 @@ personas:
     summary: >-
       Owns clusters, networking, and platform foundations. Thinks in systems,
       quotas, and failure domains.
-    audiences:
-      - platform-admin
-      - infrastructure
+    aliases:
+      - platform engineer
+      - platform admin
+      - devops/platform engineer
+      - infrastructure engineer
+      - sre
+      - site reliability
     default_experience:
       - experienced
     card: platform-engineer.md
 
-# Map free-text RFE / research "target audience" language → role personas.
-# Skills compose with experience overlays from default_experience (or
-# knowledge/personas/overlays/experience.md). Other overlays (accessibility,
-# regulation, team) come from knowledge/personas/overlays/catalog.yaml audience_map.
-audience_map:
-  - match:
-      - data scientist
-      - data scientists
-      - ml practitioner
-      - ml practitioners
-    personas: [data-scientist]
+  - id: system-admin
+    display_name: Sam
+    role: System administrator
+    summary: >-
+      Hands-on server and OS fleet ops — patching, imaging, remediation.
+      Titles vary; the job is keeping hosts reliable under time pressure.
+    aliases:
+      - system admin
+      - system administrator
+      - sysadmin
+      - sys admin
+      - linux admin
+      - linux administrator
+      - server admin
+      - server administrator
+    default_experience:
+      - junior
+      - experienced
+    card: system-admin.md
 
-  - match:
-      - ai/ml engineer
-      - ml engineer
-      - ml engineers
+  - id: security-compliance
+    display_name: Priya
+    role: Security & compliance practitioner
+    summary: >-
+      Owns vulnerability, hardening, and audit posture. Prefers proactive
+      automation and clear evidence for owners and auditors.
+    aliases:
+      - security
+      - infosec
+      - info sec
+      - compliance
+      - compliance auditor
+      - it security
+      - security and compliance
+    default_experience:
+      - experienced
+      - senior
+    card: security-compliance.md
+
+  - id: infrastructure-architect
+    display_name: Ira
+    role: Infrastructure architect
+    summary: >-
+      Designs infrastructure standards for the business. Focuses on impact,
+      compatibility, and change windows over day-to-day click-ops.
+    aliases:
+      - infrastructure architect
+      - solution architect
+      - enterprise architect
+      - principal architect
+    default_experience:
+      - senior
+      - experienced
+    card: infrastructure-architect.md
+
+  - id: automation-developer
+    display_name: Avery
+    role: Automation developer
+    summary: >-
+      Writes automation content (jobs, roles, templates). Learning centers on
+      structure, variables, and progressive real-world examples.
+    aliases:
+      - automation developer
+      - content creator
+      - automation author
+    default_experience:
+      - junior
+      - senior
+    card: automation-developer.md
+
+  - id: automation-admin
+    display_name: Adrian
+    role: Automation platform admin / operator
+    summary: >-
+      Operates an automation platform for others — install, credentials, RBAC,
+      templates, and platform health. Distinct from content authoring.
+    aliases:
+      - automation admin
+      - automation operator
+      - automation platform admin
+    default_experience:
+      - junior
+      - experienced
+    card: automation-admin.md
+
+  - id: app-developer
+    display_name: Dana
+    role: Application / enterprise developer
+    summary: >-
+      Builds apps on internal platforms. Wants golden paths, self-service, and
+      enough telemetry to debug without becoming a platform expert.
+    aliases:
+      - app developer
+      - application developer
+      - enterprise developer
+      - software developer
       - developer
-      - developers
-    personas: [ml-engineer]
-
-  - match:
-      - mlops
-      - platform operator
-      - platform operators
-    personas: [mlops-operator]
-
-  - match:
-      - platform admin
-      - platform admins
-      - infrastructure
-      - sre
-    personas: [platform-engineer]
+    default_experience:
+      - junior
+      - senior
+    card: app-developer.md
 
 defaults:
   # When audience is unclear, use a balanced practitioner pair

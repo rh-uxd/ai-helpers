@@ -2,9 +2,9 @@
 id: data-scientist
 display_name: Deena
 role: Data scientist / ML practitioner
-audiences:
-  - data-scientist
-  - ml-practitioner
+aliases:
+  - data scientist
+  - ml practitioner
 default_experience:
   - junior
   - senior

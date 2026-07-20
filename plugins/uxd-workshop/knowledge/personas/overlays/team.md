@@ -9,11 +9,18 @@ levels:
     label: Medium team
   - id: large-team
     label: Large team
-audiences:
+aliases:
   - small team
-  - large team
-  - enterprise team
+  - small-team
   - startup
+  - early stage
+  - medium team
+  - mid-size team
+  - mid size team
+  - large team
+  - large-team
+  - enterprise
+  - platform org
 ---
 
 # Team size
