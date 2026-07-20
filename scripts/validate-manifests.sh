@@ -45,29 +45,28 @@ while read -r claude_manifest; do
     continue
   fi
 
-  # Allow Cursor-only component path / MCP fields; compare the rest.
+  # Manifests differ — compare field by field.
   if ! python3 - "$claude_manifest" "$cursor_manifest" "$plugin_name" <<'PY'
 import json, sys
 claude_path, cursor_path, name = sys.argv[1:4]
-cursor_only = {"skills", "agents", "commands", "rules", "hooks", "mcpServers"}
 with open(claude_path) as f:
     claude = json.load(f)
 with open(cursor_path) as f:
     cursor = json.load(f)
-claude_extra = set(claude) - set(cursor)
-cursor_shared = {k: v for k, v in cursor.items() if k not in cursor_only}
-claude_shared = {k: v for k, v in claude.items() if k not in cursor_only}
-# Claude should not carry Cursor-only path overrides (keep Claude lean).
-if set(claude) & cursor_only:
-    print(f"  FAIL: {name}: .claude-plugin/plugin.json has Cursor-only fields: {sorted(set(claude) & cursor_only)}", file=sys.stderr)
+if claude != cursor:
+    claude_only = sorted(set(claude) - set(cursor))
+    cursor_only = sorted(set(cursor) - set(claude))
+    shared_diff = sorted(k for k in set(claude) & set(cursor) if claude[k] != cursor[k])
+    parts = []
+    if claude_only:
+        parts.append(f"Claude-only keys: {claude_only}")
+    if cursor_only:
+        parts.append(f"Cursor-only keys: {cursor_only}")
+    if shared_diff:
+        parts.append(f"shared keys with different values: {shared_diff}")
+    print(f"  FAIL: {name}: plugin.json differs — {'; '.join(parts)}", file=sys.stderr)
     sys.exit(1)
-if claude_shared != cursor_shared:
-    print(f"  FAIL: {name}: shared plugin.json fields differ between Claude and Cursor", file=sys.stderr)
-    sys.exit(1)
-if claude_extra:
-    print(f"  FAIL: {name}: Claude has keys missing from Cursor: {sorted(claude_extra)}", file=sys.stderr)
-    sys.exit(1)
-print(f"  OK: {name}: Cursor adds path overrides; shared fields match")
+print(f"  OK: {name}: manifests match")
 PY
   then
     fail "${plugin_name}: .claude-plugin/plugin.json and .cursor-plugin/plugin.json differ incompatibly"

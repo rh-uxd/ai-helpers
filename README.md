@@ -58,7 +58,7 @@ See [PLUGINS.md](PLUGINS.md) for the full list of skills, agents, and usage deta
 ## How It Works
 
 1. You add this repo as a **marketplace** in Claude Code or Cursor
-2. You install a plugin (e.g., `patternfly`) — it auto-installs its sub-plugins via dependencies
+2. You install a plugin (e.g., `patternfly`) — it aggregates all PF sub-plugin skills, agents, and MCP servers
 3. Skills become available as `/<plugin>:<skill>` slash commands in any project
 
 ## Repository Structure

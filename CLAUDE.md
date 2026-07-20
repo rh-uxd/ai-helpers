@@ -40,7 +40,7 @@ scripts/                           — Automation scripts
 
 ## Meta-plugin Architecture
 
-The `patternfly` plugin at `plugins/patternfly/` is a **meta-plugin** — it declares dependencies on consumer-facing PF plugins and auto-installs them. It has no skills, only the `pf-assist` routing agent.
+The `patternfly` plugin at `plugins/patternfly/` is a **meta-plugin** — it aggregates all PF sub-plugin skills, agents, and MCP servers via explicit path fields. It has no skills of its own, only the `pf-assist` routing agent.
 
 **Delisted plugins** (kept on disk, not in marketplace.json):
 - `pf-a11y` — empty, no skills yet
