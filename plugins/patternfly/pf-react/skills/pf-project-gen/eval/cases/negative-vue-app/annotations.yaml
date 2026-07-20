@@ -1,0 +1,3 @@
+expect_pf_scaffold: false
+expect_charts: false
+prompt_style: negative
