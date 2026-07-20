@@ -1,0 +1,106 @@
+# Canonical UXD persona catalog (role personas only).
+# Skills should load this file before inventing ad-hoc persona names.
+#
+# Path: ${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml
+#
+# Card files and IDs are role-based (data-scientist). Personal names (Deena, …)
+# are display_name labels for reports/conversation.
+#
+# Experience, accessibility, regulation, and team size are persona overlays — see
+# ${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml
+
+version: "1.1"
+
+personas:
+  - id: data-scientist
+    display_name: Deena
+    role: Data scientist / ML practitioner
+    summary: >-
+      Works in notebooks and model workflows. Comfortable with ML concepts;
+      less so with platform/infra jargon.
+    audiences:
+      - data-scientist
+      - ml-practitioner
+    default_experience:
+      - junior
+      - senior
+    card: data-scientist.md
+
+  - id: ml-engineer
+    display_name: Alex
+    role: AI/ML engineer / developer
+    summary: >-
+      Builds and integrates model-serving and app code. Expects clear APIs,
+      logs, and developer-oriented flows.
+    audiences:
+      - ml-engineer
+      - developer
+    default_experience:
+      - junior
+      - senior
+    card: ml-engineer.md
+
+  - id: mlops-operator
+    display_name: Maude
+    role: MLOps / platform operator
+    summary: >-
+      Operates pipelines, deployments, and day-2 concerns. Values reliability,
+      observability, and operational clarity.
+    audiences:
+      - mlops
+      - platform-operator
+    default_experience:
+      - junior
+      - experienced
+    card: mlops-operator.md
+
+  - id: platform-engineer
+    display_name: Paula
+    role: Platform / infrastructure engineer
+    summary: >-
+      Owns clusters, networking, and platform foundations. Thinks in systems,
+      quotas, and failure domains.
+    audiences:
+      - platform-admin
+      - infrastructure
+    default_experience:
+      - experienced
+    card: platform-engineer.md
+
+# Map free-text RFE / research "target audience" language → role personas.
+# Skills compose with experience overlays from default_experience (or
+# knowledge/personas/overlays/experience.md). Other overlays (accessibility,
+# regulation, team) come from knowledge/personas/overlays/catalog.yaml audience_map.
+audience_map:
+  - match:
+      - data scientist
+      - data scientists
+      - ml practitioner
+      - ml practitioners
+    personas: [data-scientist]
+
+  - match:
+      - ai/ml engineer
+      - ml engineer
+      - ml engineers
+      - developer
+      - developers
+    personas: [ml-engineer]
+
+  - match:
+      - mlops
+      - platform operator
+      - platform operators
+    personas: [mlops-operator]
+
+  - match:
+      - platform admin
+      - platform admins
+      - infrastructure
+      - sre
+    personas: [platform-engineer]
+
+defaults:
+  # When audience is unclear, use a balanced practitioner pair
+  # (persona + experience overlay → composed run IDs)
+  pair: [data-scientist+junior, data-scientist+senior]
