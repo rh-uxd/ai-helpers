@@ -1,0 +1,102 @@
+# Cross-cutting overlays — apply on top of role personas.
+# Path: ${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml
+#
+# Overlays are contexts/lenses, not job roles. A data scientist can also be
+# evaluated under accessibility, regulation, team size, and/or experience level.
+
+version: "1.0"
+
+overlays:
+  - id: experience
+    display_name: Experience level
+    kind: slider
+    summary: >-
+      How long the person has done the work. Compose with a persona ID as
+      {persona-id}+{level} (e.g. data-scientist+junior).
+    card: experience.md
+    levels:
+      - id: junior
+        label: Junior
+      - id: senior
+        label: Senior
+      - id: experienced
+        label: Experienced
+
+  - id: accessibility
+    display_name: Accessibility
+    kind: context
+    summary: >-
+      Keyboard, assistive tech, and clear structure. Layer onto a role persona;
+      do not use as the only evaluator.
+    audiences:
+      - accessibility
+      - a11y
+      - screen reader
+    card: accessibility.md
+
+  - id: regulation
+    display_name: Regulated environment
+    kind: context
+    summary: >-
+      Compliance, air-gap, or strict change-control constraints. Layer onto a
+      role persona; do not use as a standalone job role.
+    audiences:
+      - regulated
+      - air-gapped
+      - compliance
+    card: regulation.md
+
+  - id: team
+    display_name: Team size
+    kind: slider
+    summary: >-
+      Org / team scale. Compose level IDs as {persona-id}+…+{level}
+      (e.g. data-scientist+senior+small-team).
+    card: team.md
+    levels:
+      - id: small-team
+        label: Small team
+      - id: medium-team
+        label: Medium team
+      - id: large-team
+        label: Large team
+
+# Free-text audience language → overlay IDs (applied in addition to a persona).
+# For team size, match also implies a default level when composing.
+audience_map:
+  - match:
+      - accessibility
+      - a11y
+      - screen reader
+    overlays: [accessibility]
+
+  - match:
+      - regulated
+      - air-gapped
+      - air gapped
+      - compliance
+      - fedramp
+    overlays: [regulation]
+
+  - match:
+      - small team
+      - small-team
+      - startup
+      - early stage
+    overlays: [team]
+    level: small-team
+
+  - match:
+      - medium team
+      - mid-size team
+      - mid size team
+    overlays: [team]
+    level: medium-team
+
+  - match:
+      - large team
+      - large-team
+      - enterprise
+      - platform org
+    overlays: [team]
+    level: large-team
