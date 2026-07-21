@@ -4,14 +4,15 @@ Schema definitions for artifacts produced by the prototype creation pipeline. Lo
 
 ## .artifacts/{ID}/workspace-analysis.json
 
-Written during Step 6 (codebase analysis). Critical for workspace mode — `submit_to_repo.py` reads `branch` and `clone_url` from this file.
+Written during Step 6 (codebase analysis). Critical for workspace mode — `submit_to_repo.py` reads `branch`, `clone_url`, and optional `upstream_url` from this file.
 
 ```json
 {
   "rfe_key": "PROJ-298",
   "workspace_path": ".artifacts/PROJ-298/workspace",
   "branch": "3.5",
-  "clone_url": "https://gitlab.example.com/org/repo.git",
+  "clone_url": "https://gitlab.example.com/user/fork.git",
+  "upstream_url": "https://gitlab.example.com/org/canonical.git",
   "tech_stack": {
     "framework": "react",
     "language": "typescript",
@@ -34,6 +35,8 @@ Written during Step 6 (codebase analysis). Critical for workspace mode — `subm
   }
 }
 ```
+
+`upstream_url` (alias `target_repo_url`) is set when `--target` was a git URL — the MR/PR base repo. Omit when publishing to the same project as `clone_url` / `origin`.
 
 ## .artifacts/{ID}/metadata.json
 
@@ -200,6 +203,10 @@ JSON output from the workspace resolution script:
   "branch": "3.5",
   "branch_source": "url",
   "clone_path": ".artifacts/PROJ-298/workspace",
+  "upstream_url": "https://gitlab.example.com/org/canonical.git",
+  "upstream_remote": "set",
   "status": "cloned"
 }
 ```
+
+`upstream_url` / `upstream_remote` appear when `--upstream` is passed (from a `--target` git URL).

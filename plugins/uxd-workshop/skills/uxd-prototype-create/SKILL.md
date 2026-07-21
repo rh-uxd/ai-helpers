@@ -66,6 +66,7 @@ Print a summary and ask for confirmation before starting:
 Prototype Plan:
   Source:     PROJ-298 (Jira)
   Workspace:  standalone
+  Target:     none
   Mode:       auto
   Depth:      normal
 ```
@@ -76,12 +77,15 @@ Prototype Plan:
 
 | Flag | Values | Default | Description |
 |------|--------|---------|-------------|
-| `--workspace` | local path, git URL, or `standalone` | `standalone` | Where to build |
+| `--workspace` | local path, git URL, or `standalone` | `standalone` | Where to build (often a fork) |
+| `--target` | `repo`, `github`, `gitlab`, `vercel`, `none`, or a git URL | `none` (pipeline) | Where to publish; a git URL means open an MR/PR **against** that repo (implies `repo`) |
 | `--mode` | `auto`, `decide` | `auto` | Who makes design decisions |
 | `--depth` | `under`, `normal`, `over` | `normal` | Decision count: under 2–3, normal 4–7, over 8–12 |
 | `--branch` | branch name | auto-detected | Git branch to clone |
 | `--dry-run` | flag | off | Skip external writes |
 | `--pipeline` / `--speedrun` | flag | off | Run create → evaluate → refine → publish (see pipeline-mode.md) |
+
+**`--target` URL detection:** If the value looks like a git URL (`https://`, `http://`, `git@`, `ssh://`, or ends with `.git`), treat it as the MR/PR base repo. That implies publish type `repo`. Pass the URL to `resolve_workspace.py --upstream` so the clone gets an `upstream` remote; persist as `target_repo_url` / `upstream_url` in pipeline config and workspace analysis.
 
 **Dry run:** Fetches RFEs and creates all local artifacts under `.artifacts/` but skips git operations, Jira label updates, and any external writes.
 
@@ -137,12 +141,12 @@ If the RFE is thin, document assumptions in `metadata.json`. Store structured st
 
 ```bash
 python3 "${CLAUDE_SKILL_DIR}/scripts/resolve_workspace.py" "<path-or-url>" \
-  --rfe-key "{KEY}" [--branch "{BRANCH}"]
+  --rfe-key "{KEY}" [--branch "{BRANCH}"] [--upstream "{TARGET_REPO_URL}"]
 ```
 
-Handles local paths, GitHub/GitLab URLs (extracts branch from URL patterns), SSL auto-retry, and shallow clones. Output JSON includes `type`, `clone_url`, `branch`, `clone_path`, `status`.
+Handles local paths, GitHub/GitLab URLs (extracts branch from URL patterns), SSL auto-retry, and shallow clones. When `--upstream` is set (from a `--target` git URL), adds/sets an `upstream` remote on the clone for fork-style MR submission. Output JSON includes `type`, `clone_url`, `branch`, `clone_path`, `upstream_url` (if set), `status`.
 
-**Preserve `branch` and `clone_url`** from this output in workspace analysis (Step 6) — `submit_to_repo.py` needs them for the MR target branch and push remote.
+**Preserve `branch`, `clone_url`, and `upstream_url`** from this output in workspace analysis (Step 6) — `submit_to_repo.py` needs them for the MR target branch, push remote, and fork detection.
 
 ## Step 6: Analyze Target Codebase
 
@@ -155,7 +159,7 @@ Detect and record:
 3. Navigation structure and design system usage
 4. Agent instructions (`.cursor/rules/`, `AGENTS.md`) — extract **verification commands** (lint, build, typecheck) for Step 10
 
-Save to `.artifacts/{ID}/workspace-analysis.json` including `clone_url`, `branch`, and `workspace_path`.
+Save to `.artifacts/{ID}/workspace-analysis.json` including `clone_url`, `branch`, `workspace_path`, and `upstream_url` when `--target` was a git URL.
 
 ## Step 7: Design Decisions
 

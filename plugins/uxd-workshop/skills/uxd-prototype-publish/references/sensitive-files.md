@@ -1,6 +1,6 @@
 # Sensitive Files Reference
 
-Files and directories that must be stripped before publishing a prototype. Load this when running the `public`, `gitlab`, or `vercel` target to verify the sanitization checklist.
+Files and directories that must be stripped before publishing a prototype. Load this when running the `github`, `gitlab`, or `vercel` target to verify the sanitization checklist.
 
 ## Directories Removed
 

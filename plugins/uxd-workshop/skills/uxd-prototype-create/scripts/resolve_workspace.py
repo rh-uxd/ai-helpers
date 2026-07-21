@@ -3,11 +3,13 @@
 Resolve a workspace argument into a cloneable git URL + branch, or a validated local path.
 
 Handles branch detection from common git hosting URL patterns (GitLab, GitHub)
-and an explicit --branch override flag.
+and an explicit --branch override flag. Optional --upstream sets an upstream
+remote after clone (MR/PR base when --target is a git URL).
 
 Usage:
     # Resolve and clone
-    python3 scripts/resolve_workspace.py <url-or-path> --rfe-key PROJ-298 [--branch 3.5]
+    python3 scripts/resolve_workspace.py <url-or-path> --rfe-key PROJ-298 \
+        [--branch 3.5] [--upstream https://gitlab.example.com/org/canonical.git]
 
     # Resolve only (no clone, just print parsed result)
     python3 scripts/resolve_workspace.py <url-or-path> --resolve-only [--branch 3.5]
@@ -20,6 +22,7 @@ Output (JSON to stdout):
       "branch": "3.5",
       "branch_source": "url",
       "clone_path": ".artifacts/PROJ-298/workspace",
+      "upstream_url": "https://gitlab.example.com/org/canonical.git",
       "status": "cloned"
     }
 """
@@ -90,6 +93,27 @@ def _ensure_git_suffix(url):
     return url
 
 
+def is_git_url(workspace):
+    """Determine if a workspace argument is a git URL vs. a local path."""
+    if workspace.startswith(('https://', 'http://', 'git@', 'ssh://')):
+        return True
+    if workspace.endswith('.git'):
+        return True
+    return False
+
+
+def normalize_upstream_url(upstream):
+    """Normalize an upstream/MR-base URL to a clean clone URL."""
+    if not upstream:
+        return None
+    if not is_git_url(upstream):
+        print(f'Error: --upstream must be a git URL, got: {upstream}',
+              file=sys.stderr)
+        sys.exit(1)
+    clone_url, _ = parse_git_url(upstream)
+    return clone_url
+
+
 def resolve_branch(url_branch, flag_branch):
     """Resolve final branch from URL-detected and flag-specified values.
 
@@ -102,16 +126,8 @@ def resolve_branch(url_branch, flag_branch):
     return None, None
 
 
-def is_git_url(workspace):
-    """Determine if a workspace argument is a git URL vs. a local path."""
-    if workspace.startswith(('https://', 'http://', 'git@', 'ssh://')):
-        return True
-    if workspace.endswith('.git'):
-        return True
-    return False
-
-
-def resolve_workspace(workspace, rfe_key=None, branch_flag=None):
+def resolve_workspace(workspace, rfe_key=None, branch_flag=None,
+                      upstream_url=None):
     """Resolve a workspace argument to structured metadata.
 
     Returns a dict with type, URLs, branch info, and clone path.
@@ -124,6 +140,8 @@ def resolve_workspace(workspace, rfe_key=None, branch_flag=None):
         }
         if branch_flag:
             result['warning'] = '--branch is ignored for local paths'
+        if upstream_url:
+            result['upstream_url'] = upstream_url
         return result
 
     clone_url, url_branch = parse_git_url(workspace)
@@ -137,6 +155,9 @@ def resolve_workspace(workspace, rfe_key=None, branch_flag=None):
         'branch_source': branch_source,
     }
 
+    if upstream_url:
+        result['upstream_url'] = upstream_url
+
     if branch_source == 'flag' and url_branch and url_branch != branch_flag:
         result['override_note'] = (
             f'--branch={branch_flag} overrides branch {url_branch} from URL'
@@ -146,6 +167,30 @@ def resolve_workspace(workspace, rfe_key=None, branch_flag=None):
         result['clone_path'] = f'.artifacts/{rfe_key}/workspace'
 
     return result
+
+
+def set_upstream_remote(clone_path, upstream_url, no_ssl_verify=False):
+    """Add or update the upstream remote on a cloned workspace."""
+    env = os.environ.copy()
+    if no_ssl_verify:
+        env['GIT_SSL_NO_VERIFY'] = 'true'
+
+    check = subprocess.run(
+        ['git', 'remote', 'get-url', 'upstream'],
+        cwd=clone_path, capture_output=True, text=True, env=env,
+    )
+    if check.returncode == 0:
+        subprocess.run(
+            ['git', 'remote', 'set-url', 'upstream', upstream_url],
+            cwd=clone_path, check=True, capture_output=True, text=True,
+            env=env,
+        )
+    else:
+        subprocess.run(
+            ['git', 'remote', 'add', 'upstream', upstream_url],
+            cwd=clone_path, check=True, capture_output=True, text=True,
+            env=env,
+        )
 
 
 def clone_repo(resolved, no_ssl_verify=False):
@@ -186,6 +231,22 @@ def clone_repo(resolved, no_ssl_verify=False):
             print(f'Error cloning: {e.stderr.strip()}', file=sys.stderr)
             sys.exit(1)
 
+    upstream_url = resolved.get('upstream_url')
+    if upstream_url:
+        try:
+            set_upstream_remote(
+                clone_path, upstream_url,
+                no_ssl_verify=no_ssl_verify or resolved.get(
+                    'ssl_verify_skipped', False),
+            )
+            resolved['upstream_remote'] = 'set'
+        except subprocess.CalledProcessError as e:
+            err = (e.stderr or str(e)).strip()
+            print(f'Warning: failed to set upstream remote: {err}',
+                  file=sys.stderr)
+            resolved['upstream_remote'] = 'error'
+            resolved['upstream_error'] = err
+
     return resolved
 
 
@@ -197,6 +258,7 @@ def main():
     workspace = sys.argv[1]
     rfe_key = None
     branch_flag = None
+    upstream_flag = None
     resolve_only = False
     no_ssl_verify = False
 
@@ -208,6 +270,9 @@ def main():
         elif sys.argv[i] == '--branch' and i + 1 < len(sys.argv):
             branch_flag = sys.argv[i + 1]
             i += 2
+        elif sys.argv[i] == '--upstream' and i + 1 < len(sys.argv):
+            upstream_flag = sys.argv[i + 1]
+            i += 2
         elif sys.argv[i] == '--resolve-only':
             resolve_only = True
             i += 1
@@ -218,13 +283,29 @@ def main():
             print(f'Unknown argument: {sys.argv[i]}', file=sys.stderr)
             sys.exit(1)
 
-    resolved = resolve_workspace(workspace, rfe_key, branch_flag)
+    upstream_url = normalize_upstream_url(upstream_flag)
+    resolved = resolve_workspace(
+        workspace, rfe_key, branch_flag, upstream_url=upstream_url,
+    )
 
     if resolved['type'] == 'local':
         if not resolved['exists']:
             print(f'Error: workspace path does not exist: {resolved["path"]}',
                   file=sys.stderr)
             sys.exit(1)
+        if upstream_url:
+            try:
+                set_upstream_remote(
+                    resolved['path'], upstream_url,
+                    no_ssl_verify=no_ssl_verify,
+                )
+                resolved['upstream_remote'] = 'set'
+            except subprocess.CalledProcessError as e:
+                err = (e.stderr or str(e)).strip()
+                print(f'Warning: failed to set upstream remote: {err}',
+                      file=sys.stderr)
+                resolved['upstream_remote'] = 'error'
+                resolved['upstream_error'] = err
         resolved['status'] = 'exists'
         print(json.dumps(resolved, indent=2))
         return

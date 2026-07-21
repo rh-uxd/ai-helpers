@@ -10,7 +10,7 @@ User asks for a full pipeline, "speedrun", "create and evaluate and publish", or
 
 After normal create questions, also ask:
 
-1. **Publish target** — `repo` (MR), `public` (GitHub Pages), `gitlab`, `vercel`, or `none` (stop after eval)
+1. **Publish target** — `repo` (MR/PR), `github` (GitHub Pages), `gitlab`, `vercel`, `none` (stop after eval), **or a git URL** (open an MR/PR against that repo; implies `repo`)
 2. **Prototype URL for evaluate** — required once the app can be served (workspace: usual `npm start` URL; standalone: serve the HTML folder)
 3. **Auto-refine?** — yes/no (default yes, max 3 cycles)
 
@@ -23,6 +23,8 @@ After normal create questions, also ask:
 4. REFINE?   → if evaluation-report.csv has FAIL → refine (this skill) → re-eval
                skip when FAIL count is 0
 5. PUBLISH?  → /uxd-prototype-publish {ID} --target={target}  (if target ≠ none)
+               When target was a git URL, pass --target=<url> (or --target=repo with
+               upstream already set / submit_to_repo.py --upstream <url>)
 ```
 
 Persist flags to `.artifacts/{ID}/pipeline-config.yaml` so the run survives context compression:
@@ -30,14 +32,17 @@ Persist flags to `.artifacts/{ID}/pipeline-config.yaml` so the run survives cont
 ```yaml
 pipeline:
   id: PROJ-298
-  workspace: /path/or/standalone
+  workspace: https://gitlab.example.com/user/fork.git
   mode: auto
   depth: normal
   url: http://localhost:3000
   target: repo
+  target_repo_url: https://gitlab.example.com/org/canonical.git
   max_refine_cycles: 3
   dry_run: false
 ```
+
+When `--target` is a git URL, normalize `target` to `repo` and store the URL in `target_repo_url`. Pass that URL to `resolve_workspace.py --upstream` during create and to `submit_to_repo.py --upstream` during publish.
 
 ## Defaults
 
@@ -57,7 +62,16 @@ pipeline:
 
 ## Repo submit notes
 
-When `--target=repo`, publish uses `submit_to_repo.py` (fork-aware `glab mr create`, MR verification, optional Pages polling). Run git push / submit scripts with elevated permissions (`required_permissions: ["all"]` in Cursor).
+When `--target=repo` or `--target` is a git URL, publish uses `submit_to_repo.py` (fork-aware `glab mr create`, MR verification, optional Pages polling). Run git push / submit scripts with elevated permissions (`required_permissions: ["all"]` in Cursor).
+
+**Fork demo pattern:**
+
+```
+--workspace https://gitlab.example.com/user/fork.git \
+--target https://gitlab.example.com/org/canonical.git
+```
+
+`--workspace` is cloned as `origin` (push destination). `--target` URL becomes `upstream` (MR base). Same project path on both → same-repo workflow.
 
 ## Batch
 
