@@ -110,7 +110,7 @@ plugins/<plugin-name>/
 }
 ```
 
-3. Add the plugin to both marketplace configs (`.claude-plugin/marketplace.json` and `.cursor-plugin/marketplace.json`)
+3. Add the plugin to both marketplace configs (`.claude-plugin/marketplace.json` and `.cursor-plugin/marketplace.json`). Exception: meta-plugins using `dependencies` (like `patternfly`) are Claude Code-only and only listed in the Claude marketplace.
 4. Move the relevant skills from the workshop into the new plugin
 5. Open a pull request
 

@@ -56,7 +56,7 @@ Then add the plugin to both marketplace configs and open a PR. See [CONTRIBUTING
 make check
 ```
 
-This runs manifest validation (parity between `.claude-plugin/` and `.cursor-plugin/`, JSON validity, name consistency) and regenerates docs. If `make check` passes, your PR will pass CI.
+This runs manifest validation (plugin-level `plugin.json` parity between `.claude-plugin/` and `.cursor-plugin/`, JSON validity, name consistency) and regenerates docs. Marketplace configs (`marketplace.json`) are validated independently — they can differ between platforms. If `make check` passes, your PR will pass CI.
 
 ### My skill works in Claude Code but not in Cursor (or vice versa). Why?
 

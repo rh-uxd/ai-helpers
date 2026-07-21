@@ -6,7 +6,7 @@
 [![Skills](https://img.shields.io/badge/skills-39-blue)](./PLUGINS.md)
 [![skillsaw grade](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Frh-uxd%2Fai-helpers%2Fmain%2F.skillsaw-badge.json)](https://github.com/rh-uxd/ai-helpers/blob/main/.skillsaw-baseline.json)
 
-AI skills for PatternFly and UXD teams — component development, design, accessibility, and migration. Plugins work in both **Claude Code** and **Cursor**.
+AI skills for PatternFly and UXD teams — component development, design, accessibility, and migration. Skills work in both **Claude Code** and **Cursor**; the `patternfly` meta-plugin is Claude Code-only.
 
 ## Quick Start
 
@@ -91,7 +91,7 @@ See [PLUGINS.md](PLUGINS.md) for the full list of skills, agents, and usage deta
 
 ## PatternFly MCP Server
 
-PatternFly plugins automatically include the [PatternFly MCP server](https://github.com/patternfly/patternfly-mcp), which gives AI tools access to component documentation, prop schemas, and design guidelines — no extra setup required.
+The `pf-mcp` plugin provides access to the [PatternFly MCP server](https://github.com/patternfly/patternfly-mcp), giving AI tools component documentation, prop schemas, and design guidelines. On Claude Code, `pf-mcp` is included automatically when you install `patternfly`. On Cursor, install `pf-mcp` individually.
 
 ## Contributing
 
