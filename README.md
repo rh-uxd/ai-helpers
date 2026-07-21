@@ -8,9 +8,15 @@
 
 AI skills for PatternFly and UXD teams — component development, design, accessibility, and migration. Skills work in both **Claude Code** and **Cursor**; the `patternfly` meta-plugin is Claude Code-only.
 
+<p align="center">
+  <img src="assets/install-plugins-terminal.gif" alt="Browsing and installing plugins interactively in Claude Code" width="600">
+</p>
+
 ## Quick Start
 
 ### Claude Code
+
+Add the marketplace and install the `patternfly` meta-plugin — it auto-installs all PatternFly sub-plugins in one step:
 
 ```bash
 # Add the marketplace (one time)
@@ -20,13 +26,22 @@ claude plugins marketplace add rh-uxd/ai-helpers
 claude plugins install patternfly@uxd-ai-helpers
 ```
 
-That's it — `patternfly` auto-installs all sub-plugins. All PatternFly skills are now available:
+That's it — all PatternFly skills are now available as slash commands:
 
 ```
 /pf-react:pf-test-gen          # Generate unit tests for a React component
 /pf-design-guide:pf-ai-guide   # Get AI experience design guidance
 /pf-design-audit:pf-color-scan # Scan for hardcoded colors that should be tokens
 ```
+
+<details>
+<summary>See the install flow</summary>
+
+<br>
+
+![Installing the marketplace and patternfly plugin via CLI](assets/install-marketplace-cli.gif)
+
+</details>
 
 **Individual plugins:** Install only what you need (e.g., `claude plugins install pf-react@uxd-ai-helpers`). Don't install both `patternfly` and individual sub-plugins — `patternfly` already includes them.
 
@@ -36,15 +51,25 @@ Enable auto-update to receive new skills as they're merged:
 
 ### Cursor
 
-Add the marketplace and install plugins individually:
+Cursor doesn't support the `dependencies` feature that powers the `patternfly` meta-plugin, so install plugins individually. Add the marketplace in **Settings → Marketplace**, then install the ones you need — see the [Plugins](#plugins) table below for the full list.
+
+<details>
+<summary>See it in action</summary>
+
+<br>
+
+![Browsing the marketplace and adding a plugin in Cursor](assets/browse-marketplace-desktop.gif)
+
+</details>
+
+After installing, skills work the same way — slash commands in any project:
 
 ```
-pf-react          # React component development
-pf-design-guide   # Design guidance and component selection
-pf-design-audit   # Validate designs against PatternFly standards
-pf-migration      # PF version migration tools
-pf-mcp            # PatternFly MCP server (component docs and design tokens)
+/pf-react:pf-test-gen          # Generate unit tests for a React component
+/pf-design-audit:pf-color-scan # Scan for hardcoded colors that should be tokens
 ```
+
+> **Note:** Install `pf-mcp` separately for MCP server access. See the [FAQ](FAQ.md#how-do-i-test-a-skill-without-the-patternfly-mcp-server) for setup.
 
 ## Plugins
 
