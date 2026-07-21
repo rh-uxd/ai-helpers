@@ -91,7 +91,7 @@ See [PLUGINS.md](PLUGINS.md) for the full list of skills, agents, and usage deta
 
 ## PatternFly MCP Server
 
-The `pf-mcp` plugin provides access to the [PatternFly MCP server](https://github.com/patternfly/patternfly-mcp), giving AI tools component documentation, prop schemas, and design guidelines. On Claude Code, `pf-mcp` is included automatically when you install `patternfly`. On Cursor, install `pf-mcp` individually.
+The [PatternFly MCP server](https://github.com/patternfly/patternfly-mcp) gives AI tools access to component documentation, prop schemas, and design guidelines. On Claude Code, `pf-mcp` is included automatically when you install `patternfly`. On Cursor, the MCP server requires [separate setup](FAQ.md#how-do-i-test-a-skill-without-the-patternfly-mcp-server).
 
 ## Contributing
 
