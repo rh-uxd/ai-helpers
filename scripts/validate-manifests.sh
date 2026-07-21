@@ -10,17 +10,19 @@ fail() {
   ERRORS=$((ERRORS + 1))
 }
 
-# 1. Marketplace-level manifest parity
+# 1. Marketplace-level manifest validation
 echo "=== Marketplace manifests ==="
-if [ -f .claude-plugin/marketplace.json ] && [ -f .cursor-plugin/marketplace.json ]; then
-  if ! diff -q .claude-plugin/marketplace.json .cursor-plugin/marketplace.json > /dev/null 2>&1; then
-    fail "Marketplace manifests differ between .claude-plugin/ and .cursor-plugin/"
-    diff --unified .claude-plugin/marketplace.json .cursor-plugin/marketplace.json || true
-  else
-    echo "  OK: marketplace.json files are identical"
+for mp in .claude-plugin/marketplace.json .cursor-plugin/marketplace.json; do
+  if [ -f "$mp" ]; then
+    if ! python3 -m json.tool "$mp" > /dev/null 2>&1; then
+      fail "${mp}: invalid JSON"
+    else
+      echo "  OK: ${mp} is valid JSON"
+    fi
+    CHECKED=$((CHECKED + 1))
   fi
-  CHECKED=$((CHECKED + 1))
-fi
+done
+# Cursor marketplace is a subset of Claude (no meta-plugin), so parity is not required
 
 # 2. Plugin-level manifest parity (handles both flat and nested plugins)
 #

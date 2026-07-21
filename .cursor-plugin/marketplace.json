@@ -5,11 +5,6 @@
   },
   "plugins": [
     {
-      "name": "patternfly",
-      "source": "./plugins/patternfly",
-      "description": "Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs"
-    },
-    {
       "name": "uxd-workshop",
       "source": "./plugins/uxd-workshop",
       "description": "UXD team tools — prototyping, research, design review"

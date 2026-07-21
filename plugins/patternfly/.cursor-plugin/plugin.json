@@ -1,28 +1,16 @@
 {
   "name": "patternfly",
   "description": "Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs",
-  "skills": [
-    "./pf-react/skills",
-    "./pf-design-guide/skills",
-    "./pf-design-audit/skills",
-    "./pf-migration/skills"
+  "dependencies": [
+    "pf-react",
+    "pf-design-guide",
+    "pf-design-audit",
+    "pf-migration",
+    "pf-mcp"
   ],
   "agents": [
-    "./agents/pf-assist/pf-assist.md",
-    "./pf-react/agents/pf-coding-standards.md",
-    "./pf-react/agents/pf-component-structure-audit.md",
-    "./pf-react/agents/pf-unit-test-standards.md",
-    "./pf-design-guide/agents/pf-microcopy.md"
+    "./agents/pf-assist/pf-assist.md"
   ],
-  "mcpServers": {
-    "patternfly": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@patternfly/patternfly-mcp@2.0.1"
-      ]
-    }
-  },
   "author": {
     "name": "UXD Team",
     "url": "https://www.patternfly.org"

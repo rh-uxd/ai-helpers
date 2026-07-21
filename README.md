@@ -20,7 +20,7 @@ claude plugins marketplace add rh-uxd/ai-helpers
 claude plugins install patternfly@uxd-ai-helpers
 ```
 
-That's it. All PatternFly skills are now available:
+That's it — `patternfly` auto-installs all sub-plugins. All PatternFly skills are now available:
 
 ```
 /pf-react:pf-test-gen          # Generate unit tests for a React component
@@ -28,7 +28,7 @@ That's it. All PatternFly skills are now available:
 /pf-design-audit:pf-color-scan # Scan for hardcoded colors that should be tokens
 ```
 
-**Power users:** Install individual plugins for granular control (e.g., `claude plugins install pf-react@uxd-ai-helpers`).
+**Individual plugins:** Install only what you need (e.g., `claude plugins install pf-react@uxd-ai-helpers`). Don't install both `patternfly` and individual sub-plugins — `patternfly` already includes them.
 
 Enable auto-update to receive new skills as they're merged:
 
@@ -36,7 +36,15 @@ Enable auto-update to receive new skills as they're merged:
 
 ### Cursor
 
-Add this repo as a third-party plugin source in Cursor's settings.
+Add the marketplace and install plugins individually:
+
+```
+pf-react          # React component development
+pf-design-guide   # Design guidance and component selection
+pf-design-audit   # Validate designs against PatternFly standards
+pf-migration      # PF version migration tools
+pf-mcp            # PatternFly MCP server (component docs and design tokens)
+```
 
 ## Plugins
 
@@ -58,7 +66,7 @@ See [PLUGINS.md](PLUGINS.md) for the full list of skills, agents, and usage deta
 ## How It Works
 
 1. You add this repo as a **marketplace** in Claude Code or Cursor
-2. You install a plugin (e.g., `patternfly`) — it aggregates all PF sub-plugin skills, agents, and MCP servers
+2. You install plugins — on Claude Code, `patternfly` auto-installs all PF sub-plugins; on Cursor, install them individually
 3. Skills become available as `/<plugin>:<skill>` slash commands in any project
 
 ## Repository Structure
