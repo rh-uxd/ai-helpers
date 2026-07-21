@@ -11,9 +11,9 @@ description: >-
 Publishes a completed prototype so others can see it. Supports four publishing targets:
 
 - **Repo** — Push prototype code to a git branch and create a GitLab merge request. Best for team review.
-- **Public** — Deploy a sanitized copy to a public GitHub repo with GitHub Pages. Strips all internal/sensitive files. Best for stakeholder or external sharing.
-- **GitLab** — Deploy a sanitized copy to a GitLab instance with GitLab Pages. Supports both self-hosted (behind VPN) and gitlab.com. Same sanitization as public.
-- **Vercel** — Deploy a sanitized copy to Vercel. Same sensitive-file stripping as public. Best for preview deployments and projects using Vercel.
+- **GitHub** — Deploy a sanitized copy to a GitHub repo with GitHub Pages. Strips all internal/sensitive files. Best for stakeholder or external sharing.
+- **GitLab** — Deploy a sanitized copy to a GitLab instance with GitLab Pages. Supports both self-hosted (behind VPN) and gitlab.com. Same sanitization as github.
+- **Vercel** — Deploy a sanitized copy to Vercel. Same sensitive-file stripping as github. Best for preview deployments and projects using Vercel.
 
 Also updates the source Jira ticket with a link, eval summary (AC FAIL count / Pages preview), and status labels.
 
@@ -23,9 +23,9 @@ If the user says "share", "publish", "deploy", "submit", or "I'm done" without s
 
 > Your prototype is ready to share. Where should it go?
 >
-> - **Create a merge request** — I'll push to the repo so your team can review and comment.
-> - **Publish to GitHub Pages** — I'll deploy a sanitized version to GitHub Pages with a shareable URL.
-> - **Deploy to GitLab Pages** — I'll deploy a sanitized version to a GitLab instance (self-hosted or gitlab.com).
+> - **Create a merge request** — I'll push to the repo so your team can review and comment. You can also paste a git URL to open the MR/PR against that repo.
+> - **Publish to GitHub** — I'll deploy a sanitized version to GitHub Pages with a shareable URL.
+> - **Deploy to GitLab** — I'll deploy a sanitized version to GitLab Pages (self-hosted or gitlab.com).
 > - **Deploy to Vercel** — I'll deploy a sanitized version to Vercel with a preview URL.
 
 ## Inputs
@@ -43,9 +43,9 @@ If the user says "share", "publish", "deploy", "submit", or "I'm done" without s
 
 | Flag | Values | Default | Description |
 |------|--------|---------|-------------|
-| `--target` | `repo`, `public`, `gitlab`, `vercel` | `public` | Where to publish |
-| `--remote` | Git URL | workspace origin | Remote URL override for repo target |
-| `--repo` | `owner/repo` or GitHub URL | — | GitHub repo for public target |
+| `--target` | `repo`, `github`, `gitlab`, `vercel`, or a git URL | `github` | Where to publish. A git URL means open an MR/PR **against** that repo (implies `repo`) |
+| `--remote` | Git URL | workspace origin | **Push** remote override only (not the MR base). For MR destination, use `--target <url>` |
+| `--repo` | `owner/repo` or GitHub URL | — | GitHub repo for github target |
 | `--pages-base-url` | URL | — | GitLab Pages base for MR preview polling (repo) |
 | `--pages-timeout` | seconds | `600` | Pages poll timeout |
 | `--dry-run` | flag | Off | Preview without external writes |
@@ -100,22 +100,25 @@ Before publishing to any target, scan existing CI/CD configuration files in the 
 
 **Handling by target:**
 
-- **`public` / `gitlab` / `vercel`**: The publish scripts replace CI files entirely with clean templates, so existing CI content is never carried forward. This audit still runs as a precaution — if secrets are found in CI files, warn the user since those secrets may also be leaked elsewhere in the codebase.
+- **`github` / `gitlab` / `vercel`**: The publish scripts replace CI files entirely with clean templates, so existing CI content is never carried forward. This audit still runs as a precaution — if secrets are found in CI files, warn the user since those secrets may also be leaked elsewhere in the codebase.
 - **`repo`**: CI files are pushed as-is (internal MR). Flag any hardcoded secrets found and recommend using CI variables instead, but do not block the MR.
 
 ---
 
 ## Step 3: Publish to Target
 
-### Target: repo
+### Target: repo (or a git URL)
 
 Push prototype changes to a git repo and create a GitLab merge request.
+
+If `--target` is a git URL (`https://`, `http://`, `git@`, `ssh://`, or ends with `.git`), normalize publish type to `repo` and treat that URL as the MR/PR base (`upstream`). Pass it through as `--upstream` below. Read `target_repo_url` / `upstream_url` from `pipeline-config.yaml` or `workspace-analysis.json` when present.
 
 **Workspace mode:** Use `submit_to_repo.py` from `uxd-prototype-create` (fork-aware `glab mr create`):
 
 ```bash
 python3 "${CLAUDE_SKILL_DIR}/../uxd-prototype-create/scripts/submit_to_repo.py" \
   --rfe-key {ID} --title "{title}" \
+  [--upstream "{TARGET_REPO_URL}"] \
   [--pages-base-url {url}] [--pages-timeout 600] \
   [--jira-comment-id {id}] \
   [--no-ssl-verify] [--dry-run]
@@ -133,9 +136,9 @@ git remote add origin {remote-url} && git push -u origin main
 
 > **Sandbox note**: Requires `required_permissions: ["all"]` for git push.
 
-### Target: public
+### Target: github
 
-Deploy a sanitized copy to a public GitHub repo with GitHub Pages. This is the workflow for sharing prototypes externally — it strips all internal/sensitive files before pushing.
+Deploy a sanitized copy to a GitHub repo with GitHub Pages. This is the workflow for sharing prototypes externally — it strips all internal/sensitive files before pushing.
 
 **Step 3a: GitHub Repository**
 
@@ -175,7 +178,7 @@ https://<owner>.github.io/<repo-name>/
 
 ### Target: gitlab
 
-Deploy a sanitized copy to a GitLab instance with GitLab Pages. Works with both self-hosted GitLab (behind VPN) and gitlab.com. Uses the same sensitive-file stripping as the `public` target.
+Deploy a sanitized copy to a GitLab instance with GitLab Pages. Works with both self-hosted GitLab (behind VPN) and gitlab.com. Uses the same sensitive-file stripping as the `github` target.
 
 **Sensitivity note:** Self-hosted GitLab instances behind a VPN are less exposed than public GitHub/gitlab.com deployments, but the same sanitization is applied regardless — internal agent configs, credentials, and design history should never be in a deployed prototype.
 
@@ -211,7 +214,7 @@ After push completes, GitLab CI runs the pages pipeline. Provide the URL:
 
 ### Target: vercel
 
-Deploy a sanitized copy to Vercel. Uses the same sensitive-file stripping as the `public` target.
+Deploy a sanitized copy to Vercel. Uses the same sensitive-file stripping as the `github` target.
 
 **Step 3a: Vercel Project**
 
@@ -267,6 +270,8 @@ Update `.artifacts/{ID}/metadata.json` with submission record:
 }
 ```
 
+When `--target` was a git URL, store `submission.target` as `"repo"` (enum) and put the MR URL in `submission.url`. The MR base repo itself lives in `workspace-analysis.json` as `upstream_url` / pipeline `target_repo_url`.
+
 Update frontmatter:
 
 ```bash
@@ -284,7 +289,7 @@ If `--dry-run`: Show what would happen without executing external writes.
 
 ## Re-Publishing
 
-To update a previously published prototype, run the same workflow again. The public and gitlab targets force-push (replaces entirely). The vercel target redeploys (replaces the previous deployment). The repo target creates a new branch/MR.
+To update a previously published prototype, run the same workflow again. The github and gitlab targets force-push (replaces entirely). The vercel target redeploys (replaces the previous deployment). The repo target creates a new branch/MR.
 
 ## Edge Cases
 

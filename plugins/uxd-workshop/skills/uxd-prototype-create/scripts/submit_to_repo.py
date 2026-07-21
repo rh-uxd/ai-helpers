@@ -12,6 +12,7 @@ for GitLab Pages deployment and updates a Jira comment with the preview URL.
 Usage:
     python3 scripts/submit_to_repo.py --rfe-key PROJ-298 \
         --title "New onboarding wizard" \
+        [--upstream https://gitlab.example.com/org/canonical.git] \
         [--no-ssl-verify] \
         [--pages-base-url https://pages.example.com] \
         [--pages-timeout 600] \
@@ -227,6 +228,34 @@ def get_remote_url(remote_name, cwd, env):
     if result.returncode == 0:
         return result.stdout.strip()
     return None
+
+
+def ensure_git_suffix(url):
+    """Add .git suffix for HTTPS URLs when missing."""
+    if not url:
+        return url
+    if url.startswith('git@'):
+        return url
+    url = url.rstrip('/')
+    if not url.endswith('.git'):
+        return url + '.git'
+    return url
+
+
+def ensure_upstream_remote(cwd, upstream_url, env, dry_run=False):
+    """Add or set the upstream remote to the given URL."""
+    upstream_url = ensure_git_suffix(upstream_url)
+    existing = get_remote_url('upstream', cwd, env)
+    if existing == upstream_url:
+        return upstream_url
+    if existing:
+        run_git(['remote', 'set-url', 'upstream', upstream_url],
+                cwd=cwd, env=env, dry_run=dry_run)
+    else:
+        run_git(['remote', 'add', 'upstream', upstream_url],
+                cwd=cwd, env=env, dry_run=dry_run)
+    print(f'Set upstream remote → {upstream_url}', file=sys.stderr)
+    return upstream_url
 
 
 def extract_project_path(remote_url):
@@ -614,6 +643,7 @@ def main():
     pages_base_url = None
     pages_timeout = 600
     jira_comment_id = None
+    upstream_flag = None
 
     i = 1
     while i < len(sys.argv):
@@ -623,6 +653,9 @@ def main():
             i += 2
         elif arg == '--title' and i + 1 < len(sys.argv):
             title = sys.argv[i + 1]
+            i += 2
+        elif arg == '--upstream' and i + 1 < len(sys.argv):
+            upstream_flag = sys.argv[i + 1]
             i += 2
         elif arg == '--no-ssl-verify':
             no_ssl_verify = True
@@ -672,6 +705,17 @@ def main():
         env['GIT_SSL_NO_VERIFY'] = 'true'
 
     branch_name = f'prototype/{rfe_key}'
+
+    # --- Step 0: Ensure upstream remote when --target was a git URL ---
+    upstream_url = (
+        upstream_flag
+        or analysis.get('upstream_url')
+        or analysis.get('target_repo_url')
+    )
+    if upstream_url:
+        ensure_upstream_remote(
+            workspace_path, upstream_url, env, dry_run=dry_run,
+        )
 
     # --- Step 1: Detect workflow (fork vs same-repo) ---
     workflow_info = detect_workflow(workspace_path, env)

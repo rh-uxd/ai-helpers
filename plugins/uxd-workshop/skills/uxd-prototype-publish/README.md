@@ -11,7 +11,8 @@ After creating and evaluating a prototype with `uxd-prototype-create` and `uxd-p
 | Target | What happens | Best for |
 |--------|-------------|----------|
 | `repo` | Push to git branch, create GitLab MR (fork-aware `glab`) | Team review, design feedback |
-| `public` | Sanitize + deploy to GitHub Pages | Stakeholder demos, external sharing |
+| git URL | Same as `repo`, MR/PR opened **against** that repo (sets `upstream`) | Fork → canonical MR demos |
+| `github` | Sanitize + deploy to GitHub Pages | Stakeholder demos, external sharing |
 | `gitlab` | Sanitize + deploy to GitLab Pages | Self-hosted or gitlab.com sharing |
 | `vercel` | Sanitize + deploy to Vercel | Preview deployments, Vercel-based projects |
 
@@ -50,4 +51,4 @@ Repo MR creation: `uxd-prototype-create/scripts/submit_to_repo.py` (fork detecti
 
 ## Sensitive File Handling
 
-The `public`, `gitlab`, and `vercel` targets strip internal files before publishing — agent configs, design history, credentials, CI pipelines, and MCP configurations. See `references/sensitive-files.md`.
+The `github`, `gitlab`, and `vercel` targets strip internal files before publishing — agent configs, design history, credentials, CI pipelines, and MCP configurations. See `references/sensitive-files.md`.
