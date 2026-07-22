@@ -249,14 +249,7 @@ This is a cursory wiring check, not a full UX review. Spend a minute or two; fix
 
 ### Prototype Bar (default on)
 
-Unless `--no-prototype-bar` was set, install the sticky Prototype Bar after Step 9 writes `prototype-bar.json` (Sources, Prototype|Eval, Scenario, Export). See Step 9 for the install command with `--config`.
-
-If you install earlier for a quick preview, re-run install after syncing the config so Sources are injected.
-
-- **Standalone:** `--source` = `.artifacts/{ID}/prototype/`
-- **Workspace:** `--source` = workspace root from `workspace-analysis.json`
-
-If auto-mount fails for React, copy templates and mount `<PrototypeBar />` manually (same pattern as pf-prototype-mode).
+The Prototype Bar (Sources, Prototype|Eval toggle, Scenario switcher, Export) is installed in its own step (Step 10) after artifacts are written. If `--no-prototype-bar` was set, Step 10 is skipped.
 
 ---
 
@@ -273,23 +266,30 @@ Write these artifacts after generation:
 
 The `prototype-summary.yaml` captures what was built (build mode), what it was built from (source), how decisions were made, and what was produced. Downstream skills like `uxd-prototype-evaluate`, `uxd-prototype-export`, and `uxd-prototype-publish` can consume this directly without parsing human-readable output.
 
-After writing `metadata.json`, sync the Prototype Bar config (maps Jira/Figma/description sources into one Sources list) and install/refresh the bar:
+Read [references/output-formats.md](references/output-formats.md) for full schema definitions and examples of each artifact file.
+
+## Step 10: Install Prototype Bar
+
+*Skip if `--no-prototype-bar` was set. Otherwise this step is mandatory.*
+
+Run the unified install-and-sync script. This generates `prototype-bar.json` from metadata/scenarios and installs the bar assets into the prototype source:
 
 ```bash
 EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
-node "${EXPORT_SKILL}/scripts/sync-prototype-bar-config.mjs" \
-  --artifacts ".artifacts/{ID}"
-
-# Unless --no-prototype-bar
-bash "${EXPORT_SKILL}/scripts/install-prototype-bar.sh" \
+bash "${EXPORT_SKILL}/scripts/install-and-sync-prototype-bar.sh" \
+  --artifacts ".artifacts/{ID}" \
   --source "<prototype-dir-or-workspace>" \
-  --mode standalone|workspace \
-  --config ".artifacts/{ID}/prototype-bar.json"
+  --mode standalone|workspace
 ```
 
-Read [references/output-formats.md](references/output-formats.md) for full schema definitions and examples of each artifact file.
+- **Standalone:** `--source` = `.artifacts/{ID}/prototype/`
+- **Workspace:** `--source` = workspace root from `workspace-analysis.json`
 
-## Step 10: Post-Change Verification
+If auto-mount fails for a React workspace (script reports "could not find App.*"), manually import and render `<PrototypeBar />` in the app shell.
+
+After install, the bar provides: Sources dropdown (Jira/Figma links), Prototype|Eval view toggle, Scenario switcher (from `scenarios.json`), and Export menu.
+
+## Step 11: Post-Change Verification
 
 *Workspace mode only. Mandatory — do not skip.*
 
@@ -300,7 +300,7 @@ Read [references/output-formats.md](references/output-formats.md) for full schem
 5. If verification changes more files, update `changeset.md`
 6. Record pass/fail in `.artifacts/{ID}/verification.json`
 
-## Step 11: Journey export (when `--export`)
+## Step 12: Journey export (when `--export`)
 
 *Skip unless `--export` was set.*
 
@@ -333,7 +333,7 @@ node "${EXPORT_SKILL}/scripts/export-helper.mjs" \
   --artifacts ".artifacts"
 ```
 
-## Step 12: Summary and Next Steps
+## Step 13: Summary and Next Steps
 
 Print a summary showing ID, title, decisions (`skip` / `auto` / `human`), screens, journeys, prototype bar, exports (if any), workspace, status, and artifact paths.
 
