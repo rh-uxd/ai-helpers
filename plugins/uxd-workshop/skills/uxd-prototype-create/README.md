@@ -25,7 +25,7 @@ The skill accepts any combination of these — it asks clarifying questions to f
 | RFE snapshot | Markdown with YAML frontmatter | `.artifacts/{ID}/rfe-snapshot.md` |
 | Changeset manifest | Markdown listing all created/modified files | `.artifacts/{ID}/changeset.md` |
 | Workspace analysis | JSON with tech stack, conventions, verification commands | `.artifacts/{ID}/workspace-analysis.json` |
-| Metadata | JSON with mode, source, assumptions | `.artifacts/{ID}/metadata.json` |
+| Metadata | JSON with `decision_mode`, source, assumptions | `.artifacts/{ID}/metadata.json` |
 | Prototype Bar config | Sources + Prototype\|Eval + scenarios | `.artifacts/{ID}/prototype-bar.json` |
 | Journeys | Structured steps / interaction states for build + export | `.artifacts/{ID}/journeys.json` |
 | Scenarios | Data/condition variants per page (empty, error, …) | `.artifacts/{ID}/scenarios.json` |
@@ -33,14 +33,15 @@ The skill accepts any combination of these — it asks clarifying questions to f
 
 Prototype Bar (default on): sticky Sources, Prototype\|Eval, Scenario switcher, and Export on the running prototype. Disable with `--no-prototype-bar`.
 
-## Decision Modes
+## Decision levels (`--decisions`)
 
-| Mode | Behavior |
-|------|----------|
-| **auto** | AI makes all design decisions based on best practices. Fast, no pauses. Still writes browsable PatternFly decision pages + `index.html`. |
-| **decide** | Generates PatternFly HTML comparison pages with real component previews and tradeoffs. Surfaces a `file://` URL and opens the index in the browser so you can click through linked pages, then pick each direction. |
+| Value | Behavior |
+|-------|----------|
+| **skip** (default) | Make design calls while building. No decision kit, pages, or strategy brief. |
+| **auto** | Generate PatternFly HTML comparison pages, AI-pick recommendations, present a batch summary to override. |
+| **human** | Same decision pages, walked one at a time so you pick each direction. |
 
-Decision depth (`--depth`): `under` (2–3), `normal` (4–7), `over` (8–12). Chat `--mode=decide` maps to `decision_mode: interactive` in `prototype-summary.yaml`.
+Decision depth (`--depth`): `under` (2–3), `normal` (4–7), `over` (8–12). Only applies when `--decisions` is `auto` or `human`. Values map 1:1 to `decision_mode` in `prototype-summary.yaml`.
 
 ## Pipeline mode
 
@@ -52,7 +53,7 @@ Pass `--pipeline` / `--speedrun` or ask for a full run. Sequence: create → ser
 /uxd-prototype-create --speedrun PROJ-298 \
   --workspace https://gitlab.example.com/user/fork.git \
   --target https://gitlab.example.com/org/canonical.git \
-  --mode auto --headless
+  --decisions skip --headless
 ```
 
 ## Quick Start

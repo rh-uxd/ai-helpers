@@ -54,15 +54,17 @@ For each item determine severity (critical/major/minor), effort (small/medium/la
 
 Plan 3–7 refinements per iteration: critical FAILs first, then major usability, then minor.
 
-### Step 5: Handle Decision Mode
+### Step 5: Handle Decision Level
 
-If `--mode=decide` and any refinement involves a non-trivial design choice:
+If `--decisions=human` and any refinement involves a non-trivial design choice:
 
 1. Generate a decision page (see `references/decision-workflow.md`)
 2. Present to user, ask for choice
 3. Record in `decisions.json`
 
-If `--mode=auto`, auto-resolve and log.
+If `--decisions=auto`, auto-resolve and log (optional decision page + batch note).
+
+If `--decisions=skip` (default), apply the refinement without a decision kit.
 
 ### Step 6: Apply Refinements
 

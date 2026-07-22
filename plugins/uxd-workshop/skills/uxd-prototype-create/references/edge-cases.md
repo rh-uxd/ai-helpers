@@ -44,7 +44,7 @@ If the target codebase already uses patterns that conflict with the AI's recomme
 
 1. Detect the existing pattern from codebase analysis
 2. Default to consistency with the existing codebase
-3. In decide mode, present the conflict: "The existing app uses X, but Y might be better for this feature. Which approach?"
+3. When `--decisions=human`, present the conflict: "The existing app uses X, but Y might be better for this feature. Which approach?" When `auto`, prefer consistency and note the tradeoff in the batch summary. When `skip`, prefer consistency silently.
 
 ## Jira Fallbacks
 

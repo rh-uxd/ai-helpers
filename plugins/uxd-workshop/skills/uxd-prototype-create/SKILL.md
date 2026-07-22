@@ -13,7 +13,7 @@ description: >-
 
 Creates a prototype based on various input sources and delivers output in multiple formats. Accepts Jira tickets, Figma design links, feature descriptions, existing codebases, or just a rough idea — the skill asks clarifying questions to fill in whatever context is missing.
 
-Supports two workspace modes (integrate into an existing codebase or generate standalone HTML) and two decision modes (AI auto-resolves or presents interactive HTML decision pages for human selection).
+Supports two workspace modes (integrate into an existing codebase or generate standalone HTML) and three decision levels: **skip** (just build), **auto** (decision kit + AI picks + batch override), or **human** (walk through decision pages one at a time).
 
 Also handles iterative refinement: after `uxd-prototype-evaluate` (Playwright AC validation + usability), re-invoke this skill to apply targeted improvements from failed criteria and refinement suggestions.
 
@@ -44,14 +44,15 @@ Default to standalone if the user isn't sure.
 ### Question 3: How should design decisions be handled?
 
 > How do you want to handle design decisions?
-> - **Auto** — I'll make all design calls based on context and best practices.
-> - **Decide** — I'll generate visual HTML comparison pages for each decision, then ask you to pick.
+> - **Skip** — I'll make design calls as I build. No decision kit or recorded decision pages.
+> - **Auto** — I'll generate visual HTML comparison pages, pick recommendations, and show a batch summary you can override.
+> - **Human** — I'll generate visual HTML comparison pages for each decision, then ask you to pick one at a time.
 
-Default to auto.
+Default to **skip**.
 
 ### Question 4: How deep should decision exploration go?
 
-*Only ask this if the user chose **decide** mode.*
+*Only ask this if the user chose **auto** or **human**.*
 
 > How many design decisions should I surface?
 > - **Under** (2–3) — Quick exploration, simple features
@@ -62,15 +63,14 @@ Default to normal.
 
 ### Confirm and Proceed
 
-Print a summary and ask for confirmation before starting:
+Print a summary and ask for confirmation before starting. Omit `Depth` when decisions are `skip`:
 
 ```
 Prototype Plan:
   Source:         PROJ-298 (Jira)
   Workspace:      standalone
   Target:         none
-  Mode:           auto
-  Depth:          normal
+  Decisions:      skip
   Prototype bar:  on
   Export:         off
 ```
@@ -83,8 +83,8 @@ Prototype Plan:
 |------|--------|---------|-------------|
 | `--workspace` | local path, git URL, or `standalone` | `standalone` | Where to build (often a fork) |
 | `--target` | `repo`, `github`, `gitlab`, `vercel`, `none`, or a git URL | `none` (pipeline) | Where to publish; a git URL means open an MR/PR **against** that repo (implies `repo`) |
-| `--mode` | `auto`, `decide` | `auto` | Who makes design decisions |
-| `--depth` | `under`, `normal`, `over` | `normal` | Decision count: under 2–3, normal 4–7, over 8–12 |
+| `--decisions` | `skip`, `auto`, `human` | `skip` | Whether / how to run the decision kit |
+| `--depth` | `under`, `normal`, `over` | `normal` | Decision count when `--decisions` is `auto` or `human`: under 2–3, normal 4–7, over 8–12 |
 | `--branch` | branch name | auto-detected | Git branch to clone |
 | `--dry-run` | flag | off | Skip external writes |
 | `--pipeline` / `--speedrun` | flag | off | Run create → evaluate → refine → publish (see pipeline-mode.md) |
@@ -121,9 +121,11 @@ Save each RFE with YAML frontmatter using the frontmatter utility:
 ```bash
 python3 "${CLAUDE_SKILL_DIR}/scripts/frontmatter.py" set ".artifacts/{ID}/rfe-snapshot.md" \
   prototype_id="{ID}" source_rfe="{KEY}" \
-  mode="{MODE}" status="draft" iteration="0" \
+  mode="{DECISIONS}" status="draft" iteration="0" \
   created_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ```
+
+Where `{DECISIONS}` is `skip`, `auto`, or `human` (frontmatter field name remains `mode` for schema compatibility).
 
 Where `{ID}` is derived from the Jira key (e.g., `PROJ-298`) or a generated slug.
 
@@ -188,20 +190,22 @@ Save to `.artifacts/{ID}/workspace-analysis.json` including `clone_url`, `branch
 
 ## Step 7: Design Decisions
 
+**If `--decisions=skip`:** Make design calls inline while building. Do not generate decision pages, `decisions.json`, or a strategy brief. Set `decision_mode: skip` in `prototype-summary.yaml` / `metadata.json` and omit `decision_depth` / `decisions_count`. Skip the rest of this step.
+
 Design decisions are planned dynamically based on the RFE and codebase context. See `${CLAUDE_SKILL_DIR}/references/decision-points.yaml` for reference categories.
 
 **Plan decisions:** Analyze user stories and codebase to identify decisions with real tradeoffs. Count is determined by `--depth` (under: 2–3, normal: 4–7, over: 8–12).
 
-**Decision workflow depends on mode:**
+**Decision workflow depends on `--decisions`:**
 
-- **`--mode=auto`:** Generate HTML decision pages, auto-pick recommendations, present a batch summary table for the user to override any choices.
-- **`--mode=decide`:** Generate all decision pages upfront, then walk through one at a time asking the user to choose.
+- **`--decisions=auto`:** Generate HTML decision pages, auto-pick recommendations, present a batch summary table for the user to override any choices.
+- **`--decisions=human`:** Generate all decision pages upfront, then walk through one at a time asking the user to choose.
 
 **Quality bar:** Decision pages use PatternFly CDN chrome (copy [references/decision-page-template.html](references/decision-page-template.html)). Option previews are real rendered UI — no ASCII or empty wireframes. Previews match the build target (standalone → PF components; workspace → target-app components when possible). Every page cross-links to the others plus `index.html`. After generation, print absolute `file://` URLs and open the index in the browser.
 
 Read [references/decision-workflow.md](references/decision-workflow.md) for the full procedure. See [references/decision-page-example.md](references/decision-page-example.md) for preview recipes by decision type.
 
-Store all decision artifacts in `.artifacts/{ID}/decisions/` (decision pages, `index.html`, `decisions.json`, `strategy-brief.md`). Chat flag `--mode=decide` maps to `decision_mode: interactive` in `prototype-summary.yaml`.
+Store all decision artifacts in `.artifacts/{ID}/decisions/` (decision pages, `index.html`, `decisions.json`, `strategy-brief.md`). Persist the same vocabulary in artifacts: `decision_mode: skip | auto | human`.
 
 ---
 
@@ -259,7 +263,7 @@ If auto-mount fails for React, copy templates and mount `<PrototypeBar />` manua
 Write these artifacts after generation:
 
 - `.artifacts/{ID}/changeset.md` — lists all files created/modified with one-line descriptions
-- `.artifacts/{ID}/metadata.json` — prototype ID, title, mode, status, iteration, screens list, `journeys_path`, `scenarios_path`, `prototype_bar`, `source` / `source_rfes` / `sources`, timestamps
+- `.artifacts/{ID}/metadata.json` — prototype ID, title, `decision_mode`, status, iteration, screens list, `journeys_path`, `scenarios_path`, `prototype_bar`, `source` / `source_rfes` / `sources`, timestamps
 - `.artifacts/{ID}/prototype-summary.yaml` — structured machine-readable summary for downstream skills and pipeline consumption
 - `.artifacts/{ID}/prototype-bar.json` — Prototype Bar config (Sources + Eval + slim `scenarios` list)
 - Ensure `.artifacts/{ID}/journeys.json` is present (from Step 4; update routes/selectors if implementation diverged)
@@ -323,7 +327,7 @@ Optional: keep `node "${EXPORT_SKILL}/scripts/export-helper.mjs" --out ".artifac
 
 ## Step 12: Summary and Next Steps
 
-Print a summary showing ID, title, mode, screens, journeys, prototype bar, exports (if any), workspace, status, and artifact paths.
+Print a summary showing ID, title, decisions (`skip` / `auto` / `human`), screens, journeys, prototype bar, exports (if any), workspace, status, and artifact paths.
 
 Suggest next steps:
 
@@ -347,7 +351,7 @@ Read [references/refinement-procedure.md](references/refinement-procedure.md) wh
 **Invocation:**
 
 ```
-/uxd-prototype-create refine {ID} [--mode auto|decide] [--headless] [--max-cycles 3]
+/uxd-prototype-create refine {ID} [--decisions skip|auto|human] [--headless] [--max-cycles 3]
 ```
 
 **Headless auto-loop:** With `--headless`, runs refine → `uxd-prototype-evaluate` → check FAIL count → refine again until zero FAIL, max cycles, or plateau.

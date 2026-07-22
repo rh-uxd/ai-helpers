@@ -334,8 +334,16 @@ def build_mr_description(rfe_key, title, score, verdict, changeset_files):
     decisions = read_decisions(rfe_key)
     rfe_summary = read_rfe_summary(rfe_key)
 
-    mode = metadata.get('mode', 'unknown')
-    mode_label = 'human-in-the-loop' if mode == 'decide' else 'auto (AI-resolved)'
+    mode = metadata.get('decision_mode') or metadata.get('mode', 'unknown')
+    # Normalize legacy decide/interactive → human
+    if mode in ('decide', 'interactive'):
+        mode = 'human'
+    mode_labels = {
+        'skip': 'skip (no decision kit)',
+        'auto': 'auto (AI-resolved)',
+        'human': 'human-in-the-loop',
+    }
+    mode_label = mode_labels.get(mode, mode)
 
     sections = []
 
@@ -367,19 +375,22 @@ def build_mr_description(rfe_key, title, score, verdict, changeset_files):
     sections.append('')
     sections.append('| | |')
     sections.append('|---|---|')
-    sections.append(f'| **Mode** | {mode_label} |')
+    sections.append(f'| **Decisions** | {mode_label} |')
     if score is not None:
         status_label = 'pass' if verdict and 'pass' in str(verdict) else 'needs attention'
         if isinstance(score, str):
             sections.append(f'| **Eval** | {score} ({status_label}) |')
         else:
             sections.append(f'| **Eval / rubric** | {score} ({status_label}) |')
-    human_review = mode == 'decide'
-    sections.append(
-        f'| **Human review** | '
-        f'{"Yes — design decisions were reviewed by a human" if human_review else "Not yet — all decisions were auto-resolved by AI"}'
-        f' |'
-    )
+    if mode == 'human':
+        human_review_label = 'Yes — design decisions were reviewed by a human'
+    elif mode == 'auto':
+        human_review_label = 'Batch review — decisions were auto-resolved by AI (overrides allowed)'
+    elif mode == 'skip':
+        human_review_label = 'Skipped — no decision kit; design calls made while building'
+    else:
+        human_review_label = 'Unknown'
+    sections.append(f'| **Human review** | {human_review_label} |')
     sections.append('')
 
     if decisions:

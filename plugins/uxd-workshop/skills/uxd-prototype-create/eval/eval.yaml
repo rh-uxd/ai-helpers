@@ -53,7 +53,7 @@ judges:
           re.IGNORECASE,
       )
       asks_mode = re.search(
-          r"\bauto\b|\bdecide\b|design decisions",
+          r"\bskip\b|\bauto\b|\bhuman\b|design decisions|--decisions",
           text,
           re.IGNORECASE,
       )
@@ -81,7 +81,7 @@ judges:
       return True, "Asked clarifying questions before building"
 
   - name: prints_prototype_plan
-    description: Prints a Prototype Plan summary with Source/Workspace/Mode before generating
+    description: Prints a Prototype Plan summary with Source/Workspace/Decisions before generating
     if: "annotations.get('case_type') == 'standalone-plan-confirm'"
     check: |
       import re
@@ -89,15 +89,15 @@ judges:
       has_plan = re.search(r"Prototype Plan", text, re.IGNORECASE)
       has_source = re.search(r"Source\s*:", text, re.IGNORECASE)
       has_workspace = re.search(r"Workspace\s*:\s*standalone", text, re.IGNORECASE)
-      has_mode = re.search(r"Mode\s*:\s*auto", text, re.IGNORECASE)
+      has_decisions = re.search(r"Decisions\s*:\s*skip", text, re.IGNORECASE)
       if not has_plan:
           return False, "Missing 'Prototype Plan' summary"
-      if not (has_source and has_workspace and has_mode):
-          return False, "Prototype Plan missing Source, Workspace: standalone, and/or Mode: auto"
+      if not (has_source and has_workspace and has_decisions):
+          return False, "Prototype Plan missing Source, Workspace: standalone, and/or Decisions: skip"
       wrote_files = bool(outputs.get("files"))
       if wrote_files:
           return False, "Wrote files after plan — should stop and wait for confirmation"
-      return True, "Printed Prototype Plan with Source, Workspace, and Mode"
+      return True, "Printed Prototype Plan with Source, Workspace, and Decisions"
 
 thresholds:
   asks_before_building:

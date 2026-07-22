@@ -1,6 +1,6 @@
 # Decision Workflow
 
-Full procedure for Step 7 design decision generation. Load this when the prototype reaches the design decision phase.
+Full procedure for Step 7 design decision generation. Load this when the prototype reaches the design decision phase and `--decisions` is `auto` or `human`. When `--decisions=skip`, do not run this workflow.
 
 Copy the page skeleton from [decision-page-template.html](decision-page-template.html). Read [decision-page-example.md](decision-page-example.md) for preview quality rules by decision type.
 
@@ -45,7 +45,7 @@ Generate one self-contained HTML file per decision under `.artifacts/{ID}/decisi
 ### Required page sections
 
 1. **Header** — decision number, title, short context (why this decision matters for these user stories)
-2. **Cross-decision nav** — PatternFly tabs or nav strip linking every decision page + `index.html`; highlight the current page (required for **both** auto and decide modes)
+2. **Cross-decision nav** — PatternFly tabs or nav strip linking every decision page + `index.html`; highlight the current page (required for **both** `auto` and `human`)
 3. **Options grid (2×2)** — one card per option; each card includes:
    - Letter label (A / B / C / D)
    - Name and one-sentence description
@@ -138,11 +138,21 @@ Status values: `"auto-resolved"`, `"user-decided"`, `"pending"`.
 
 Preserve these field names — downstream skills (`uxd-prototype-evaluate`, `uxd-prototype-publish`) read them.
 
-**Mode naming:** Chat / CLI flag `--mode=decide` maps to `decision_mode: interactive` in `prototype-summary.yaml`. `--mode=auto` maps to `decision_mode: auto`.
+**Vocabulary:** Chat / CLI `--decisions=skip|auto|human` maps 1:1 to `decision_mode` in `prototype-summary.yaml` and `metadata.json`. Legacy values `decide` / `interactive` mean `human`.
 
 ---
 
-## Auto Mode — Batch Review
+## Skip — No Decision Kit
+
+When `--decisions=skip`:
+
+1. Do **not** create `.artifacts/{ID}/decisions/` pages, `decisions.json`, or `strategy-brief.md`
+2. Make design calls inline during prototype generation
+3. Record `decision_mode: skip` and omit `decision_depth` / `decisions_count`
+
+---
+
+## Auto — Batch Review
 
 After auto-resolving all decisions:
 
@@ -170,7 +180,7 @@ Want to override any of these? (Enter numbers to change, or "ok" to proceed)
 
 ---
 
-## Decide Mode — Interactive Walk-Through
+## Human — Interactive Walk-Through
 
 1. Generate ALL decision pages + `index.html` upfront (before asking any questions)
 2. Surface `file://` URLs and open the index (or the first decision page) in the browser
@@ -227,7 +237,7 @@ Write `.artifacts/{ID}/decisions/strategy-brief.md`:
 
 ## Cross-decision navigation
 
-Include on **every** decision page (auto and decide). Prefer PatternFly tab markup from the template; keep relative `href`s so pages work when opened via `file://`:
+Include on **every** decision page (`auto` and `human`). Prefer PatternFly tab markup from the template; keep relative `href`s so pages work when opened via `file://`:
 
 ```html
 <nav class="pf-v6-c-tabs pf-m-box" aria-label="Design decisions">

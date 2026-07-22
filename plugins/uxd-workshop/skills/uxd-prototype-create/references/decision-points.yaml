@@ -4,6 +4,7 @@
 # codebase context. This file serves as a reference catalog of common decision
 # categories the AI may draw from — it is NOT a fixed checklist.
 #
+# Only used when --decisions is auto or human (skip builds without a decision kit).
 # The AI identifies 4–7 decisions by default (configurable via --depth: under 2–3,
 # normal 4–7, over 8–12) that have genuine tradeoffs for the specific RFE. Some
 # RFEs may surface entirely different decisions than those listed here.
