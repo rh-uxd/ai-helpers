@@ -1,0 +1,113 @@
+/* UXD Prototype Bar — sticky top chrome for export (and future controls) */
+
+#uxd-prototype-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.75rem;
+  box-sizing: border-box;
+  background: #1b1d21;
+  color: #f0f0f0;
+  font-family: "Red Hat Text", "Helvetica Neue", Arial, sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.3;
+  border-bottom: 1px solid #3c3f42;
+}
+
+#uxd-prototype-bar * {
+  box-sizing: border-box;
+}
+
+#uxd-prototype-bar .uxd-pb-brand {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+#uxd-prototype-bar .uxd-pb-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+#uxd-prototype-bar .uxd-pb-export-wrap {
+  position: relative;
+}
+
+#uxd-prototype-bar .uxd-pb-btn {
+  appearance: none;
+  border: 1px solid #6a6e73;
+  background: #2c2f33;
+  color: #f0f0f0;
+  border-radius: 2px;
+  padding: 0.25rem 0.65rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+#uxd-prototype-bar .uxd-pb-btn:hover,
+#uxd-prototype-bar .uxd-pb-btn:focus-visible {
+  background: #3c3f42;
+  outline: 1px solid #8a8d90;
+  outline-offset: 1px;
+}
+
+#uxd-prototype-bar .uxd-pb-btn:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+#uxd-prototype-bar .uxd-pb-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 12rem;
+  margin: 0;
+  padding: 0.25rem 0;
+  list-style: none;
+  background: #2c2f33;
+  border: 1px solid #6a6e73;
+  border-radius: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+#uxd-prototype-bar .uxd-pb-menu[hidden] {
+  display: none;
+}
+
+#uxd-prototype-bar .uxd-pb-menu button {
+  display: block;
+  width: 100%;
+  text-align: left;
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  padding: 0.4rem 0.75rem;
+  cursor: pointer;
+}
+
+#uxd-prototype-bar .uxd-pb-menu button:hover,
+#uxd-prototype-bar .uxd-pb-menu button:focus-visible {
+  background: #3c3f42;
+}
+
+#uxd-prototype-bar .uxd-pb-status {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: #c7c7c7;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.uxd-prototype-bar-offset {
+  /* reserved for future fixed-bar layouts */
+}

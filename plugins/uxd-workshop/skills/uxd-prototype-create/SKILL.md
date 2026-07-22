@@ -64,11 +64,13 @@ Print a summary and ask for confirmation before starting:
 
 ```
 Prototype Plan:
-  Source:     PROJ-298 (Jira)
-  Workspace:  standalone
-  Target:     none
-  Mode:       auto
-  Depth:      normal
+  Source:         PROJ-298 (Jira)
+  Workspace:      standalone
+  Target:         none
+  Mode:           auto
+  Depth:          normal
+  Prototype bar:  on
+  Export:         off
 ```
 
 ---
@@ -84,10 +86,14 @@ Prototype Plan:
 | `--branch` | branch name | auto-detected | Git branch to clone |
 | `--dry-run` | flag | off | Skip external writes |
 | `--pipeline` / `--speedrun` | flag | off | Run create → evaluate → refine → publish (see pipeline-mode.md) |
+| `--prototype-bar` / `--no-prototype-bar` | flag | on | Install sticky Prototype Bar (Export menu) after generate |
+| `--export` | flag | off | After artifacts, batch-export journey steps with `export: true` via `uxd-prototype-export` |
+| `--url` | URL | asked if `--export` | Live base URL for Playwright export (and pipeline evaluate) |
+| `--export-formats` | `html`, `tree`, or both | `html` | Formats for `--export` |
 
 **`--target` URL detection:** If the value looks like a git URL (`https://`, `http://`, `git@`, `ssh://`, or ends with `.git`), treat it as the MR/PR base repo. That implies publish type `repo`. Pass the URL to `resolve_workspace.py --upstream` so the clone gets an `upstream` remote; persist as `target_repo_url` / `upstream_url` in pipeline config and workspace analysis.
 
-**Dry run:** Fetches RFEs and creates all local artifacts under `.artifacts/` but skips git operations, Jira label updates, and any external writes.
+**Dry run:** Fetches RFEs and creates all local artifacts under `.artifacts/` but skips git operations, Jira label updates, and any external writes. Local `--export` files are still written when a URL is available.
 
 ---
 
@@ -119,7 +125,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/frontmatter.py" set ".artifacts/{ID}/rfe-sn
 
 Where `{ID}` is derived from the Jira key (e.g., `PROJ-298`) or a generated slug.
 
-## Step 4: Extract User Stories
+## Step 4: Extract User Stories and Journeys
 
 Parse from the RFE:
 
@@ -127,9 +133,18 @@ Parse from the RFE:
 2. **Acceptance criteria** — Given/When/Then, checkboxes, or AC sections
 3. **Personas / roles** — prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` when mapping roles via `aliases`; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/` for experience, accessibility, regulation, or team size
 4. **Key entities** — nouns the UI manipulates (cluster, pipeline, key, …)
-5. **Flows** — verb phrases → screen sequence (create → configure → deploy)
+5. **Flows / user journeys** — ordered steps the user takes (screens **and** UI states such as “modal open”, empty/error). Prefer an explicit “User journey” section when present; otherwise infer from stories and ACs.
 
 If the RFE is thin, document assumptions in `metadata.json`. Store structured stories in `.artifacts/{ID}/user-stories.json`.
+
+**Also write** `.artifacts/{ID}/journeys.json` (schema in [references/output-formats.md](references/output-formats.md) and `uxd-prototype-export/references/journeys-schema.md`):
+
+- One journey per primary flow; `steps` with `id`, `name`, `route`, and `"export": true` for key screens/states
+- For states that are not distinct URLs (e.g. modal open), keep the same `route` and add `actions` (`click`, `wait_for`, `fill`, …)
+- Use stable selectors (`data-ouia-component-id`, roles, labels)
+- Align loosely with evaluate `journey_definitions` field names (`id`, `title`, `persona`, `source`, `ac_ids`)
+
+Use journeys for implementation in Step 8 and for `--export` later.
 
 ---
 
@@ -198,6 +213,34 @@ Generate HTML files in `.artifacts/{ID}/prototype/` using PatternFly CDN:
 
 If the PatternFly docs MCP is available, use it for component reference.
 
+### Reachability self-check
+
+After implementing, do a quick pass to confirm every new screen or flow is actually reachable. Fix any gaps before continuing:
+
+- **Routes** — each new page/view is registered in the app's router (or linked as a real HTML file in standalone)
+- **Nav / entry points** — left nav, tabs, or menus include the new destinations where users would expect them
+- **Inbound links** — CTAs, table row actions, breadcrumbs, and other hyperlinks that should lead to the new UI are wired to the correct paths
+- **Dead ends** — no orphan screens that can only be opened by typing a URL
+- **Journey coverage** — every `route` in `.artifacts/{ID}/journeys.json` is reachable; steps with `actions` have matching interactive elements (stable selectors) so those states can be opened
+
+This is a cursory wiring check, not a full UX review. Spend a minute or two; fix obvious misses, then move on.
+
+### Prototype Bar (default on)
+
+Unless `--no-prototype-bar` was set, install the sticky Prototype Bar (Export → Static HTML | Component tree):
+
+```bash
+EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
+bash "${EXPORT_SKILL}/scripts/install-prototype-bar.sh" \
+  --source "<prototype-dir-or-workspace>" \
+  --mode standalone|workspace
+```
+
+- **Standalone:** `--source` = `.artifacts/{ID}/prototype/`
+- **Workspace:** `--source` = workspace root from `workspace-analysis.json`
+
+If auto-mount fails for React, copy templates and mount `<PrototypeBar />` manually (same pattern as pf-prototype-mode).
+
 ---
 
 ## Step 9: Write Prototype Artifacts
@@ -205,10 +248,11 @@ If the PatternFly docs MCP is available, use it for component reference.
 Write these artifacts after generation:
 
 - `.artifacts/{ID}/changeset.md` — lists all files created/modified with one-line descriptions
-- `.artifacts/{ID}/metadata.json` — prototype ID, title, mode, status, iteration, screens list, timestamps
+- `.artifacts/{ID}/metadata.json` — prototype ID, title, mode, status, iteration, screens list, `journeys_path`, `prototype_bar`, timestamps
 - `.artifacts/{ID}/prototype-summary.yaml` — structured machine-readable summary for downstream skills and pipeline consumption
+- Ensure `.artifacts/{ID}/journeys.json` is present (from Step 4; update routes/selectors if implementation diverged)
 
-The `prototype-summary.yaml` captures what was built (build mode), what it was built from (source), how decisions were made, and what was produced. Downstream skills like `uxd-prototype-evaluate` and `uxd-prototype-publish` can consume this directly without parsing human-readable output.
+The `prototype-summary.yaml` captures what was built (build mode), what it was built from (source), how decisions were made, and what was produced. Downstream skills like `uxd-prototype-evaluate`, `uxd-prototype-export`, and `uxd-prototype-publish` can consume this directly without parsing human-readable output.
 
 Read [references/output-formats.md](references/output-formats.md) for full schema definitions and examples of each artifact file.
 
@@ -227,15 +271,39 @@ Read [references/output-formats.md](references/output-formats.md) for full schem
 
 If Jira is available (MCP or REST credentials), add label `prototype-creator-draft` to the source issue. If unavailable, skip silently.
 
+## Step 11b: Journey export (when `--export`)
+
+*Skip unless `--export` was set.*
+
+1. Confirm `.artifacts/{ID}/journeys.json` has at least one step (prefer steps with `"export": true`; if none are marked, pass `--export-all-if-unset`)
+2. Resolve `--url` — ask if missing. For standalone HTML, serve `.artifacts/{ID}/prototype/` (e.g. `npx serve`) and use that origin
+3. Ensure export skill deps: `cd "${CLAUDE_SKILL_DIR}/../uxd-prototype-export" && npm install`
+4. Run:
+
+```bash
+EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
+node "${EXPORT_SKILL}/scripts/export-journey.mjs" \
+  --base-url "{URL}" \
+  --journeys ".artifacts/{ID}/journeys.json" \
+  --out ".artifacts/{ID}/exports" \
+  --formats "{html|html,tree}" \
+  --export-all-if-unset
+```
+
+5. Record `exports.path`, `exports.count`, and `exports.manifest` in `metadata.json` and `prototype-summary.yaml`
+
+Optional: keep `node "${EXPORT_SKILL}/scripts/export-helper.mjs" --out ".artifacts/{ID}/exports"` running so the Prototype Bar can write into the same folder.
+
 ## Step 12: Summary and Next Steps
 
-Print a summary showing ID, title, mode, screens, workspace, status, and artifact paths.
+Print a summary showing ID, title, mode, screens, journeys, prototype bar, exports (if any), workspace, status, and artifact paths.
 
 Suggest next steps:
 
-1. Serve the prototype and run `uxd-prototype-evaluate {ID} <URL> [--workspace=…]` (Playwright AC + usability)
-2. Re-invoke this skill to refine from FAIL / refinement-suggestions
-3. Publish via `uxd-prototype-publish` (or `${CLAUDE_SKILL_DIR}/scripts/submit_to_repo.py` for repo MR)
+1. Serve the prototype — use the Prototype Bar **Export** menu for ad-hoc static HTML / component tree, or run `uxd-prototype-export`
+2. Run `uxd-prototype-evaluate {ID} <URL> [--workspace=…]` (Playwright AC + usability)
+3. Re-invoke this skill to refine from FAIL / refinement-suggestions
+4. Publish via `uxd-prototype-publish` (or `${CLAUDE_SKILL_DIR}/scripts/submit_to_repo.py` for repo MR)
 
 If `--pipeline` / `--speedrun` was set, continue with [references/pipeline-mode.md](references/pipeline-mode.md).
 

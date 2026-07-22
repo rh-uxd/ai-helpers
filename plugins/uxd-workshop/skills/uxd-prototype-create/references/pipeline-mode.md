@@ -18,7 +18,9 @@ After normal create questions, also ask:
 
 ```
 1. CREATE    → follow uxd-prototype-create Steps 1–12
+               (Prototype Bar on by default; optional --export after serve URL is known)
 2. SERVE     → ensure prototype is reachable at {URL}
+2b. EXPORT?  → if --export, run Step 11b (journey static HTML / tree under .artifacts/{ID}/exports)
 3. EVALUATE  → /uxd-prototype-evaluate {ID} {URL} [--workspace=…]
 4. REFINE?   → if evaluation-report.csv has FAIL → refine (this skill) → re-eval
                skip when FAIL count is 0
@@ -40,6 +42,9 @@ pipeline:
   target_repo_url: https://gitlab.example.com/org/canonical.git
   max_refine_cycles: 3
   dry_run: false
+  prototype_bar: true
+  export: false
+  export_formats: html
 ```
 
 When `--target` is a git URL, normalize `target` to `repo` and store the URL in `target_repo_url`. Pass that URL to `resolve_workspace.py --upstream` during create and to `submit_to_repo.py --upstream` during publish.
@@ -53,6 +58,8 @@ When `--target` is a git URL, normalize `target` to `repo` and store the URL in 
 | `--target` | `none` |
 | `--max-refine-cycles` | `3` |
 | `--headless` | off |
+| `--prototype-bar` | on |
+| `--export` | off |
 
 ## Evaluate contract
 

@@ -26,6 +26,10 @@ The skill accepts any combination of these — it asks clarifying questions to f
 | Changeset manifest | Markdown listing all created/modified files | `.artifacts/{ID}/changeset.md` |
 | Workspace analysis | JSON with tech stack, conventions, verification commands | `.artifacts/{ID}/workspace-analysis.json` |
 | Metadata | JSON with mode, source, assumptions | `.artifacts/{ID}/metadata.json` |
+| Journeys | Structured steps/screens/states for build + export | `.artifacts/{ID}/journeys.json` |
+| Exports (optional) | Static HTML / component trees when `--export` | `.artifacts/{ID}/exports/` |
+
+Prototype Bar (default on): sticky Export menu on the running prototype. Disable with `--no-prototype-bar`.
 
 ## Decision Modes
 
@@ -59,5 +63,6 @@ Pass `--pipeline` / `--speedrun` or ask for a full run. Sequence: create → ser
 
 ## Related
 
+- **uxd-prototype-export** — Static HTML / component-tree export; Prototype Bar install
 - **uxd-prototype-evaluate** — Playwright AC validation + persona usability + HTML report
 - **uxd-prototype-publish** — MR, GitHub/GitLab Pages, or Vercel

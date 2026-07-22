@@ -57,6 +57,12 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
   "iteration": 0,
   "workspace_path": ".artifacts/PROJ-298/workspace",
   "screens": ["ApiKeyList", "ApiKeyDetail", "CreateApiKeyWizard"],
+  "journeys_path": ".artifacts/PROJ-298/journeys.json",
+  "prototype_bar": true,
+  "exports": {
+    "path": ".artifacts/PROJ-298/exports",
+    "count": 0
+  },
   "decisions_count": 5,
   "assumptions": [],
   "created_at": "2025-01-15T10:30:00Z",
@@ -66,6 +72,8 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
 ```
 
 Status values: `"draft"`, `"refined"`, `"reviewed"`, `"submitted"`.
+
+Optional fields: `journeys_path`, `prototype_bar`, `exports` (populated when `--export` runs).
 
 ## .artifacts/{ID}/changeset.md
 
@@ -127,7 +135,15 @@ prototype_summary:
     - ApiKeyList
     - ApiKeyDetail
     - CreateApiKeyWizard
+  journeys_path: .artifacts/PROJ-298/journeys.json
+  prototype_bar: true
   prototype_path: .artifacts/PROJ-298/workspace  # or .artifacts/PROJ-298/prototype/ for standalone
+
+  # Optional — present after create --export
+  exports:
+    path: .artifacts/PROJ-298/exports
+    count: 2
+    manifest: .artifacts/PROJ-298/exports/export-manifest.json
 
   # Iteration state
   iteration: 0
@@ -178,6 +194,52 @@ When the refinement procedure runs, update `prototype-summary.yaml` in place:
       score_after: "5/6"
       applied_at: "2025-01-16T09:00:00Z"
 ```
+
+## .artifacts/{ID}/journeys.json
+
+Written during Step 4 (and kept in sync if flows change). Drives implementation reachability in Step 8 and batch export via `uxd-prototype-export`. Full action vocabulary: `uxd-prototype-export/references/journeys-schema.md`.
+
+```json
+{
+  "prototype_id": "PROJ-298",
+  "extracted_at": "2025-01-15T10:30:00Z",
+  "journeys": [
+    {
+      "id": "journey-1",
+      "title": "Create API key",
+      "persona": "app-developer",
+      "source": "jira",
+      "ac_ids": ["AC-1"],
+      "steps": [
+        {
+          "id": "list",
+          "name": "API key list",
+          "route": "/api-keys",
+          "export": true
+        },
+        {
+          "id": "open-create",
+          "name": "Create modal open",
+          "route": "/api-keys",
+          "export": true,
+          "actions": [
+            { "type": "click", "selector": "[data-ouia-component-id=\"create-api-key\"]" },
+            { "type": "wait_for", "selector": "[role=\"dialog\"]" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `steps[].route` | Path relative to the prototype base URL |
+| `steps[].export` | When `true`, included in create `--export` / `export-journey.mjs` |
+| `steps[].actions` | Optional UI actions before capture (open modal, fill, wait) — not only distinct URLs |
+
+Also keep the flat `screens` list in `metadata.json` / `prototype-summary.yaml` as a convenience index of screen names.
 
 ## .artifacts/{ID}/verification.json
 

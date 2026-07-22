@@ -1,0 +1,15 @@
+{
+  "name": "uxd-prototype-export",
+  "version": "1.0.0",
+  "description": "Export prototype pages as static HTML or component trees",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "postinstall": "npx playwright install chromium || true",
+    "export-journey": "node scripts/export-journey.mjs",
+    "export-helper": "node scripts/export-helper.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.61.0"
+  }
+}

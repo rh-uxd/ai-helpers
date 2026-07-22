@@ -24,14 +24,15 @@ When Figma URLs are in the conversation, or the user requests design critique, c
 | `/uxd-figma-read` | Retrieve screenshots, structure, and design tokens from a Figma file |
 | `/uxd-evaluate-design-heuristics` | Score a design against accessibility, visual hierarchy, content, and state coverage heuristics |
 
-## Prototyping — building, refining, or publishing prototypes
+## Prototyping — building, refining, exporting, or publishing prototypes
 
-When the user asks to create, iterate on, evaluate, or publish a prototype, these skills are available:
+When the user asks to create, iterate on, evaluate, export, or publish a prototype, these skills are available:
 
 | Skill | What it does |
 |-------|-------------|
 | `/uxd-prototype-create` | Create or refine a UX prototype from a ticket, Figma design, or idea |
 | `/uxd-prototype-evaluate` | Evaluate prototype quality through rubric scoring and simulated usability testing |
+| `/uxd-prototype-export` | Export pages/journey states as static HTML or a component tree; install Prototype Bar |
 | `/uxd-prototype-publish` | Publish a prototype to a git repo, GitHub Pages, or other destination |
 
 ## Synthesis guidance
