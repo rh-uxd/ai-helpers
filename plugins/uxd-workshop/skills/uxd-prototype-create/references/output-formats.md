@@ -51,6 +51,15 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
     "reference": "PROJ-298",
     "rfe_count": 1
   },
+  "source_rfes": ["PROJ-298"],
+  "sources": [
+    {
+      "kind": "rfe",
+      "key": "PROJ-298",
+      "label": "RFE",
+      "url": "https://issues.redhat.com/browse/PROJ-298"
+    }
+  ],
   "build_mode": "existing-codebase",
   "decision_mode": "auto",
   "status": "draft",
@@ -73,7 +82,41 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
 
 Status values: `"draft"`, `"refined"`, `"reviewed"`, `"submitted"`.
 
-Optional fields: `journeys_path`, `prototype_bar`, `exports` (populated when `--export` runs).
+Optional fields: `journeys_path`, `prototype_bar`, `exports` (populated when `--export` runs), `source_rfes` (multi-RFE compose), `sources` (normalized provenance for the Prototype Bar), `figma_url`.
+
+## .artifacts/{ID}/prototype-bar.json
+
+Written during Step 9 (and refreshed by evaluate / publish-report). Runtime config for the Prototype Bar Sources dropdown and Prototype ↔ Eval switch. Prefer generating it with:
+
+```bash
+EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
+node "${EXPORT_SKILL}/scripts/sync-prototype-bar-config.mjs" \
+  --artifacts ".artifacts/{ID}"
+```
+
+Or write it directly from `metadata.json` fields. Schema: see `uxd-prototype-export/references/prototype-bar-config.md`.
+
+```json
+{
+  "id": "PROJ-298",
+  "title": "API Key Management",
+  "jiraBaseUrl": "https://issues.redhat.com/browse/",
+  "sources": [
+    {
+      "kind": "rfe",
+      "key": "PROJ-298",
+      "label": "RFE",
+      "url": "https://issues.redhat.com/browse/PROJ-298"
+    }
+  ],
+  "views": {
+    "prototype": null,
+    "eval": "/evals/PROJ-298/"
+  }
+}
+```
+
+`sources` is a single list for all provenance (outcome, RFE, strat, Figma, description). Outcome / strat entries are usually added later by evaluate when `outcome-context.json` exists. `views.eval` uses the conventional static path `/evals/{ID}/` so Pages hosting works once the report is copied there.
 
 ## .artifacts/{ID}/changeset.md
 

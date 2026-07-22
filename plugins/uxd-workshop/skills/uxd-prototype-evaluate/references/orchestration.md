@@ -354,6 +354,11 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-stat
 # Open the report for the designer
 open .artifacts/<KEY>/evaluation-report.html
 
+# Prototype Bar: ensure Sources (outcome/strat) + views.eval are current
+# (also performed inside eval-report.md Step 5)
+EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
+node "${EXPORT_SKILL}/scripts/sync-prototype-bar-config.mjs" --artifacts .artifacts/<KEY>
+
 # Present narrative summary in chat (same model as eval-review)
 Read .artifacts/<KEY>/evaluation-report.csv and .artifacts/<KEY>/extract-state.json
 Compute pass/fail/flagged counts from CSV

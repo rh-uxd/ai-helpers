@@ -6,7 +6,7 @@ Export prototype pages and journey UI states as self-contained static HTML or a 
 
 - Capture the screen you are looking at (including open modals / transient states)
 - Batch-export key journey steps after `uxd-prototype-create`
-- Install the Prototype Bar so designers can export without running the skill
+- Install the Prototype Bar so designers can export, open Sources, and switch to Eval
 
 ## Formats
 
@@ -23,8 +23,10 @@ Export prototype pages and journey UI states as self-contained static HTML or a 
 | `scripts/export-component-tree.js` | React fiber / DOM tree walker |
 | `scripts/export-current.sh` | Capture one URL via Playwright |
 | `scripts/export-journey.mjs` | Batch-export `export: true` journey steps |
-| `scripts/export-helper.mjs` | Optional localhost writer for Prototype Bar (`127.0.0.1:9417`) |
-| `scripts/install-prototype-bar.sh` | Copy bar assets into standalone HTML or React workspace |
+| `scripts/export-helper.mjs` | Localhost writer + `GET /evals/:id` report server (`127.0.0.1:9417`) |
+| `scripts/install-prototype-bar.sh` | Copy bar assets + inject `prototype-bar.json` |
+| `scripts/sync-prototype-bar-config.mjs` | Build/merge `.artifacts/{ID}/prototype-bar.json` |
+| `scripts/copy-eval-for-pages.sh` | Copy report to `public/evals/{ID}/` for static Pages |
 
 ## Setup
 
@@ -35,16 +37,43 @@ npm install
 
 ## Prototype Bar
 
-Sticky top bar with an **Export** menu (Static HTML | Component tree).
+Sticky top bar with three zones:
 
-1. Serializes the current page in the browser
-2. If `http://127.0.0.1:9417/health` responds, POSTs the file to the helper
-3. Otherwise triggers a browser download
+| Zone | Controls |
+|------|----------|
+| Left | **Sources** — outcome / RFE / strat / Figma / description links |
+| Center | **Prototype \| Eval** view switch |
+| Right | **Export** (Static HTML \| Component tree) + status |
+
+Config: `.artifacts/{ID}/prototype-bar.json` → `window.__UXD_PROTOTYPE__` (see `references/prototype-bar-config.md`).
+
+Eval navigation:
+
+1. If the helper is healthy → `http://127.0.0.1:9417/evals/{ID}/`
+2. Else → `views.eval` (e.g. `/evals/{ID}/` on Pages)
+3. Else → control disabled
 
 ```bash
-# optional — land files under .artifacts instead of Downloads
+# optional — land exports under .artifacts and serve eval reports locally
 node scripts/export-helper.mjs --out .artifacts/PROJ-298/exports
+
+# install bar with Sources/Eval config
+bash scripts/install-prototype-bar.sh \
+  --source .artifacts/PROJ-298/prototype \
+  --config .artifacts/PROJ-298/prototype-bar.json
 ```
+
+## Static Pages (no backend)
+
+Keep working files under `.artifacts/{ID}/`. For GitLab/GitHub Pages:
+
+```bash
+bash scripts/copy-eval-for-pages.sh \
+  --artifacts .artifacts/PROJ-298 \
+  --pages-root public
+```
+
+Produces `public/evals/PROJ-298/index.html` so the bar can use same-origin `/evals/PROJ-298/`.
 
 ## Journey batch export
 
@@ -56,10 +85,10 @@ node scripts/export-journey.mjs \
   --formats html,tree
 ```
 
-See `references/journeys-schema.md` and `references/export-formats.md`.
+See `references/journeys-schema.md`, `references/export-formats.md`, and `references/prototype-bar-config.md`.
 
 ## Related skills
 
-- `uxd-prototype-create` — builds the prototype; `--prototype-bar` (default on) and `--export`
-- `uxd-prototype-evaluate` — Playwright AC / usability (separate from export)
-- `uxd-prototype-publish` — deploy / MR (not the same as portable snapshots)
+- `uxd-prototype-create` — builds the prototype; writes `prototype-bar.json`; `--prototype-bar` (default on)
+- `uxd-prototype-evaluate` — writes reports; syncs Sources (outcome) into bar config
+- `uxd-prototype-publish` — deploy / MR; copy evals into Pages tree when hosting statically

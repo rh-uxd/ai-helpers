@@ -118,6 +118,10 @@ Do not improvise the loop from this overview alone — follow the orchestration 
 | `.artifacts/<KEY>/screenshots-iter-N/` | Archived screenshots per Phase A iteration |
 | `.artifacts/<KEY>/screenshots/persona-<id>-step-N.png` | Phase B per-persona screenshots |
 | `.artifacts/<KEY>/usability-thinkaloud-<id>.md` | Phase B think-aloud traces |
+| `.artifacts/<KEY>/prototype-bar.json` | Updated after report (Sources + `views.eval` for Prototype Bar) |
+| `.artifacts/<KEY>/report-url.txt` | Hosted eval URL after `publish-report.sh` |
+
+After rendering the report, sync the Prototype Bar (merges `outcome-context.json` into Sources). See `references/phases/eval-report.md` Step 5. Local Eval browsing: run `uxd-prototype-export`’s `export-helper.mjs` so the bar can open `/evals/<KEY>/` on port 9417. For static Pages, copy with `copy-eval-for-pages.sh` or `publish-report.sh` (`public/evals/<KEY>/`).
 
 ## Error Handling
 

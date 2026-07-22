@@ -83,6 +83,29 @@ Unless `--force` is set, **block submission when any AC verdict is FAIL**.
 
 Legacy fallback: if only `.artifacts/{ID}/reviews/summary.md` exists, use its verdict but prefer a fresh Playwright eval.
 
+## Step 2a: Static Eval path for Prototype Bar (Pages targets)
+
+When publishing to **GitHub**, **GitLab**, or any static host, copy the evaluation report next to the prototype so the Prototype Bar **Eval** control works without a backend:
+
+```bash
+EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
+bash "${EXPORT_SKILL}/scripts/copy-eval-for-pages.sh" \
+  --artifacts ".artifacts/{ID}" \
+  --pages-root "<staging-or-public-dir>"
+```
+
+Convention (same-origin, no server):
+
+```
+public/
+  …                          ← prototype files
+  evals/{ID}/index.html      ← copy of evaluation-report.html
+```
+
+Keep `.artifacts/{ID}/` as the working store. Ensure `.artifacts/{ID}/prototype-bar.json` has `views.eval: "/evals/{ID}/"` (sync script sets this). Re-install or refresh the bar config in the published tree if Sources/Eval were injected at create time.
+
+CI tip: add a Pages job step that copies `.artifacts/{ID}/evaluation-report.html` → `public/evals/{ID}/index.html` after evaluate; do not rely on a dynamic helper in production.
+
 ## Step 2b: Audit CI/CD Configs for Secrets
 
 Before publishing to any target, scan existing CI/CD configuration files in the workspace for sensitive content. This is especially important for workspace mode where the prototype lives inside an existing codebase with its own CI setup.
