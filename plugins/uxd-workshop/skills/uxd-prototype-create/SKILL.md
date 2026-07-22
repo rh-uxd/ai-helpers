@@ -169,7 +169,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/resolve_workspace.py" "<path-or-url>" \
   --rfe-key "{KEY}" [--branch "{BRANCH}"] [--upstream "{TARGET_REPO_URL}"]
 ```
 
-Handles local paths, GitHub/GitLab URLs (extracts branch from URL patterns), SSL auto-retry, and shallow clones. When `--upstream` is set (from a `--target` git URL), adds/sets an `upstream` remote on the clone for fork-style MR submission. Output JSON includes `type`, `clone_url`, `branch`, `clone_path`, `upstream_url` (if set), `status`.
+Handles local paths, GitHub/GitLab URLs (extracts branch from URL patterns), SSL auto-retry, HTTPS↔SSH fallback on auth/access failures, and shallow clones. When `--upstream` is set (from a `--target` git URL), adds/sets an `upstream` remote on the clone for fork-style MR submission. Output JSON includes `type`, `clone_url`, `branch`, `clone_path`, `upstream_url` (if set), `status`.
 
 **Preserve `branch`, `clone_url`, and `upstream_url`** from this output in workspace analysis (Step 6) — `submit_to_repo.py` needs them for the MR target branch, push remote, and fork detection.
 
