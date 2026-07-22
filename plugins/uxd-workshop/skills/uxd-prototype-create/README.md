@@ -14,13 +14,13 @@ The skill accepts any combination of these — it asks clarifying questions to f
 | Existing codebase | Local path or git URL to build on top of (workspace mode) |
 | Research context | Personas, JTBD, user stories in `.context/research-context/` |
 | Prior decisions | Existing `.artifacts/{ID}/decisions/` from an earlier run |
-| Eval feedback | `evaluation-report.csv` + `refinement-suggestions.json` for refine |
+| Eval feedback | `.artifacts/{ID}/eval/evaluation-report.csv` + `refinement-suggestions.json` for refine |
 
 ## Outputs
 
 | Output | Format | Location |
 |--------|--------|----------|
-| Prototype | HTML (standalone) or framework code (workspace mode) | `.artifacts/{ID}/prototype/` or target workspace |
+| Prototype | HTML (standalone) or framework code (workspace mode) | `.artifacts/{ID}/prototype/` or `.artifacts/{ID}/code/` (cloned target) |
 | Design decisions | PatternFly HTML comparison pages (cross-linked + `index.html`) + JSON record | `.artifacts/{ID}/decisions/` |
 | RFE snapshot | Markdown with YAML frontmatter | `.artifacts/{ID}/rfe-snapshot.md` |
 | Changeset manifest | Markdown listing all created/modified files | `.artifacts/{ID}/changeset.md` |

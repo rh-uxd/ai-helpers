@@ -6,15 +6,15 @@ Pre-journey intelligence gathering. Reads the workspace source files listed in `
 
 | Input | Description | Required |
 |-------|-------------|----------|
-| `.artifacts/<KEY>/mr-delta.json` | Changed files list from eval-extract | Yes |
+| `.artifacts/<KEY>/eval/mr-delta.json` | Changed files list from eval-extract | Yes |
 | `--workspace` | Path to prototype source code | Yes |
-| `.artifacts/<KEY>/extract-state.json` | Journey definitions (to match routes to journeys) | Yes |
+| `.artifacts/<KEY>/eval/extract-state.json` | Journey definitions (to match routes to journeys) | Yes |
 
 ## Outputs
 
 | File | Description |
 |------|-------------|
-| `.artifacts/<KEY>/navigation-hints.json` | Routes, selectors, page structure, nav hierarchy |
+| `.artifacts/<KEY>/eval/navigation-hints.json` | Routes, selectors, page structure, nav hierarchy |
 
 ## What the hints are used for (and what they are NOT)
 
@@ -37,7 +37,7 @@ Pre-journey intelligence gathering. Reads the workspace source files listed in `
 
 ### Step 1: Read MR delta and identify target files
 
-Read `.artifacts/<KEY>/mr-delta.json`. Collect all files from `new_files` and `modified_files`.
+Read `.artifacts/<KEY>/eval/mr-delta.json`. Collect all files from `new_files` and `modified_files`.
 
 Also identify related files not in the delta that provide navigation context:
 - Route files: `AppRoutes.tsx`, `*Routes*`, `*routes*`

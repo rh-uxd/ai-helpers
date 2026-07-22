@@ -8,12 +8,13 @@ const { execSync } = require('child_process');
 const artifactsDir = process.argv[2];
 if (!artifactsDir) {
   console.error('Usage: node ${CLAUDE_SKILL_DIR}/scripts/render-report.js <artifacts-dir>');
-  console.error('  e.g. node ${CLAUDE_SKILL_DIR}/scripts/render-report.js .artifacts/PROJ-298/');
+  console.error('  e.g. node ${CLAUDE_SKILL_DIR}/scripts/render-report.js .artifacts/PROJ-298/eval/');
   process.exit(1);
 }
 
+const { resolveProjectRoot, resolveKeyFromArtifactsDir } = require('./resolve-root');
 const absArtifacts = path.resolve(artifactsDir);
-const projectRoot = require('./resolve-root').resolveProjectRoot();
+const projectRoot = resolveProjectRoot();
 const templatePath = path.join(__dirname, '..', 'templates', 'evaluation-report.html');
 
 /** Load product-overlay.yaml (minimal parse — no YAML dependency). */
@@ -115,7 +116,7 @@ function badgeHtml(verdict, acId) {
 }
 
 function extractPrototypeId() {
-  return path.basename(absArtifacts);
+  return resolveKeyFromArtifactsDir(absArtifacts);
 }
 
 function normalizeDelta(raw) {
@@ -3406,6 +3407,36 @@ function generateIterationReports() {
   }
 }
 
+/** Embed standalone Prototype Bar into a generated report HTML (best-effort). */
+function injectPrototypeBarIfAvailable(htmlPath) {
+  try {
+    const key = resolveKeyFromArtifactsDir(absArtifacts);
+    const keyDir = key ? path.join(projectRoot, '.artifacts', key) : path.dirname(absArtifacts);
+    const injectScript = path.resolve(
+      __dirname,
+      '..',
+      '..',
+      'uxd-prototype-export',
+      'scripts',
+      'inject-prototype-bar-into-html.mjs'
+    );
+    if (!fs.existsSync(injectScript)) {
+      console.log('  (Prototype Bar inject skipped — inject script not found)');
+      return;
+    }
+    if (!fs.existsSync(path.join(keyDir, 'prototype-bar.json'))) {
+      console.log('  (Prototype Bar inject skipped — no prototype-bar.json at key root)');
+      return;
+    }
+    execSync(
+      `node "${injectScript}" --html "${htmlPath}" --artifacts "${keyDir}" --view eval`,
+      { stdio: 'inherit' }
+    );
+  } catch (err) {
+    console.warn(`  Warning: Prototype Bar inject failed: ${err.message || err}`);
+  }
+}
+
 function main() {
   if (!fs.existsSync(templatePath)) {
     console.error(`Template not found: ${templatePath}`);
@@ -3419,6 +3450,9 @@ function main() {
   fs.writeFileSync(outPath, template, 'utf8');
   console.log(`✓ Report written to ${outPath}`);
   console.log(`  Size: ${(Buffer.byteLength(template) / 1024).toFixed(0)} KB`);
+
+  // Embed Prototype Bar (Prototype|Eval) when key-root config exists
+  injectPrototypeBarIfAvailable(outPath);
 
   // Generate per-iteration snapshot reports (shortened versions for intermediates)
   generateIterationReports();

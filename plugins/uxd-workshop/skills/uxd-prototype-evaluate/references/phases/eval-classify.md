@@ -6,14 +6,14 @@ Phase 2a of the eval pipeline. Classifies each acceptance criterion into a tier 
 
 | Input | Description | Required |
 |-------|-------------|----------|
-| `.artifacts/<KEY>/extract-state.json` | AC list with references and feature_context, from eval-extract | Yes |
+| `.artifacts/<KEY>/eval/extract-state.json` | AC list with references and feature_context, from eval-extract | Yes |
 | `config/csv-schema.yaml` | CSV section/column definitions | Yes |
 
 ## Outputs
 
 | File | Description |
 |------|-------------|
-| `.artifacts/<KEY>/evaluation-report.csv` | Section 1 initialized with headers + tier assignments (no verdicts yet) |
+| `.artifacts/<KEY>/eval/evaluation-report.csv` | Section 1 initialized with headers + tier assignments (no verdicts yet) |
 
 ## Tier Definitions
 
@@ -34,7 +34,7 @@ These prototypes are **functional TypeScript applications** built with Cursor --
 
 ### Step 1: Read extract-state.json
 
-Load the AC list, criterion-to-reference map, and `feature_context` from `.artifacts/<KEY>/extract-state.json`.
+Load the AC list, criterion-to-reference map, and `feature_context` from `.artifacts/<KEY>/eval/extract-state.json`.
 
 If `feature_context.ui_enhancements` exists, use it as supplementary signal for tier decisions -- it describes what the prototype is supposed to visually demonstrate.
 

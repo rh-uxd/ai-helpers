@@ -96,16 +96,67 @@ async function helperHealthy(): Promise<boolean> {
   }
 }
 
+/** True when URL serves an eval report — not an SPA historyApiFallback shell. */
+async function looksLikeEvalReport(url: string): Promise<boolean> {
+  try {
+    const res = await fetch(url, { method: 'GET', credentials: 'same-origin' });
+    if (!res.ok) return false;
+    const ct = res.headers.get('content-type') || '';
+    if (ct && !/text\/html/i.test(ct) && !/application\/json/i.test(ct)) return false;
+    // Helper returns JSON 404 payloads for missing reports
+    if (/application\/json/i.test(ct)) return false;
+    const head = (await res.text()).slice(0, 12000);
+    if (/data-uxd-eval-report/i.test(head)) return true;
+    if (/data-uxd-view=["']eval["']/i.test(head)) return true;
+    if (/<title>\s*Evaluation:/i.test(head)) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
 async function resolveEvalUrl(cfg: UxdPrototypeConfig): Promise<string | null> {
   if (cfg.id && (await helperHealthy())) {
-    return `${HELPER}/evals/${encodeURIComponent(cfg.id)}/`;
+    const helperUrl = `${HELPER}/evals/${encodeURIComponent(cfg.id)}/`;
+    if (await looksLikeEvalReport(helperUrl)) return helperUrl;
   }
-  if (cfg.views?.eval) return cfg.views.eval;
+  const fallback = cfg.views?.eval;
+  if (!fallback) return null;
+  // Hosted absolute URLs (Pages) — trust without probing (may be cross-origin)
+  if (/^https?:\/\//i.test(fallback)) return fallback;
+  // Relative /evals/{id}/ only when it actually serves the report (not SPA fallback)
+  if (await looksLikeEvalReport(fallback)) return fallback;
   return null;
+}
+
+const EVAL_UNAVAILABLE_HINT =
+  'Eval report not available yet — for local viewing, run export-helper on :9417';
+
+const RETURN_URL_KEY = 'uxd-prototype-return-url';
+
+function rememberPrototypeReturnUrl(): void {
+  try {
+    if (detectActiveView() !== 'prototype') return;
+    sessionStorage.setItem(RETURN_URL_KEY, window.location.href);
+  } catch {
+    /* private mode / blocked storage */
+  }
 }
 
 function resolvePrototypeUrl(cfg: UxdPrototypeConfig): string {
   if (cfg.views?.prototype) return cfg.views.prototype;
+  try {
+    const stored = sessionStorage.getItem(RETURN_URL_KEY);
+    if (stored) return stored;
+  } catch {
+    /* ignore */
+  }
+  try {
+    const ref = document.referrer;
+    if (ref && !/\/evals\//.test(ref)) return ref;
+  } catch {
+    /* ignore */
+  }
   return '/';
 }
 
@@ -308,13 +359,14 @@ export const PrototypeBar: React.FC = () => {
     try {
       const url = await resolveEvalUrl(cfg);
       if (!url) {
-        setStatus('Eval report not available yet');
+        setStatus(EVAL_UNAVAILABLE_HINT);
         return;
       }
       if (active === 'eval') {
         setStatus('Viewing eval');
         return;
       }
+      rememberPrototypeReturnUrl();
       window.location.href = url;
     } finally {
       setBusy(false);
@@ -414,7 +466,7 @@ export const PrototypeBar: React.FC = () => {
             type="button"
             aria-current={active === 'eval' ? 'true' : undefined}
             disabled={!evalReady && active !== 'eval'}
-            title={!evalReady && active !== 'eval' ? 'Eval report not available yet' : undefined}
+            title={!evalReady && active !== 'eval' ? EVAL_UNAVAILABLE_HINT : undefined}
             onClick={goEval}
           >
             Eval

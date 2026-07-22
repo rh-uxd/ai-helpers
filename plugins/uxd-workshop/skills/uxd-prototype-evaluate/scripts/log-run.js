@@ -8,16 +8,25 @@ const { execSync } = require('child_process');
 const artifactsDir = process.argv[2];
 if (!artifactsDir) {
   console.error('Usage: node ${CLAUDE_SKILL_DIR}/scripts/log-run.js <artifacts-dir> [--note="description"]');
+  console.error('  e.g. node log-run.js .artifacts/PROJ-298/eval/');
   process.exit(1);
 }
 
 const noteArg = process.argv.find(a => a.startsWith('--note='));
 const note = noteArg ? noteArg.slice(7).replace(/"/g, '') : '';
 
+const {
+  resolveProjectRoot,
+  resolveEvalGlobalDir,
+  resolveKeyFromArtifactsDir,
+} = require('./resolve-root');
+
 const absArtifacts = path.resolve(artifactsDir);
-const projectRoot = require('./resolve-root').resolveProjectRoot();
-const runsDir = path.join(projectRoot, '.artifacts', 'runs');
-const logPath = path.join(runsDir, 'run-log.csv');
+const projectRoot = resolveProjectRoot();
+const globalEvalDir = resolveEvalGlobalDir();
+const globalRunsDir = path.join(globalEvalDir, 'runs');
+const logPath = path.join(globalRunsDir, 'run-log.csv');
+const localRunsDir = path.join(absArtifacts, 'runs');
 
 function readJsonOr(filePath, fallback) {
   try { return JSON.parse(fs.readFileSync(filePath, 'utf8')); } catch { return fallback; }
@@ -43,8 +52,18 @@ function getGitVersion() {
   }
 }
 
+function archiveRunFiles(archiveDir, filesToArchive) {
+  fs.mkdirSync(archiveDir, { recursive: true });
+  for (const f of filesToArchive) {
+    const src = path.join(absArtifacts, f);
+    if (fs.existsSync(src)) {
+      fs.copyFileSync(src, path.join(archiveDir, f));
+    }
+  }
+}
+
 function main() {
-  const protoId = path.basename(absArtifacts);
+  const protoId = resolveKeyFromArtifactsDir(absArtifacts);
   const now = new Date();
   const runId = now.toISOString().replace(/[:.]/g, '').substring(0, 15);
   const timestamp = now.toISOString();
@@ -100,18 +119,14 @@ function main() {
     mrAvailable, escapeCsv(personas), escapeCsv(note)
   ].join(',');
 
-  // Ensure runs directory exists
-  fs.mkdirSync(runsDir, { recursive: true });
+  // Ensure global runs directory exists
+  fs.mkdirSync(globalRunsDir, { recursive: true });
 
   // Append to run log (create with headers if new)
   if (!fs.existsSync(logPath)) {
     fs.writeFileSync(logPath, headers + '\n', 'utf8');
   }
   fs.appendFileSync(logPath, row + '\n', 'utf8');
-
-  // Archive this run's key artifacts
-  const archiveDir = path.join(runsDir, protoId, runId);
-  fs.mkdirSync(archiveDir, { recursive: true });
 
   const filesToArchive = [
     'evaluation-report.csv',
@@ -121,12 +136,11 @@ function main() {
     'evaluation-report.md'
   ];
 
-  for (const f of filesToArchive) {
-    const src = path.join(absArtifacts, f);
-    if (fs.existsSync(src)) {
-      fs.copyFileSync(src, path.join(archiveDir, f));
-    }
-  }
+  // Archive under per-key eval/ and global .artifacts/eval/runs/
+  const localArchiveDir = path.join(localRunsDir, runId);
+  const globalArchiveDir = path.join(globalRunsDir, protoId, runId);
+  archiveRunFiles(localArchiveDir, filesToArchive);
+  archiveRunFiles(globalArchiveDir, filesToArchive);
 
   console.log(`Run logged: ${runId}`);
   console.log(`  Prototype: ${protoId}`);
@@ -137,7 +151,8 @@ function main() {
   console.log(`  Nav fails: ${navFailures}`);
   console.log(`  MR delta:  ${mrAvailable}`);
   if (note) console.log(`  Note:      ${note}`);
-  console.log(`  Archived:  ${archiveDir}`);
+  console.log(`  Archived:  ${localArchiveDir}`);
+  console.log(`  Global:    ${globalArchiveDir}`);
   console.log(`  Log:       ${logPath}`);
 
   // Publish report to GitLab Pages (or reports branch)

@@ -162,18 +162,20 @@ Use journeys + scenarios for implementation in Step 8 and for `--export` later (
 
 ## Step 5: Resolve Workspace
 
+All create/publish artifacts share the **consumer project** tree at `.artifacts/{ID}/` (repo root where the skill was invoked — never `${CLAUDE_SKILL_DIR}`). Eval outputs live under `.artifacts/{ID}/eval/`.
+
 **Standalone mode:** Create `.artifacts/{ID}/prototype/`. Skip to Step 6.
 
-**Workspace mode:** Use the resolve script (needs elevated permissions for git clone — `required_permissions: ["all"]` in Cursor):
+**Workspace mode:** Clone the target codebase into `.artifacts/{ID}/code/` (keeps source separate from decision pages, reports, and other artifacts). Use the resolve script (needs elevated permissions for git clone — `required_permissions: ["all"]` in Cursor):
 
 ```bash
 python3 "${CLAUDE_SKILL_DIR}/scripts/resolve_workspace.py" "<path-or-url>" \
   --rfe-key "{KEY}" [--branch "{BRANCH}"] [--upstream "{TARGET_REPO_URL}"]
 ```
 
-Handles local paths, GitHub/GitLab URLs (extracts branch from URL patterns), SSL auto-retry, HTTPS↔SSH fallback on auth/access failures, and shallow clones. When `--upstream` is set (from a `--target` git URL), adds/sets an `upstream` remote on the clone for fork-style MR submission. Output JSON includes `type`, `clone_url`, `branch`, `clone_path`, `upstream_url` (if set), `status`.
+Handles local paths, GitHub/GitLab URLs (extracts branch from URL patterns), SSL auto-retry, HTTPS↔SSH fallback on auth/access failures, and shallow clones. When `--upstream` is set (from a `--target` git URL), adds/sets an `upstream` remote on the clone for fork-style MR submission. Output JSON includes `type`, `clone_url`, `branch`, `clone_path` (`.artifacts/{ID}/code`), `upstream_url` (if set), `status`.
 
-**Preserve `branch`, `clone_url`, and `upstream_url`** from this output in workspace analysis (Step 6) — `submit_to_repo.py` needs them for the MR target branch, push remote, and fork detection.
+**Preserve `branch`, `clone_url`, and `upstream_url`** from this output in workspace analysis (Step 6) — `submit_to_repo.py` needs them for the MR target branch, push remote, and fork detection. Set `workspace_path` to the absolute or repo-relative `clone_path` (`.artifacts/{ID}/code`).
 
 ## Step 6: Analyze Target Codebase
 
@@ -186,7 +188,7 @@ Detect and record:
 3. Navigation structure and design system usage
 4. Agent instructions (`.cursor/rules/`, `AGENTS.md`) — extract **verification commands** (lint, build, typecheck) for Step 10
 
-Save to `.artifacts/{ID}/workspace-analysis.json` including `clone_url`, `branch`, `workspace_path`, and `upstream_url` when `--target` was a git URL.
+Save to `.artifacts/{ID}/workspace-analysis.json` including `clone_url`, `branch`, `workspace_path` (pointing at `.artifacts/{ID}/code`), and `upstream_url` when `--target` was a git URL.
 
 ## Step 7: Design Decisions
 
@@ -323,7 +325,13 @@ node "${EXPORT_SKILL}/scripts/export-journey.mjs" \
 
 6. Record `exports.path`, `exports.count`, `exports.manifest`, and `exports.index` in `metadata.json` and `prototype-summary.yaml`
 
-Optional: keep `node "${EXPORT_SKILL}/scripts/export-helper.mjs" --out ".artifacts/{ID}/exports"` running so the Prototype Bar can write into the same folder.
+Optional but recommended while viewing locally: keep the export helper running so the Prototype Bar can (a) write Export captures into `.artifacts/{ID}/exports` and (b) open Eval at `http://127.0.0.1:9417/evals/{ID}/` (SPA servers cannot serve `.artifacts/` reports via relative `/evals/…`):
+
+```bash
+node "${EXPORT_SKILL}/scripts/export-helper.mjs" \
+  --out ".artifacts/{ID}/exports" \
+  --artifacts ".artifacts"
+```
 
 ## Step 12: Summary and Next Steps
 
@@ -346,7 +354,7 @@ After Playwright evaluation, apply targeted improvements from failed ACs and sug
 
 Read [references/refinement-procedure.md](references/refinement-procedure.md) when the user asks to refine or when running the automated refine→eval loop.
 
-**Quick summary:** Reads `evaluation-report.csv` + `refinement-suggestions.json`, plans fixes for FAIL criteria, applies without full rewrite, increments iteration. Pass = zero FAIL. Default max: 3 cycles.
+**Quick summary:** Reads `.artifacts/{ID}/eval/evaluation-report.csv` + `refinement-suggestions.json`, plans fixes for FAIL criteria, applies without full rewrite, increments iteration. Pass = zero FAIL. Default max: 3 cycles.
 
 **Invocation:**
 

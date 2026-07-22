@@ -7,12 +7,13 @@
  *
  * GET  /health              → { ok, out, artifacts }
  * POST /export              → write capture under --out
- * GET  /evals/:id[/…]       → serve .artifacts/:id/evaluation-report.html (+ siblings)
+ * GET  /evals/:id[/…]       → serve .artifacts/:id/eval/evaluation-report.html (+ siblings)
  */
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { injectPrototypeBar } from './inject-prototype-bar-into-html.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -118,33 +119,18 @@ function readBody(req) {
 }
 
 function injectEvalBar(html, id) {
-  // Ensure eval pages can show the bar with data-uxd-view=eval if config is known
-  if (/id=["']uxd-prototype-bar["']/.test(html)) return html;
-  const cfgPath = path.join(opts.artifactsRoot, id, 'prototype-bar.json');
-  let cfgScript = '';
-  if (fs.existsSync(cfgPath)) {
-    try {
-      const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-      cfgScript = `<script>window.__UXD_PROTOTYPE__=${JSON.stringify(cfg)};</script>\n`;
-    } catch {
-      /* ignore */
-    }
-  } else {
-    cfgScript = `<script>window.__UXD_PROTOTYPE__=${JSON.stringify({
+  // Always embed the standalone Prototype Bar so Eval pages match Prototype chrome.
+  const keyDir = path.join(opts.artifactsRoot, id);
+  try {
+    return injectPrototypeBar(html, {
+      artifacts: keyDir,
       id,
-      views: { prototype: '/', eval: `/evals/${id}/` },
-      sources: [],
-    })};</script>\n`;
+      view: 'eval',
+    });
+  } catch (err) {
+    console.warn(`injectPrototypeBar failed for ${id}:`, err.message || err);
+    return html;
   }
-  // Inject config + view marker (bar chrome may already be on the report or co-hosted).
-  const marker = `<script>document.documentElement.setAttribute('data-uxd-view','eval');</script>\n${cfgScript}`;
-  if (/<\/head>/i.test(html)) {
-    return html.replace(/<\/head>/i, `${marker}</head>`);
-  }
-  if (/<body[^>]*>/i.test(html)) {
-    return html.replace(/<body([^>]*)>/i, `<body$1>\n${marker}`);
-  }
-  return marker + html;
 }
 
 const opts = parseArgs(process.argv);
@@ -158,7 +144,7 @@ Listens on 127.0.0.1 only.
   POST /export   Prototype Bar writes captures:
                  { "filename": "current/page.html", "body": "...", "format": "html" }
   GET  /evals/:id[/path]  Serve evaluation-report.html (and siblings) from
-                 <artifacts>/:id/
+                 <artifacts>/:id/eval/
 `);
   process.exit(0);
 }
@@ -203,10 +189,13 @@ const server = http.createServer(async (req, res) => {
   if (req.method === 'GET' && evalMatch) {
     const id = decodeURIComponent(evalMatch[1]);
     const rest = (evalMatch[2] || '').replace(/\/+$/, '');
-    const artifactDir = safeJoin(opts.artifactsRoot, id);
+    const keyDir = safeJoin(opts.artifactsRoot, id);
+    const evalDir = path.join(keyDir, 'eval');
+    const artifactDir =
+      fs.existsSync(evalDir) && fs.statSync(evalDir).isDirectory() ? evalDir : keyDir;
 
-    if (!fs.existsSync(artifactDir) || !fs.statSync(artifactDir).isDirectory()) {
-      sendJson(res, 404, { error: `No artifacts for ${id}`, lookedIn: artifactDir });
+    if (!fs.existsSync(keyDir) || !fs.statSync(keyDir).isDirectory()) {
+      sendJson(res, 404, { error: `No artifacts for ${id}`, lookedIn: keyDir });
       return;
     }
 
@@ -217,7 +206,7 @@ const server = http.createServer(async (req, res) => {
         sendJson(res, 404, {
           error: 'evaluation-report.html not found',
           lookedIn: artifactDir,
-          hint: 'Run uxd-prototype-evaluate first',
+          hint: 'Run uxd-prototype-evaluate first (writes .artifacts/<KEY>/eval/)',
         });
         return;
       }

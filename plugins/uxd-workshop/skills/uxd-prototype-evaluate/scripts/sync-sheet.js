@@ -112,7 +112,7 @@ function parseCSVLine(line) {
 }
 
 function readEvalResults(dir) {
-  const base = path.join(ARTIFACTS_BASE, dir);
+  const base = path.join(ARTIFACTS_BASE, dir, 'eval');
   const csvPath = path.join(base, 'evaluation-report.csv');
   if (!fs.existsSync(csvPath)) return null;
 
@@ -213,11 +213,12 @@ function main() {
   console.log(`\n  Sync Eval Results → Google Sheet (mode: ${mode})\n`);
   if (!fs.existsSync(ARTIFACTS_BASE)) { console.error('  No .artifacts/ found.'); process.exit(1); }
 
-  // Include any artifact dir that has an evaluation report (exclude runs/, etc.)
+  // Include any key dir that has eval/evaluation-report.csv (skip global .artifacts/eval/)
   const allDirs = fs.readdirSync(ARTIFACTS_BASE).filter(d => {
+    if (d === 'eval' || d === 'runs') return false;
     const full = path.join(ARTIFACTS_BASE, d);
     return fs.statSync(full).isDirectory()
-      && fs.existsSync(path.join(full, 'evaluation-report.csv'));
+      && fs.existsSync(path.join(full, 'eval', 'evaluation-report.csv'));
   });
   const testDirs = allDirs.filter(d => d.includes('-test'));
   const liveDirs = allDirs.filter(d => !d.includes('-test'));

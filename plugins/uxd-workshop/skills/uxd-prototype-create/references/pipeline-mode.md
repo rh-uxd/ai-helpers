@@ -22,7 +22,7 @@ After normal create questions, also ask:
 2. SERVE     → ensure prototype is reachable at {URL}
 2b. EXPORT?  → if --export, run Step 11 (journey static HTML / tree under .artifacts/{ID}/exports)
 3. EVALUATE  → /uxd-prototype-evaluate {ID} {URL} [--workspace=…]
-4. REFINE?   → if evaluation-report.csv has FAIL → refine (this skill) → re-eval
+4. REFINE?   → if .artifacts/{ID}/eval/evaluation-report.csv has FAIL → refine (this skill) → re-eval
                skip when FAIL count is 0
 5. PUBLISH?  → /uxd-prototype-publish {ID} --target={target}  (if target ≠ none)
                When target was a git URL, pass --target=<url> (or --target=repo with
@@ -64,7 +64,7 @@ When `--target` is a git URL, normalize `target` to `repo` and store the URL in 
 ## Evaluate contract
 
 - Evaluate needs a **live URL** — do not claim "quick rubric" scoring.
-- Pass for continuing to publish without `--force`: zero FAIL in `.artifacts/{ID}/evaluation-report.csv`.
+- Pass for continuing to publish without `--force`: zero FAIL in `.artifacts/{ID}/eval/evaluation-report.csv`.
 - FLAGGED criteria: surface to the user; do not auto-block publish unless the user wants a clean report.
 
 ## Repo submit notes

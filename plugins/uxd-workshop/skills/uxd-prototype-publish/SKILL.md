@@ -36,7 +36,7 @@ If the user says "share", "publish", "deploy", "submit", or "I'm done" without s
 | `metadata.json` | `.artifacts/{ID}/metadata.json` | Yes |
 | Changeset manifest | `.artifacts/{ID}/changeset.md` | Yes (workspace mode) |
 | Workspace analysis | `.artifacts/{ID}/workspace-analysis.json` | Yes (repo target, workspace mode) |
-| Eval report | `.artifacts/{ID}/evaluation-report.csv` | Recommended |
+| Eval report | `.artifacts/{ID}/eval/evaluation-report.csv` | Recommended |
 | Pages base URL | `--pages-base-url` or product config | Optional (repo target) |
 
 ## Flags
@@ -72,7 +72,7 @@ If validation fails: "Prototype `{ID}` is incomplete. Missing: [list]. Fix befor
 
 ## Step 2: Check Eval Results
 
-Read `.artifacts/{ID}/evaluation-report.csv` from `uxd-prototype-evaluate` if it exists.
+Read `.artifacts/{ID}/eval/evaluation-report.csv` from `uxd-prototype-evaluate` if it exists.
 
 - **Pass** — zero `FAIL` verdicts in Section 1 (AC rows) → label: `rubric-pass` (or `eval-pass`)
 - **Needs attention** — one or more `FAIL` → label: `needs-attention`
@@ -99,12 +99,12 @@ Convention (same-origin, no server):
 ```
 public/
   …                          ← prototype files
-  evals/{ID}/index.html      ← copy of evaluation-report.html
+  evals/{ID}/index.html      ← copy of .artifacts/{ID}/eval/evaluation-report.html
 ```
 
-Keep `.artifacts/{ID}/` as the working store. Ensure `.artifacts/{ID}/prototype-bar.json` has `views.eval: "/evals/{ID}/"` (sync script sets this). Re-install or refresh the bar config in the published tree if Sources/Eval were injected at create time.
+Keep `.artifacts/{ID}/` as the create/publish working store; eval reports live under `.artifacts/{ID}/eval/`. Ensure `.artifacts/{ID}/prototype-bar.json` has `views.eval: "/evals/{ID}/"` (sync script sets this). Re-install or refresh the bar config in the published tree if Sources/Eval were injected at create time.
 
-CI tip: add a Pages job step that copies `.artifacts/{ID}/evaluation-report.html` → `public/evals/{ID}/index.html` after evaluate; do not rely on a dynamic helper in production.
+CI tip: add a Pages job step that copies `.artifacts/{ID}/eval/evaluation-report.html` → `public/evals/{ID}/index.html` after evaluate; do not rely on a dynamic helper in production.
 
 ## Step 2b: Audit CI/CD Configs for Secrets
 

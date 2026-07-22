@@ -16,16 +16,65 @@ Phase procedures live in `${CLAUDE_SKILL_DIR}/references/phases/` — read and f
 
 **Full orchestration** (loop, exit conditions, state, notify): read and follow [`references/orchestration.md`](references/orchestration.md).
 
-## Prerequisites
+## Artifact location (CRITICAL)
 
-From the skill directory (or using `${CLAUDE_SKILL_DIR}`):
+All **eval** runtime outputs live under the **consumer project** at `.artifacts/<KEY>/eval/` — never under `${CLAUDE_SKILL_DIR}`, and never mixed into the key root used by create/publish.
+
+`${CLAUDE_SKILL_DIR}` is the skill install (plugin cache or `plugins/…/uxd-prototype-evaluate`). Writing `.artifacts/` there pollutes the skill.
+
+**Layout:**
+
+```text
+.artifacts/<KEY>/                 # create / publish key root (decisions, code, prototype-bar, …)
+  eval/                           # ARTIFACTS_DIR — all per-key eval outputs
+.artifacts/eval/                  # cross-key eval namespace (run-log, pain-leaderboard)
+```
+
+**At the start of every run, pin absolute paths once and reuse them:**
 
 ```bash
+# Consumer project = directory where the user invoked the skill (usually git toplevel).
+# Never use ${CLAUDE_SKILL_DIR} or a nested clone under .artifacts/<KEY>/code as PROJECT_ROOT.
+export UXD_PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# If git toplevel is inside the skill install or under .artifacts/*/code, use the
+# invocation cwd instead (or: node -e "console.log(require('${CLAUDE_SKILL_DIR}/scripts/resolve-root').resolveProjectRoot())")
+
+export KEY_DIR="${UXD_PROJECT_ROOT}/.artifacts/<KEY>"
+export ARTIFACTS_DIR="${KEY_DIR}/eval"
+mkdir -p "${ARTIFACTS_DIR}/scripts" "${ARTIFACTS_DIR}/screenshots"
+
+# Persist for the rest of the run (survives context compression)
+python3 "${CLAUDE_SKILL_DIR}/scripts/eval_state.py" init "${ARTIFACTS_DIR}/eval-state.yaml" \
+  artifacts_dir="${ARTIFACTS_DIR}" project_root="${UXD_PROJECT_ROOT}" key=<KEY> ...
+```
+
+**Rules:**
+
+1. Use `${ARTIFACTS_DIR}/…` (absolute) for every eval read/write. Do not use bare relative `.artifacts/<KEY>/eval/…` after any `cd`.
+2. `cd "${CLAUDE_SKILL_DIR}"` is allowed only for `npm install` / Playwright browser install. Return to `${UXD_PROJECT_ROOT}` before writing artifacts or generating scripts.
+3. `cd` into the prototype `.artifacts/<KEY>/code` clone is fine for git/build; eval artifact paths stay absolute under `${ARTIFACTS_DIR}`.
+4. Generated Playwright scripts go in `${ARTIFACTS_DIR}/scripts/` (`journey-test.mjs`, `persona-walkthrough.mjs`) — not the skill root, not the project root.
+5. `--fresh` deletes only the pinned `${ARTIFACTS_DIR}` (`.artifacts/<KEY>/eval/`). Never delete the key root, never `.artifacts/eval/`, never `rm -rf .artifacts/…` relative to an unknown cwd.
+6. Create-owned siblings (`decisions/`, `prototype-bar.json`, …) stay at `${KEY_DIR}`. Sync Prototype Bar with `--artifacts ${KEY_DIR}`, not `${ARTIFACTS_DIR}`.
+7. Node helpers resolve paths via `scripts/resolve-root.js` (honors `UXD_PROJECT_ROOT`). Prefer passing absolute `${ARTIFACTS_DIR}` into those scripts.
+
+In phase docs, `.artifacts/<KEY>/eval/…` means `${UXD_PROJECT_ROOT}/.artifacts/<KEY>/eval/…` — always resolve against the pinned project root. Create inputs at `.artifacts/<KEY>/…` (no `eval/`) stay at the key root.
+
+## Prerequisites
+
+Install Playwright deps from the skill directory, then return to the project root:
+
+```bash
+# Remember project root BEFORE leaving it
+export UXD_PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+
 cd "${CLAUDE_SKILL_DIR}"
 npm install
 npx playwright install chromium
+cd "${UXD_PROJECT_ROOT}"
 
 # Optional — personas + PatternFly consistency guidelines (VPN may be required)
+# Bootstrap into the consumer project .context/, not the skill install
 bash "${CLAUDE_SKILL_DIR}/scripts/bootstrap-usability-testing.sh"
 bash "${CLAUDE_SKILL_DIR}/scripts/bootstrap-consistency-checker.sh"
 ```
@@ -57,7 +106,7 @@ Edit `${CLAUDE_SKILL_DIR}/config/product-overlay.yaml` for product-specific Jira
 | `--no-iterate` | flag | No | Off |
 | `--no-fix` | flag | No | Off |
 | `--reset` | flag | No | Off (evaluate current state; when set, hard-resets workspace to origin branch HEAD before eval) |
-| `--fresh` | flag | No | Off (when set, deletes .artifacts/<KEY>/ before starting for a clean-slate run) |
+| `--fresh` | flag | No | Off (when set, deletes `.artifacts/<KEY>/eval/` only — never the key root, never `.artifacts/eval/`) |
 
 ## Pipeline Flow (Two-Phase)
 
@@ -109,19 +158,40 @@ Do not improvise the loop from this overview alone — follow the orchestration 
 
 ## Outputs
 
+Per-key eval outputs under `${UXD_PROJECT_ROOT}/.artifacts/<KEY>/eval/`:
+
 | File | Description |
 |------|-------------|
-| `.artifacts/<KEY>/evaluation-report.html` | Final HTML report (both phases) |
-| `.artifacts/<KEY>/evaluation-report.csv` | Final AC verdicts + usability dimensions |
-| `.artifacts/<KEY>/iteration-log.json` | Per-iteration counts + Phase B usability |
-| `.artifacts/<KEY>/evaluation-report-iter-N.csv` | Archived CSV per Phase A iteration |
-| `.artifacts/<KEY>/screenshots-iter-N/` | Archived screenshots per Phase A iteration |
-| `.artifacts/<KEY>/screenshots/persona-<id>-step-N.png` | Phase B per-persona screenshots |
-| `.artifacts/<KEY>/usability-thinkaloud-<id>.md` | Phase B think-aloud traces |
-| `.artifacts/<KEY>/prototype-bar.json` | Updated after report (Sources + `views.eval` for Prototype Bar) |
-| `.artifacts/<KEY>/report-url.txt` | Hosted eval URL after `publish-report.sh` |
+| `evaluation-report.html` | Final HTML report (both phases) |
+| `evaluation-report.csv` | Final AC verdicts + usability dimensions |
+| `iteration-log.json` | Per-iteration counts + Phase B usability |
+| `journey-log.json` | Playwright step log + usability overlays |
+| `scripts/journey-test.mjs` | Generated Phase A Playwright script |
+| `scripts/persona-walkthrough.mjs` | Generated Phase B Playwright script |
+| `evaluation-report-iter-N.csv` | Archived CSV per Phase A iteration |
+| `screenshots-iter-N/` | Archived screenshots per Phase A iteration |
+| `screenshots/persona-<id>-step-N.png` | Phase B per-persona screenshots |
+| `usability-thinkaloud-<id>.md` | Phase B think-aloud traces |
+| `runs/<timestamp>/` | Archived copy of this run’s key artifacts |
+| `report-url.txt` | Hosted eval URL after `publish-report.sh` |
 
-After rendering the report, sync the Prototype Bar (merges `outcome-context.json` into Sources). See `references/phases/eval-report.md` Step 5. Local Eval browsing: run `uxd-prototype-export`’s `export-helper.mjs` so the bar can open `/evals/<KEY>/` on port 9417. For static Pages, copy with `copy-eval-for-pages.sh` or `publish-report.sh` (`public/evals/<KEY>/`).
+Cross-key (under `${UXD_PROJECT_ROOT}/.artifacts/eval/`, untouched by `--fresh`):
+
+| File | Description |
+|------|-------------|
+| `runs/run-log.csv` | Appended run entries |
+| `runs/<KEY>/<timestamp>/` | Global archive mirror for leaderboard |
+| `pain-leaderboard.html` | Aggregate pain leaderboard |
+
+Create-owned (key root, updated by eval sync — not deleted by `--fresh`):
+
+| File | Description |
+|------|-------------|
+| `.artifacts/<KEY>/prototype-bar.json` | Sources + `views.eval` for Prototype Bar |
+
+After rendering the report, sync the Prototype Bar with `--artifacts ${KEY_DIR}` (merges `outcome-context.json` into Sources). See `references/phases/eval-report.md` Step 5. Local Eval browsing: run `uxd-prototype-export`’s `export-helper.mjs` so the bar can open `/evals/<KEY>/` on port 9417 (serves `.artifacts/<KEY>/eval/`). For static Pages, copy with `copy-eval-for-pages.sh` or `publish-report.sh` (`public/evals/<KEY>/`).
+
+**Migration:** move existing eval files from `.artifacts/<KEY>/` into `.artifacts/<KEY>/eval/`; move `.artifacts/runs/` and `.artifacts/pain-leaderboard.html` into `.artifacts/eval/`.
 
 ## Error Handling
 

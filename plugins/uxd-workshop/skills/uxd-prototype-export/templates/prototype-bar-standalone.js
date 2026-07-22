@@ -89,17 +89,65 @@
     }
   }
 
+  /** True when URL serves an eval report — not an SPA historyApiFallback shell. */
+  async function looksLikeEvalReport(url) {
+    try {
+      var res = await fetch(url, { method: 'GET', credentials: 'same-origin' });
+      if (!res.ok) return false;
+      var ct = res.headers.get('content-type') || '';
+      if (ct && !/text\/html/i.test(ct) && !/application\/json/i.test(ct)) return false;
+      if (/application\/json/i.test(ct)) return false;
+      var head = (await res.text()).slice(0, 12000);
+      if (/data-uxd-eval-report/i.test(head)) return true;
+      if (/data-uxd-view=["']eval["']/i.test(head)) return true;
+      if (/<title>\s*Evaluation:/i.test(head)) return true;
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
   async function resolveEvalUrl(cfg) {
     var id = cfg.id;
     if (id && (await helperHealthy())) {
-      return HELPER + '/evals/' + encodeURIComponent(id) + '/';
+      var helperUrl = HELPER + '/evals/' + encodeURIComponent(id) + '/';
+      if (await looksLikeEvalReport(helperUrl)) return helperUrl;
     }
-    if (cfg.views && cfg.views.eval) return cfg.views.eval;
+    var fallback = cfg.views && cfg.views.eval;
+    if (!fallback) return null;
+    if (/^https?:\/\//i.test(fallback)) return fallback;
+    if (await looksLikeEvalReport(fallback)) return fallback;
     return null;
+  }
+
+  var EVAL_UNAVAILABLE_HINT =
+    'Eval report not available yet — for local viewing, run export-helper on :9417';
+
+  var RETURN_URL_KEY = 'uxd-prototype-return-url';
+
+  function rememberPrototypeReturnUrl() {
+    try {
+      if (detectActiveView() !== 'prototype') return;
+      sessionStorage.setItem(RETURN_URL_KEY, window.location.href);
+    } catch (e) {
+      /* private mode / blocked storage */
+    }
   }
 
   function resolvePrototypeUrl(cfg) {
     if (cfg.views && cfg.views.prototype) return cfg.views.prototype;
+    try {
+      var stored = sessionStorage.getItem(RETURN_URL_KEY);
+      if (stored) return stored;
+    } catch (e) {
+      /* ignore */
+    }
+    try {
+      var ref = document.referrer;
+      if (ref && !/\/evals\//.test(ref)) return ref;
+    } catch (e) {
+      /* ignore */
+    }
     return '/';
   }
 
@@ -291,13 +339,14 @@
         try {
           var url = await resolveEvalUrl(getConfig());
           if (!url) {
-            setStatus('Eval report not available yet');
+            setStatus(EVAL_UNAVAILABLE_HINT);
             return;
           }
           if (active === 'eval') {
             setStatus('Viewing eval');
             return;
           }
+          rememberPrototypeReturnUrl();
           window.location.href = url;
         } finally {
           evalBtn.disabled = false;
@@ -309,7 +358,7 @@
       var url = await resolveEvalUrl(cfg);
       if (!url && active !== 'eval') {
         evalBtn.disabled = true;
-        evalBtn.title = 'Eval report not available yet';
+        evalBtn.title = EVAL_UNAVAILABLE_HINT;
       }
     })();
 

@@ -19,9 +19,9 @@ When called without `--mode`, defaults to `both` (legacy behavior).
 | Input | Description | Required |
 |-------|-------------|----------|
 | `.context/consistency-checker/guidelines/` | Vendored PatternFly guideline markdown files | Yes |
-| `.artifacts/<KEY>/mr-delta.json` | Changed files list (scopes source-mode checks) | For source mode |
-| `.artifacts/<KEY>/journey-log.json` | Screenshots for visual-mode checks | For visual mode |
-| `.artifacts/<KEY>/screenshots/` | Journey screenshots | For visual mode |
+| `.artifacts/<KEY>/eval/mr-delta.json` | Changed files list (scopes source-mode checks) | For source mode |
+| `.artifacts/<KEY>/eval/journey-log.json` | Screenshots for visual-mode checks | For visual mode |
+| `.artifacts/<KEY>/eval/screenshots/` | Journey screenshots | For visual mode |
 | `--workspace` | Path to prototype source | For source mode |
 | `--mode` | `source`, `visual`, or `both` | No (default: both) |
 
@@ -29,8 +29,8 @@ When called without `--mode`, defaults to `both` (legacy behavior).
 
 | File | Description |
 |------|-------------|
-| `.artifacts/<KEY>/consistency-report.json` | Full consistency report (source + visual findings) |
-| `.artifacts/<KEY>/refinement-suggestions.json` | Appended with consistency suggestions |
+| `.artifacts/<KEY>/eval/consistency-report.json` | Full consistency report (source + visual findings) |
+| `.artifacts/<KEY>/eval/refinement-suggestions.json` | Appended with consistency suggestions |
 
 ## Procedure
 
@@ -78,7 +78,7 @@ For each guideline file in the **matched categories**, extract:
 
 #### 1b: Scope to MR delta files
 
-Read `.artifacts/<KEY>/mr-delta.json`. Collect `new_files` + `modified_files`. Only check these files — pre-existing violations in unchanged files are not this prototype's responsibility.
+Read `.artifacts/<KEY>/eval/mr-delta.json`. Collect `new_files` + `modified_files`. Only check these files — pre-existing violations in unchanged files are not this prototype's responsibility.
 
 #### 1c: Run deterministic checks via analyze.py bash commands
 

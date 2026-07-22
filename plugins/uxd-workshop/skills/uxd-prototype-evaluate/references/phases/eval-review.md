@@ -20,7 +20,7 @@ Conversational entry point for designers to review eval results. Reads the pipel
 
 ### Step 1: Load Artifacts
 
-Read the eval artifacts from `.artifacts/<KEY>/`:
+Read the eval artifacts from `.artifacts/<KEY>/eval/`:
 
 ```
 Required:
@@ -34,12 +34,12 @@ Optional:
   - iteration-log.json (iteration history)
 ```
 
-If `.artifacts/<KEY>/` does not exist, tell the user: "No eval results found for <KEY>. Run `/uxd-prototype-evaluate <KEY> <URL>` first."
+If `.artifacts/<KEY>/eval/` does not exist, tell the user: "No eval results found for <KEY>. Run `/uxd-prototype-evaluate <KEY> <URL>` first."
 
 ### Step 2: Open the Report
 
 ```bash
-open .artifacts/<KEY>/evaluation-report.html
+open .artifacts/<KEY>/eval/evaluation-report.html
 ```
 
 ### Step 3: Present Narrative Summary
@@ -87,7 +87,7 @@ How can I help?
 2. Invoke eval-iterate with the same parameters
 
 **On "Looks good" or "Approve":**
-1. Confirm: "Great — eval complete for <KEY>. The report is at `.artifacts/<KEY>/evaluation-report.html`."
+1. Confirm: "Great — eval complete for <KEY>. The report is at `.artifacts/<KEY>/eval/evaluation-report.html`."
 2. If there's a workspace with an MR, mention: "When you're ready to submit, the eval summary can be included in your MR description."
 
 **On anything else:**

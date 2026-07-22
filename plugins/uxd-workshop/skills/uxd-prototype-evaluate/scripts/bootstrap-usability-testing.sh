@@ -2,13 +2,21 @@
 # Bootstrap usability-testing personas and rubric into .context/ for evaluation.
 # Set USABILITY_TESTING_REPO to a git URL that contains personas/ and prompts/.
 # Sparse-clones only personas/, prompts/, and tools/.
+#
+# Writes into the consumer project (UXD_PROJECT_ROOT), never into the skill install.
 
 set -euo pipefail
 
-CONTEXT_DIR=".context/usability-testing"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${UXD_PROJECT_ROOT:-}"
+if [ -z "$PROJECT_ROOT" ]; then
+  PROJECT_ROOT="$(node -e "console.log(require('${SCRIPT_DIR}/resolve-root').resolveProjectRoot())" 2>/dev/null || pwd)"
+fi
+
+CONTEXT_DIR="${PROJECT_ROOT}/.context/usability-testing"
 USABILITY_REPO="${USABILITY_TESTING_REPO:-}"
 
-echo "Bootstrapping usability-testing context..."
+echo "Bootstrapping usability-testing context into ${CONTEXT_DIR}..."
 
 if [ -z "$USABILITY_REPO" ]; then
     echo "Skipping: set USABILITY_TESTING_REPO to a git URL with personas/ and prompts/,"

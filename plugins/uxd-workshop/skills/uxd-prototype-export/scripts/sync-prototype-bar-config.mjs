@@ -14,6 +14,7 @@ function parseArgs(argv) {
   const opts = {
     artifacts: '',
     evalUrl: null,
+    prototypeUrl: null,
     jiraBase: 'https://issues.redhat.com/browse/',
     help: false,
   };
@@ -21,6 +22,7 @@ function parseArgs(argv) {
     const a = argv[i];
     if (a === '--artifacts' && argv[i + 1]) opts.artifacts = path.resolve(argv[++i]);
     else if (a === '--eval-url' && argv[i + 1]) opts.evalUrl = argv[++i];
+    else if (a === '--prototype-url' && argv[i + 1]) opts.prototypeUrl = argv[++i];
     else if (a === '--jira-base' && argv[i + 1]) opts.jiraBase = argv[++i];
     else if (a === '--help' || a === '-h') opts.help = true;
   }
@@ -208,16 +210,23 @@ function main() {
       ? existing.scenarios
       : [];
 
+  let prototypeUrl = opts.prototypeUrl;
+  if (prototypeUrl == null && existing.views && existing.views.prototype != null) {
+    prototypeUrl = existing.views.prototype;
+  }
+  if (prototypeUrl == null) {
+    // Prefer published Pages preview URL so Eval → Prototype works cross-origin
+    const publish = meta.publish || {};
+    prototypeUrl = publish.pages_url || meta.prototype_url || meta.preview_url || null;
+  }
+
   const config = {
     id: existing.id || meta.prototype_id || id,
     title: meta.title || existing.title || id,
     jiraBaseUrl: jiraBase,
     sources,
     views: {
-      prototype:
-        (existing.views && existing.views.prototype !== undefined
-          ? existing.views.prototype
-          : null) ?? null,
+      prototype: prototypeUrl,
       eval: evalUrl,
     },
     scenarios: scenariosOut,

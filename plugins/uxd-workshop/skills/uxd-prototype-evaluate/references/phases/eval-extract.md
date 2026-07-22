@@ -33,9 +33,9 @@ When called without `--phase`, runs all steps (legacy behavior).
 
 | File                                    | Description                                                       |
 | --------------------------------------- | ----------------------------------------------------------------- |
-| `.artifacts/<KEY>/extract-state.json`   | `{ ac_list, journey_definitions, breadcrumb, persona_selection }` |
-| `.artifacts/<KEY>/mr-delta.json`        | Git diff analysis (when `--workspace` provided)                   |
-| `.artifacts/<KEY>/outcome-context.json` | Parent Outcome ticket context (if discoverable)                   |
+| `.artifacts/<KEY>/eval/extract-state.json`   | `{ ac_list, journey_definitions, breadcrumb, persona_selection }` |
+| `.artifacts/<KEY>/eval/mr-delta.json`        | Git diff analysis (when `--workspace` provided)                   |
+| `.artifacts/<KEY>/eval/outcome-context.json` | Parent Outcome ticket context (if discoverable)                   |
 
 
 
@@ -49,7 +49,7 @@ When called without `--phase`, runs all steps (legacy behavior).
 Before fetching from Jira, check if cached artifacts exist and are still valid:
 
 ```
-if .artifacts/<KEY>/extract-state.json exists AND --force-extract NOT set:
+if .artifacts/<KEY>/eval/extract-state.json exists AND --force-extract NOT set:
   Read ac_content_hash field from the file (MD5 of ticket description + ACs)
   
   # Quick Jira check: fetch ONLY description field to compare content hash
@@ -268,7 +268,7 @@ If ALL strategies fail, write `outcome-context.json` with `null` values and warn
 
 Extract: key, title, problem_statement, user_journey, acceptance_criteria, connected_rfes.
 
-Write to `.artifacts/<KEY>/outcome-context.json`.
+Write to `.artifacts/<KEY>/eval/outcome-context.json`.
 
 ### Step 8: Extract MR Deltas (when `--workspace` provided)
 
@@ -283,7 +283,7 @@ Categorize changes: new pages/components, modified components, route/nav changes
 
 Flag navigation gaps: if new pages added but no route/nav files modified.
 
-Write to `.artifacts/<KEY>/mr-delta.json`.
+Write to `.artifacts/<KEY>/eval/mr-delta.json`.
 
 ### Step 9: Write extract-state.json
 

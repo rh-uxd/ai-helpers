@@ -15,7 +15,7 @@
  * Fixes the common issue where Phase B subagents write persona-results.json
  * with empty trace/screenshots arrays, causing report modals to be empty.
  * 
- * Usage: node hydrate-persona-results.js .artifacts/<KEY>/
+ * Usage: node hydrate-persona-results.js .artifacts/<KEY>/eval/
  */
 
 const fs = require('fs');
@@ -23,7 +23,7 @@ const path = require('path');
 
 const artifactsDir = process.argv[2];
 if (!artifactsDir) {
-  console.error('Usage: node hydrate-persona-results.js .artifacts/<KEY>/');
+  console.error('Usage: node hydrate-persona-results.js .artifacts/<KEY>/eval/');
   process.exit(1);
 }
 

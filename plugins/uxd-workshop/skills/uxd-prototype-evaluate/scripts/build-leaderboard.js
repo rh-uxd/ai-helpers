@@ -4,9 +4,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const PROJECT_ROOT = require('./resolve-root').resolveProjectRoot();
-const RUNS_DIR = path.join(PROJECT_ROOT, '.artifacts', 'runs');
-const OUTPUT_PATH = path.join(PROJECT_ROOT, '.artifacts', 'pain-leaderboard.html');
+const { resolveEvalGlobalDir } = require('./resolve-root');
+const EVAL_GLOBAL_DIR = resolveEvalGlobalDir();
+const RUNS_DIR = path.join(EVAL_GLOBAL_DIR, 'runs');
+const OUTPUT_PATH = path.join(EVAL_GLOBAL_DIR, 'pain-leaderboard.html');
 
 function readJsonOr(filePath, fallback) {
   try { return JSON.parse(fs.readFileSync(filePath, 'utf8')); } catch { return fallback; }
@@ -436,7 +437,7 @@ function main() {
   console.log(`  Found ${prototypes.length} prototypes (latest run only, no -test dirs)\n`);
 
   if (!prototypes.length) {
-    console.log('  No data found in .artifacts/runs/');
+    console.log('  No data found in .artifacts/eval/runs/');
     return;
   }
 

@@ -18,7 +18,7 @@ After creating and evaluating a prototype with `uxd-prototype-create` and `uxd-p
 
 ## Eval gate
 
-Reads `.artifacts/{ID}/evaluation-report.csv`. Blocks publish when any AC verdict is `FAIL` unless `--force`. `FLAGGED` items warn but do not block by default.
+Reads `.artifacts/{ID}/eval/evaluation-report.csv`. Blocks publish when any AC verdict is `FAIL` unless `--force`. `FLAGGED` items warn but do not block by default.
 
 ## Inputs
 
@@ -26,7 +26,7 @@ Reads `.artifacts/{ID}/evaluation-report.csv`. Blocks publish when any AC verdic
 |-------|-------------|----------|
 | Prototype ID | `.artifacts/{ID}/` directory with prototype output | Yes |
 | `metadata.json` | Prototype state and configuration | Yes |
-| Eval report | `evaluation-report.csv` from `uxd-prototype-evaluate` | Recommended |
+| Eval report | `.artifacts/{ID}/eval/evaluation-report.csv` from `uxd-prototype-evaluate` | Recommended |
 | Workspace analysis | Clone path and branch info (workspace mode, repo target) | Conditional |
 | Changeset manifest | Modified files list (workspace mode) | Conditional |
 

@@ -3,14 +3,14 @@
 
 const fs = require('fs');
 const path = require('path');
-const { resolveProjectRoot } = require('./resolve-root');
+const { resolveEvalGlobalDir } = require('./resolve-root');
 
-const projectRoot = resolveProjectRoot();
-const logPath = path.join(projectRoot, '.artifacts', 'runs', 'run-log.csv');
+const evalGlobalDir = resolveEvalGlobalDir();
+const logPath = path.join(evalGlobalDir, 'runs', 'run-log.csv');
 
 if (!fs.existsSync(logPath)) {
   console.error('No run log found at', logPath);
-  console.error('Run an eval first with: node ${CLAUDE_SKILL_DIR}/scripts/log-run.js .artifacts/<KEY>/');
+  console.error('Run an eval first with: node ${CLAUDE_SKILL_DIR}/scripts/log-run.js .artifacts/<KEY>/eval/');
   process.exit(1);
 }
 
@@ -130,7 +130,7 @@ if (r1.mr_delta_available !== r2.mr_delta_available) {
 }
 
 // Try to do per-AC comparison if archived CSVs exist
-const runsBase = path.join(projectRoot, '.artifacts', 'runs');
+const runsBase = path.join(evalGlobalDir, 'runs');
 const csv1Path = path.join(runsBase, r1.prototype_id, r1.run_id, 'evaluation-report.csv');
 const csv2Path = path.join(runsBase, r2.prototype_id, r2.run_id, 'evaluation-report.csv');
 

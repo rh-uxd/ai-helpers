@@ -110,7 +110,7 @@ node "${CLAUDE_SKILL_DIR}/scripts/export-helper.mjs" \
 Listens on `127.0.0.1:9417`.
 
 - **Export:** Prototype Bar POSTs captures here when healthy; otherwise downloads in the browser
-- **Eval:** `GET /evals/{ID}/` serves `.artifacts/{ID}/evaluation-report.html` so the bar’s Eval control works locally without Pages
+- **Eval:** `GET /evals/{ID}/` serves `.artifacts/{ID}/eval/evaluation-report.html` so the bar’s Eval control works locally without Pages
 
 **E. Sync / copy bar config for static Pages**
 

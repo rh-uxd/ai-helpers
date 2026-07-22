@@ -10,28 +10,28 @@ Each persona navigates at their own competence level — an experienced user exp
 
 | Input | Description | Required |
 |-------|-------------|----------|
-| `.artifacts/<KEY>/journey-log.json` | Phase A Playwright step log with AC screenshots | Yes |
-| `.artifacts/<KEY>/screenshots/` | Phase A journey screenshots (for reference) | Yes |
-| `.artifacts/<KEY>/extract-state.json` | Persona selection, journey definitions, goals | Yes |
+| `.artifacts/<KEY>/eval/journey-log.json` | Phase A Playwright step log with AC screenshots | Yes |
+| `.artifacts/<KEY>/eval/screenshots/` | Phase A journey screenshots (for reference) | Yes |
+| `.artifacts/<KEY>/eval/extract-state.json` | Persona selection, journey definitions, goals | Yes |
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` | Role persona IDs, display names, audience map | Yes |
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/<card>.md` | Short persona cards (front matter + body) | Recommended |
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml` | Experience / accessibility / regulation / team overlays | Recommended |
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/<id>.md` | Overlay cards | When audience needs them |
 | `.context/usability-testing/personas/` | Deep behavioral YAML (optional bootstrap) | Recommended for scoring |
 | `.context/usability-testing/prompts/evaluate-flow.md` | 7-dimension rubric | Recommended for scoring |
-| `.artifacts/<KEY>/navigation-hints.json` | Fallback hints for stuck personas | No |
+| `.artifacts/<KEY>/eval/navigation-hints.json` | Fallback hints for stuck personas | No |
 | Prototype URL | Live URL (from eval-state.yaml) | Yes |
 
 ## Outputs
 
 | File | Description |
 |------|-------------|
-| `.artifacts/<KEY>/journey-log.json` | Updated with `usability_dimensions` section |
-| `.artifacts/<KEY>/evaluation-report.csv` | Appended Section 2 (USABILITY DIMENSIONS) |
-| `.artifacts/<KEY>/usability-thinkaloud-<persona-id>-task-<N>.md` | Per-persona per-task think-aloud trace |
-| `.artifacts/<KEY>/screenshots/persona-<persona-id>-task-<N>-step-<M>.png` | Per-persona per-task walkthrough screenshots |
-| `.artifacts/<KEY>/persona-results.json` | Structured trace data for all persona+task runs |
-| `.artifacts/<KEY>/refinement-suggestions.json` | Appended with usability suggestions for scores 0-1 |
+| `.artifacts/<KEY>/eval/journey-log.json` | Updated with `usability_dimensions` section |
+| `.artifacts/<KEY>/eval/evaluation-report.csv` | Appended Section 2 (USABILITY DIMENSIONS) |
+| `.artifacts/<KEY>/eval/usability-thinkaloud-<persona-id>-task-<N>.md` | Per-persona per-task think-aloud trace |
+| `.artifacts/<KEY>/eval/screenshots/persona-<persona-id>-task-<N>-step-<M>.png` | Per-persona per-task walkthrough screenshots |
+| `.artifacts/<KEY>/eval/persona-results.json` | Structured trace data for all persona+task runs |
+| `.artifacts/<KEY>/eval/refinement-suggestions.json` | Appended with usability suggestions for scores 0-1 |
 
 ## Procedure
 
@@ -127,7 +127,7 @@ For each task:
 - If a task describes a state that can't be shown (feature disabled, RBAC restricted), navigate to the closest relevant page (Settings, Feature Flags, admin panel) and STAY there. Do NOT fall back to the default page.
 - A task about "comparing two things" should show BOTH things side-by-side or in sequence, not just one
 
-**Write the task route mapping** as a comment block at the top of `persona-walkthrough.mjs`:
+**Write the task route mapping** as a comment block at the top of `.artifacts/<KEY>/eval/scripts/persona-walkthrough.mjs` (pinned: `${ARTIFACTS_DIR}/scripts/persona-walkthrough.mjs`). Never write this file into `${CLAUDE_SKILL_DIR}` or the project root.
 
 ```
 // TASK ROUTES (from Step 1c-routes):
@@ -142,7 +142,7 @@ This mapping drives all downstream Playwright generation. If the mapping shows t
 
 Each persona runs their OWN Playwright walkthrough as an independent sub-agent. Navigation behavior is driven by the persona's YAML fields — not a shared script.
 
-**REQUIRED script structure for `persona-walkthrough.mjs`:**
+**REQUIRED script structure for `.artifacts/<KEY>/eval/scripts/persona-walkthrough.mjs`:**
 
 The generated script MUST have:
 - **One function per task:** `runTask1(page, persona)`, `runTask2(page, persona)`, `runTask3(page, persona)`
@@ -299,7 +299,7 @@ At each step:
 4. Note your confidence level and current patience
 
 If you get stuck (can't find where to go after reasonable exploration for your type):
-- Read .artifacts/<KEY>/navigation-hints.json for a hint
+- Read .artifacts/<KEY>/eval/navigation-hints.json for a hint
 - Mark the step as "navigate-assisted" in your log
 - Note: "I had to ask a colleague where this was"
 - Continue from the assisted location
@@ -312,18 +312,18 @@ Screenshot rules (these are seen by a human reviewer):
 - Every screenshot should show something the reviewer needs to see to understand your experience
 - In the narration, describe WHAT is visible and WHY it matters for your task
 
-Save screenshots to: .artifacts/<KEY>/screenshots/persona-<persona-id>-task-<N>-step-<M>.png
-Write your think-aloud trace to: .artifacts/<KEY>/usability-thinkaloud-<persona-id>-task-<N>.md
+Save screenshots to: .artifacts/<KEY>/eval/screenshots/persona-<persona-id>-task-<N>-step-<M>.png
+Write your think-aloud trace to: .artifacts/<KEY>/eval/usability-thinkaloud-<persona-id>-task-<N>.md
 
 CRITICAL — SYNCHRONOUS TRACE WRITING:
 At EACH step, you MUST write BOTH:
 1. Append the step to the markdown think-aloud file (Phase 1 Actor format)
-2. Write the step entry to .artifacts/<KEY>/persona-results.json trace[] array
+2. Write the step entry to .artifacts/<KEY>/eval/persona-results.json trace[] array
 
 The persona-results.json entry for this step must include:
   { "step": M, "what_i_see": "...", "what_im_thinking": "...", "action": "...",
     "confidence": "high|medium|low", "patience": N,
-    "screenshot": ".artifacts/<KEY>/screenshots/persona-<id>-task-<N>-step-<M>.png",
+    "screenshot": ".artifacts/<KEY>/eval/screenshots/persona-<id>-task-<N>-step-<M>.png",
     "evidence_for_acs": ["AC-X"] }
 
 Do NOT defer trace writing to a later step. Each screenshot MUST have a corresponding trace entry written at the same time.
@@ -342,7 +342,7 @@ Do NOT defer trace writing to a later step. Each screenshot MUST have a correspo
 After persona walkthroughs should complete, verify that per-persona screenshots were actually produced:
 
 ```bash
-ls .artifacts/<KEY>/screenshots/persona-*.png
+ls .artifacts/<KEY>/eval/screenshots/persona-*.png
 ```
 
 For each selected persona, at least ONE file matching `persona-<persona-id>-task-*-step-*.png` MUST exist.
@@ -352,18 +352,18 @@ For each selected persona, at least ONE file matching `persona-<persona-id>-task
 Different tasks MUST produce visually different screenshots (they test different features/flows). After capture, verify:
 
 ```bash
-md5sum .artifacts/<KEY>/screenshots/persona-*-task-1-step-2.png .artifacts/<KEY>/screenshots/persona-*-task-2-step-2.png .artifacts/<KEY>/screenshots/persona-*-task-3-step-2.png
-md5sum .artifacts/<KEY>/screenshots/persona-*-task-1-step-3.png .artifacts/<KEY>/screenshots/persona-*-task-2-step-3.png .artifacts/<KEY>/screenshots/persona-*-task-3-step-3.png
+md5sum .artifacts/<KEY>/eval/screenshots/persona-*-task-1-step-2.png .artifacts/<KEY>/eval/screenshots/persona-*-task-2-step-2.png .artifacts/<KEY>/eval/screenshots/persona-*-task-3-step-2.png
+md5sum .artifacts/<KEY>/eval/screenshots/persona-*-task-1-step-3.png .artifacts/<KEY>/eval/screenshots/persona-*-task-2-step-3.png .artifacts/<KEY>/eval/screenshots/persona-*-task-3-step-3.png
 ```
 
 Compare step-2 AND step-3 across tasks for each persona. Tasks on the same page that differ by interaction may have identical step-2 (same page load) but MUST differ by step-3 (after the distinguishing interaction).
 
 **If ANY two tasks share the same MD5 hash for BOTH step-2 AND step-3:**
 
-1. **DELETE** `persona-walkthrough.mjs` and ALL `persona-*.png` screenshots
+1. **DELETE** `${ARTIFACTS_DIR}/scripts/persona-walkthrough.mjs` and ALL `${ARTIFACTS_DIR}/screenshots/persona-*.png` screenshots
 2. **Re-read** the task-to-route mapping from Step 1c-routes
 3. **Verify** the mapping has distinct interactions per task (not just different routes). If not, revise the mapping first.
-4. **Regenerate** `persona-walkthrough.mjs` with per-task functions that produce different visual states
+4. **Regenerate** `${ARTIFACTS_DIR}/scripts/persona-walkthrough.mjs` with per-task functions that produce different visual states
 5. **Re-run** Playwright
 6. **Re-check** MD5 hashes
 
@@ -400,8 +400,8 @@ This preserves the discoverability signal while preventing walkthroughs from bei
 ### Step 2: Apply Persona Constraints to Journey Evidence
 
 After persona walkthroughs complete, read each persona's output:
-- `.artifacts/<KEY>/usability-thinkaloud-<persona-id>-task-<N>.md`
-- `.artifacts/<KEY>/screenshots/persona-<persona-id>-task-<N>-step-<M>.png`
+- `.artifacts/<KEY>/eval/usability-thinkaloud-<persona-id>-task-<N>.md`
+- `.artifacts/<KEY>/eval/screenshots/persona-<persona-id>-task-<N>-step-<M>.png`
 
 For each persona's trace, assess:
 1. **Comprehension** — did the persona understand the UI elements? Check against domain_knowledge map.
@@ -492,7 +492,7 @@ For each persona-task markdown file that already has Phase 1 Actor content, APPE
 
 **REQUIRED: Write a standalone .md file for EACH evaluated persona PER TASK:**
 
-File: `.artifacts/<KEY>/usability-thinkaloud-<persona-id>-task-<N>.md`
+File: `.artifacts/<KEY>/eval/usability-thinkaloud-<persona-id>-task-<N>.md`
 
 Always use per-task naming even when there is only one task. This ensures consistent behavior
 in the report renderer regardless of task count.
@@ -556,7 +556,7 @@ This file is what renders in the report's Personas tab. If it doesn't exist, the
 
 **Discoverability Summary (optional — not yet consumed by render-report.js):**
 
-After all persona-task traces are complete, optionally produce `.artifacts/<KEY>/discoverability-matrix.json`. This artifact is not yet wired into the report renderer but provides useful cross-reference data for future reporting:
+After all persona-task traces are complete, optionally produce `.artifacts/<KEY>/eval/discoverability-matrix.json`. This artifact is not yet wired into the report renderer but provides useful cross-reference data for future reporting:
 
 ```json
 {
@@ -580,7 +580,7 @@ For each AC that passed Phase A, check whether ANY persona trace step has `evide
 
 **ALWAYS produce this file**, regardless of single-task or multi-task runs. This structured JSON is the canonical source for persona walkthrough data consumed by the report renderer.
 
-Write to: `.artifacts/<KEY>/persona-results.json`
+Write to: `.artifacts/<KEY>/eval/persona-results.json`
 
 Format: array of persona-task results, one entry per persona per task:
 
@@ -599,7 +599,7 @@ Format: array of persona-task results, one entry per persona per task:
         "action": "...",
         "confidence": "high|medium|low",
         "patience": 100,
-        "screenshot": ".artifacts/<KEY>/screenshots/persona-<id>-task-1-step-1.png",
+        "screenshot": ".artifacts/<KEY>/eval/screenshots/persona-<id>-task-1-step-1.png",
         "evidence_for_acs": ["AC-1"]
       }
     ],

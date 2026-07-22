@@ -6,10 +6,10 @@ Executes Playwright walkthroughs for each journey defined by eval-extract. Opera
 
 | Input | Description | Required |
 |-------|-------------|----------|
-| `.artifacts/<KEY>/extract-state.json` | Journey definitions, persona selection, AC list | Yes |
-| `.artifacts/<KEY>/evaluation-report.csv` | Tier-classified ACs from eval-classify (Section 1 with tiers, no verdicts) | Yes |
-| `.artifacts/<KEY>/navigation-hints.json` | Selectors, routes, nav hierarchy from eval-hint | No |
-| `.artifacts/<KEY>/mr-delta.json` | Changed files (for nav gap detection, URL fallback hints) | No |
+| `.artifacts/<KEY>/eval/extract-state.json` | Journey definitions, persona selection, AC list | Yes |
+| `.artifacts/<KEY>/eval/evaluation-report.csv` | Tier-classified ACs from eval-classify (Section 1 with tiers, no verdicts) | Yes |
+| `.artifacts/<KEY>/eval/navigation-hints.json` | Selectors, routes, nav hierarchy from eval-hint | No |
+| `.artifacts/<KEY>/eval/mr-delta.json` | Changed files (for nav gap detection, URL fallback hints) | No |
 | Prototype URL | Live URL to test against (e.g., `http://localhost:4200`) | Yes |
 | `--mode` | `informed` (x-ray mode, the only mode for this skill) | No |
 | `--rerun-only` | Comma-separated AC IDs — only run journeys testing these ACs | No |
@@ -19,11 +19,11 @@ Executes Playwright walkthroughs for each journey defined by eval-extract. Opera
 
 | File | Description |
 |------|-------------|
-| `.artifacts/<KEY>/journey-log.json` | Full Playwright step log with actions, results, screenshots, exploration |
-| `.artifacts/<KEY>/journey-test.mjs` | Generated Playwright script (kept for re-runs) |
-| `.artifacts/<KEY>/screenshots/` | Journey step screenshots |
-| `.artifacts/<KEY>/evaluation-report.csv` | Updated Section 1 with verdicts (PASS/FAIL/FLAGGED per AC) |
-| `.artifacts/<KEY>/refinement-suggestions.json` | FAIL criteria fix suggestions |
+| `.artifacts/<KEY>/eval/journey-log.json` | Full Playwright step log with actions, results, screenshots, exploration |
+| `.artifacts/<KEY>/eval/scripts/journey-test.mjs` | Generated Playwright script (kept for re-runs) |
+| `.artifacts/<KEY>/eval/screenshots/` | Journey step screenshots |
+| `.artifacts/<KEY>/eval/evaluation-report.csv` | Updated Section 1 with verdicts (PASS/FAIL/FLAGGED per AC) |
+| `.artifacts/<KEY>/eval/refinement-suggestions.json` | FAIL criteria fix suggestions |
 
 ## Procedure
 
@@ -72,14 +72,18 @@ When `--mode=informed`, skip Steps 3 and 3b below (hint fallback logic is unnece
 
 ```bash
 EVAL_SKILL_ROOT="${CLAUDE_SKILL_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)}"
+# Stay on / return to UXD_PROJECT_ROOT after install — do not leave cwd in the skill dir
+# (relative .artifacts writes would land inside the skill).
+PROJECT_ROOT="${UXD_PROJECT_ROOT:-$(pwd)}"
 if ! npx playwright --version >/dev/null 2>&1; then
   cd "$EVAL_SKILL_ROOT"
   npm install
   npx playwright install chromium firefox
-  cd -
+  cd "$PROJECT_ROOT"
 else
   echo "Playwright already installed, skipping setup"
 fi
+mkdir -p "${ARTIFACTS_DIR}/scripts" "${ARTIFACTS_DIR}/screenshots"
 ```
 
 **Browser selection:** Use Firefox by default (more reliable CSS rendering for PatternFly expandable components). Chromium's headless mode can incorrectly collapse `isExpanded={false}` rows to zero height.
@@ -95,15 +99,15 @@ If Firefox is not installed, fall back to Chromium. The script should import and
 ### Step 2: Prepare screenshots directory
 
 ```bash
-rm -rf .artifacts/<KEY>/screenshots
-mkdir -p .artifacts/<KEY>/screenshots
+rm -rf "${ARTIFACTS_DIR}/screenshots"
+mkdir -p "${ARTIFACTS_DIR}/screenshots"
 ```
 
 On re-iterations with `--rerun-only`, only clear screenshots for re-run journeys (preserve PASS journey screenshots).
 
 ### Step 3: Load navigation hints as FALLBACK (the "colleague" pattern)
 
-If `.artifacts/<KEY>/navigation-hints.json` exists (produced by eval-hint), it is available as a **fallback safety net** — NOT pre-loaded knowledge.
+If `.artifacts/<KEY>/eval/navigation-hints.json` exists (produced by eval-hint), it is available as a **fallback safety net** — NOT pre-loaded knowledge.
 
 **How hints work (try discovery first, consult only when stuck):**
 
@@ -131,7 +135,9 @@ For each journey, check if ANY of its `ac_ids` are in `--rerun-only`. If none ar
 
 ### Step 4: Generate and run Playwright script
 
-Generate `.artifacts/<KEY>/journey-test.mjs` with two phases in a single browser session:
+Generate `.artifacts/<KEY>/eval/scripts/journey-test.mjs` with two phases in a single browser session.
+
+**Path rules:** Write the script under the pinned `${ARTIFACTS_DIR}/scripts/` (consumer repo `.artifacts/<KEY>/eval/scripts/`). Never write `journey-test.mjs` into `${CLAUDE_SKILL_DIR}` or the project root. Create the directory first: `mkdir -p "${ARTIFACTS_DIR}/scripts"`.
 
 **Phase 1 — Prescribed Journeys:**
 
@@ -151,7 +157,7 @@ PatternFly-based prototypes often use collapsible nav sections. A link inside a 
 
 ```javascript
 // navHints loaded ONLY for fallback use
-const navHints = loadHintsOrNull('.artifacts/<KEY>/navigation-hints.json');
+const navHints = loadHintsOrNull('.artifacts/<KEY>/eval/navigation-hints.json');
 
 async function navigateViaSidebar(page, targetText) {
   // Strategy 1: Direct click — link is already visible (no hints needed)
@@ -287,7 +293,8 @@ Extra exploration (checking adjacent pages, testing edge cases) goes in the `exp
 
 Run the script:
 ```bash
-node .artifacts/<KEY>/journey-test.mjs
+node "${ARTIFACTS_DIR}/scripts/journey-test.mjs"
+# equivalent: node .artifacts/<KEY>/eval/scripts/journey-test.mjs  (from UXD_PROJECT_ROOT only)
 ```
 
 ### Step 5: Screenshot capture rules
@@ -454,7 +461,7 @@ Update `evaluation-report.csv` Section 1 with verdicts, rationale, evidence, fix
 **MANDATORY AUTOMATED VALIDATION — run AFTER writing CSV:**
 
 ```bash
-node ${CLAUDE_SKILL_DIR}/scripts/validate-verdicts.js .artifacts/<KEY>/
+node ${CLAUDE_SKILL_DIR}/scripts/validate-verdicts.js .artifacts/<KEY>/eval/
 ```
 
 If this script exits with code 1 (violations found), you MUST fix the CSV before proceeding to Step 7. For each violation:
@@ -515,7 +522,7 @@ The output MUST match this exact schema. `render-report.js` reads these specific
 - `screenshot` paths MUST be `"screenshots/journey-N-step-M.png"` format exactly
 - `narration` MUST be designer-readable (what a reviewer sees, not DOM internals)
 - `result` MUST be exactly `"success"` or `"fail"` (not "ok", not "pass", not "PASS")
-- Screenshot files MUST exist at the referenced paths in `.artifacts/<KEY>/screenshots/`
+- Screenshot files MUST exist at the referenced paths in `.artifacts/<KEY>/eval/screenshots/`
 
 **If any field is missing, the report will render with blank sections, no embedded images, and broken path comparison tables.**
 
@@ -539,7 +546,7 @@ After writing journey-log.json, verify every AC has been tested:
 
 ### Step 8: Generate refinement suggestions for FAILs
 
-For each FAIL verdict, write an entry to `.artifacts/<KEY>/refinement-suggestions.json`:
+For each FAIL verdict, write an entry to `.artifacts/<KEY>/eval/refinement-suggestions.json`:
 
 ```json
 {

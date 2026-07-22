@@ -6,10 +6,10 @@ Phase 5a of the eval pipeline. Applies fixes to the prototype based on evaluatio
 
 | Input | Description | Required |
 |-------|-------------|----------|
-| `.artifacts/<KEY>/refinement-suggestions.json` | Fix suggestions from eval-journey + eval-usability + eval-consistency | Yes |
-| `.artifacts/<KEY>/consistency-report.json` | PatternFly violations with file/line references | No |
+| `.artifacts/<KEY>/eval/refinement-suggestions.json` | Fix suggestions from eval-journey + eval-usability + eval-consistency | Yes |
+| `.artifacts/<KEY>/eval/consistency-report.json` | PatternFly violations with file/line references | No |
 | `--workspace` | Path to the prototype source code | Yes |
-| `.artifacts/<KEY>/extract-state.json` | AC context for understanding fix intent | No |
+| `.artifacts/<KEY>/eval/extract-state.json` | AC context for understanding fix intent | No |
 | `.artifacts/<KEY>/decisions/decisions.json` | Decision context (prevents undoing deliberate choices) | No |
 
 ## Outputs
@@ -17,13 +17,13 @@ Phase 5a of the eval pipeline. Applies fixes to the prototype based on evaluatio
 | File | Description |
 |------|-------------|
 | Modified prototype files in `--workspace` | The actual code fixes |
-| `.artifacts/<KEY>/fix-log.json` | Record of what was fixed and why |
+| `.artifacts/<KEY>/eval/fix-log.json` | Record of what was fixed and why |
 
 ## Procedure
 
 ### Step 1: Read suggestions and prioritize
 
-Read `.artifacts/<KEY>/refinement-suggestions.json`. Suggestions have three types, applied in this order:
+Read `.artifacts/<KEY>/eval/refinement-suggestions.json`. Suggestions have three types, applied in this order:
 
 1. **Consistency violations** (`type: "consistency"`) — Deterministic fixes with explicit file paths and line numbers. Apply directly. These are guaranteed correct (PatternFly docs are the reference).
 2. **AC failures** (`type: "ac_failure"`) — Code changes to make failing acceptance criteria pass. Require reading the verdict rationale.

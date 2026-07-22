@@ -51,13 +51,16 @@ Scenario contract: `?scenario=<id>` via `window.UxdScenario` (`templates/uxd-sce
 
 Eval navigation:
 
-1. If the helper is healthy → `http://127.0.0.1:9417/evals/{ID}/`
-2. Else → `views.eval` (e.g. `/evals/{ID}/` on Pages)
-3. Else → control disabled
+1. If the helper is healthy and serves a report → `http://127.0.0.1:9417/evals/{ID}/`
+2. Else if `views.eval` is an absolute URL → use it
+3. Else if relative `views.eval` probes as a real report (not SPA fallback) → use it
+4. Else → Eval disabled (hint: start export-helper for local viewing)
 
 ```bash
-# optional — land exports under .artifacts and serve eval reports locally
-node scripts/export-helper.mjs --out .artifacts/PROJ-298/exports
+# recommended while viewing locally — land exports under .artifacts and serve eval reports
+node scripts/export-helper.mjs \
+  --out .artifacts/PROJ-298/exports \
+  --artifacts .artifacts
 
 # sync Sources + scenarios into bar config, then install
 node scripts/sync-prototype-bar-config.mjs --artifacts .artifacts/PROJ-298
@@ -68,7 +71,7 @@ bash scripts/install-prototype-bar.sh \
 
 ## Static Pages (no backend)
 
-Keep working files under `.artifacts/{ID}/`. For GitLab/GitHub Pages:
+Keep working files under `.artifacts/{ID}/` (eval report under `.artifacts/{ID}/eval/`). For GitLab/GitHub Pages:
 
 ```bash
 bash scripts/copy-eval-for-pages.sh \
@@ -76,7 +79,7 @@ bash scripts/copy-eval-for-pages.sh \
   --pages-root public
 ```
 
-Produces `public/evals/PROJ-298/index.html` so the bar can use same-origin `/evals/PROJ-298/`.
+Copies `.artifacts/PROJ-298/eval/evaluation-report.html` → `public/evals/PROJ-298/index.html` so the bar can use same-origin `/evals/PROJ-298/`.
 
 ## Journey batch export
 

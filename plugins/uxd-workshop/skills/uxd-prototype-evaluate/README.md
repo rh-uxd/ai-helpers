@@ -41,7 +41,7 @@ Verifies each acceptance criterion from the Jira ticket using Playwright with fu
 Per-persona Playwright walkthroughs with think-aloud traces and 7-dimension scoring. Always runs after Phase A exits.
 
 **Report**  
-Self-contained HTML at `.artifacts/<KEY>/evaluation-report.html` plus CSV/JSON evidence artifacts.
+Self-contained HTML at `.artifacts/<KEY>/eval/evaluation-report.html` plus CSV/JSON evidence under that `eval/` folder.
 
 ## Flags
 
@@ -52,17 +52,19 @@ Self-contained HTML at `.artifacts/<KEY>/evaluation-report.html` plus CSV/JSON e
 | `--no-iterate` | Off | Single Phase A pass, no loop |
 | `--no-fix` | Off | Evaluate only — do not apply fixes |
 | `--reset` | Off | Hard-reset workspace to origin branch HEAD before eval |
-| `--fresh` | Off | Delete `.artifacts/<KEY>/` before starting |
+| `--fresh` | Off | Delete `.artifacts/<KEY>/eval/` only before starting (never the key root, never `.artifacts/eval/`) |
 
 ## Outputs
 
 | File | Description |
 |------|-------------|
-| `.artifacts/<KEY>/evaluation-report.html` | HTML report |
-| `.artifacts/<KEY>/evaluation-report.csv` | AC verdicts + usability scores |
-| `.artifacts/<KEY>/journey-log.json` | Playwright steps + screenshots metadata |
-| `.artifacts/<KEY>/refinement-suggestions.json` | Suggested fixes |
-| `.artifacts/<KEY>/iteration-log.json` | Per-iteration pass/fail counts |
+| `.artifacts/<KEY>/eval/evaluation-report.html` | HTML report |
+| `.artifacts/<KEY>/eval/evaluation-report.csv` | AC verdicts + usability scores |
+| `.artifacts/<KEY>/eval/journey-log.json` | Playwright steps + screenshots metadata |
+| `.artifacts/<KEY>/eval/refinement-suggestions.json` | Suggested fixes |
+| `.artifacts/<KEY>/eval/iteration-log.json` | Per-iteration pass/fail counts |
+| `.artifacts/eval/runs/run-log.csv` | Cross-key run log |
+| `.artifacts/eval/pain-leaderboard.html` | Aggregate pain leaderboard |
 
 ## Pass / fail for downstream skills
 

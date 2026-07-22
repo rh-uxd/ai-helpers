@@ -92,7 +92,7 @@ def read_review_score(rfe_key):
     Returns (score_or_summary, verdict) where score may be a short string
     for CSV-based evals (e.g. "8/10 PASS") or an int for legacy rubrics.
     """
-    csv_path = f'.artifacts/{rfe_key}/evaluation-report.csv'
+    csv_path = f'.artifacts/{rfe_key}/eval/evaluation-report.csv'
     if os.path.isfile(csv_path):
         pass_n = fail_n = flagged_n = 0
         with open(csv_path) as f:
@@ -694,6 +694,11 @@ def main():
     analysis = read_workspace_analysis(rfe_key)
     workspace_path = analysis.get('workspace_path')
     target_branch = analysis.get('branch')
+
+    if not workspace_path or not os.path.isdir(workspace_path):
+        code_path = f'.artifacts/{rfe_key}/code'
+        if os.path.isdir(code_path):
+            workspace_path = code_path
 
     if not workspace_path or not os.path.isdir(workspace_path):
         print(f'Error: workspace path does not exist: {workspace_path}',

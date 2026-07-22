@@ -1,13 +1,21 @@
 #!/bin/bash
 # Bootstrap design consistency guidelines into .context/.
 # Set CONSISTENCY_CHECKER_REPO to a git URL that contains guidelines/ and scripts/.
+#
+# Writes into the consumer project (UXD_PROJECT_ROOT), never into the skill install.
 
 set -euo pipefail
 
-CONTEXT_DIR=".context/consistency-checker"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${UXD_PROJECT_ROOT:-}"
+if [ -z "$PROJECT_ROOT" ]; then
+  PROJECT_ROOT="$(node -e "console.log(require('${SCRIPT_DIR}/resolve-root').resolveProjectRoot())" 2>/dev/null || pwd)"
+fi
+
+CONTEXT_DIR="${PROJECT_ROOT}/.context/consistency-checker"
 CHECKER_REPO="${CONSISTENCY_CHECKER_REPO:-}"
 
-echo "Bootstrapping consistency-checker..."
+echo "Bootstrapping consistency-checker into ${CONTEXT_DIR}..."
 
 if [ -z "$CHECKER_REPO" ]; then
     echo "Skipping: set CONSISTENCY_CHECKER_REPO to a git URL with guidelines/ and scripts/,"

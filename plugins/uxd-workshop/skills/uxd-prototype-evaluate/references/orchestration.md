@@ -2,16 +2,29 @@
 
 Read and follow this file when running the full evaluate pipeline. Phase procedures live in `references/phases/` — execute each when the orchestrator reaches that step.
 
+**Artifact paths:** Pin `UXD_PROJECT_ROOT`, `KEY_DIR`, and absolute `ARTIFACTS_DIR` first (see SKILL.md "Artifact location"). All eval writes use `${ARTIFACTS_DIR}` (absolute = `.artifacts/<KEY>/eval`). Never write under `${CLAUDE_SKILL_DIR}`. After any `cd` (skill install or `.artifacts/<KEY>/code` clone), keep using the absolute `ARTIFACTS_DIR`.
+
 ```
 iteration = 0
 max_iterations = parse --max-iterations (default: 3)
 no_fix = parse --no-fix (default: false)
 
+# ── Pin artifact root (CRITICAL — do this before any writes or --fresh) ──
+export UXD_PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# If git toplevel is the skill install or a nested .artifacts/<KEY>/code clone,
+# resolve via: node -e "console.log(require('${CLAUDE_SKILL_DIR}/scripts/resolve-root').resolveProjectRoot())"
+KEY_DIR="${UXD_PROJECT_ROOT}/.artifacts/<KEY>"
+ARTIFACTS_DIR="${KEY_DIR}/eval"
+mkdir -p "${ARTIFACTS_DIR}/scripts" "${ARTIFACTS_DIR}/screenshots"
+
 # ── Fresh flag handling ────────────────────────────────────────────
-# --fresh deletes all prior artifacts for this KEY before starting.
+# --fresh deletes ONLY this KEY's eval/ dir (absolute path).
+# Never: rm -rf .artifacts/<KEY>/  (wipes create artifacts)
+# Never: rm -rf .artifacts/eval/   (wipes cross-key run log / leaderboard)
 if --fresh:
-  rm -rf .artifacts/<KEY>/
-  echo "Cleared .artifacts/<KEY>/ (--fresh)"
+  rm -rf "${ARTIFACTS_DIR}"
+  mkdir -p "${ARTIFACTS_DIR}/scripts" "${ARTIFACTS_DIR}/screenshots"
+  echo "Cleared ${ARTIFACTS_DIR} (--fresh)"
 
 # ── Staleness detection (content-based) ────────────────────────────
 # eval-extract Step 0 handles cache validation using a content hash of the
@@ -21,9 +34,10 @@ if --fresh:
 # eval-extract's own cache check (content hash) decide whether to re-fetch.
 
 # Initialize persistent state (survives context compression)
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py init .artifacts/<KEY>/eval-state.yaml \
+python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py init ${ARTIFACTS_DIR}/eval-state.yaml \
   iteration=0 max_iterations=$max_iterations exit_reason=pending \
   phase=a ac_pass=false key=<KEY> url=<URL> workspace=<workspace> \
+  artifacts_dir=${ARTIFACTS_DIR} project_root=${UXD_PROJECT_ROOT} \
   pipeline_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
 # ═══════════════════════════════════════════════════════════════════
@@ -38,6 +52,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py init .artifacts/<KEY>/eval-sta
 # We never reset their work unless explicitly asked via --reset.
 
 if workspace provided:
+  # Use absolute paths — nested clone has its own .git and must not become PROJECT_ROOT
   cd <workspace>
 
   # Capture current state for the report (what exactly are we evaluating?)
@@ -55,8 +70,11 @@ if workspace provided:
     WORKSPACE_COMMIT=$(git log -1 --format="%h")
     WORKSPACE_DIRTY=0
 
+  # Return to project root before any artifact writes (nested git must not confuse tools)
+  cd "${UXD_PROJECT_ROOT}"
+
   # Log workspace state to eval-state.yaml for the report
-  python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+  python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
     workspace_commit=$WORKSPACE_COMMIT workspace_dirty=$WORKSPACE_DIRTY
 
   # ── Detect server type (static vs dev/HMR) ──────────────────────
@@ -79,14 +97,14 @@ if workspace provided:
 # ── Per-skill timing ──────────────────────────────────────────────
 # Record start/end timestamps for each skill to measure optimization impact.
 
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
   extract_core_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
 Read ${CLAUDE_SKILL_DIR}/references/phases/eval-extract.md and execute it with --phase=core
 # Produces: extract-state.json, mr-delta.json
 # Defers: outcome-context.json, tasks_to_be_done, breadcrumb (run before Phase B)
 
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
   extract_core_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp) \
   consistency_source_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
@@ -95,14 +113,14 @@ Read ${CLAUDE_SKILL_DIR}/references/phases/eval-consistency.md and execute it wi
 # Visual-mode deferred to after eval-journey when screenshots exist.
 # Uses analyze.py bash commands for deterministic checks (no report generation).
 
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
   consistency_source_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
 # ── AC Fix Loop ────────────────────────────────────────────────────
 
 LOOP:
   iteration += 1
-  python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml iteration=$iteration
+  python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml iteration=$iteration
 
   # ── Classify ───────────────────────────────────────────────────
   if iteration == 1:
@@ -125,16 +143,16 @@ LOOP:
     # Carries forward PASS verdicts from previous iteration
 
   # ── Verdict cross-check (automated) ─────────────────────────────
-  node ${CLAUDE_SKILL_DIR}/scripts/validate-verdicts.js .artifacts/<KEY>/
+  node ${CLAUDE_SKILL_DIR}/scripts/validate-verdicts.js ${ARTIFACTS_DIR}/
   # If violations found (exit 1): fix CSV verdicts to FLAGGED for contradicted ACs before continuing.
   # A journey FAIL + CSV PASS is never acceptable unless journey-log is corrected with visual evidence.
 
   # ── Archive this iteration ─────────────────────────────────────
-  cp .artifacts/<KEY>/evaluation-report.csv → .artifacts/<KEY>/evaluation-report-iter-<iteration>.csv
-  cp -r .artifacts/<KEY>/screenshots/ → .artifacts/<KEY>/screenshots-iter-<iteration>/
+  cp ${ARTIFACTS_DIR}/evaluation-report.csv → ${ARTIFACTS_DIR}/evaluation-report-iter-<iteration>.csv
+  cp -r ${ARTIFACTS_DIR}/screenshots/ → ${ARTIFACTS_DIR}/screenshots-iter-<iteration>/
 
   # ── Compute counts FROM the CSV (source of truth) ──────────────
-  Read .artifacts/<KEY>/evaluation-report.csv Section 1 (ACCEPTANCE CRITERIA)
+  Read ${ARTIFACTS_DIR}/evaluation-report.csv Section 1 (ACCEPTANCE CRITERIA)
   Parse using proper CSV quoting (fields may contain commas):
     pass_count = count rows where verdict column == "PASS"
     fail_count = count rows where verdict column == "FAIL"
@@ -144,7 +162,7 @@ LOOP:
 
   # ── Write iteration entry to iteration-log.json ────────────────
   # Use the append-iteration-log.js script for rich, consistent entries:
-  node ${CLAUDE_SKILL_DIR}/scripts/append-iteration-log.js .artifacts/<KEY>/ <iteration> a
+  node ${CLAUDE_SKILL_DIR}/scripts/append-iteration-log.js ${ARTIFACTS_DIR}/ <iteration> a
 
   # This script reads CSV, journey-log, fix-log, refinement-suggestions, and
   # consistency-report to produce a complete iteration entry including:
@@ -157,12 +175,12 @@ LOOP:
   #   - timestamp for timing analysis
 
   # Read the updated log to get computed counts for exit checks:
-  Read .artifacts/<KEY>/iteration-log.json for pass_count, fail_count from the last entry
+  Read ${ARTIFACTS_DIR}/iteration-log.json for pass_count, fail_count from the last entry
 
   # ── Exit condition checks ──────────────────────────────────────
   if fail_count == 0 AND flagged_count == 0:
     Set exit_reason = "all_pass"
-    python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+    python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
       exit_reason=all_pass ac_pass=true
     BREAK → proceed to Phase B
 
@@ -171,10 +189,10 @@ LOOP:
     # Attempt fix loop on FLAGGED suggestions. If eval-fix produces no changes, exit.
     if iteration > 1:
       # Check if fix-log.json from last iteration had zero applied fixes for FLAGGED items
-      Read .artifacts/<KEY>/fix-log.json
+      Read ${ARTIFACTS_DIR}/fix-log.json
       if fix-log shows 0 applied fixes (all skipped/deferred):
         Set exit_reason = "flagged_unfixable"
-        python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+        python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
           exit_reason=flagged_unfixable ac_pass=true
         BREAK → proceed to Phase B (FLAGGED items need human review)
     # Otherwise continue to fix loop — eval-fix will attempt FLAGGED suggestions
@@ -183,26 +201,26 @@ LOOP:
     Compare current CSV verdicts against previous iteration's archived CSV
     if any criterion flipped PASS → FAIL:
       Set exit_reason = "regression"
-      python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+      python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
         exit_reason=regression ac_pass=false
       BREAK → proceed to Phase B (on current prototype state)
 
   if iteration >= max_iterations:
     Set exit_reason = "max_iterations"
-    python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+    python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
       exit_reason=max_iterations ac_pass=false
     BREAK → proceed to Phase B (even with remaining FAILs)
 
   if --no-iterate:
     Set exit_reason = "no_iterate"
-    python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+    python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
       exit_reason=no_iterate ac_pass=false
     BREAK → proceed to Phase B
 
   # ── Fix ────────────────────────────────────────────────────────
   if no_fix:
     Set exit_reason = "no_fix"
-    python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+    python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
       exit_reason=no_fix ac_pass=false
     BREAK → proceed to Phase B
     # Findings remain in refinement-suggestions.json for human/agent review
@@ -211,7 +229,7 @@ LOOP:
   # Applies fixes from refinement-suggestions.json (AC failures + consistency + flagged)
 
   # Record what was fixed into the iteration log (reads fix-log.json)
-  node ${CLAUDE_SKILL_DIR}/scripts/append-iteration-log.js .artifacts/<KEY>/ <iteration> fix
+  node ${CLAUDE_SKILL_DIR}/scripts/append-iteration-log.js ${ARTIFACTS_DIR}/ <iteration> fix
 
   # ── Rebuild so changes are visible to Playwright ─────────────────
   if NEEDS_REBUILD:
@@ -240,7 +258,7 @@ if iteration > 1:
   Read ${CLAUDE_SKILL_DIR}/references/phases/eval-journey.md and execute in capture-only mode:
     --mode=informed --capture-only --all-journeys
   # This re-walks ALL journeys (not just the re-run set) and captures fresh screenshots
-  # to .artifacts/<KEY>/screenshots/ — overwriting the partial captures from fix iterations.
+  # to ${ARTIFACTS_DIR}/screenshots/ — overwriting the partial captures from fix iterations.
   # Verdict CSV is NOT modified. journey-log.json step screenshots are updated in-place.
 
   # Ensure the rebuild completed before capturing (static server needs explicit build)
@@ -256,7 +274,7 @@ if iteration > 1:
 # Now that screenshots exist, run visual-mode consistency checks.
 # ═══════════════════════════════════════════════════════════════════
 
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
   consistency_visual_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
 Read ${CLAUDE_SKILL_DIR}/references/phases/eval-consistency.md and execute it with --mode=visual
@@ -264,7 +282,7 @@ Read ${CLAUDE_SKILL_DIR}/references/phases/eval-consistency.md and execute it wi
 # Appends visual findings to consistency-report.json and refinement-suggestions.json.
 # These findings are informational for the report — they do NOT re-trigger the fix loop.
 
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
   consistency_visual_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
 # ═══════════════════════════════════════════════════════════════════
@@ -273,7 +291,7 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-stat
 # This was deferred from setup to keep Phase A fast.
 # ═══════════════════════════════════════════════════════════════════
 
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
   extract_enrichment_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
 Read ${CLAUDE_SKILL_DIR}/references/phases/eval-extract.md and execute it with --phase=enrichment
@@ -281,11 +299,11 @@ Read ${CLAUDE_SKILL_DIR}/references/phases/eval-extract.md and execute it with -
 # Uses Outcome ticket for better persona task generation.
 # Falls back to journey titles if Outcome is not discoverable.
 
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
   extract_enrichment_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
 if workspace provided:
-  python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+  python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
     hint_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
   Read ${CLAUDE_SKILL_DIR}/references/phases/eval-hint.md and execute it
@@ -294,7 +312,7 @@ if workspace provided:
   # Consumed by eval-usability as fallback for stuck-persona navigation.
   # Runs here (post-fix) so hints reflect the final workspace state.
 
-  python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+  python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
     hint_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
 # ═══════════════════════════════════════════════════════════════════
@@ -303,7 +321,7 @@ if workspace provided:
 # Method: Per-persona Playwright, discovery navigation, think-aloud scoring
 # ═══════════════════════════════════════════════════════════════════
 
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml phase=b
+python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml phase=b
 
 # Phase B always runs at full depth — the prototype is known-good (or best-effort).
 # No degraded/inference-only mode. Personas run their own Playwright walkthroughs.
@@ -319,7 +337,7 @@ Read ${CLAUDE_SKILL_DIR}/references/phases/eval-usability.md and execute it
 #           usability suggestions for human review
 
 # VERIFY: Per-persona screenshots must exist after eval-usability completes.
-# Check: ls .artifacts/<KEY>/screenshots/persona-*.png
+# Check: ls ${ARTIFACTS_DIR}/screenshots/persona-*.png
 # If no persona screenshots exist, Phase B did not run correctly.
 # Go back and re-run eval-usability — ensure Step 1d actually launches Playwright.
 
@@ -327,14 +345,14 @@ Read ${CLAUDE_SKILL_DIR}/references/phases/eval-usability.md and execute it
 # If any persona-task entry has empty trace[], the walkthrough failed to write live data.
 # In that case, re-run eval-usability for the affected persona (do NOT hydrate post-hoc).
 # The hydrate-persona-results.js script is DEPRECATED — trace data must be written during Step 1d.
-Read .artifacts/<KEY>/persona-results.json
+Read ${ARTIFACTS_DIR}/persona-results.json
 if any entry has trace == [] (empty array):
   echo "WARNING: persona-results.json has empty trace[] — re-running eval-usability"
   Read ${CLAUDE_SKILL_DIR}/references/phases/eval-usability.md and execute it
   # This should not happen if Step 1d synchronous writing is followed correctly
 
 # Update iteration log with usability results
-node ${CLAUDE_SKILL_DIR}/scripts/append-iteration-log.js .artifacts/<KEY>/ <iteration> b
+node ${CLAUDE_SKILL_DIR}/scripts/append-iteration-log.js ${ARTIFACTS_DIR}/ <iteration> b
 
 # ═══════════════════════════════════════════════════════════════════
 # REPORT (always runs)
@@ -348,19 +366,20 @@ Read ${CLAUDE_SKILL_DIR}/references/phases/eval-report.md and execute it with:
 # NOTIFY (open report + present summary)
 # ═══════════════════════════════════════════════════════════════════
 
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set .artifacts/<KEY>/eval-state.yaml \
+python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
   pipeline_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
 # Open the report for the designer
-open .artifacts/<KEY>/evaluation-report.html
+open ${ARTIFACTS_DIR}/evaluation-report.html
 
 # Prototype Bar: ensure Sources (outcome/strat) + views.eval are current
 # (also performed inside eval-report.md Step 5)
+# Sync against KEY_DIR (prototype-bar.json lives at key root, not under eval/)
 EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
-node "${EXPORT_SKILL}/scripts/sync-prototype-bar-config.mjs" --artifacts .artifacts/<KEY>
+node "${EXPORT_SKILL}/scripts/sync-prototype-bar-config.mjs" --artifacts ${KEY_DIR}
 
 # Present narrative summary in chat (same model as eval-review)
-Read .artifacts/<KEY>/evaluation-report.csv and .artifacts/<KEY>/extract-state.json
+Read ${ARTIFACTS_DIR}/evaluation-report.csv and ${ARTIFACTS_DIR}/extract-state.json
 Compute pass/fail/flagged counts from CSV
 Present:
 
@@ -480,7 +499,7 @@ PHASE B — Usability:
   Score:     <score>/21
   Key finding: <one-liner from highest-impact dimension>
 
-Report: .artifacts/<KEY>/evaluation-report.html
+Report: ${ARTIFACTS_DIR}/evaluation-report.html
 ────────────────────────────────────────
 ```
 

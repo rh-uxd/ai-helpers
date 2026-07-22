@@ -76,7 +76,7 @@ function parseCSVLine(line) {
 }
 
 function readEvalCSV(key) {
-  const csvPath = path.join(artifactsBase, key, 'evaluation-report.csv');
+  const csvPath = path.join(artifactsBase, key, 'eval', 'evaluation-report.csv');
   if (!fs.existsSync(csvPath)) return null;
 
   const raw = fs.readFileSync(csvPath, 'utf8').trim();
@@ -125,7 +125,7 @@ function main() {
 
   console.log('\nGround Truth vs Automated Eval — Comparison\n');
   console.log('Ground truth: ' + manualEvals.length + ' entries');
-  console.log('Our data: eval CSVs from .artifacts/\n');
+  console.log('Our data: eval CSVs from .artifacts/<KEY>/eval/\n');
 
   const evaluated = [];
   const notEvaluated = [];
@@ -195,7 +195,7 @@ function main() {
     console.log(`\n  Nav failure recall: ${navRecallHits}/${navRecallTotal}`);
   }
 
-  const outDir = path.join(artifactsBase, 'runs');
+  const outDir = path.join(artifactsBase, 'eval', 'runs');
   fs.mkdirSync(outDir, { recursive: true });
   const outPath = path.join(outDir, 'manual-comparison.md');
 

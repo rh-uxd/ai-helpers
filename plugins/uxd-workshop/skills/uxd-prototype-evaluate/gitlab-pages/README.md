@@ -21,7 +21,7 @@ public/
 Configure `config/publish.yaml` (`gitlab_pages_repo`, `pages_base_url`), then run:
 
 ```bash
-bash "${CLAUDE_SKILL_DIR}/scripts/publish-report.sh" .artifacts/PROJ-298/
+bash "${CLAUDE_SKILL_DIR}/scripts/publish-report.sh" .artifacts/PROJ-298/eval/
 ```
 
 Re-running an eval replaces the report at the same URL.

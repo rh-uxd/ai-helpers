@@ -11,10 +11,11 @@ const phaseArg = process.argv[4] || 'a';
 if (!artifactsDir || !iterationArg) {
   console.error('Usage: node append-iteration-log.js <artifacts-dir> <iteration> [phase]');
   console.error('  phase: "a" (AC validation) or "b" (usability)');
-  console.error('  e.g. node append-iteration-log.js .artifacts/PROJ-298/ 1 a');
+  console.error('  e.g. node append-iteration-log.js .artifacts/PROJ-298/eval/ 1 a');
   process.exit(1);
 }
 
+const { resolveKeyFromArtifactsDir } = require('./resolve-root');
 const absArtifacts = path.resolve(artifactsDir);
 const iteration = parseInt(iterationArg, 10);
 const phase = phaseArg.toLowerCase();
@@ -173,7 +174,7 @@ function buildPhaseBEntry() {
 // Read or initialize the iteration log
 const logPath = path.join(absArtifacts, 'iteration-log.json');
 const log = readJsonOr(logPath, null) || {
-  key: path.basename(absArtifacts),
+  key: resolveKeyFromArtifactsDir(absArtifacts),
   max_iterations: parseInt(process.env.MAX_ITERATIONS || '3', 10),
   iterations: [],
   exit_reason: 'pending',

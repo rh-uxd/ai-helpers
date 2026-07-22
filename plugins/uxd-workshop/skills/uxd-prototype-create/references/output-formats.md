@@ -2,6 +2,20 @@
 
 Schema definitions for artifacts produced by the prototype creation pipeline. Load this when writing artifact files to ensure correct structure.
 
+**Layout (consumer project root):**
+
+```
+.artifacts/{ID}/
+  code/                 # cloned target repo (workspace mode)
+  prototype/            # standalone HTML
+  decisions/            # decision pages + decisions.json
+  scripts/              # generated Playwright scripts (from evaluate)
+  screenshots/          # eval evidence
+  *.json / *.md / …     # snapshots, reports, metadata
+```
+
+Never write these under the skill install directory (`${CLAUDE_SKILL_DIR}`).
+
 ## .artifacts/{ID}/workspace-analysis.json
 
 Written during Step 6 (codebase analysis). Critical for workspace mode — `submit_to_repo.py` reads `branch`, `clone_url`, and optional `upstream_url` from this file.
@@ -9,7 +23,7 @@ Written during Step 6 (codebase analysis). Critical for workspace mode — `subm
 ```json
 {
   "rfe_key": "PROJ-298",
-  "workspace_path": ".artifacts/PROJ-298/workspace",
+  "workspace_path": ".artifacts/PROJ-298/code",
   "branch": "3.5",
   "clone_url": "https://gitlab.example.com/user/fork.git",
   "upstream_url": "https://gitlab.example.com/org/canonical.git",
@@ -64,7 +78,7 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
   "decision_mode": "skip",
   "status": "draft",
   "iteration": 0,
-  "workspace_path": ".artifacts/PROJ-298/workspace",
+  "workspace_path": ".artifacts/PROJ-298/code",
   "screens": ["ApiKeyList", "ApiKeyDetail", "CreateApiKeyWizard"],
   "journeys_path": ".artifacts/PROJ-298/journeys.json",
   "scenarios_path": ".artifacts/PROJ-298/scenarios.json",
@@ -185,7 +199,7 @@ prototype_summary:
   journeys_path: .artifacts/PROJ-298/journeys.json
   scenarios_path: .artifacts/PROJ-298/scenarios.json
   prototype_bar: true
-  prototype_path: .artifacts/PROJ-298/workspace  # or .artifacts/PROJ-298/prototype/ for standalone
+  prototype_path: .artifacts/PROJ-298/code  # or .artifacts/PROJ-298/prototype/ for standalone
 
   # Optional — present after create --export
   exports:
@@ -358,7 +372,7 @@ JSON output from the workspace resolution script:
   "clone_url": "https://gitlab.example.com/org/repo.git",
   "branch": "3.5",
   "branch_source": "url",
-  "clone_path": ".artifacts/PROJ-298/workspace",
+  "clone_path": ".artifacts/PROJ-298/code",
   "upstream_url": "https://gitlab.example.com/org/canonical.git",
   "upstream_remote": "set",
   "status": "cloned"

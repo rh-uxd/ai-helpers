@@ -8,7 +8,7 @@ Full procedure for iterative prototype improvement after `uxd-prototype-evaluate
 
 Find the existing prototype artifacts:
 
-1. Check `.artifacts/{ID}/workspace-analysis.json` — if present, this is workspace mode. Read workspace path.
+1. Check `.artifacts/{ID}/workspace-analysis.json` — if present, this is workspace mode. Read `workspace_path` (`.artifacts/{ID}/code`).
 2. Check `.artifacts/{ID}/changeset.md` — parse for the list of created/modified files.
 3. Check `.artifacts/{ID}/prototype/` — if present, this is standalone mode with HTML files.
 4. Read `.artifacts/{ID}/metadata.json` for iteration count and decision history.
@@ -21,8 +21,8 @@ Prefer Playwright eval outputs from `uxd-prototype-evaluate`:
 
 | Artifact | Use |
 |----------|-----|
-| `.artifacts/{ID}/evaluation-report.csv` | AC verdicts (PASS / FAIL / FLAGGED) and usability scores |
-| `.artifacts/{ID}/refinement-suggestions.json` | Actionable fix suggestions from Phase A / consistency |
+| `.artifacts/{ID}/eval/evaluation-report.csv` | AC verdicts (PASS / FAIL / FLAGGED) and usability scores |
+| `.artifacts/{ID}/eval/refinement-suggestions.json` | Actionable fix suggestions from Phase A / consistency |
 | `.artifacts/{ID}/iteration-log.json` | Prior fix-loop history |
 | `.artifacts/{ID}/usability-thinkaloud-*.md` | Phase B persona findings (optional) |
 
