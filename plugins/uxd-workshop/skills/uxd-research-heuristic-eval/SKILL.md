@@ -59,8 +59,8 @@ Parse as: `<interface-input> [--framework <name>] [--heuristics <custom>] [--spe
 - `--framework <name>[,<name>]` — Which heuristic framework(s) to use
   (see [references/heuristic-frameworks.md](references/heuristic-frameworks.md)).
   Accepts a single framework or a comma-separated list
-  (e.g., `--framework nielsen,shneiderman`). If not specified, ask the
-  user.
+  (e.g., `--framework nielsen,shneiderman`). If not specified, **ask and
+  wait** — do not assume Nielsen or any other default.
 - `--heuristics <custom>` — User-defined heuristics (overrides framework).
 - `--specialists <areas>` — Add specialist evaluators beyond the core
   three (e.g., `accessibility,information-architecture`).
@@ -132,7 +132,15 @@ without visual inspection.
 
 ### Heuristic framework(s)
 
-If the user hasn't specified a framework, present the options:
+**Hard stop.** If the user has not specified `--framework` (or custom
+`--heuristics`), you must ask which framework to use and **wait for an
+answer before any evaluation passes**. Do not start Evaluator A/B/C,
+do not invent a framework choice, and do not silently default to
+Nielsen's 10.
+
+Prefer `AskUserQuestion` when that tool is available. Present the
+options below (multi-select allowed). If the tool is unavailable, ask
+the same question in chat and stop until the researcher replies.
 
 > **Which heuristic framework(s) should the evaluators use?**
 > You can select more than one (e.g., "1 and 2").
@@ -152,6 +160,11 @@ If the user hasn't specified a framework, present the options:
 >    data-driven tasks, judicious redundancy.
 > 5. **Custom** — Provide your own heuristics.
 > 6. **Not sure** — I'll default to Nielsen's 10.
+
+**Decline / cancel / no answer ≠ "Not sure".** If `AskUserQuestion` is
+declined, cancelled, or unanswered, stop and re-ask (or ask in chat).
+Only default to Nielsen's 10 when the researcher explicitly selects
+option 6 ("Not sure").
 
 Load full heuristic definitions from
 [references/heuristic-frameworks.md](references/heuristic-frameworks.md).
@@ -291,6 +304,9 @@ from the plugin's `plugin.json` manifest and populate `[version]`.
 
 ## Guardrails
 
+- **Framework before evaluation.** No Evaluator A/B/C (and no
+  consolidated findings) until `--framework`, `--heuristics`, or an
+  explicit researcher framework choice is on record.
 - **Violations only, not interpretations.** Report observable mismatches.
   Do not infer user intent or claim impact without evidence.
 - **No severity ratings from evaluators.** The researcher assigns
@@ -319,3 +335,4 @@ from the plugin's `plugin.json` manifest and populate `[version]`.
 | [heuristic-frameworks.md](references/heuristic-frameworks.md) | Full definitions for all four built-in heuristic frameworks |
 | [report-templates.md](references/report-templates.md) | Markdown and HTML report output format templates |
 | [researcher-review.md](references/researcher-review.md) | Spreadsheet and chat review format details |
+| [human-vs-agent-operation.md](references/human-vs-agent-operation.md) | Human vs agent operating modes; what to change for reliable agent runs (design brief, not runtime procedure) |

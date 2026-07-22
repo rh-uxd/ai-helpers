@@ -1,0 +1,12 @@
+handlers:
+  - match: Questions asked to the user via AskUserQuestion.
+    patterns:
+      - AskUserQuestion
+    prompt: |
+      Answer based on the test case context in input.yaml and answers.yaml.
+      Use answers.yaml guidance for domain-specific decisions.
+      If asked how to review findings (spreadsheet vs chat), always choose
+      chat / "Here in the chat" (Google Workspace MCP is unavailable offline).
+      If asked which heuristic framework and answers.yaml specifies one, use that.
+      Default: pick the first option or answer "yes" for confirmations.
+hook_model: claude-haiku-4-5-20251001

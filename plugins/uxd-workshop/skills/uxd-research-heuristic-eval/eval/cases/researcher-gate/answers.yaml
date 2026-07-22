@@ -1,0 +1,5 @@
+# Guidance for the AskUserQuestion auto-answerer (eval harness).
+instruction: >
+  When asked how to review findings, choose "Here in the chat" (or chat/inline).
+  Do not choose Spreadsheet — Google Workspace MCP is unavailable in this
+  offline eval.

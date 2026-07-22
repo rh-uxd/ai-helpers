@@ -1,0 +1,5 @@
+prompt: >-
+  Using the uxd-research-heuristic-eval skill with --framework nielsen: evaluate
+  fixture-ui.md in this case directory through the three evaluator passes.
+  Do not call network or MCP.
+fixture: fixture-ui.md

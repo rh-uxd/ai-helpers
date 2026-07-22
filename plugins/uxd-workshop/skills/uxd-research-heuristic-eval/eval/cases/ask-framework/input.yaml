@@ -1,0 +1,4 @@
+prompt: >-
+  Using the uxd-research-heuristic-eval skill: evaluate the settings page in
+  fixture-ui.md in this case directory. Do not call network or MCP.
+fixture: fixture-ui.md

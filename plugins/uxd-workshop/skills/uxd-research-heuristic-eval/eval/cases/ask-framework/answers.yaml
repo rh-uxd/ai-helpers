@@ -1,0 +1,10 @@
+# Guidance for the AskUserQuestion auto-answerer (eval harness).
+selected_framework: Shneiderman's 8 Golden Rules
+instruction: >
+  If asked which heuristic framework(s) to use, select Shneiderman's 8 Golden
+  Rules (or the option whose label/description matches Shneiderman). Do not
+  select Nielsen, Not sure, or Custom.
+
+  If asked how to review findings or how to proceed at the researcher review
+  gate, choose "Review in chat" / chat / inline walkthrough. Do not choose
+  Spreadsheet, "Accept all as-is", or "Skip to reports".
