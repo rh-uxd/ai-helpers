@@ -35,8 +35,8 @@ Persist flags to `.artifacts/{ID}/pipeline-config.yaml` so the run survives cont
 pipeline:
   id: PROJ-298
   workspace: https://gitlab.example.com/user/fork.git
-  mode: auto
-  depth: normal
+  decisions: skip
+  # depth: normal          # only when decisions is auto or human
   url: http://localhost:3000
   target: repo
   target_repo_url: https://gitlab.example.com/org/canonical.git
@@ -53,8 +53,8 @@ When `--target` is a git URL, normalize `target` to `repo` and store the URL in 
 
 | Flag | Default |
 |------|---------|
-| `--mode` | `auto` |
-| `--depth` | `normal` |
+| `--decisions` | `skip` |
+| `--depth` | `normal` (ignored when `--decisions=skip`) |
 | `--target` | `none` |
 | `--max-refine-cycles` | `3` |
 | `--headless` | off |

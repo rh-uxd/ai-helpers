@@ -61,7 +61,7 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
     }
   ],
   "build_mode": "existing-codebase",
-  "decision_mode": "auto",
+  "decision_mode": "skip",
   "status": "draft",
   "iteration": 0,
   "workspace_path": ".artifacts/PROJ-298/workspace",
@@ -73,7 +73,6 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
     "path": ".artifacts/PROJ-298/exports",
     "count": 0
   },
-  "decisions_count": 5,
   "assumptions": [],
   "created_at": "2025-01-15T10:30:00Z",
   "updated_at": null,
@@ -172,9 +171,9 @@ prototype_summary:
 
   # How the prototype was built
   build_mode: existing-codebase  # standalone-html | existing-codebase
-  decision_mode: auto            # auto | interactive (interactive = chat/CLI --mode=decide)
-  decision_depth: normal         # under | normal | over (omitted if decision_mode is auto)
-  decisions_count: 5
+  decision_mode: skip            # skip | auto | human (legacy: decide/interactive → human)
+  # decision_depth: normal       # under | normal | over — only when decision_mode is auto or human
+  # decisions_count: 5           # only when decision_mode is auto or human
 
   # What was produced
   files_created: 3
@@ -219,8 +218,8 @@ prototype_summary:
 | `source.reference` | string | The Jira key, Figma URL, or omitted when the source was freeform text |
 | `source.rfe_count` | int | Number of RFEs merged into this prototype (1 for single-ticket, 2+ for composed features) |
 | `build_mode` | enum | `standalone-html` — self-contained HTML/CSS/JS with PatternFly CDN. `existing-codebase` — modifications to a cloned product repo |
-| `decision_mode` | enum | `auto` — AI resolved all decisions, user reviewed batch summary. `interactive` — user picked from HTML comparison pages one at a time (maps from chat/CLI `--mode=decide`) |
-| `decision_depth` | enum | `under` (2–3), `normal` (4–7), or `over` (8–12). Only present when `decision_mode` is `interactive` |
+| `decision_mode` | enum | `skip` — no decision kit; design calls made while building. `auto` — AI resolved decisions with batch summary override. `human` — user picked from HTML comparison pages one at a time. Maps 1:1 from `--decisions`. |
+| `decision_depth` | enum | `under` (2–3), `normal` (4–7), or `over` (8–12). Only present when `decision_mode` is `auto` or `human` |
 | `status` | enum | `draft` (initial creation), `refined` (after refinement pass), `reviewed` (after evaluation), `submitted` (pushed to repo) |
 | `verification` | object | Post-change verification results. Only present for `existing-codebase` builds. Omit entirely for `standalone-html` |
 | `prototype_path` | string | Relative path to the prototype files |

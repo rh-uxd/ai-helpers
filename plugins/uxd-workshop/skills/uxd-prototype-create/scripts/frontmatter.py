@@ -21,7 +21,7 @@ SCHEMAS = {
         'title': {'type': 'string', 'required': True},
         'source_rfe': {'type': 'string', 'required': True},
         'jira_key': {'type': 'string', 'required': False},
-        'mode': {'type': 'string', 'required': True, 'values': ['auto', 'decide']},
+        'mode': {'type': 'string', 'required': True, 'values': ['skip', 'auto', 'human']},
         'status': {'type': 'string', 'required': True, 'values': ['draft', 'reviewed', 'refined', 'submitted']},
         'iteration': {'type': 'int', 'required': False, 'default': 0},
         'created_at': {'type': 'datetime', 'required': True},
