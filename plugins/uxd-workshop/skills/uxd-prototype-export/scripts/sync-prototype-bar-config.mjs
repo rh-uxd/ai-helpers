@@ -138,6 +138,27 @@ function sourcesFromOutcome(outcome, jiraBase) {
   return out;
 }
 
+/** Flatten scenarios.json pages → slim bar list { route, id, name, default? } */
+function flattenScenarios(scenariosDoc) {
+  if (!scenariosDoc || !Array.isArray(scenariosDoc.pages)) return [];
+  const out = [];
+  for (const page of scenariosDoc.pages) {
+    if (!page || !page.route) continue;
+    const list = Array.isArray(page.scenarios) ? page.scenarios : [];
+    for (const s of list) {
+      if (!s || !s.id) continue;
+      const entry = {
+        route: page.route,
+        id: s.id,
+        name: s.name || s.id,
+      };
+      if (s.default === true || s.id === 'default') entry.default = true;
+      out.push(entry);
+    }
+  }
+  return out;
+}
+
 function main() {
   const opts = parseArgs(process.argv);
   if (opts.help || !opts.artifacts) {
@@ -149,11 +170,13 @@ function main() {
   const id = path.basename(artifacts);
   const metaPath = path.join(artifacts, 'metadata.json');
   const outcomePath = path.join(artifacts, 'outcome-context.json');
+  const scenariosPath = path.join(artifacts, 'scenarios.json');
   const outPath = path.join(artifacts, 'prototype-bar.json');
   const reportUrlPath = path.join(artifacts, 'report-url.txt');
 
   const meta = readJson(metaPath) || {};
   const outcome = readJson(outcomePath);
+  const scenariosDoc = readJson(scenariosPath);
   const existing = readJson(outPath) || {};
 
   const jiraBase = normalizeJiraBase(
@@ -177,6 +200,14 @@ function main() {
     sourcesFromOutcome(outcome, jiraBase)
   );
 
+  const scenarios = flattenScenarios(scenariosDoc);
+  // Prefer freshly synced scenarios.json; keep existing only if no scenarios file
+  const scenariosOut = scenarios.length
+    ? scenarios
+    : Array.isArray(existing.scenarios)
+      ? existing.scenarios
+      : [];
+
   const config = {
     id: existing.id || meta.prototype_id || id,
     title: meta.title || existing.title || id,
@@ -189,12 +220,15 @@ function main() {
           : null) ?? null,
       eval: evalUrl,
     },
+    scenarios: scenariosOut,
   };
 
   fs.mkdirSync(artifacts, { recursive: true });
   fs.writeFileSync(outPath, JSON.stringify(config, null, 2) + '\n', 'utf8');
   console.log(`Wrote ${outPath}`);
-  console.log(`  sources: ${config.sources.length}, eval: ${config.views.eval || '(none)'}`);
+  console.log(
+    `  sources: ${config.sources.length}, scenarios: ${config.scenarios.length}, eval: ${config.views.eval || '(none)'}`
+  );
 }
 
 main();

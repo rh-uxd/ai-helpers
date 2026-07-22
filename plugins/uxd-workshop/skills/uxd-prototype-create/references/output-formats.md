@@ -67,6 +67,7 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
   "workspace_path": ".artifacts/PROJ-298/workspace",
   "screens": ["ApiKeyList", "ApiKeyDetail", "CreateApiKeyWizard"],
   "journeys_path": ".artifacts/PROJ-298/journeys.json",
+  "scenarios_path": ".artifacts/PROJ-298/scenarios.json",
   "prototype_bar": true,
   "exports": {
     "path": ".artifacts/PROJ-298/exports",
@@ -82,7 +83,7 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
 
 Status values: `"draft"`, `"refined"`, `"reviewed"`, `"submitted"`.
 
-Optional fields: `journeys_path`, `prototype_bar`, `exports` (populated when `--export` runs), `source_rfes` (multi-RFE compose), `sources` (normalized provenance for the Prototype Bar), `figma_url`.
+Optional fields: `journeys_path`, `scenarios_path`, `prototype_bar`, `exports` (populated when `--export` runs), `source_rfes` (multi-RFE compose), `sources` (normalized provenance for the Prototype Bar), `figma_url`.
 
 ## .artifacts/{ID}/prototype-bar.json
 
@@ -112,11 +113,15 @@ Or write it directly from `metadata.json` fields. Schema: see `uxd-prototype-exp
   "views": {
     "prototype": null,
     "eval": "/evals/PROJ-298/"
-  }
+  },
+  "scenarios": [
+    { "route": "/api-keys", "id": "default", "name": "Populated list", "default": true },
+    { "route": "/api-keys", "id": "empty", "name": "Empty state" }
+  ]
 }
 ```
 
-`sources` is a single list for all provenance (outcome, RFE, strat, Figma, description). Outcome / strat entries are usually added later by evaluate when `outcome-context.json` exists. `views.eval` uses the conventional static path `/evals/{ID}/` so Pages hosting works once the report is copied there.
+`sources` is a single list for all provenance (outcome, RFE, strat, Figma, description). Outcome / strat entries are usually added later by evaluate when `outcome-context.json` exists. `views.eval` uses the conventional static path `/evals/{ID}/` so Pages hosting works once the report is copied there. `scenarios` is a slim flatten of `scenarios.json` (synced by `sync-prototype-bar-config.mjs`) for the bar Scenario menu.
 
 ## .artifacts/{ID}/changeset.md
 
@@ -167,7 +172,7 @@ prototype_summary:
 
   # How the prototype was built
   build_mode: existing-codebase  # standalone-html | existing-codebase
-  decision_mode: auto            # auto | interactive
+  decision_mode: auto            # auto | interactive (interactive = chat/CLI --mode=decide)
   decision_depth: normal         # under | normal | over (omitted if decision_mode is auto)
   decisions_count: 5
 
@@ -179,6 +184,7 @@ prototype_summary:
     - ApiKeyDetail
     - CreateApiKeyWizard
   journeys_path: .artifacts/PROJ-298/journeys.json
+  scenarios_path: .artifacts/PROJ-298/scenarios.json
   prototype_bar: true
   prototype_path: .artifacts/PROJ-298/workspace  # or .artifacts/PROJ-298/prototype/ for standalone
 
@@ -187,6 +193,7 @@ prototype_summary:
     path: .artifacts/PROJ-298/exports
     count: 2
     manifest: .artifacts/PROJ-298/exports/export-manifest.json
+    index: .artifacts/PROJ-298/exports/index.html
 
   # Iteration state
   iteration: 0
@@ -212,8 +219,8 @@ prototype_summary:
 | `source.reference` | string | The Jira key, Figma URL, or omitted when the source was freeform text |
 | `source.rfe_count` | int | Number of RFEs merged into this prototype (1 for single-ticket, 2+ for composed features) |
 | `build_mode` | enum | `standalone-html` — self-contained HTML/CSS/JS with PatternFly CDN. `existing-codebase` — modifications to a cloned product repo |
-| `decision_mode` | enum | `auto` — AI resolved all decisions, user reviewed batch summary. `interactive` — user picked from HTML comparison pages one at a time |
-| `decision_depth` | enum | `under` (2-3), `normal` (4-5), or `over` (6-8). Only present when `decision_mode` is `interactive` |
+| `decision_mode` | enum | `auto` — AI resolved all decisions, user reviewed batch summary. `interactive` — user picked from HTML comparison pages one at a time (maps from chat/CLI `--mode=decide`) |
+| `decision_depth` | enum | `under` (2–3), `normal` (4–7), or `over` (8–12). Only present when `decision_mode` is `interactive` |
 | `status` | enum | `draft` (initial creation), `refined` (after refinement pass), `reviewed` (after evaluation), `submitted` (pushed to repo) |
 | `verification` | object | Post-change verification results. Only present for `existing-codebase` builds. Omit entirely for `standalone-html` |
 | `prototype_path` | string | Relative path to the prototype files |
@@ -284,9 +291,54 @@ Written during Step 4 (and kept in sync if flows change). Drives implementation 
 
 Also keep the flat `screens` list in `metadata.json` / `prototype-summary.yaml` as a convenience index of screen names.
 
+## .artifacts/{ID}/scenarios.json
+
+Written during Step 4 (kept in sync if pages/conditions change). Sibling to `journeys.json`. Catalog of **data/condition variants** per page (empty, load error, validation, alternate selection). Interaction states (modal open) stay in journey `actions` — not scenarios.
+
+Full schema: `uxd-prototype-export/references/scenarios-schema.md`. Mock wiring: [scenario-mocks.md](scenario-mocks.md).
+
+```json
+{
+  "prototype_id": "PROJ-298",
+  "extracted_at": "2025-01-15T10:30:00Z",
+  "pages": [
+    {
+      "route": "/api-keys",
+      "screen": "ApiKeyList",
+      "scenarios": [
+        {
+          "id": "default",
+          "name": "Populated list",
+          "description": "Happy path with several API keys",
+          "default": true
+        },
+        {
+          "id": "empty",
+          "name": "Empty state",
+          "description": "No API keys yet"
+        },
+        {
+          "id": "load-error",
+          "name": "Load error",
+          "description": "Failed to fetch keys"
+        }
+      ]
+    }
+  ]
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `pages[].route` | Must match journey step routes |
+| `pages[].scenarios[].id` | Filename-safe (`[a-z0-9-]+`); used in `?scenario=<id>` and export filenames |
+| `pages[].scenarios[].default` | Exactly one `true` per page (or imply `id: "default"`) |
+
+Every journey route needs at least a `default` scenario. Export captures each exportable journey step × each scenario for that step’s route.
+
 ## .artifacts/{ID}/verification.json
 
-Written during Step 11 (workspace mode post-change verification).
+Written during Step 10 (workspace mode post-change verification).
 
 ```json
 {

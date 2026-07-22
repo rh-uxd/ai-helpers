@@ -50,6 +50,6 @@ If the target codebase already uses patterns that conflict with the AI's recomme
 
 | Available | Behavior |
 |-----------|----------|
-| Atlassian MCP | Full Jira integration: fetch, label, link |
-| `JIRA_*` env vars + fetch script | Fetch and label via REST API |
-| Neither | Accept user description directly, skip labeling |
+| Atlassian MCP | Full Jira integration: fetch issue content |
+| `JIRA_*` env vars + fetch script | Fetch via REST API |
+| Neither | Accept user description directly |

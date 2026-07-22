@@ -122,6 +122,7 @@ install_standalone() {
   local dest_js="$SOURCE/uxd-prototype-bar"
   mkdir -p "$dest_js"
   cp "$TEMPLATE_DIR/serialize-page.browser.js" "$dest_js/"
+  cp "$TEMPLATE_DIR/uxd-scenario-runtime.js" "$dest_js/"
   cp "$TEMPLATE_DIR/prototype-bar-standalone.js" "$dest_js/"
   cp "$TEMPLATE_DIR/prototype-bar.css" "$dest_js/"
   if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
@@ -143,29 +144,35 @@ install_standalone() {
   while IFS= read -r html; do
     [[ -z "$html" ]] && continue
     if grep -q "$marker" "$html" 2>/dev/null; then
-      # Refresh inline config if present
-      if [[ -n "$cfg_script" ]]; then
-        python3 - "$html" "$cfg_script" <<'PY'
-import re, sys
-path, cfg = sys.argv[1], sys.argv[2]
+      # Refresh inline config if present; ensure scenario runtime script is present
+      python3 - "$html" "$cfg_script" "$dest_js" <<'PY'
+import os, re, sys
+path, cfg, dest_js = sys.argv[1], sys.argv[2], sys.argv[3]
 text = open(path, encoding="utf-8").read()
-pat = re.compile(r'<script data-uxd-prototype-bar="config">.*?</script>\s*', re.S)
-if pat.search(text):
-    text = pat.sub(cfg + "\n", text, count=1)
-else:
-    # Insert config before first bar script/link
+html_dir = os.path.dirname(path)
+rel = os.path.relpath(dest_js, html_dir).replace("\\", "/")
+if cfg:
+    pat = re.compile(r'<script data-uxd-prototype-bar="config">.*?</script>\s*', re.S)
+    if pat.search(text):
+        text = pat.sub(cfg + "\n", text, count=1)
+    else:
+        text = re.sub(
+            r'(<link[^>]*data-uxd-prototype-bar="install"[^>]*>)',
+            cfg + r"\n\1",
+            text,
+            count=1,
+        )
+runtime = f'<script src="{rel}/uxd-scenario-runtime.js" data-uxd-prototype-bar="install"></script>'
+if "uxd-scenario-runtime.js" not in text:
     text = re.sub(
-        r'(<link[^>]*data-uxd-prototype-bar="install"[^>]*>)',
-        cfg + r"\n\1",
+        r'(<script[^>]*serialize-page\.browser\.js[^>]*></script>)',
+        r"\1\n" + runtime,
         text,
         count=1,
     )
 open(path, "w", encoding="utf-8").write(text)
 print("  refreshed config:", path)
 PY
-      else
-        echo "  skip (already installed): $html"
-      fi
       continue
     fi
     # Relative path from html dir to uxd-prototype-bar
@@ -177,6 +184,7 @@ PY
 ${cfg_script}
 <link rel="stylesheet" href="${rel}/prototype-bar.css" ${marker} />
 <script src="${rel}/serialize-page.browser.js" ${marker}></script>
+<script src="${rel}/uxd-scenario-runtime.js" ${marker}></script>
 <script src="${rel}/prototype-bar-standalone.js" ${marker}></script>
 EOF
 )"
@@ -206,8 +214,10 @@ install_workspace() {
   fi
   mkdir -p "$dest_dir"
   cp "$TEMPLATE_DIR/PrototypeBar.tsx" "$dest_dir/"
+  cp "$TEMPLATE_DIR/useUxdScenario.ts" "$dest_dir/"
   cp "$TEMPLATE_DIR/prototype-bar.css" "$dest_dir/"
   cp "$TEMPLATE_DIR/serialize-page.browser.js" "$dest_dir/"
+  cp "$TEMPLATE_DIR/uxd-scenario-runtime.js" "$dest_dir/"
 
   # Public copy so the browser can load the serializer + config without bundler help
   local public_dir=""
@@ -219,6 +229,7 @@ install_workspace() {
   if [[ -n "$public_dir" ]]; then
     mkdir -p "$public_dir"
     cp "$TEMPLATE_DIR/serialize-page.browser.js" "$public_dir/"
+    cp "$TEMPLATE_DIR/uxd-scenario-runtime.js" "$public_dir/"
     cp "$TEMPLATE_DIR/prototype-bar.css" "$public_dir/"
     if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
       cp "$CONFIG" "$public_dir/prototype-bar.json"
@@ -228,6 +239,36 @@ install_workspace() {
   elif [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
     cp "$CONFIG" "$dest_dir/prototype-bar.json"
     echo "  copied config → $dest_dir/prototype-bar.json (no public/ — fetch may need a bundler copy)"
+  fi
+
+  # Ensure scenario runtime is loaded from index.html when present
+  local index_html=""
+  for candidate in "$SOURCE/index.html" "$SOURCE/public/index.html"; do
+    if [[ -f "$candidate" ]]; then
+      index_html="$candidate"
+      break
+    fi
+  done
+  if [[ -n "$index_html" ]] && ! grep -q 'uxd-scenario-runtime.js' "$index_html" 2>/dev/null; then
+    if [[ -n "$public_dir" ]]; then
+      python3 - "$index_html" <<'PY'
+import re, sys
+path = sys.argv[1]
+snippet = '<script src="/uxd-prototype-bar/uxd-scenario-runtime.js" data-uxd-scenario-runtime="true"></script>\n'
+text = open(path, encoding="utf-8").read()
+if "uxd-scenario-runtime.js" in text:
+    print("  scenario runtime already in", path)
+else:
+    new, n = re.subn(r"</head>", snippet + "</head>", text, count=1, flags=re.I)
+    if n == 0:
+        new, n = re.subn(r"</body>", snippet + "</body>", text, count=1, flags=re.I)
+    if n:
+        open(path, "w", encoding="utf-8").write(new)
+        print("  injected scenario runtime into", path)
+    else:
+        print("  could not inject scenario runtime — add uxd-scenario-runtime.js manually")
+PY
+    fi
   fi
 
   echo "  copied templates → $dest_dir"

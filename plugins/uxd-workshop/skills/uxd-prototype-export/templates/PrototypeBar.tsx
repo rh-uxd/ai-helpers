@@ -7,11 +7,19 @@ export type UxdPrototypeSource = {
   url?: string;
 };
 
+export type UxdBarScenario = {
+  route?: string;
+  id: string;
+  name?: string;
+  default?: boolean;
+};
+
 export type UxdPrototypeConfig = {
   id?: string;
   title?: string;
   jiraBaseUrl?: string;
   sources?: UxdPrototypeSource[];
+  scenarios?: UxdBarScenario[];
   views?: {
     prototype?: string | null;
     eval?: string | null;
@@ -21,6 +29,12 @@ export type UxdPrototypeConfig = {
 declare global {
   interface Window {
     __UXD_PROTOTYPE__?: UxdPrototypeConfig;
+    UxdScenario?: {
+      get: () => string;
+      set: (id: string) => void;
+      subscribe: (cb: (id: string) => void) => () => void;
+      DEFAULT_ID?: string;
+    };
     UxdPrototypeExport?: {
       exportStaticHtml: () => Promise<{
         warnings?: string[];
@@ -57,6 +71,22 @@ function detectActiveView(): 'prototype' | 'eval' {
   return 'prototype';
 }
 
+function normalizePath(p: string): string {
+  if (!p) return '/';
+  const noQuery = p.split('?')[0].split('#')[0];
+  if (noQuery.length > 1 && noQuery.endsWith('/')) return noQuery.slice(0, -1);
+  return noQuery || '/';
+}
+
+function routeMatches(scenarioRoute: string | undefined, pathname: string): boolean {
+  if (!scenarioRoute) return false;
+  return normalizePath(scenarioRoute) === normalizePath(pathname);
+}
+
+function scenariosForPath(scenarios: UxdBarScenario[] | undefined, pathname: string): UxdBarScenario[] {
+  return (scenarios || []).filter((s) => s && s.id && routeMatches(s.route, pathname));
+}
+
 async function helperHealthy(): Promise<boolean> {
   try {
     const res = await fetch(`${HELPER}/health`, { method: 'GET' });
@@ -79,21 +109,41 @@ function resolvePrototypeUrl(cfg: UxdPrototypeConfig): string {
   return '/';
 }
 
+function getActiveScenarioId(): string {
+  if (window.UxdScenario) return window.UxdScenario.get();
+  try {
+    return new URLSearchParams(window.location.search).get('scenario') || 'default';
+  } catch {
+    return 'default';
+  }
+}
+
 /**
- * Sticky Prototype Bar — Sources, Prototype|Eval, Export.
+ * Sticky Prototype Bar — Sources, Prototype|Eval, Scenario, Export.
  * Requires serialize-page.browser.js for export (script tag or bundler copy).
+ * Requires uxd-scenario-runtime.js for scenario switching.
  * Reads window.__UXD_PROTOTYPE__ (see references/prototype-bar-config.md).
  */
 export const PrototypeBar: React.FC = () => {
   const [exportOpen, setExportOpen] = useState(false);
   const [sourcesOpen, setSourcesOpen] = useState(false);
+  const [scenarioOpen, setScenarioOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
   const [evalReady, setEvalReady] = useState(false);
   const [cfg, setCfg] = useState<UxdPrototypeConfig>(() => window.__UXD_PROTOTYPE__ || {});
+  const [activeScenario, setActiveScenario] = useState(getActiveScenarioId);
   const exportRef = useRef<HTMLDivElement>(null);
   const sourcesRef = useRef<HTMLDivElement>(null);
+  const scenarioRef = useRef<HTMLDivElement>(null);
   const active = useMemo(() => detectActiveView(), []);
+  const pathname = typeof window !== 'undefined' ? window.location.pathname : '/';
+
+  const pageScenarios = useMemo(
+    () => scenariosForPath(cfg.scenarios, pathname),
+    [cfg.scenarios, pathname]
+  );
+  const showScenarioMenu = active === 'prototype' && pageScenarios.length > 1;
 
   useEffect(() => {
     const load = async () => {
@@ -119,6 +169,33 @@ export const PrototypeBar: React.FC = () => {
       }
     };
     void load();
+  }, []);
+
+  useEffect(() => {
+    if (window.UxdScenario) return;
+    if (document.querySelector('script[data-uxd-scenario-runtime]')) return;
+    const candidates = [
+      '/uxd-prototype-bar/uxd-scenario-runtime.js',
+      '/uxd-scenario-runtime.js',
+    ];
+    const script = document.createElement('script');
+    script.src = candidates[0];
+    script.setAttribute('data-uxd-scenario-runtime', 'true');
+    script.async = false;
+    script.onerror = () => {
+      script.remove();
+      const fallback = document.createElement('script');
+      fallback.src = candidates[1];
+      fallback.setAttribute('data-uxd-scenario-runtime', 'true');
+      document.head.appendChild(fallback);
+    };
+    document.head.appendChild(script);
+  }, []);
+
+  useEffect(() => {
+    setActiveScenario(getActiveScenarioId());
+    if (!window.UxdScenario) return;
+    return window.UxdScenario.subscribe((id) => setActiveScenario(id));
   }, []);
 
   useEffect(() => {
@@ -159,6 +236,7 @@ export const PrototypeBar: React.FC = () => {
       const t = e.target as Node;
       if (exportRef.current && !exportRef.current.contains(t)) setExportOpen(false);
       if (sourcesRef.current && !sourcesRef.current.contains(t)) setSourcesOpen(false);
+      if (scenarioRef.current && !scenarioRef.current.contains(t)) setScenarioOpen(false);
     };
     document.addEventListener('mousedown', onDoc);
     return () => document.removeEventListener('mousedown', onDoc);
@@ -243,8 +321,27 @@ export const PrototypeBar: React.FC = () => {
     }
   };
 
+  const selectScenario = (id: string) => {
+    setScenarioOpen(false);
+    if (id === activeScenario) {
+      setStatus(`Scenario: ${id}`);
+      return;
+    }
+    setStatus(`Scenario: ${id}`);
+    if (window.UxdScenario) {
+      window.UxdScenario.set(id);
+      return;
+    }
+    const url = new URL(window.location.href);
+    if (id === 'default') url.searchParams.delete('scenario');
+    else url.searchParams.set('scenario', id);
+    window.location.assign(url.toString());
+  };
+
   const sources = cfg.sources || [];
   const showSources = sources.length > 0;
+  const activeScenarioLabel =
+    pageScenarios.find((s) => s.id === activeScenario)?.name || activeScenario;
 
   return (
     <div id="uxd-prototype-bar" role="region" aria-label="Prototype bar">
@@ -259,6 +356,7 @@ export const PrototypeBar: React.FC = () => {
               aria-expanded={sourcesOpen}
               onClick={() => {
                 setExportOpen(false);
+                setScenarioOpen(false);
                 setSourcesOpen((v) => !v);
               }}
             >
@@ -322,6 +420,39 @@ export const PrototypeBar: React.FC = () => {
             Eval
           </button>
         </div>
+        {showScenarioMenu && (
+          <div className="uxd-pb-scenario-wrap" ref={scenarioRef}>
+            <button
+              type="button"
+              className="uxd-pb-btn"
+              aria-haspopup="menu"
+              aria-expanded={scenarioOpen}
+              title={activeScenarioLabel}
+              onClick={() => {
+                setExportOpen(false);
+                setSourcesOpen(false);
+                setScenarioOpen((v) => !v);
+              }}
+            >
+              Scenario ▾
+            </button>
+            <ul className="uxd-pb-menu uxd-pb-scenario-menu" role="menu" hidden={!scenarioOpen}>
+              {pageScenarios.map((s) => (
+                <li key={`${s.route}-${s.id}`} role="none">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    aria-current={s.id === activeScenario ? 'true' : undefined}
+                    onClick={() => selectScenario(s.id)}
+                  >
+                    {s.name || s.id}
+                    {s.id === activeScenario ? ' ✓' : ''}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {active !== 'eval' && (
           <div className="uxd-pb-export-wrap" ref={exportRef}>
             <button
@@ -332,6 +463,7 @@ export const PrototypeBar: React.FC = () => {
               disabled={busy}
               onClick={() => {
                 setSourcesOpen(false);
+                setScenarioOpen(false);
                 setExportOpen((v) => !v);
               }}
             >

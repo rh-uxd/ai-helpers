@@ -4,19 +4,29 @@
 # codebase context. This file serves as a reference catalog of common decision
 # categories the AI may draw from — it is NOT a fixed checklist.
 #
-# The AI identifies 4–7 decisions (configurable via --depth) that have genuine
-# tradeoffs for the specific RFE. Some RFEs may surface entirely different
-# decisions than those listed here.
+# The AI identifies 4–7 decisions by default (configurable via --depth: under 2–3,
+# normal 4–7, over 8–12) that have genuine tradeoffs for the specific RFE. Some
+# RFEs may surface entirely different decisions than those listed here.
 #
-# See .claude/skills/prototype-create/SKILL.md Step 8 for the dynamic planning process.
+# See SKILL.md Step 7 for the dynamic planning process.
 # See decision-workflow.md for the decision artifact format and storage schema.
+# See decision-page-template.html / decision-page-example.md for page quality.
 
 reference_decisions:
+# Preview quality (all categories):
+# Decision HTML pages must render real UI in each option's .visual-preview —
+# PatternFly CDN for standalone, or the target codebase's components when in
+# workspace mode. Ban ASCII art and empty gray-box wireframes as the primary
+# preview. See decision-workflow.md and decision-page-example.md.
+
   - id: layout-pattern
     order: 1
     name: Layout Pattern
     question: What overall page structure best serves these user stories?
     context_from: rfe_user_stories
+    preview_hint: >
+      Mini app frames showing masthead/nav + content structure for each option
+      using real PF (or target-app) components and product-domain copy.
     options:
       - id: list-detail
         name: List + Detail
@@ -58,6 +68,9 @@ reference_decisions:
     name: Interaction Model
     question: How should users interact with the core content?
     context_from: layout_decision
+    preview_hint: >
+      Same primary action shown four ways (inline, modal, drawer, page) with
+      real controls — not numbered stick-figure flows.
     options:
       - id: inline-edit
         name: Inline Editing
@@ -144,4 +157,9 @@ reference_decisions:
       needs and the prior decisions. The options are drawn from the design
       system component library. Typically 2-4 component choices are surfaced
       for the most critical UI elements in the prototype.
+      Previews MUST render the actual components (PatternFly CDN or the target
+      app's component markup) composing that UI — not labeled wireframe boxes.
+    preview_hint: >
+      Compose the critical UI from real Table/Drawer/Form/etc. components so
+      the component choice is obvious in the preview.
     dynamic: true

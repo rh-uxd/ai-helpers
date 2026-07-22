@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Decision 1: Layout Pattern — {Project Name}</title>
+  <!-- PatternFly 6 CDN — required for all decision pages. Do not replace with custom dark themes. -->
+  <link rel="stylesheet" href="https://unpkg.com/@patternfly/patternfly@6/patternfly.min.css" />
+  <link rel="stylesheet" href="https://unpkg.com/@patternfly/patternfly@6/patternfly-addons.min.css" />
+  <style>
+    /* Minimal layout helpers only — prefer PF utility / component classes for chrome. */
+    .decision-page { max-width: 1200px; margin: 0 auto; padding: var(--pf-t--global--spacer--xl); }
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--pf-t--global--spacer--lg);
+      margin: var(--pf-t--global--spacer--xl) 0;
+    }
+    @media (max-width: 768px) {
+      .options-grid { grid-template-columns: 1fr; }
+    }
+    .option-card { position: relative; height: 100%; display: flex; flex-direction: column; }
+    .option-card.recommended {
+      box-shadow: var(--pf-t--global--box-shadow--md);
+      outline: 2px solid var(--pf-t--global--border--color--status--warning--default);
+    }
+    .option-card.selected {
+      outline: 2px solid var(--pf-t--global--border--color--status--success--default);
+    }
+    .option-card.not-chosen { opacity: 0.65; }
+    .option-letter {
+      font-size: var(--pf-t--global--font--size--sm);
+      font-weight: var(--pf-t--global--font--weight--heading--bold);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: var(--pf-t--global--spacer--xs);
+    }
+    .option-letter.a { color: var(--pf-t--global--color--nonstatus--blue--100); }
+    .option-letter.b { color: var(--pf-t--global--color--nonstatus--orange--100); }
+    .option-letter.c { color: var(--pf-t--global--color--nonstatus--yellow--100); }
+    .option-letter.d { color: var(--pf-t--global--color--nonstatus--purple--100); }
+    .visual-preview {
+      min-height: 280px;
+      margin: var(--pf-t--global--spacer--md) 0;
+      border: 1px solid var(--pf-t--global--border--color--default);
+      border-radius: var(--pf-t--global--border--radius--small);
+      overflow: hidden;
+      background: var(--pf-t--global--background--color--primary--default);
+    }
+    /* Scale mock UI inside the preview so four cards fit on one page */
+    .visual-preview .preview-frame {
+      transform: scale(0.72);
+      transform-origin: top left;
+      width: 138.9%; /* 100 / 0.72 */
+      pointer-events: none;
+    }
+    .badge-row {
+      position: absolute;
+      top: 0;
+      right: var(--pf-t--global--spacer--md);
+      display: flex;
+      gap: var(--pf-t--global--spacer--xs);
+    }
+    .comparison-section, .recommendation-section, .footer-prompt {
+      margin-top: var(--pf-t--global--spacer--2xl);
+    }
+  </style>
+</head>
+<body>
+  <div class="decision-page">
+
+    <!-- ===== HEADER ===== -->
+    <header class="pf-v6-u-text-align-center pf-v6-u-mb-xl">
+      <p class="pf-v6-c-label pf-m-outline">
+        <span class="pf-v6-c-label__content">Decision 1 of N · Visual / IA</span>
+      </p>
+      <h1 class="pf-v6-c-title pf-m-2xl pf-v6-u-mt-sm">Layout Pattern</h1>
+      <p class="pf-v6-u-color-200 pf-v6-u-mt-sm" style="max-width: 40rem; margin-inline: auto;">
+        <!-- CONTEXT: why this decision matters for these user stories -->
+        What overall page structure best serves operators browsing and inspecting items?
+      </p>
+    </header>
+
+    <!-- ===== CROSS-DECISION NAV (required on every page, auto + decide) ===== -->
+    <nav class="pf-v6-c-tabs pf-m-box" aria-label="Design decisions">
+      <ul class="pf-v6-c-tabs__list" role="presentation">
+        <li class="pf-v6-c-tabs__item" role="presentation">
+          <a href="index.html" class="pf-v6-c-tabs__link">All</a>
+        </li>
+        <li class="pf-v6-c-tabs__item pf-m-current" role="presentation">
+          <a href="01-layout-pattern.html" class="pf-v6-c-tabs__link" aria-current="page">1. Layout</a>
+        </li>
+        <li class="pf-v6-c-tabs__item" role="presentation">
+          <a href="02-interaction-model.html" class="pf-v6-c-tabs__link">2. Interaction</a>
+        </li>
+        <li class="pf-v6-c-tabs__item" role="presentation">
+          <a href="03-density.html" class="pf-v6-c-tabs__link">3. Density</a>
+        </li>
+        <!-- Add a tab per decision; keep short labels; highlight current with pf-m-current -->
+      </ul>
+    </nav>
+
+    <!-- ===== OPTIONS GRID ===== -->
+    <div class="options-grid">
+
+      <!-- Option A -->
+      <article class="pf-v6-c-card option-card">
+        <div class="badge-row">
+          <!-- Show Recommended on the AI pick; Selected only after choice is locked -->
+          <!-- <span class="pf-v6-c-label pf-m-orange"><span class="pf-v6-c-label__content">Recommended</span></span> -->
+          <!-- <span class="pf-v6-c-label pf-m-green"><span class="pf-v6-c-label__content">Selected</span></span> -->
+        </div>
+        <div class="pf-v6-c-card__header">
+          <div class="pf-v6-c-card__header-main">
+            <p class="option-letter a">Option A</p>
+            <h2 class="pf-v6-c-title pf-m-lg">Card Grid</h2>
+            <p class="pf-v6-u-color-200">Summary cards in a responsive grid; click through to detail.</p>
+          </div>
+        </div>
+        <div class="pf-v6-c-card__body">
+          <div class="visual-preview" aria-label="Preview of Card Grid">
+            <div class="preview-frame">
+              <!--
+                REQUIRED: Render real UI here (PF CDN or target-app components).
+                Ban ASCII and empty gray boxes as the primary preview.
+                Use product-domain copy from the RFE — no lorem ipsum.
+              -->
+            </div>
+          </div>
+          <div class="pf-v6-l-grid pf-m-all-6-col pf-m-gutter">
+            <div class="pf-v6-l-grid__item">
+              <strong class="pf-v6-u-success-color-100">Pros</strong>
+              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
+                <li>Scannable discovery</li>
+                <li>Works well on wide screens</li>
+              </ul>
+            </div>
+            <div class="pf-v6-l-grid__item">
+              <strong class="pf-v6-u-danger-color-100">Cons</strong>
+              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
+                <li>Weak for dense ops tables</li>
+                <li>Detail requires navigation</li>
+              </ul>
+            </div>
+          </div>
+          <p class="pf-v6-u-font-size-sm pf-v6-u-mt-md">
+            <strong>When to use:</strong> Catalog / discovery workflows.
+          </p>
+        </div>
+      </article>
+
+      <!-- Option B (example: recommended) -->
+      <article class="pf-v6-c-card option-card recommended">
+        <div class="badge-row">
+          <span class="pf-v6-c-label pf-m-orange">
+            <span class="pf-v6-c-label__content">Recommended</span>
+          </span>
+        </div>
+        <div class="pf-v6-c-card__header">
+          <div class="pf-v6-c-card__header-main">
+            <p class="option-letter b">Option B</p>
+            <h2 class="pf-v6-c-title pf-m-lg">List + Detail</h2>
+            <p class="pf-v6-u-color-200">Master list on the left; detail panel on the right.</p>
+          </div>
+        </div>
+        <div class="pf-v6-c-card__body">
+          <div class="visual-preview" aria-label="Preview of List + Detail">
+            <div class="preview-frame">
+              <!-- Rendered UI mockup for Option B -->
+            </div>
+          </div>
+          <div class="pf-v6-l-grid pf-m-all-6-col pf-m-gutter">
+            <div class="pf-v6-l-grid__item">
+              <strong class="pf-v6-u-success-color-100">Pros</strong>
+              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
+                <li>Browse + inspect without losing context</li>
+                <li>Maps to common admin patterns</li>
+              </ul>
+            </div>
+            <div class="pf-v6-l-grid__item">
+              <strong class="pf-v6-u-danger-color-100">Cons</strong>
+              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
+                <li>Needs careful responsive collapse</li>
+                <li>Less visual for marketing-style content</li>
+              </ul>
+            </div>
+          </div>
+          <p class="pf-v6-u-font-size-sm pf-v6-u-mt-md">
+            <strong>When to use:</strong> Browse-heavy ops and configuration lists.
+          </p>
+        </div>
+      </article>
+
+      <!-- Option C -->
+      <article class="pf-v6-c-card option-card">
+        <div class="pf-v6-c-card__header">
+          <div class="pf-v6-c-card__header-main">
+            <p class="option-letter c">Option C</p>
+            <h2 class="pf-v6-c-title pf-m-lg">Dashboard</h2>
+            <p class="pf-v6-u-color-200">Widgets and status panels as the primary surface.</p>
+          </div>
+        </div>
+        <div class="pf-v6-c-card__body">
+          <div class="visual-preview" aria-label="Preview of Dashboard">
+            <div class="preview-frame"><!-- Rendered UI --></div>
+          </div>
+          <div class="pf-v6-l-grid pf-m-all-6-col pf-m-gutter">
+            <div class="pf-v6-l-grid__item">
+              <strong class="pf-v6-u-success-color-100">Pros</strong>
+              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
+                <li>Status at a glance</li>
+              </ul>
+            </div>
+            <div class="pf-v6-l-grid__item">
+              <strong class="pf-v6-u-danger-color-100">Cons</strong>
+              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
+                <li>Weak for item-level CRUD</li>
+              </ul>
+            </div>
+          </div>
+          <p class="pf-v6-u-font-size-sm pf-v6-u-mt-md">
+            <strong>When to use:</strong> Monitoring and operational overview.
+          </p>
+        </div>
+      </article>
+
+      <!-- Option D -->
+      <article class="pf-v6-c-card option-card">
+        <div class="pf-v6-c-card__header">
+          <div class="pf-v6-c-card__header-main">
+            <p class="option-letter d">Option D</p>
+            <h2 class="pf-v6-c-title pf-m-lg">Wizard / Stepper</h2>
+            <p class="pf-v6-u-color-200">Guided multi-step flow as the primary surface.</p>
+          </div>
+        </div>
+        <div class="pf-v6-c-card__body">
+          <div class="visual-preview" aria-label="Preview of Wizard">
+            <div class="preview-frame"><!-- Rendered UI --></div>
+          </div>
+          <div class="pf-v6-l-grid pf-m-all-6-col pf-m-gutter">
+            <div class="pf-v6-l-grid__item">
+              <strong class="pf-v6-u-success-color-100">Pros</strong>
+              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
+                <li>Reduces cognitive load for complex create</li>
+              </ul>
+            </div>
+            <div class="pf-v6-l-grid__item">
+              <strong class="pf-v6-u-danger-color-100">Cons</strong>
+              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
+                <li>Poor fit for ongoing browse/manage</li>
+              </ul>
+            </div>
+          </div>
+          <p class="pf-v6-u-font-size-sm pf-v6-u-mt-md">
+            <strong>When to use:</strong> Complex creation or setup flows.
+          </p>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- ===== COMPARISON TABLE (required) ===== -->
+    <section class="comparison-section" aria-labelledby="comparison-heading">
+      <h2 id="comparison-heading" class="pf-v6-c-title pf-m-xl pf-v6-u-mb-md">Comparison</h2>
+      <table class="pf-v6-c-table pf-m-compact pf-m-grid-md" role="grid">
+        <caption class="pf-v6-u-screen-reader">Option comparison across key dimensions</caption>
+        <thead>
+          <tr role="row">
+            <th role="columnheader" scope="col">Dimension</th>
+            <th role="columnheader" scope="col">A · Card Grid</th>
+            <th role="columnheader" scope="col">B · List + Detail</th>
+            <th role="columnheader" scope="col">C · Dashboard</th>
+            <th role="columnheader" scope="col">D · Wizard</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 5–8 rows of meaningful dimensions for THIS decision -->
+          <tr role="row">
+            <td role="cell"><strong>Browse speed</strong></td>
+            <td role="cell">High</td>
+            <td role="cell">High</td>
+            <td role="cell">Medium</td>
+            <td role="cell">Low</td>
+          </tr>
+          <tr role="row">
+            <td role="cell"><strong>Inspect without leaving list</strong></td>
+            <td role="cell">Low</td>
+            <td role="cell">High</td>
+            <td role="cell">Low</td>
+            <td role="cell">N/A</td>
+          </tr>
+          <tr role="row">
+            <td role="cell"><strong>Fits RFE browse+inspect stories</strong></td>
+            <td role="cell">Medium</td>
+            <td role="cell">High</td>
+            <td role="cell">Low</td>
+            <td role="cell">Low</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ===== RECOMMENDATION ===== -->
+    <section class="recommendation-section" aria-labelledby="rec-heading">
+      <div class="pf-v6-c-alert pf-m-info" aria-label="Recommendation">
+        <div class="pf-v6-c-alert__icon">
+          <!-- optional icon -->
+        </div>
+        <h2 id="rec-heading" class="pf-v6-c-alert__title">Recommendation: Option B — List + Detail</h2>
+        <div class="pf-v6-c-alert__description">
+          <p>
+            <!-- Plain English, grounded in RFE / codebase context -->
+            The RFE centers on browsing items and inspecting details without losing list context,
+            which maps cleanly to a master–detail layout.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== FOOTER PROMPT ===== -->
+    <footer class="footer-prompt pf-v6-u-text-align-center">
+      <p class="pf-v6-c-helper-text">
+        <span class="pf-v6-c-helper-text__item">
+          Respond with: <strong>Option A / B / C / D</strong> (or describe your own).
+          Open <a href="index.html">all decisions</a> to jump around.
+        </span>
+      </p>
+    </footer>
+
+  </div>
+</body>
+</html>

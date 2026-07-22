@@ -2,9 +2,11 @@
 name: uxd-prototype-create
 description: >-
   Create or refine a UX prototype from a Jira ticket, Figma design, feature
-  description, or rough idea. Use when starting a new prototype, integrating
-  into an existing codebase, generating standalone HTML, or applying evaluation
-  feedback.
+  description, or rough idea. Enumerates user journeys and page scenarios
+  (empty/error/alternate conditions), wires mock data via ?scenario=, and
+  supports export of each step × scenario. Use when starting a new prototype,
+  integrating into an existing codebase, generating standalone HTML, or applying
+  evaluation feedback.
 ---
 
 # Prototype Creator
@@ -93,7 +95,7 @@ Prototype Plan:
 
 **`--target` URL detection:** If the value looks like a git URL (`https://`, `http://`, `git@`, `ssh://`, or ends with `.git`), treat it as the MR/PR base repo. That implies publish type `repo`. Pass the URL to `resolve_workspace.py --upstream` so the clone gets an `upstream` remote; persist as `target_repo_url` / `upstream_url` in pipeline config and workspace analysis.
 
-**Dry run:** Fetches RFEs and creates all local artifacts under `.artifacts/` but skips git operations, Jira label updates, and any external writes. Local `--export` files are still written when a URL is available.
+**Dry run:** Fetches RFEs and creates all local artifacts under `.artifacts/` but skips git operations and any external writes. Local `--export` files are still written when a URL is available.
 
 ---
 
@@ -133,18 +135,26 @@ Parse from the RFE:
 2. **Acceptance criteria** — Given/When/Then, checkboxes, or AC sections
 3. **Personas / roles** — prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` when mapping roles via `aliases`; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/` for experience, accessibility, regulation, or team size
 4. **Key entities** — nouns the UI manipulates (cluster, pipeline, key, …)
-5. **Flows / user journeys** — ordered steps the user takes (screens **and** UI states such as “modal open”, empty/error). Prefer an explicit “User journey” section when present; otherwise infer from stories and ACs.
+5. **Flows / user journeys** — ordered steps the user takes (screens **and** interaction UI states such as “modal open”). Prefer an explicit “User journey” section when present; otherwise infer from stories and ACs.
+6. **Page scenarios** — data/condition variants per page (empty, load error, validation error, alternate selection). Derive from ACs and stories; do not only list the happy path.
 
 If the RFE is thin, document assumptions in `metadata.json`. Store structured stories in `.artifacts/{ID}/user-stories.json`.
 
 **Also write** `.artifacts/{ID}/journeys.json` (schema in [references/output-formats.md](references/output-formats.md) and `uxd-prototype-export/references/journeys-schema.md`):
 
 - One journey per primary flow; `steps` with `id`, `name`, `route`, and `"export": true` for key screens/states
-- For states that are not distinct URLs (e.g. modal open), keep the same `route` and add `actions` (`click`, `wait_for`, `fill`, …)
+- For interaction states that are not distinct URLs (e.g. modal open), keep the same `route` and add `actions` (`click`, `wait_for`, `fill`, …)
 - Use stable selectors (`data-ouia-component-id`, roles, labels)
 - Align loosely with evaluate `journey_definitions` field names (`id`, `title`, `persona`, `source`, `ac_ids`)
 
-Use journeys for implementation in Step 8 and for `--export` later.
+**Also write** `.artifacts/{ID}/scenarios.json` (schema in [references/output-formats.md](references/output-formats.md) and `uxd-prototype-export/references/scenarios-schema.md`):
+
+- One `pages[]` entry per distinct journey `route`, with at least a `default` scenario
+- Add empty / error / validation / alternate-branch scenarios when ACs or stories imply them
+- Scenario `id`s must be filename-safe (`[a-z0-9-]+`); keep modal/drawer open in journey `actions`, not scenarios
+- Mock wiring convention: [references/scenario-mocks.md](references/scenario-mocks.md)
+
+Use journeys + scenarios for implementation in Step 8 and for `--export` later (export = each exportable step × each scenario for that step’s route).
 
 ---
 
@@ -187,9 +197,11 @@ Design decisions are planned dynamically based on the RFE and codebase context. 
 - **`--mode=auto`:** Generate HTML decision pages, auto-pick recommendations, present a batch summary table for the user to override any choices.
 - **`--mode=decide`:** Generate all decision pages upfront, then walk through one at a time asking the user to choose.
 
-Read [references/decision-workflow.md](references/decision-workflow.md) for the full decision page generation procedure and recording format.
+**Quality bar:** Decision pages use PatternFly CDN chrome (copy [references/decision-page-template.html](references/decision-page-template.html)). Option previews are real rendered UI — no ASCII or empty wireframes. Previews match the build target (standalone → PF components; workspace → target-app components when possible). Every page cross-links to the others plus `index.html`. After generation, print absolute `file://` URLs and open the index in the browser.
 
-Store all decision artifacts in `.artifacts/{ID}/decisions/` (decision pages, `decisions.json`, `strategy-brief.md`).
+Read [references/decision-workflow.md](references/decision-workflow.md) for the full procedure. See [references/decision-page-example.md](references/decision-page-example.md) for preview recipes by decision type.
+
+Store all decision artifacts in `.artifacts/{ID}/decisions/` (decision pages, `index.html`, `decisions.json`, `strategy-brief.md`). Chat flag `--mode=decide` maps to `decision_mode: interactive` in `prototype-summary.yaml`.
 
 ---
 
@@ -201,6 +213,7 @@ Store all decision artifacts in `.artifacts/{ID}/decisions/` (decision pages, `d
 2. Generate components following the project's conventions (imports, TypeScript, CSS approach)
 3. Register routes and update navigation
 4. Implement each design decision from Step 7
+5. Wire mock data per scenario in `.artifacts/{ID}/scenarios.json` — pages choose data via `window.UxdScenario.get()` or `useUxdScenario` (see [references/scenario-mocks.md](references/scenario-mocks.md)); active scenario is `?scenario=<id>`
 
 ### Standalone Mode
 
@@ -213,6 +226,8 @@ Generate HTML files in `.artifacts/{ID}/prototype/` using PatternFly CDN:
 
 If the PatternFly docs MCP is available, use it for component reference.
 
+Branch each page’s mock data on `UxdScenario.get()` (installed with the Prototype Bar). See [references/scenario-mocks.md](references/scenario-mocks.md).
+
 ### Reachability self-check
 
 After implementing, do a quick pass to confirm every new screen or flow is actually reachable. Fix any gaps before continuing:
@@ -222,12 +237,13 @@ After implementing, do a quick pass to confirm every new screen or flow is actua
 - **Inbound links** — CTAs, table row actions, breadcrumbs, and other hyperlinks that should lead to the new UI are wired to the correct paths
 - **Dead ends** — no orphan screens that can only be opened by typing a URL
 - **Journey coverage** — every `route` in `.artifacts/{ID}/journeys.json` is reachable; steps with `actions` have matching interactive elements (stable selectors) so those states can be opened
+- **Scenario coverage** — every non-default scenario in `.artifacts/{ID}/scenarios.json` is selectable via `?scenario=<id>` (or the bar Scenario menu) and shows the intended empty/error/alternate UI
 
 This is a cursory wiring check, not a full UX review. Spend a minute or two; fix obvious misses, then move on.
 
 ### Prototype Bar (default on)
 
-Unless `--no-prototype-bar` was set, install the sticky Prototype Bar after Step 9 writes `prototype-bar.json` (Sources, Prototype|Eval, Export). See Step 9 for the install command with `--config`.
+Unless `--no-prototype-bar` was set, install the sticky Prototype Bar after Step 9 writes `prototype-bar.json` (Sources, Prototype|Eval, Scenario, Export). See Step 9 for the install command with `--config`.
 
 If you install earlier for a quick preview, re-run install after syncing the config so Sources are injected.
 
@@ -243,10 +259,11 @@ If auto-mount fails for React, copy templates and mount `<PrototypeBar />` manua
 Write these artifacts after generation:
 
 - `.artifacts/{ID}/changeset.md` — lists all files created/modified with one-line descriptions
-- `.artifacts/{ID}/metadata.json` — prototype ID, title, mode, status, iteration, screens list, `journeys_path`, `prototype_bar`, `source` / `source_rfes` / `sources`, timestamps
+- `.artifacts/{ID}/metadata.json` — prototype ID, title, mode, status, iteration, screens list, `journeys_path`, `scenarios_path`, `prototype_bar`, `source` / `source_rfes` / `sources`, timestamps
 - `.artifacts/{ID}/prototype-summary.yaml` — structured machine-readable summary for downstream skills and pipeline consumption
-- `.artifacts/{ID}/prototype-bar.json` — Prototype Bar config (Sources + Eval navigation)
+- `.artifacts/{ID}/prototype-bar.json` — Prototype Bar config (Sources + Eval + slim `scenarios` list)
 - Ensure `.artifacts/{ID}/journeys.json` is present (from Step 4; update routes/selectors if implementation diverged)
+- Ensure `.artifacts/{ID}/scenarios.json` is present (from Step 4; update routes/scenario ids if implementation diverged)
 
 The `prototype-summary.yaml` captures what was built (build mode), what it was built from (source), how decisions were made, and what was produced. Downstream skills like `uxd-prototype-evaluate`, `uxd-prototype-export`, and `uxd-prototype-publish` can consume this directly without parsing human-readable output.
 
@@ -277,30 +294,30 @@ Read [references/output-formats.md](references/output-formats.md) for full schem
 5. If verification changes more files, update `changeset.md`
 6. Record pass/fail in `.artifacts/{ID}/verification.json`
 
-## Step 11: Apply Labels in Jira (Optional)
-
-If Jira is available (MCP or REST credentials), add label `prototype-creator-draft` to the source issue. If unavailable, skip silently.
-
-## Step 11b: Journey export (when `--export`)
+## Step 11: Journey export (when `--export`)
 
 *Skip unless `--export` was set.*
 
+Export captures each exportable journey step × each scenario for that step’s route (`?scenario=<id>`), writing `{journeyId}/{stepId}--{scenarioId}.html` plus `exports/index.html`.
+
 1. Confirm `.artifacts/{ID}/journeys.json` has at least one step (prefer steps with `"export": true`; if none are marked, pass `--export-all-if-unset`)
-2. Resolve `--url` — ask if missing. For standalone HTML, serve `.artifacts/{ID}/prototype/` (e.g. `npx serve`) and use that origin
-3. Ensure export skill deps: `cd "${CLAUDE_SKILL_DIR}/../uxd-prototype-export" && npm install`
-4. Run:
+2. Confirm `.artifacts/{ID}/scenarios.json` exists (fallback: export uses `default` only per route)
+3. Resolve `--url` — ask if missing. For standalone HTML, serve `.artifacts/{ID}/prototype/` (e.g. `npx serve`) and use that origin
+4. Ensure export skill deps: `cd "${CLAUDE_SKILL_DIR}/../uxd-prototype-export" && npm install`
+5. Run:
 
 ```bash
 EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
 node "${EXPORT_SKILL}/scripts/export-journey.mjs" \
   --base-url "{URL}" \
   --journeys ".artifacts/{ID}/journeys.json" \
+  --scenarios ".artifacts/{ID}/scenarios.json" \
   --out ".artifacts/{ID}/exports" \
   --formats "{html|html,tree}" \
   --export-all-if-unset
 ```
 
-5. Record `exports.path`, `exports.count`, and `exports.manifest` in `metadata.json` and `prototype-summary.yaml`
+6. Record `exports.path`, `exports.count`, `exports.manifest`, and `exports.index` in `metadata.json` and `prototype-summary.yaml`
 
 Optional: keep `node "${EXPORT_SKILL}/scripts/export-helper.mjs" --out ".artifacts/{ID}/exports"` running so the Prototype Bar can write into the same folder.
 

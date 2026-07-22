@@ -1,4 +1,4 @@
-/* UXD Prototype Bar — sticky top chrome: Sources, Prototype|Eval, Export */
+/* UXD Prototype Bar — sticky top chrome: Sources, Prototype|Eval, Scenario, Export */
 
 #uxd-prototype-bar {
   position: sticky;
@@ -82,7 +82,8 @@
 }
 
 #uxd-prototype-bar .uxd-pb-export-wrap,
-#uxd-prototype-bar .uxd-pb-sources-wrap {
+#uxd-prototype-bar .uxd-pb-sources-wrap,
+#uxd-prototype-bar .uxd-pb-scenario-wrap {
   position: relative;
 }
 
@@ -128,6 +129,14 @@
 #uxd-prototype-bar .uxd-pb-sources-menu {
   min-width: 16rem;
   padding: 0.35rem 0;
+}
+
+#uxd-prototype-bar .uxd-pb-scenario-menu {
+  min-width: 12rem;
+}
+
+#uxd-prototype-bar .uxd-pb-scenario-menu button[aria-current="true"] {
+  font-weight: 600;
 }
 
 #uxd-prototype-bar .uxd-pb-sources-title {

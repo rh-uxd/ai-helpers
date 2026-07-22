@@ -21,25 +21,26 @@ The skill accepts any combination of these — it asks clarifying questions to f
 | Output | Format | Location |
 |--------|--------|----------|
 | Prototype | HTML (standalone) or framework code (workspace mode) | `.artifacts/{ID}/prototype/` or target workspace |
-| Design decisions | HTML comparison pages + JSON record | `.artifacts/{ID}/decisions/` |
+| Design decisions | PatternFly HTML comparison pages (cross-linked + `index.html`) + JSON record | `.artifacts/{ID}/decisions/` |
 | RFE snapshot | Markdown with YAML frontmatter | `.artifacts/{ID}/rfe-snapshot.md` |
 | Changeset manifest | Markdown listing all created/modified files | `.artifacts/{ID}/changeset.md` |
 | Workspace analysis | JSON with tech stack, conventions, verification commands | `.artifacts/{ID}/workspace-analysis.json` |
 | Metadata | JSON with mode, source, assumptions | `.artifacts/{ID}/metadata.json` |
-| Prototype Bar config | Sources + Prototype\|Eval URLs | `.artifacts/{ID}/prototype-bar.json` |
-| Journeys | Structured steps/screens/states for build + export | `.artifacts/{ID}/journeys.json` |
-| Exports (optional) | Static HTML / component trees when `--export` | `.artifacts/{ID}/exports/` |
+| Prototype Bar config | Sources + Prototype\|Eval + scenarios | `.artifacts/{ID}/prototype-bar.json` |
+| Journeys | Structured steps / interaction states for build + export | `.artifacts/{ID}/journeys.json` |
+| Scenarios | Data/condition variants per page (empty, error, …) | `.artifacts/{ID}/scenarios.json` |
+| Exports (optional) | Static HTML / trees per step × scenario when `--export` | `.artifacts/{ID}/exports/` |
 
-Prototype Bar (default on): sticky Export menu on the running prototype. Disable with `--no-prototype-bar`.
+Prototype Bar (default on): sticky Sources, Prototype\|Eval, Scenario switcher, and Export on the running prototype. Disable with `--no-prototype-bar`.
 
 ## Decision Modes
 
 | Mode | Behavior |
 |------|----------|
-| **auto** | AI makes all design decisions based on best practices. Fast, no pauses. |
-| **decide** | Generates HTML decision pages with visual previews and tradeoffs. User picks each direction. |
+| **auto** | AI makes all design decisions based on best practices. Fast, no pauses. Still writes browsable PatternFly decision pages + `index.html`. |
+| **decide** | Generates PatternFly HTML comparison pages with real component previews and tradeoffs. Surfaces a `file://` URL and opens the index in the browser so you can click through linked pages, then pick each direction. |
 
-Decision depth (`--depth`): `under` (2–3), `normal` (4–7), `over` (8–12).
+Decision depth (`--depth`): `under` (2–3), `normal` (4–7), `over` (8–12). Chat `--mode=decide` maps to `decision_mode: interactive` in `prototype-summary.yaml`.
 
 ## Pipeline mode
 

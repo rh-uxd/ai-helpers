@@ -24,8 +24,13 @@ CSS dependencies required for paint.
 
 | Source | Path |
 |--------|------|
-| Journey step | `{out}/{journeyId}/{stepId}.html` |
+| Journey step × scenario | `{out}/{journeyId}/{stepId}--{scenarioId}.html` |
+| Export gallery | `{out}/index.html` |
+| Manifest | `{out}/export-manifest.json` |
 | Ad-hoc / bar | `{out}/current/{slug}-{timestamp}.html` |
+
+Batch export navigates with `?scenario=<id>` (omitted for `default`), runs any
+journey step `actions`, then captures. See `scenarios-schema.md`.
 
 ---
 
@@ -44,8 +49,8 @@ Structured outline of the UI hierarchy for the current view.
 
 | File | Content |
 |------|---------|
-| `{stepId}.tree.json` | Nested nodes: `{ name, props?, children[] }` |
-| `{stepId}.tree.txt` | Indented outline for quick reading |
+| `{stepId}--{scenarioId}.tree.json` | Nested nodes: `{ name, props?, children[] }` |
+| `{stepId}--{scenarioId}.tree.txt` | Indented outline for quick reading |
 
 Max depth default: 25. Host components preferred over DOM leaf noise (skip pure
 text wrappers when walking fiber).

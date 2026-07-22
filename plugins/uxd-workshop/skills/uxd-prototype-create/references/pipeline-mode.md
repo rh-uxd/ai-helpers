@@ -20,7 +20,7 @@ After normal create questions, also ask:
 1. CREATE    → follow uxd-prototype-create Steps 1–12
                (Prototype Bar on by default; optional --export after serve URL is known)
 2. SERVE     → ensure prototype is reachable at {URL}
-2b. EXPORT?  → if --export, run Step 11b (journey static HTML / tree under .artifacts/{ID}/exports)
+2b. EXPORT?  → if --export, run Step 11 (journey static HTML / tree under .artifacts/{ID}/exports)
 3. EVALUATE  → /uxd-prototype-evaluate {ID} {URL} [--workspace=…]
 4. REFINE?   → if evaluation-report.csv has FAIL → refine (this skill) → re-eval
                skip when FAIL count is 0

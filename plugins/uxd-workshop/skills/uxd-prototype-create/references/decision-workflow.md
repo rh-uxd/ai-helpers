@@ -1,19 +1,105 @@
 # Decision Workflow
 
-Full procedure for Step 8 design decision generation. Load this when the prototype reaches the design decision phase.
+Full procedure for Step 7 design decision generation. Load this when the prototype reaches the design decision phase.
+
+Copy the page skeleton from [decision-page-template.html](decision-page-template.html). Read [decision-page-example.md](decision-page-example.md) for preview quality rules by decision type.
+
+---
+
+## Quality bar (non-negotiable)
+
+Decision pages must feel like decision-kit artifacts: rich, browsable HTML with **real rendered UI** in every option preview — not chat summaries with ASCII art.
+
+| Rule | Requirement |
+|------|-------------|
+| Chrome | PatternFly 6 CDN for page chrome (`patternfly.min.css` + `patternfly-addons.min.css`). Do **not** invent a dark custom theme. |
+| Options | Exactly 4 options (A–D) unless the user asks for more |
+| Previews | Real HTML UI in each `.visual-preview` slot. **Ban ASCII art and empty gray-box wireframes** as the primary preview. |
+| Preview source | Match the build target (see below) |
+| Comparison | Mandatory comparison table (5–8 dimensions) rating all options |
+| Cross-links | Every page links to all other decisions + `index.html` |
+| Surface | Always print absolute `file://` URLs and open the index in the browser |
+
+### Preview source by workspace
+
+- **Standalone** — Compose option previews from PatternFly CDN components (same stack as the eventual prototype).
+- **Workspace** — Prefer the target codebase’s real components, patterns, and class names when available. If that is impractical for a static HTML decision page, fall back to PatternFly CDN mockups that still represent the same choice (same layout/interaction/component tradeoff).
+
+### Quality checklist (before presenting any page)
+
+- [ ] Four options are visually distinct at a glance (not four accent-color variants of the same layout)
+- [ ] Product-real copy in previews (domain nouns from the RFE — no lorem ipsum / “Item 1”)
+- [ ] Comparison table present with 5–8 meaningful dimensions
+- [ ] Recommended badge on the AI pick; Selected badge only after a choice is locked
+- [ ] Nav links to every decision page + `index.html` work
+- [ ] Page loads PatternFly CDN and uses PF layout/card/table classes for chrome
+
+---
 
 ## Decision Page Generation
 
-Generate a self-contained HTML page for each decision. Each page should include:
+Generate one self-contained HTML file per decision under `.artifacts/{ID}/decisions/`, named `01-{slug}.html`, `02-{slug}.html`, etc.
 
-Each option card should include:
-- Option letter label (A, B, C, D) with distinct colors
-- Name and description
-- Visual preview area (ASCII or simple HTML mockup showing the layout concept)
-- Pros and cons list (2-3 each)
-- "When to use" guidance
-- "Recommended" badge on the AI's suggested option
-- "Selected" badge on the chosen option (after decision)
+**Start from** [decision-page-template.html](decision-page-template.html). Fill in content; do not redesign the chrome.
+
+### Required page sections
+
+1. **Header** — decision number, title, short context (why this decision matters for these user stories)
+2. **Cross-decision nav** — PatternFly tabs or nav strip linking every decision page + `index.html`; highlight the current page (required for **both** auto and decide modes)
+3. **Options grid (2×2)** — one card per option; each card includes:
+   - Letter label (A / B / C / D)
+   - Name and one-sentence description
+   - `.visual-preview` with **rendered** UI (see preview source rules)
+   - Pros and cons (2–3 each)
+   - “When to use” guidance
+   - “Recommended” badge on the AI suggestion
+   - “Selected” badge on the chosen option (after decision)
+4. **Comparison table** — rows = dimensions that matter for this decision; columns = A–D
+5. **Recommendation** — which option and why (plain English, grounded in RFE / codebase)
+6. **Footer** — “Respond with: Option A / B / C / D (or describe your own)”
+
+### Preview type by decision category
+
+| Category | Preview must show |
+|----------|-------------------|
+| Layout / IA | Mini app frame: masthead/nav + content region illustrating the structure |
+| Interaction | Vertical flow or in-context UI showing how the action unfolds (drawer vs modal vs page) |
+| Density / tone | Same content rendered at different densities or visual emphasis using real components |
+| Key components | Actual components (PF or target-app) composing the critical UI element — not labeled boxes |
+
+---
+
+## Index page
+
+Always write `.artifacts/{ID}/decisions/index.html` whenever decision pages exist.
+
+- List every decision with title, status badge (`pending` / `auto-resolved` / `user-decided`), chosen option (if any), and link to its HTML file
+- Link back from every decision page’s nav to this index
+- Style with the same PatternFly CDN chrome as decision pages
+
+---
+
+## Surface to the user (browser)
+
+After generating (or regenerating) decision pages and `index.html`:
+
+1. Resolve the **absolute** path to the decisions directory.
+2. Print clickable `file://` URLs in chat — at minimum the index, plus the first or current decision page:
+
+```
+Decision pages (open in your browser):
+  Index:    file:///absolute/path/.artifacts/{ID}/decisions/index.html
+  Current:  file:///absolute/path/.artifacts/{ID}/decisions/01-layout-pattern.html
+```
+
+3. Open the index in the default browser:
+   - macOS: `open ".artifacts/{ID}/decisions/index.html"`
+   - Linux: `xdg-open ".artifacts/{ID}/decisions/index.html"`
+   - Windows: `start "" ".artifacts/{ID}/decisions/index.html"`
+
+Do **not** only mention a relative `.artifacts/...` path. Users must get a URL they can click or a file that opens in the browser.
+
+---
 
 ## Decision Storage Format
 
@@ -50,12 +136,20 @@ Each decision record:
 
 Status values: `"auto-resolved"`, `"user-decided"`, `"pending"`.
 
+Preserve these field names — downstream skills (`uxd-prototype-evaluate`, `uxd-prototype-publish`) read them.
+
+**Mode naming:** Chat / CLI flag `--mode=decide` maps to `decision_mode: interactive` in `prototype-summary.yaml`. `--mode=auto` maps to `decision_mode: auto`.
+
+---
+
 ## Auto Mode — Batch Review
 
 After auto-resolving all decisions:
 
-1. Generate all HTML decision pages with the chosen option highlighted
-2. Present a batch summary table:
+1. Generate all HTML decision pages with the chosen option highlighted (Selected badge)
+2. Write / update `index.html`
+3. Surface `file://` URLs and open the index in the browser
+4. Present a batch summary table in chat:
 
 ```
 Auto-Resolved Design Decisions:
@@ -71,13 +165,16 @@ Auto-Resolved Design Decisions:
 Want to override any of these? (Enter numbers to change, or "ok" to proceed)
 ```
 
-3. If the user overrides any: update `decisions.json`, regenerate the corresponding HTML page
-4. Once confirmed, transition all decisions to final status
+5. If the user overrides any: update `decisions.json`, regenerate the corresponding HTML page and index
+6. Once confirmed, ensure all decisions are in final status (`auto-resolved` or `user-decided`)
+
+---
 
 ## Decide Mode — Interactive Walk-Through
 
-1. Generate ALL decision pages upfront (before asking any questions)
-2. Present decisions sequentially:
+1. Generate ALL decision pages + `index.html` upfront (before asking any questions)
+2. Surface `file://` URLs and open the index (or the first decision page) in the browser
+3. Present decisions sequentially in chat:
 
 ```
 Decision 1/5: Layout Pattern
@@ -85,7 +182,9 @@ Decision 1/5: Layout Pattern
   What overall page structure best serves these user stories?
 
   Open the visual comparison:
-  .artifacts/{ID}/decisions/01-layout-pattern.html
+  file:///absolute/path/.artifacts/{ID}/decisions/01-layout-pattern.html
+
+  All decisions: file:///absolute/path/.artifacts/{ID}/decisions/index.html
 
   My recommendation: List + Detail (Option B)
   — The RFE describes browsing and inspecting items.
@@ -93,9 +192,12 @@ Decision 1/5: Layout Pattern
   Which option do you prefer? (A/B/C/D, "recommended", or describe your own)
 ```
 
-3. Wait for the user's choice before proceeding to the next decision
-4. If the user provides a custom answer, generate a card for it and record with `chosenOption: "custom"`
-5. After all decisions, generate the strategy brief
+4. Wait for the user's choice before proceeding to the next decision
+5. After each choice: update `decisions.json`, regenerate that page (Selected badge) and `index.html`
+6. If the user provides a custom answer, generate a card for it and record with `chosenOption: "custom"`
+7. After all decisions, generate the strategy brief
+
+---
 
 ## Strategy Brief
 
@@ -121,16 +223,26 @@ Write `.artifacts/{ID}/decisions/strategy-brief.md`:
 [1-2 paragraph synthesis of how decisions combine into a coherent approach]
 ```
 
-## Navigation Tabs (Decide Mode)
+---
 
-When generating decision pages for decide mode, add a navigation tab bar at the top of each page linking to all other decision pages:
+## Cross-decision navigation
+
+Include on **every** decision page (auto and decide). Prefer PatternFly tab markup from the template; keep relative `href`s so pages work when opened via `file://`:
 
 ```html
-<nav style="display:flex; gap:2px; margin-bottom:2rem; border-bottom:2px solid #2a2a3a; padding-bottom:0;">
-  <a href="01-layout-pattern.html" style="padding:0.5rem 1rem; text-decoration:none; color:#e07c3e; border-bottom:3px solid #e07c3e; font-weight:600;">1. Layout</a>
-  <a href="02-interaction-model.html" style="padding:0.5rem 1rem; text-decoration:none; color:#8888a0;">2. Interaction</a>
-  <a href="03-density.html" style="padding:0.5rem 1rem; text-decoration:none; color:#8888a0;">3. Density</a>
+<nav class="pf-v6-c-tabs pf-m-box" aria-label="Design decisions">
+  <ul class="pf-v6-c-tabs__list">
+    <li class="pf-v6-c-tabs__item">
+      <a href="index.html" class="pf-v6-c-tabs__link">All</a>
+    </li>
+    <li class="pf-v6-c-tabs__item pf-m-current">
+      <a href="01-layout-pattern.html" class="pf-v6-c-tabs__link" aria-current="page">1. Layout</a>
+    </li>
+    <li class="pf-v6-c-tabs__item">
+      <a href="02-interaction-model.html" class="pf-v6-c-tabs__link">2. Interaction</a>
+    </li>
+  </ul>
 </nav>
 ```
 
-Highlight the current page's tab. Use short labels (decision title, truncated if needed).
+Highlight the current page. Use short labels (decision title, truncated if needed).

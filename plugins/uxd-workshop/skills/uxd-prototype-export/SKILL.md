@@ -2,15 +2,15 @@
 name: uxd-prototype-export
 description: >-
   Export a prototype page or journey step as static HTML or a React component
-  tree, and install the Prototype Bar (Sources, Prototype|Eval, Export). Use when
-  capturing the current view, batch-exporting journey screens and UI states, or
-  wiring provenance/eval navigation into a prototype.
+  tree, and install the Prototype Bar (Sources, Prototype|Eval, Scenario, Export).
+  Use when capturing the current view, batch-exporting journey screens and page
+  scenarios, or wiring provenance/eval/scenario navigation into a prototype.
 ---
 
 # Export Prototype
 
 Captures prototype screens as portable artifacts. Supports interactive export from
-the running app (Prototype Bar) and batch export from journey definitions.
+the running app (Prototype Bar) and batch export from journey + scenario definitions.
 
 ## Formats
 
@@ -37,17 +37,18 @@ If the user says "export", "snapshot", "static HTML", or "component tree" withou
 > What should I export?
 >
 > - **Current page** — capture whatever is on screen (use the Prototype Bar, or give me a URL)
-> - **Journey steps** — batch-export screens/states from `.artifacts/{ID}/journeys.json`
-> - **Install Prototype Bar** — add the sticky export bar to this prototype
+> - **Journey steps × scenarios** — batch-export from `.artifacts/{ID}/journeys.json` + `scenarios.json`
+> - **Install Prototype Bar** — add the sticky bar (Sources, Eval, Scenario, Export)
 
 ## Flags
 
 | Flag | Values | Default | Description |
 |------|--------|---------|-------------|
 | `--install-bar` | flag | off | Install Prototype Bar into the prototype (standalone or React workspace) |
-| `--config` | path | auto-detect | `prototype-bar.json` for Sources / Eval (with `--install-bar`) |
+| `--config` | path | auto-detect | `prototype-bar.json` for Sources / Eval / scenarios (with `--install-bar`) |
 | `--base-url` | URL | — | Live prototype URL for Playwright capture |
 | `--journeys` | path | `.artifacts/{ID}/journeys.json` | Journey definitions |
+| `--scenarios` | path | sibling `scenarios.json` | Page scenario catalog |
 | `--out` | path | `.artifacts/{ID}/exports` | Output directory |
 | `--formats` | `html`, `tree`, or both | `html` | Comma-separated formats |
 | `--source` | path | — | Standalone prototype dir or workspace root (for `--install-bar`) |
@@ -65,31 +66,36 @@ bash "${CLAUDE_SKILL_DIR}/scripts/install-prototype-bar.sh" \
 ```
 
 Pass `--config` (or rely on auto-detect next to the prototype / under `.artifacts/`)
-so the bar can show **Sources** and **Prototype | Eval**. Schema:
+so the bar can show **Sources**, **Prototype | Eval**, and **Scenario**. Schema:
 [references/prototype-bar-config.md](references/prototype-bar-config.md).
+Scenario runtime (`?scenario=<id>`) is installed as `uxd-scenario-runtime.js`.
 
 For workspace/React, if the script cannot patch App automatically, follow the
 pf-prototype-mode pattern: copy `templates/PrototypeBar.tsx` + CSS, import and
-mount `<PrototypeBar />` near the top of the app shell.
+mount `<PrototypeBar />` near the top of the app shell. Use `useUxdScenario` for
+mock branching (see create skill `references/scenario-mocks.md`).
 
 **B. Export current URL (CLI)**
 
 ```bash
 bash "${CLAUDE_SKILL_DIR}/scripts/export-current.sh" \
-  --url "http://localhost:3000/some-route" \
+  --url "http://localhost:3000/some-route?scenario=empty" \
   --out ".artifacts/{ID}/exports" \
   [--formats html,tree]
 ```
 
-**C. Batch-export journey steps**
+**C. Batch-export journey steps × scenarios**
 
-Requires [journeys schema](references/journeys-schema.md). Steps with `export: true`
-are captured after their `route` + `actions` (click, wait_for, etc.).
+Requires [journeys schema](references/journeys-schema.md) and optionally
+[scenarios schema](references/scenarios-schema.md). For each step with `export: true`,
+captures every scenario for that step’s `route` (navigates with `?scenario=<id>`,
+then runs step `actions`).
 
 ```bash
 node "${CLAUDE_SKILL_DIR}/scripts/export-journey.mjs" \
   --base-url "http://localhost:3000" \
   --journeys ".artifacts/{ID}/journeys.json" \
+  --scenarios ".artifacts/{ID}/scenarios.json" \
   --out ".artifacts/{ID}/exports" \
   --formats html
 ```
@@ -117,8 +123,9 @@ bash "${CLAUDE_SKILL_DIR}/scripts/copy-eval-for-pages.sh" \
   --pages-root public
 ```
 
-Copies the report to `public/evals/{ID}/index.html` and sets `views.eval` to `/evals/{ID}/`
-for same-origin navigation on GitLab/GitHub Pages (no backend).
+Sync merges Sources and flattens `scenarios.json` into `prototype-bar.json`.
+`copy-eval-for-pages` copies the report to `public/evals/{ID}/index.html` and sets
+`views.eval` to `/evals/{ID}/` for same-origin navigation on GitLab/GitHub Pages.
 
 ## Step 2: Confirm Outputs
 
@@ -126,9 +133,11 @@ Expected layout:
 
 ```
 .artifacts/{ID}/exports/
-  {journeyId}/{stepId}.html
-  {journeyId}/{stepId}.tree.json
-  {journeyId}/{stepId}.tree.txt
+  index.html
+  export-manifest.json
+  {journeyId}/{stepId}--{scenarioId}.html
+  {journeyId}/{stepId}--{scenarioId}.tree.json
+  {journeyId}/{stepId}--{scenarioId}.tree.txt
   current/page-{timestamp}.html   # ad-hoc / bar exports
 ```
 
@@ -140,19 +149,23 @@ not rehydrate React interactivity.
 | Zone | Controls |
 |------|----------|
 | Left | Brand + **Sources** (outcome / RFE / strat / Figma / description links) |
-| Center | **Prototype \| Eval** view switch |
+| Center | **Prototype \| Eval** view switch + **Scenario ▾** (when ≥2 scenarios for the current route) |
 | Right | **Export** menu + status |
 
 Eval resolution: helper `/evals/{id}/` when healthy → else `views.eval` → else disabled.
+
+Scenario switching: sets `?scenario=<id>` and reloads. Pages read
+`window.UxdScenario.get()` for mock data.
 
 ## Architecture
 
 | Mechanism | Role |
 |-----------|------|
 | In-page serializer (Prototype Bar) | Capture current DOM state (modals, filled fields) |
-| `window.__UXD_PROTOTYPE__` / `prototype-bar.json` | Sources + view URLs |
+| `window.__UXD_PROTOTYPE__` / `prototype-bar.json` | Sources + view URLs + slim scenarios list |
+| `window.UxdScenario` / `?scenario=` | Active page scenario for mocks + export |
 | `export-helper.mjs` | Optional write into `.artifacts/` + local eval report server |
-| `export-journey.mjs` | Playwright replay of journey actions, then same serializer |
+| `export-journey.mjs` | Playwright: each step × scenario, then same serializer |
 
 Shared capture logic lives in `scripts/serialize-page.js` and
 `templates/serialize-page.browser.js`.

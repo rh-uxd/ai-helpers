@@ -1,7 +1,8 @@
 /**
  * Standalone Prototype Bar injector (no React required).
- * Reads window.__UXD_PROTOTYPE__ for Sources + Prototype|Eval.
+ * Reads window.__UXD_PROTOTYPE__ for Sources + Prototype|Eval + Scenario.
  * Expects window.UxdPrototypeExport from serialize-page.browser.js.
+ * Expects window.UxdScenario from uxd-scenario-runtime.js (optional fallback).
  */
 (function () {
   'use strict';
@@ -41,6 +42,42 @@
       return 'eval';
     }
     return 'prototype';
+  }
+
+  function normalizePath(p) {
+    if (!p) return '/';
+    var noQuery = String(p).split('?')[0].split('#')[0];
+    if (noQuery.length > 1 && noQuery.charAt(noQuery.length - 1) === '/') {
+      return noQuery.slice(0, -1);
+    }
+    return noQuery || '/';
+  }
+
+  function scenariosForPath(scenarios, pathname) {
+    var path = normalizePath(pathname);
+    return (scenarios || []).filter(function (s) {
+      return s && s.id && normalizePath(s.route || '') === path;
+    });
+  }
+
+  function getActiveScenarioId() {
+    if (window.UxdScenario) return window.UxdScenario.get();
+    try {
+      return new URLSearchParams(window.location.search).get('scenario') || 'default';
+    } catch (e) {
+      return 'default';
+    }
+  }
+
+  function selectScenario(id) {
+    if (window.UxdScenario) {
+      window.UxdScenario.set(id);
+      return;
+    }
+    var url = new URL(window.location.href);
+    if (id === 'default') url.searchParams.delete('scenario');
+    else url.searchParams.set('scenario', id);
+    window.location.assign(url.toString());
   }
 
   async function helperHealthy() {
@@ -144,9 +181,35 @@
     });
   }
 
+  function buildScenarioMenu(pageScenarios, activeId, menu) {
+    menu.innerHTML = '';
+    pageScenarios.forEach(function (s) {
+      var label = s.name || s.id;
+      menu.appendChild(
+        el('li', { role: 'none' }, [
+          el('button', {
+            type: 'button',
+            role: 'menuitem',
+            'aria-current': s.id === activeId ? 'true' : 'false',
+            text: label + (s.id === activeId ? ' ✓' : ''),
+            onclick: function () {
+              menu.setAttribute('hidden', 'true');
+              setStatus('Scenario: ' + s.id);
+              selectScenario(s.id);
+            },
+          }),
+        ])
+      );
+    });
+  }
+
   async function mount() {
     var cfg = getConfig();
     var active = detectActiveView();
+    var pathname = (window.location && window.location.pathname) || '/';
+    var pageScenarios = scenariosForPath(cfg.scenarios, pathname);
+    var activeScenario = getActiveScenarioId();
+    var showScenario = active === 'prototype' && pageScenarios.length > 1;
 
     var sourcesMenu = el('ul', {
       class: 'uxd-pb-menu uxd-pb-sources-menu',
@@ -154,6 +217,15 @@
       hidden: 'true',
     });
     buildSourcesMenu(cfg, sourcesMenu);
+
+    var scenarioMenu = el('ul', {
+      class: 'uxd-pb-menu uxd-pb-scenario-menu',
+      role: 'menu',
+      hidden: 'true',
+    });
+    if (showScenario) {
+      buildScenarioMenu(pageScenarios, activeScenario, scenarioMenu);
+    }
 
     var sourcesBtn = el('button', {
       type: 'button',
@@ -163,6 +235,7 @@
       onclick: function () {
         if (sourcesMenu.hasAttribute('hidden')) {
           exportMenu.setAttribute('hidden', 'true');
+          scenarioMenu.setAttribute('hidden', 'true');
           sourcesMenu.removeAttribute('hidden');
         } else {
           sourcesMenu.setAttribute('hidden', 'true');
@@ -172,6 +245,26 @@
     var sourcesWrap = el('div', { class: 'uxd-pb-sources-wrap' }, [sourcesBtn, sourcesMenu]);
     if (!(cfg.sources && cfg.sources.length)) {
       sourcesWrap.style.display = 'none';
+    }
+
+    var scenarioBtn = el('button', {
+      type: 'button',
+      class: 'uxd-pb-btn',
+      'aria-haspopup': 'menu',
+      text: 'Scenario ▾',
+      onclick: function () {
+        if (scenarioMenu.hasAttribute('hidden')) {
+          exportMenu.setAttribute('hidden', 'true');
+          sourcesMenu.setAttribute('hidden', 'true');
+          scenarioMenu.removeAttribute('hidden');
+        } else {
+          scenarioMenu.setAttribute('hidden', 'true');
+        }
+      },
+    });
+    var scenarioWrap = el('div', { class: 'uxd-pb-scenario-wrap' }, [scenarioBtn, scenarioMenu]);
+    if (!showScenario) {
+      scenarioWrap.style.display = 'none';
     }
 
     var protoBtn = el('button', {
@@ -212,7 +305,6 @@
       },
     });
 
-    // Prefetch helper so Eval can be disabled when neither path works
     (async function () {
       var url = await resolveEvalUrl(cfg);
       if (!url && active !== 'eval') {
@@ -293,6 +385,7 @@
       onclick: function () {
         if (exportMenu.hasAttribute('hidden')) {
           sourcesMenu.setAttribute('hidden', 'true');
+          scenarioMenu.setAttribute('hidden', 'true');
           exportMenu.removeAttribute('hidden');
         } else {
           exportMenu.setAttribute('hidden', 'true');
@@ -302,7 +395,6 @@
 
     var exportWrap = el('div', { class: 'uxd-pb-export-wrap' }, [exportBtn, exportMenu]);
 
-    // Hide export on eval report pages (serializer not needed)
     if (active === 'eval') {
       exportWrap.style.display = 'none';
     }
@@ -312,13 +404,14 @@
         el('span', { class: 'uxd-pb-brand', text: 'Prototype' }),
         sourcesWrap,
       ]),
-      el('div', { class: 'uxd-pb-controls' }, [views, exportWrap]),
+      el('div', { class: 'uxd-pb-controls' }, [views, scenarioWrap, exportWrap]),
       el('span', { class: 'uxd-pb-status', 'aria-live': 'polite' }),
     ]);
 
     document.addEventListener('mousedown', function (e) {
       if (!exportWrap.contains(e.target)) exportMenu.setAttribute('hidden', 'true');
       if (!sourcesWrap.contains(e.target)) sourcesMenu.setAttribute('hidden', 'true');
+      if (!scenarioWrap.contains(e.target)) scenarioMenu.setAttribute('hidden', 'true');
     });
 
     var body = document.body;
@@ -327,7 +420,6 @@
   }
 
   function start() {
-    // Allow async config loader script to finish
     var startAt = Date.now();
     (function waitCfg() {
       if (window.__UXD_PROTOTYPE__ || Date.now() - startAt > 300) {

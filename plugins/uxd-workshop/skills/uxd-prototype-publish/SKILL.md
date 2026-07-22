@@ -274,7 +274,7 @@ If Jira integration is available and `--skip-jira` is not set:
 
 1. Add a comment with the published location (MR and/or Pages preview), AC summary (`PASS`/`FAIL`/`FLAGGED` counts from `evaluation-report.csv`), and refinement count. Prefer wiki-markup hyperlinks: `[Preview|https://…]`, `[Merge request|https://…]`.
 2. If `submit_to_repo.py` returned `pages_url` after polling, include it (or update an existing comment via `--jira-comment-id`).
-3. Add labels: `prototype-created` plus `rubric-pass` / `needs-attention` from Step 2.
+3. Add labels: `uxd-prototype-created` plus `rubric-pass` / `needs-attention` from Step 2.
 
 Uses the Atlassian MCP if available, otherwise skips silently.
 

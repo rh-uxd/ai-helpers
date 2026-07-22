@@ -3,6 +3,11 @@
 Written by `uxd-prototype-create` (Step 4). Consumed by `export-journey.mjs` and
 used during create for reachability checks.
 
+**Data/condition variants** (empty, error, validation) live in sibling
+`scenarios.json` — see [scenarios-schema.md](scenarios-schema.md). Journey
+`actions` remain for interaction states (e.g. modal open). Batch export captures
+each exportable step × each scenario for that step’s `route`.
+
 Aligns loosely with evaluate `journey_definitions` / `expected_path` so eval can
 reuse later; create owns this file.
 
