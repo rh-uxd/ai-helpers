@@ -53,8 +53,25 @@
     return noQuery || '/';
   }
 
+  function getBasePath() {
+    var base = document.querySelector('base');
+    if (base && base.getAttribute('href')) {
+      return normalizePath(base.getAttribute('href'));
+    }
+    return '';
+  }
+
+  function stripBasePath(pathname) {
+    var bp = getBasePath();
+    if (bp && bp !== '/' && pathname.indexOf(bp) === 0) {
+      var stripped = pathname.slice(bp.length);
+      return stripped ? (stripped.charAt(0) === '/' ? stripped : '/' + stripped) : '/';
+    }
+    return pathname;
+  }
+
   function scenariosForPath(scenarios, pathname) {
-    var path = normalizePath(pathname);
+    var path = normalizePath(stripBasePath(pathname));
     return (scenarios || []).filter(function (s) {
       return s && s.id && normalizePath(s.route || '') === path;
     });
