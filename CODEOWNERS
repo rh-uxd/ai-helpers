@@ -1,5 +1,5 @@
-# Default reviewer for shared infra
-* @jpuzz0
+# Default reviewers for shared infra
+* @jpuzz0 @andybraren
 
 # UXD workshop: Andy and Evan can self-approve
 plugins/uxd-workshop/** @andybraren @jaquevan
