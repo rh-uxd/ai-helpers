@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Unified Prototype Bar install: sync config + install assets in one shot.
+# Unified Prototype Bar install: sync config + install assets + deploy eval report.
 #
 # Combines sync-prototype-bar-config.mjs (generates prototype-bar.json from
 # metadata/scenarios) with install-prototype-bar.sh (copies assets, mounts
-# component or injects into HTML). Run this single command instead of calling
-# both scripts separately.
+# component or injects into HTML). Also copies the eval report into the
+# workspace's public/ directory so GitLab Pages can serve it at /evals/{ID}/.
 #
 # Usage:
 #   bash install-and-sync-prototype-bar.sh \
@@ -12,12 +12,13 @@
 #     --source "<workspace-or-prototype-dir>" \
 #     [--mode standalone|workspace] \
 #     [--prototype-url URL] \
-#     [--jira-base URL]
+#     [--jira-base URL] \
+#     [--no-eval-copy]
 #
 # The script:
 #   1. Runs sync-prototype-bar-config.mjs to generate/refresh prototype-bar.json
 #   2. Runs install-prototype-bar.sh to copy assets and mount the bar
-#   3. Reports success/failure
+#   3. Copies eval report to public/evals/{ID}/ for Pages (if report exists)
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -27,6 +28,7 @@ SOURCE=""
 MODE=""
 PROTOTYPE_URL=""
 JIRA_BASE=""
+NO_EVAL_COPY=false
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -35,8 +37,9 @@ while [[ $# -gt 0 ]]; do
     --mode) MODE="${2:-}"; shift 2 ;;
     --prototype-url) PROTOTYPE_URL="${2:-}"; shift 2 ;;
     --jira-base) JIRA_BASE="${2:-}"; shift 2 ;;
+    --no-eval-copy) NO_EVAL_COPY=true; shift ;;
     -h|--help)
-      echo "Usage: bash install-and-sync-prototype-bar.sh --artifacts <dir> --source <dir> [--mode standalone|workspace] [--prototype-url URL] [--jira-base URL]"
+      echo "Usage: bash install-and-sync-prototype-bar.sh --artifacts <dir> --source <dir> [--mode standalone|workspace] [--prototype-url URL] [--jira-base URL] [--no-eval-copy]"
       exit 0
       ;;
     *)
@@ -85,6 +88,44 @@ if [[ -n "$MODE" ]]; then
 fi
 
 bash "$SCRIPT_DIR/install-prototype-bar.sh" "${INSTALL_ARGS[@]}"
+
+# ── Step 3: Copy eval report for Pages ───────────────────────────────────────
+if [[ "$NO_EVAL_COPY" == "true" ]]; then
+  echo ""
+  echo "── Step 3: Eval copy skipped (--no-eval-copy)."
+else
+  # Resolve pages-root: prefer public/ in workspace, fall back to dist/
+  PAGES_ROOT=""
+  if [[ -d "$SOURCE/public" ]]; then
+    PAGES_ROOT="$SOURCE/public"
+  elif [[ -d "$SOURCE/dist" ]]; then
+    PAGES_ROOT="$SOURCE/dist"
+  fi
+
+  # Check if an eval report exists
+  EVAL_REPORT=""
+  if [[ -f "$ARTIFACTS/eval/evaluation-report.html" ]]; then
+    EVAL_REPORT="$ARTIFACTS/eval/evaluation-report.html"
+  elif [[ -f "$ARTIFACTS/evaluation-report.html" ]]; then
+    EVAL_REPORT="$ARTIFACTS/evaluation-report.html"
+  fi
+
+  if [[ -n "$EVAL_REPORT" && -n "$PAGES_ROOT" ]]; then
+    echo ""
+    echo "── Step 3: Copying eval report for Pages..."
+    bash "$SCRIPT_DIR/copy-eval-for-pages.sh" \
+      --artifacts "$ARTIFACTS" \
+      --pages-root "$PAGES_ROOT" \
+      --evals-dir evals
+  elif [[ -n "$EVAL_REPORT" && -z "$PAGES_ROOT" ]]; then
+    echo ""
+    echo "── Step 3: Eval report found but no public/ or dist/ in source — skipping Pages copy."
+    echo "   Run copy-eval-for-pages.sh manually after build if needed."
+  else
+    echo ""
+    echo "── Step 3: No eval report found yet — skipping. Re-run after evaluate to deploy."
+  fi
+fi
 
 echo ""
 echo "── Done. Prototype Bar synced and installed."
