@@ -1,6 +1,7 @@
 ---
 name: pf-security-scan
 description: Scan PatternFly React code for security anti-patterns — XSS via dangerouslySetInnerHTML, unsanitized user input in tooltips/labels, and insecure href patterns. Use when reviewing PF code for security vulnerabilities or auditing user-controlled content in PF components.
+disable-model-invocation: true
 ---
 
 # PF Security Scan
@@ -9,7 +10,7 @@ Audit PatternFly React usage for security anti-patterns that turn UI components 
 
 ## PatternFly API documentation
 
-When unfamiliar with a component's props or link-rendering behavior, consult available PatternFly API documentation (component docs, design guidelines, or an MCP server if one is installed). This skill defines **what to flag**; API docs fill in component-specific details. Without documentation tools, rely on the anti-pattern rules and component checklist in this skill.
+When unfamiliar with a component's props or link-rendering behavior, consult available PatternFly documentation (component docs, design guidelines, or local references). This skill defines **what to flag**; docs fill in component-specific details. Ask the user for confirmation before any external documentation lookup that would transmit source context. Without documentation available, rely on the anti-pattern rules and component checklist in this skill.
 
 ## How to run
 
@@ -25,9 +26,8 @@ When unfamiliar with a component's props or link-rendering behavior, consult ava
 
 | Severity | Flag when |
 |----------|-----------|
-| **CRITICAL** | `dangerouslySetInnerHTML` with a value that is not a compile-time constant |
-| **CRITICAL** | `__html` built from user/API data without a recognized sanitizer (DOMPurify, sanitize-html, or project-approved equivalent) |
-| **WARN** | `dangerouslySetInnerHTML` anywhere — even with sanitization, confirm the sanitizer config allows only safe tags |
+| **CRITICAL** | `dangerouslySetInnerHTML` / `__html` with unsanitized or untrusted non-constant HTML (no recognized sanitizer: DOMPurify, sanitize-html, or project-approved equivalent) |
+| **WARN** | `dangerouslySetInnerHTML` with sanitization present but unverified config — confirm the sanitizer allows only safe tags |
 
 Also flag PF components that accept HTML strings when fed unsanitized data:
 

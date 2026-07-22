@@ -1,7 +1,7 @@
 name: pf-security-scan-eval
 description: Evaluate pf-security-scan's detection of PF-specific XSS and insecure URL patterns
 
-skill: code-review:pf-security-scan
+skill: pf-code-review:pf-security-scan
 
 execution:
   mode: case
@@ -24,7 +24,8 @@ dataset:
   schema: |
     Each case directory contains:
     - input.yaml: prompt field with a realistic user request
-    - annotations.yaml: expect_violations (true/false) and violation_type for conditional judges
+    - annotations.yaml: expect_violations, violation_type, expected_sinks,
+      expected_severity (for violation cases)
     - A .tsx fixture file the prompt references
 
 outputs:
@@ -41,34 +42,38 @@ traces:
 
 judges:
   - name: flags_xss_risk
-    description: Identifies dangerouslySetInnerHTML or unsanitized user content in PF components
+    description: Identifies concrete XSS sinks from case annotations with risk classification
     if: "annotations.get('expect_violations') == True and annotations.get('violation_type') == 'xss'"
     check: |
       text = outputs.get("conversation", "")
       text_lower = text.lower()
-      xss_signals = [
-          "dangerouslysetinnerhtml", "xss", "unsanitized", "sanitize",
-          "dompurify", "__html", "tooltip", "popover"
-      ]
-      found = [s for s in xss_signals if s in text_lower]
-      if not found:
-          return False, "Did not identify XSS or unsanitized content risk"
-      return True, f"Identified XSS-related findings: {found}"
+      expected_sinks = annotations.get("expected_sinks", [])
+      expected_severity = str(annotations.get("expected_severity", "critical")).lower()
+      if not expected_sinks:
+          return False, "Test case missing expected_sinks annotation"
+      missing = [s for s in expected_sinks if s.lower() not in text_lower]
+      if missing:
+          return False, f"Missing expected sinks: {missing}"
+      if expected_severity not in text_lower:
+          return False, f"Missing risk classification: {expected_severity}"
+      return True, f"Flagged expected XSS sinks with {expected_severity}: {expected_sinks}"
 
   - name: flags_insecure_href
-    description: Identifies unvalidated or javascript: href patterns in PF link components
+    description: "Identifies unvalidated or javascript: href patterns in PF link components"
     if: "annotations.get('expect_violations') == True and annotations.get('violation_type') == 'href'"
     check: |
       text = outputs.get("conversation", "")
       text_lower = text.lower()
-      href_signals = [
-          "javascript:", "open redirect", "href", "unvalidated",
-          "searchparams", "redirect", "url validation", "allowlist"
-      ]
-      found = [s for s in href_signals if s in text_lower]
-      if not found:
-          return False, "Did not identify insecure href or redirect risk"
-      return True, f"Identified href-related findings: {found}"
+      expected_sinks = annotations.get("expected_sinks", [])
+      expected_severity = str(annotations.get("expected_severity", "critical")).lower()
+      if not expected_sinks:
+          return False, "Test case missing expected_sinks annotation"
+      missing = [s for s in expected_sinks if s.lower() not in text_lower]
+      if missing:
+          return False, f"Missing expected sinks: {missing}"
+      if expected_severity not in text_lower:
+          return False, f"Missing risk classification: {expected_severity}"
+      return True, f"Flagged expected href sinks with {expected_severity}: {expected_sinks}"
 
   - name: no_false_positives
     description: Does not flag safe React text children as security violations
@@ -76,16 +81,22 @@ judges:
     check: |
       import re
       text = outputs.get("conversation", "")
-      false_positive = re.compile(
-          r'(critical|high|warn|violation|xss|unsanitized|javascript:).*'
-          r'(userdisplayname|trustedurl|rel="noopener)',
+      text_lower = text.lower()
+      # Reject severity-tagged findings that name the safe fixtures
+      finding_line = re.compile(
+          r'\[(critical|high|warn)\].*(userdisplayname|trustedurl)',
           re.IGNORECASE
       )
-      if false_positive.search(text):
+      if finding_line.search(text):
           return False, "False positive — flagged safe patterns as security violations"
-      critical_count = re.search(r'critical:\s*[1-9]', text, re.IGNORECASE)
-      if critical_count:
+      if re.search(r'critical:\s*[1-9]', text_lower):
           return False, "False positive — reported critical findings for safe code"
+      # Accept explicit no-findings language (even when naming safe identifiers)
+      if re.search(
+          r'(critical:\s*0|no (security )?(findings|violations|issues)|0 (critical|findings))',
+          text_lower,
+      ):
+          return True, "Explicit no-findings result for safe PF patterns"
       return True, "No false positives for safe PF patterns"
 
 thresholds:

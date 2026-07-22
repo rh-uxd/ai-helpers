@@ -1,2 +1,7 @@
 expect_violations: true
 violation_type: href
+expected_severity: CRITICAL
+expected_sinks:
+  - userSuppliedUrl
+  - searchParams
+  - redirect

@@ -71,6 +71,7 @@ See [PLUGINS.md](PLUGINS.md) for the full list of skills, agents, and usage deta
 │   ├── uxd-workshop/       # UXD team tools (skills + uxd-assist agent)
 │   └── patternfly/         # PatternFly meta-plugin + sub-plugins
 │       ├── agents/            # pf-assist routing agent
+│       ├── pf-code-review/    # Code review and quality — security patterns
 │       ├── pf-react/          # React development — testing, structure, coding standards
 │       ├── pf-design-guide/   # Design guidance — component selection, AI patterns
 │       ├── pf-design-audit/   # Design auditing — token checks, color scanning
