@@ -61,6 +61,56 @@
     return '';
   }
 
+  /** Candidate asset URLs respecting <base href> (Pages path prefix), then root-absolute. */
+  function assetCandidates(relPaths) {
+    var base = getBasePath();
+    var out = [];
+    (relPaths || []).forEach(function (p) {
+      var clean = String(p || '').replace(/^\//, '');
+      if (!clean) return;
+      if (base && base !== '/') {
+        out.push(base + '/' + clean);
+      }
+      out.push('/' + clean);
+    });
+    return out;
+  }
+
+  function loadScriptOnce(candidates, dataAttr, async) {
+    if (document.querySelector('script[' + dataAttr + ']')) return;
+    var i = 0;
+    (function tryNext() {
+      if (i >= candidates.length) return;
+      var script = document.createElement('script');
+      script.src = candidates[i++];
+      script.setAttribute(dataAttr, 'true');
+      script.async = async !== false;
+      script.onerror = function () {
+        script.remove();
+        tryNext();
+      };
+      document.head.appendChild(script);
+    })();
+  }
+
+  function applyPrototypeBarOffset(bar) {
+    document.body.classList.add('uxd-prototype-bar-offset');
+    function syncHeight() {
+      var el = bar || document.getElementById('uxd-prototype-bar');
+      if (!el) return;
+      var h = el.getBoundingClientRect().height;
+      if (h > 0) {
+        document.documentElement.style.setProperty('--uxd-pb-height', Math.ceil(h) + 'px');
+      }
+    }
+    syncHeight();
+    if (typeof ResizeObserver !== 'undefined' && bar) {
+      var ro = new ResizeObserver(syncHeight);
+      ro.observe(bar);
+    }
+    window.addEventListener('resize', syncHeight);
+  }
+
   function stripBasePath(pathname) {
     var bp = getBasePath();
     if (bp && bp !== '/' && pathname.indexOf(bp) === 0) {
@@ -74,6 +124,50 @@
     var path = normalizePath(stripBasePath(pathname));
     return (scenarios || []).filter(function (s) {
       return s && s.id && normalizePath(s.route || '') === path;
+    });
+  }
+
+  var SCENARIO_UNAVAILABLE_HINT = 'No scenarios available for the current page';
+
+  /**
+   * Notify listeners when SPA navigations change the URL.
+   * Covers popstate, pushState/replaceState wraps, and a light href poll
+   * (fallback when another script re-wraps history and drops our hooks).
+   */
+  function onLocationChange(callback) {
+    var lastHref = window.location.href;
+    function notifyIfChanged() {
+      var href = window.location.href;
+      if (href === lastHref) return;
+      lastHref = href;
+      callback();
+    }
+    function notify() {
+      lastHref = window.location.href;
+      callback();
+    }
+
+    window.addEventListener('popstate', notify);
+    window.addEventListener('hashchange', notify);
+
+    var origPush = history.pushState;
+    var origReplace = history.replaceState;
+    history.pushState = function () {
+      var ret = origPush.apply(this, arguments);
+      notify();
+      return ret;
+    };
+    history.replaceState = function () {
+      var ret = origReplace.apply(this, arguments);
+      notify();
+      return ret;
+    };
+
+    // Fallback: catch navigations that bypass our history wrappers
+    // (e.g. another module later replaces history.pushState entirely).
+    var poll = window.setInterval(notifyIfChanged, 250);
+    window.addEventListener('beforeunload', function () {
+      window.clearInterval(poll);
     });
   }
 
@@ -180,6 +274,45 @@
     }
   }
 
+  /** Load serialize-page.browser.js when missing (Pages / inject without script tags). */
+  async function ensureExportRuntime() {
+    if (window.UxdPrototypeExport && window.UxdPrototypeExport.exportStaticHtml) return;
+    loadScriptOnce(
+      assetCandidates([
+        'uxd-prototype-bar/serialize-page.browser.js',
+        'serialize-page.browser.js',
+      ]),
+      'data-uxd-serialize-bundle',
+      true
+    );
+    await waitForExport();
+  }
+
+  /** Load export-pf-spec.browser.js when missing. */
+  async function ensurePfSpecRuntime() {
+    if (window.UxdPrototypeExport && window.UxdPrototypeExport.exportPfSpecFiles) return;
+    loadScriptOnce(
+      assetCandidates([
+        'uxd-prototype-bar/export-pf-spec.browser.js',
+        'export-pf-spec.browser.js',
+      ]),
+      'data-uxd-pf-spec-bundle',
+      true
+    );
+    var start = Date.now();
+    while (
+      !(window.UxdPrototypeExport && window.UxdPrototypeExport.exportPfSpecFiles) &&
+      Date.now() - start < 5000
+    ) {
+      await new Promise(function (r) {
+        setTimeout(r, 50);
+      });
+    }
+    if (!(window.UxdPrototypeExport && window.UxdPrototypeExport.exportPfSpecFiles)) {
+      throw new Error('PF spec runtime not loaded (export-pf-spec.browser.js)');
+    }
+  }
+
   function kindLabel(kind) {
     var map = {
       outcome: 'Outcome',
@@ -268,13 +401,39 @@
     });
   }
 
-  async function mount() {
+  function syncScenarioControls(scenarioBtn, scenarioMenu, scenarioWrap, activeView) {
     var cfg = getConfig();
-    var active = detectActiveView();
     var pathname = (window.location && window.location.pathname) || '/';
     var pageScenarios = scenariosForPath(cfg.scenarios, pathname);
     var activeScenario = getActiveScenarioId();
-    var showScenario = active === 'prototype' && pageScenarios.length > 1;
+    var enabled = activeView === 'prototype' && pageScenarios.length > 1;
+
+    if (activeView !== 'prototype') {
+      scenarioWrap.style.display = 'none';
+      scenarioMenu.setAttribute('hidden', 'true');
+      return;
+    }
+
+    scenarioWrap.style.display = '';
+    scenarioBtn.disabled = !enabled;
+    if (enabled) {
+      scenarioBtn.setAttribute('aria-haspopup', 'menu');
+      var match = pageScenarios.filter(function (s) {
+        return s.id === activeScenario;
+      })[0];
+      scenarioBtn.title = (match && match.name) || activeScenario;
+      buildScenarioMenu(pageScenarios, activeScenario, scenarioMenu);
+    } else {
+      scenarioBtn.removeAttribute('aria-haspopup');
+      scenarioBtn.title = SCENARIO_UNAVAILABLE_HINT;
+      scenarioMenu.setAttribute('hidden', 'true');
+      scenarioMenu.innerHTML = '';
+    }
+  }
+
+  async function mount() {
+    var cfg = getConfig();
+    var active = detectActiveView();
 
     var sourcesMenu = el('ul', {
       class: 'uxd-pb-menu uxd-pb-sources-menu',
@@ -288,9 +447,6 @@
       role: 'menu',
       hidden: 'true',
     });
-    if (showScenario) {
-      buildScenarioMenu(pageScenarios, activeScenario, scenarioMenu);
-    }
 
     var sourcesBtn = el('button', {
       type: 'button',
@@ -315,9 +471,9 @@
     var scenarioBtn = el('button', {
       type: 'button',
       class: 'uxd-pb-btn',
-      'aria-haspopup': 'menu',
       text: 'Scenario ▾',
       onclick: function () {
+        if (scenarioBtn.disabled) return;
         if (scenarioMenu.hasAttribute('hidden')) {
           exportMenu.setAttribute('hidden', 'true');
           sourcesMenu.setAttribute('hidden', 'true');
@@ -328,9 +484,10 @@
       },
     });
     var scenarioWrap = el('div', { class: 'uxd-pb-scenario-wrap' }, [scenarioBtn, scenarioMenu]);
-    if (!showScenario) {
-      scenarioWrap.style.display = 'none';
-    }
+    syncScenarioControls(scenarioBtn, scenarioMenu, scenarioWrap, active);
+    onLocationChange(function () {
+      syncScenarioControls(scenarioBtn, scenarioMenu, scenarioWrap, detectActiveView());
+    });
 
     var protoBtn = el('button', {
       type: 'button',
@@ -395,7 +552,7 @@
             exportBtn.disabled = true;
             setStatus('Exporting HTML…');
             try {
-              await waitForExport();
+              await ensureExportRuntime();
               var result = await window.UxdPrototypeExport.exportStaticHtml();
               setStatus(
                 result.delivery && result.delivery.method === 'helper'
@@ -424,7 +581,7 @@
             exportBtn.disabled = true;
             setStatus('Exporting component tree…');
             try {
-              await waitForExport();
+              await ensureExportRuntime();
               var result = await window.UxdPrototypeExport.exportTree();
               var method = result.delivery && result.delivery[0] && result.delivery[0].method;
               setStatus(
@@ -432,6 +589,38 @@
                   ? 'Saved tree (' + (result.source || '') + ')'
                   : 'Downloaded tree (' + (result.source || 'unknown') + ')'
               );
+            } catch (err) {
+              console.error(err);
+              setStatus(err.message || 'Export failed');
+            } finally {
+              exportBtn.disabled = false;
+            }
+          },
+        }),
+      ]),
+      el('li', { role: 'none' }, [
+        el('button', {
+          type: 'button',
+          role: 'menuitem',
+          text: 'PF implementation spec',
+          onclick: async function () {
+            exportMenu.setAttribute('hidden', 'true');
+            exportBtn.disabled = true;
+            setStatus('Exporting PF implementation spec…');
+            try {
+              await ensureExportRuntime();
+              await ensurePfSpecRuntime();
+              var result = await window.UxdPrototypeExport.exportPfSpecFiles();
+              var method = result.delivery && result.delivery[0] && result.delivery[0].method;
+              var scenario = result.scenarioId ? ' · ' + result.scenarioId : '';
+              setStatus(
+                method === 'helper'
+                  ? 'Saved PF spec' + scenario
+                  : 'Downloaded PF spec' + scenario
+              );
+              if (result.warnings && result.warnings.length) {
+                console.warn('[uxd-prototype-export] pf-spec', result.warnings);
+              }
             } catch (err) {
               console.error(err);
               setStatus(err.message || 'Export failed');
@@ -483,6 +672,31 @@
     var body = document.body;
     if (body.firstChild) body.insertBefore(bar, body.firstChild);
     else body.appendChild(bar);
+    applyPrototypeBarOffset(bar);
+
+    // Eagerly load export runtime so Export works on static hosts (no helper).
+    if (active !== 'eval') {
+      if (!(window.UxdPrototypeExport && window.UxdPrototypeExport.exportStaticHtml)) {
+        loadScriptOnce(
+          assetCandidates([
+            'uxd-prototype-bar/serialize-page.browser.js',
+            'serialize-page.browser.js',
+          ]),
+          'data-uxd-serialize-bundle',
+          true
+        );
+      }
+      if (!(window.UxdPrototypeExport && window.UxdPrototypeExport.exportPfSpecFiles)) {
+        loadScriptOnce(
+          assetCandidates([
+            'uxd-prototype-bar/export-pf-spec.browser.js',
+            'export-pf-spec.browser.js',
+          ]),
+          'data-uxd-pf-spec-bundle',
+          true
+        );
+      }
+    }
   }
 
   function start() {

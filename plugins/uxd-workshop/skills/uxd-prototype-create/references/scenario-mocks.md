@@ -13,16 +13,23 @@ Runtime helper (installed with the Prototype Bar): `window.UxdScenario`
 | `UxdScenario.subscribe(cb)` | Optional; called with the id after `set` (before reload) |
 
 Schema for the catalog: `uxd-prototype-export/references/scenarios-schema.md`.
+Brainstorm which scenarios to include: [scenario-brainstorm.md](scenario-brainstorm.md).
 
 ## Rules
 
-1. Every page with entries in `scenarios.json` must pick mock data (or UI branch)
-   from `UxdScenario.get()`.
-2. Key mock datasets by scenario `id` (`default`, `empty`, `load-error`, …).
+1. Every page with entries in `scenarios.json` must pick mock data **and/or seed
+   UI end-state** from `UxdScenario.get()` on mount/render.
+2. Key mock datasets (and end-state appliers) by scenario `id` (`default`,
+   `empty`, `load-error`, `exact-match`, …).
 3. Fall back to `default` when an unknown id is present.
 4. Do **not** use scenarios for modal/drawer open — those stay as journey `actions`.
+5. Selecting a scenario must land on the intended end-state **with no further
+   clicks**. If the user still has to open a modal or click Load to see the
+   scenario, the page is not wired correctly.
+6. Prefer persistent alerts/toasts for scenario landing (so exports still show
+   them). Avoid timeout-only toasts as the sole signal of a scenario.
 
-## Workspace (React) example
+## Workspace (React) — alternate list data
 
 ```ts
 // src/mocks/apiKeys.ts
@@ -56,6 +63,41 @@ export function ApiKeyList() {
 If `useUxdScenario` is not installed, call `window.UxdScenario.get()` once at
 render (or on mount). The bar reload on scenario change is enough for most prototypes.
 
+## Workspace (React) — post-action outcome / end-state
+
+When a scenario represents the result of a primary action (entity loaded,
+related resource auto-selected, toast/alert shown), **seed that state on mount**.
+Do not require the user to re-run the action.
+
+```tsx
+function applyPromptLoadOutcome(version, availableModelIds, setters) {
+  setters.setLoadedPrompt(/* prompt + version */);
+  setters.setSystemPrompt(version.promptText);
+  if (!version.associatedModelId) return;
+  const match = resolveModelMatch(version.associatedModelId, availableModelIds);
+  if (match?.kind === 'exact' || match?.kind === 'suffix') {
+    setters.setSelectedModel(match.modelId);
+    setters.setModelAutoSelectedFromPrompt(match.modelId);
+  } else {
+    setters.setModelUnavailableFromPrompt(version.associatedModelId);
+  }
+}
+
+useEffect(() => {
+  const scenario =
+    (window.UxdScenario && window.UxdScenario.get()) || 'default';
+  if (scenario === 'default') return;
+  const seed = SCENARIO_SEEDS[scenario]; // prompt + expected outcome flags
+  if (!seed) return;
+  applyPromptLoadOutcome(seed.version, availableModelIds, setters);
+  // override-after-unavailable: also setSelectedModel(seed.overrideModelId)
+  // and clear unavailable toast once recovered
+}, []);
+```
+
+Reuse the same apply helper from interactive flows (modal confirm) so scenario
+seeds and real clicks stay consistent.
+
 ## Standalone HTML example
 
 ```html
@@ -72,7 +114,18 @@ render (or on mount). The bar reload on scenario change is enough for most proto
 </script>
 ```
 
+For outcome scenarios in standalone HTML, swap the visible end-state (filled
+fields, selected control, toast markup) when `UxdScenario.get()` is read — same
+as the React seed pattern.
+
 ## Reachability check
 
-After implementing, confirm each non-default scenario for a page can be opened with
-`?scenario=<id>` (bar Scenario menu or typing the query) and shows the intended UI.
+After implementing, confirm each non-default scenario for a page:
+
+1. Open with `?scenario=<id>` (bar Scenario menu or typing the query).
+2. The intended end-state is visible **immediately** (no extra clicks).
+3. The UI is visually distinct from `default` and from every other scenario on
+   that page (different data, selection, empty/error chrome, and/or alerts).
+
+Two scenarios that look identical after load are a fail — merge them or fix the
+mock wiring.

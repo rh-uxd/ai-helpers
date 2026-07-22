@@ -51,7 +51,7 @@ pipeline:
   dry_run: false
   prototype_bar: true
   export: false
-  export_formats: html
+  export_formats: html,pf-spec
 ```
 
 When `--target` is a git URL, normalize `target` to `repo` and store the URL in `target_repo_url`. Pass that URL to `resolve_workspace.py --upstream` during create and to `submit_to_repo.py --upstream` during publish.

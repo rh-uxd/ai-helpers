@@ -8,16 +8,20 @@
  *     --journeys .artifacts/ID/journeys.json \
  *     --out .artifacts/ID/exports \
  *     [--scenarios .artifacts/ID/scenarios.json] \
- *     [--formats html,tree] \
+ *     [--formats html,tree,pf-spec] \
  *     [--export-all-if-unset]
  */
 import fs from 'node:fs';
 import path from 'node:path';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
+const { getExportPfSpecFnSource } = require('./export-pf-spec.js');
 const BROWSER_BUNDLE = path.resolve(__dirname, '../templates/serialize-page.browser.js');
+const PF_SPEC_BUNDLE = path.resolve(__dirname, '../templates/export-pf-spec.browser.js');
 
 function parseArgs(argv) {
   const opts = {
@@ -49,9 +53,9 @@ function usage() {
 
 Options:
   --scenarios <file>      scenarios.json (default: sibling of journeys file)
-  --formats html,tree     Export formats (default: html)
-  --export-all-if-unset   If no step has export:true, export all steps
-  --timeout <ms>          Navigation timeout (default: 30000)
+  --formats html,tree,pf-spec   Export formats (default: html)
+  --export-all-if-unset         If no step has export:true, export all steps
+  --timeout <ms>                Navigation timeout (default: 30000)
 `);
 }
 
@@ -148,22 +152,33 @@ function journeyHasExplicit(journey) {
   return (journey.steps || []).some((s) => typeof s.export === 'boolean');
 }
 
-async function ensureBundle(page) {
-  await page.addScriptTag({ path: BROWSER_BUNDLE });
-  await page.waitForFunction(() => window.UxdPrototypeExport && window.UxdPrototypeExport.serializePage);
+async function ensureBundle(page, formats) {
+  const needsSerialize = formats.includes('html') || formats.includes('tree');
+  const needsPfSpec = formats.includes('pf-spec');
+  if (needsSerialize) {
+    await page.addScriptTag({ path: BROWSER_BUNDLE });
+    await page.waitForFunction(() => window.UxdPrototypeExport && window.UxdPrototypeExport.serializePage);
+  }
+  if (needsPfSpec) {
+    if (fs.existsSync(PF_SPEC_BUNDLE)) {
+      await page.addScriptTag({ path: PF_SPEC_BUNDLE });
+      await page.waitForFunction(() => window.UxdPrototypeExport && window.UxdPrototypeExport.exportPfSpec);
+    }
+  }
 }
 
 function captureBaseName(stepId, scenarioId) {
   return `${stepId}--${scenarioId}`;
 }
 
-async function capture(page, formats, outDir, journeyId, stepId, scenarioId) {
-  await ensureBundle(page);
+async function capture(page, formats, outDir, journeyId, stepId, scenarioId, meta) {
+  await ensureBundle(page, formats);
   const dir = path.join(outDir, journeyId);
   fs.mkdirSync(dir, { recursive: true });
   const base = captureBaseName(stepId, scenarioId);
   const written = [];
   const warnings = [];
+  let pfSpec = null;
 
   if (formats.includes('html')) {
     const result = await page.evaluate(async () => window.UxdPrototypeExport.serializePage({ inlineImages: true }));
@@ -182,7 +197,46 @@ async function capture(page, formats, outDir, journeyId, stepId, scenarioId) {
     written.push(jsonFile, txtFile);
   }
 
-  return { written, warnings };
+  if (formats.includes('pf-spec')) {
+    let result;
+    if (fs.existsSync(PF_SPEC_BUNDLE)) {
+      result = await page.evaluate(
+        (sid) => window.UxdPrototypeExport.exportPfSpec({ scenarioId: sid }),
+        scenarioId
+      );
+    } else {
+      const fnSrc = getExportPfSpecFnSource();
+      result = await page.evaluate(
+        ({ src, sid }) => {
+          // eslint-disable-next-line no-eval
+          const exportPfSpec = eval(src);
+          return exportPfSpec({ scenarioId: sid });
+        },
+        { src: fnSrc, sid: scenarioId }
+      );
+    }
+    const jsonFile = path.join(dir, `${base}.pf-spec.json`);
+    const txtFile = path.join(dir, `${base}.pf-spec.txt`);
+    const payload = {
+      ...result,
+      journey_id: meta.journeyId,
+      step_id: meta.stepId,
+      scenario_id: scenarioId,
+      scenario_name: meta.scenarioName,
+      url: meta.url,
+    };
+    fs.writeFileSync(jsonFile, JSON.stringify(payload, null, 2), 'utf8');
+    fs.writeFileSync(txtFile, result.layout || '', 'utf8');
+    written.push(jsonFile, txtFile);
+    pfSpec = payload;
+    if (result.warnings && result.warnings.length) {
+      for (const w of result.warnings) {
+        warnings.push(typeof w === 'string' ? w : w.message || JSON.stringify(w));
+      }
+    }
+  }
+
+  return { written, warnings, pfSpec };
 }
 
 function escapeHtml(s) {
@@ -214,9 +268,26 @@ function writeExportIndex(outDir, summary) {
       const items = step.scenarios
         .map((row) => {
           const htmlFile = (row.files || []).find((f) => f.endsWith('.html'));
-          const href = htmlFile ? path.relative(outDir, htmlFile).split(path.sep).join('/') : '#';
+          const pfTxt = (row.files || []).find((f) => f.endsWith('.pf-spec.txt'));
+          const pfJson = (row.files || []).find((f) => f.endsWith('.pf-spec.json'));
           const label = row.scenario_name || row.scenario_id || 'default';
-          return `<li><a href="${escapeHtml(href)}">${escapeHtml(label)}</a> <code>${escapeHtml(row.scenario_id || 'default')}</code></li>`;
+          const links = [];
+          if (htmlFile) {
+            links.push(
+              `<a href="${escapeHtml(path.relative(outDir, htmlFile).split(path.sep).join('/'))}">HTML</a>`
+            );
+          }
+          if (pfTxt) {
+            links.push(
+              `<a href="${escapeHtml(path.relative(outDir, pfTxt).split(path.sep).join('/'))}">PF spec</a>`
+            );
+          } else if (pfJson) {
+            links.push(
+              `<a href="${escapeHtml(path.relative(outDir, pfJson).split(path.sep).join('/'))}">PF spec</a>`
+            );
+          }
+          const linkHtml = links.length ? links.join(' · ') : '<span>captured</span>';
+          return `<li>${linkHtml} — ${escapeHtml(label)} <code>${escapeHtml(row.scenario_id || 'default')}</code></li>`;
         })
         .join('\n');
       stepBlocks.push(
@@ -306,6 +377,8 @@ async function main() {
     warnings: [],
     base_url: opts.baseUrl,
     scenarios_path: scenariosPath || null,
+    formats: opts.formats,
+    pf_specs: [],
   };
 
   try {
@@ -326,13 +399,19 @@ async function main() {
           await runActions(page, step.actions, opts.timeout);
           await new Promise((r) => setTimeout(r, 200));
 
-          const { written, warnings } = await capture(
+          const { written, warnings, pfSpec } = await capture(
             page,
             opts.formats,
             opts.out,
             journey.id,
             step.id,
-            scenario.id
+            scenario.id,
+            {
+              journeyId: journey.id,
+              stepId: step.id,
+              scenarioName: scenario.name,
+              url,
+            }
           );
           summary.exports.push({
             journey_id: journey.id,
@@ -344,6 +423,7 @@ async function main() {
             url,
             files: written,
           });
+          if (pfSpec) summary.pf_specs.push(pfSpec);
           summary.warnings.push(...warnings);
           for (const f of written) console.log(`  → ${f}`);
         }
@@ -357,6 +437,38 @@ async function main() {
   const indexPath = writeExportIndex(opts.out, summary);
   console.log(`Index: ${indexPath}`);
 
+  let implementationSpecPath = null;
+  if (opts.formats.includes('pf-spec') && summary.pf_specs.length) {
+    implementationSpecPath = path.join(opts.out, 'implementation-spec.json');
+    fs.writeFileSync(
+      implementationSpecPath,
+      JSON.stringify(
+        {
+          prototype_id: data.prototype_id || null,
+          base_url: summary.base_url,
+          scenarios_path: summary.scenarios_path,
+          exported_at: summary.exported_at,
+          captures: summary.pf_specs.map((spec) => ({
+            journey_id: spec.journey_id,
+            step_id: spec.step_id,
+            scenario_id: spec.scenario_id,
+            scenario_name: spec.scenario_name,
+            url: spec.url,
+            title: spec.title,
+            componentList: spec.componentList,
+            layout: spec.layout,
+            warnings: spec.warnings,
+            tree: spec.tree,
+          })),
+        },
+        null,
+        2
+      ),
+      'utf8'
+    );
+    console.log(`Implementation spec: ${implementationSpecPath}`);
+  }
+
   const manifestPath = path.join(opts.out, 'export-manifest.json');
   fs.writeFileSync(
     manifestPath,
@@ -367,7 +479,9 @@ async function main() {
         exported_at: summary.exported_at,
         base_url: summary.base_url,
         scenarios_path: summary.scenarios_path,
+        formats: summary.formats,
         index: indexPath,
+        implementation_spec: implementationSpecPath,
       },
       null,
       2

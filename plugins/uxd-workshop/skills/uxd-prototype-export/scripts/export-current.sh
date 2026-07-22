@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Capture a single URL as static HTML and/or component tree.
-# Usage: bash export-current.sh --url <url> --out <dir> [--formats html,tree]
+# Capture a single URL as static HTML, component tree, and/or PF implementation spec.
+# Usage: bash export-current.sh --url <url> --out <dir> [--formats html,tree,pf-spec]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,7 +14,7 @@ while [[ $# -gt 0 ]]; do
     --out) OUT="${2:-}"; shift 2 ;;
     --formats) FORMATS="${2:-html}"; shift 2 ;;
     -h|--help)
-      echo "Usage: bash export-current.sh --url <url> --out <dir> [--formats html,tree]"
+      echo "Usage: bash export-current.sh --url <url> --out <dir> [--formats html,tree,pf-spec]"
       exit 0
       ;;
     *)

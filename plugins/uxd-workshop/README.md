@@ -12,7 +12,7 @@ UXD team tools and skill incubator — prototyping, research, design review, tea
 - **UXD Figma Read** (`/uxd-workshop:uxd-figma-read`) — Retrieve design context from a Figma file.
 - **UXD Prototype Create** (`/uxd-workshop:uxd-prototype-create`) — Create or refine a UX prototype from a Jira ticket, Figma design, feature description, or rough idea.
 - **UXD Prototype Evaluate** (`/uxd-workshop:uxd-prototype-evaluate`) — Evaluate a running prototype against Jira acceptance criteria with Playwright (x-ray AC validation + optional fix loop), then run persona-based usability walkthroughs and produce an HTML evidence report.
-- **UXD Prototype Export** (`/uxd-workshop:uxd-prototype-export`) — Export a prototype page or journey step as static HTML or a React component tree, and install the Prototype Bar (Sources, Prototype|Eval, Export).
+- **UXD Prototype Export** (`/uxd-workshop:uxd-prototype-export`) — Export a prototype page or journey step as static HTML, a React component tree, or a PatternFly implementation spec, and install the Prototype Bar (Sources, Prototype|Eval, Export).
 - **UXD Prototype Publish** (`/uxd-workshop:uxd-prototype-publish`) — Publish a prototype to a git merge request, GitHub Pages, GitLab Pages, or Vercel.
 - **UXD Research Heuristic Eval** (`/uxd-workshop:uxd-research-heuristic-eval`) — Conduct a heuristic evaluation of a prototype or interface using three independent expert evaluators.
 

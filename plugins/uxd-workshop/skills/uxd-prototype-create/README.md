@@ -28,8 +28,8 @@ The skill accepts any combination of these — it asks clarifying questions to f
 | Metadata | JSON with `decision_mode`, source, assumptions | `.artifacts/{ID}/metadata.json` |
 | Prototype Bar config | Sources + Prototype\|Eval + scenarios | `.artifacts/{ID}/prototype-bar.json` |
 | Journeys | Structured steps / interaction states for build + export | `.artifacts/{ID}/journeys.json` |
-| Scenarios | Data/condition variants per page (empty, error, …) | `.artifacts/{ID}/scenarios.json` |
-| Exports (optional) | Static HTML / trees per step × scenario when `--export` | `.artifacts/{ID}/exports/` |
+| Scenarios | Data/condition variants per page (empty, error, match, recovery, …) — brainstorm via `references/scenario-brainstorm.md` | `.artifacts/{ID}/scenarios.json` |
+| Exports (optional) | Static HTML / trees / PF specs per step × scenario when `--export` | `.artifacts/{ID}/exports/` |
 
 Prototype Bar (default on): sticky Sources, Prototype\|Eval, Scenario switcher, and Export on the running prototype. Disable with `--no-prototype-bar`.
 
@@ -66,6 +66,6 @@ Pass `--pipeline` / `--speedrun` or ask for a full run. Sequence: create → ser
 
 ## Related
 
-- **uxd-prototype-export** — Static HTML / component-tree export; Prototype Bar install
+- **uxd-prototype-export** — Static HTML / component-tree / PF implementation-spec export; Prototype Bar install
 - **uxd-prototype-evaluate** — Playwright AC validation + persona usability + HTML report
 - **uxd-prototype-publish** — MR, GitHub/GitLab Pages, or Vercel

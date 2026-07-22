@@ -3,8 +3,12 @@
 Written by `uxd-prototype-create` (Step 4). Sibling to `journeys.json`.
 
 Catalog of **data/condition variants** per page (empty, load error, validation
-error, alternate selection). Interaction states that share a URL (e.g. modal
-open) stay in `journeys.json` as step `actions` — they are not scenarios.
+error, alternate selection, match/availability/recovery branches). Interaction
+states that share a URL (e.g. modal open) stay in `journeys.json` as step
+`actions` — they are not scenarios.
+
+Brainstorm which scenarios to include:
+`uxd-prototype-create/references/scenario-brainstorm.md`.
 
 Consumed by:
 

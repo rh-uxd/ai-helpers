@@ -122,6 +122,7 @@ install_standalone() {
   local dest_js="$SOURCE/uxd-prototype-bar"
   mkdir -p "$dest_js"
   cp "$TEMPLATE_DIR/serialize-page.browser.js" "$dest_js/"
+  cp "$TEMPLATE_DIR/export-pf-spec.browser.js" "$dest_js/"
   cp "$TEMPLATE_DIR/uxd-scenario-runtime.js" "$dest_js/"
   cp "$TEMPLATE_DIR/prototype-bar-standalone.js" "$dest_js/"
   cp "$TEMPLATE_DIR/prototype-bar.css" "$dest_js/"
@@ -170,6 +171,14 @@ if "uxd-scenario-runtime.js" not in text:
         text,
         count=1,
     )
+pf_spec = f'<script src="{rel}/export-pf-spec.browser.js" data-uxd-prototype-bar="install"></script>'
+if "export-pf-spec.browser.js" not in text:
+    text = re.sub(
+        r'(<script[^>]*serialize-page\.browser\.js[^>]*></script>)',
+        r"\1\n" + pf_spec,
+        text,
+        count=1,
+    )
 open(path, "w", encoding="utf-8").write(text)
 print("  refreshed config:", path)
 PY
@@ -184,6 +193,7 @@ PY
 ${cfg_script}
 <link rel="stylesheet" href="${rel}/prototype-bar.css" ${marker} />
 <script src="${rel}/serialize-page.browser.js" ${marker}></script>
+<script src="${rel}/export-pf-spec.browser.js" ${marker}></script>
 <script src="${rel}/uxd-scenario-runtime.js" ${marker}></script>
 <script src="${rel}/prototype-bar-standalone.js" ${marker}></script>
 EOF
@@ -217,6 +227,7 @@ install_workspace() {
   cp "$TEMPLATE_DIR/useUxdScenario.ts" "$dest_dir/"
   cp "$TEMPLATE_DIR/prototype-bar.css" "$dest_dir/"
   cp "$TEMPLATE_DIR/serialize-page.browser.js" "$dest_dir/"
+  cp "$TEMPLATE_DIR/export-pf-spec.browser.js" "$dest_dir/"
   cp "$TEMPLATE_DIR/uxd-scenario-runtime.js" "$dest_dir/"
 
   # Public copy so the browser can load the serializer + config without bundler help
@@ -229,6 +240,7 @@ install_workspace() {
   if [[ -n "$public_dir" ]]; then
     mkdir -p "$public_dir"
     cp "$TEMPLATE_DIR/serialize-page.browser.js" "$public_dir/"
+    cp "$TEMPLATE_DIR/export-pf-spec.browser.js" "$public_dir/"
     cp "$TEMPLATE_DIR/uxd-scenario-runtime.js" "$public_dir/"
     cp "$TEMPLATE_DIR/prototype-bar.css" "$public_dir/"
     if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
@@ -241,34 +253,64 @@ install_workspace() {
     echo "  copied config → $dest_dir/prototype-bar.json (no public/ — fetch may need a bundler copy)"
   fi
 
-  # Ensure scenario runtime is loaded from index.html when present
+  # Ensure scenario + export runtimes are loadable from index.html when present.
+  # Use relative paths (no leading /) so <base href> works on GitLab/GitHub Pages.
   local index_html=""
-  for candidate in "$SOURCE/index.html" "$SOURCE/public/index.html"; do
+  for candidate in "$SOURCE/src/index.html" "$SOURCE/index.html" "$SOURCE/public/index.html"; do
     if [[ -f "$candidate" ]]; then
       index_html="$candidate"
       break
     fi
   done
-  if [[ -n "$index_html" ]] && ! grep -q 'uxd-scenario-runtime.js' "$index_html" 2>/dev/null; then
-    if [[ -n "$public_dir" ]]; then
-      python3 - "$index_html" <<'PY'
+  if [[ -n "$index_html" && -n "$public_dir" ]]; then
+    python3 - "$index_html" <<'PY'
 import re, sys
 path = sys.argv[1]
-snippet = '<script src="/uxd-prototype-bar/uxd-scenario-runtime.js" data-uxd-scenario-runtime="true"></script>\n'
 text = open(path, encoding="utf-8").read()
-if "uxd-scenario-runtime.js" in text:
-    print("  scenario runtime already in", path)
-else:
-    new, n = re.subn(r"</head>", snippet + "</head>", text, count=1, flags=re.I)
+changed = False
+
+def ensure_script(html, src, attr):
+    if src.split("/")[-1] in html and attr in html:
+        return html, False
+    # Prefer relative src so <base href="/mr-…/"> resolves correctly on Pages
+    snippet = f'<script src="{src}" {attr}="true"></script>\n'
+    new, n = re.subn(r"</head>", snippet + "</head>", html, count=1, flags=re.I)
     if n == 0:
-        new, n = re.subn(r"</body>", snippet + "</body>", text, count=1, flags=re.I)
-    if n:
-        open(path, "w", encoding="utf-8").write(new)
-        print("  injected scenario runtime into", path)
-    else:
-        print("  could not inject scenario runtime — add uxd-scenario-runtime.js manually")
+        new, n = re.subn(r"</body>", snippet + "</body>", html, count=1, flags=re.I)
+    return (new, True) if n else (html, False)
+
+text, did = ensure_script(
+    text, "uxd-prototype-bar/uxd-scenario-runtime.js", "data-uxd-scenario-runtime"
+)
+changed = changed or did
+if did:
+    print("  injected scenario runtime into", path)
+
+text, did = ensure_script(
+    text, "uxd-prototype-bar/serialize-page.browser.js", "data-uxd-serialize-bundle"
+)
+changed = changed or did
+if did:
+    print("  injected export runtime into", path)
+
+text, did = ensure_script(
+    text, "uxd-prototype-bar/export-pf-spec.browser.js", "data-uxd-pf-spec-bundle"
+)
+changed = changed or did
+if did:
+    print("  injected PF implementation-spec runtime into", path)
+
+if changed:
+    open(path, "w", encoding="utf-8").write(text)
+elif (
+    "uxd-scenario-runtime.js" in text
+    and "serialize-page.browser.js" in text
+    and "export-pf-spec.browser.js" in text
+):
+    print("  runtimes already referenced in", path)
+else:
+    print("  could not inject runtimes — add uxd-scenario-runtime.js / serialize-page.browser.js / export-pf-spec.browser.js manually")
 PY
-    fi
   fi
 
   echo "  copied templates → $dest_dir"

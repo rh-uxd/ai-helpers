@@ -54,3 +54,57 @@ Structured outline of the UI hierarchy for the current view.
 
 Max depth default: 25. Host components preferred over DOM leaf noise (skip pure
 text wrappers when walking fiber).
+
+---
+
+## PF implementation spec (`pf-spec`)
+
+Agent-oriented PatternFly component specification for the current view. Maps the
+live DOM to PF React components (OUIA types + `pf-v5`/`pf-v6` CSS classes), collapses
+non-PF wrappers, and includes a deduplicated import list plus structure warnings.
+
+Use this when a future implementation agent should rebuild the UI from an exact
+PF tree instead of guessing from screenshots. Scenario coverage comes from
+`scenarios.json` + journey step actions (batch export), not heuristic discovery.
+
+### Source
+
+- **DOM → PF** — `source: "dom-pf"` via `scripts/export-pf-spec.js` /
+  `templates/export-pf-spec.browser.js`
+
+### Outputs
+
+| File | Content |
+|------|---------|
+| `{stepId}--{scenarioId}.pf-spec.json` | Full spec: `componentList`, `layout`, `tree`, `warnings`, scenario metadata |
+| `{stepId}--{scenarioId}.pf-spec.txt` | Indented PF layout summary (`|-- FormGroup "Name" *required`) |
+| `implementation-spec.json` | Rolled-up catalog of all `pf-spec` captures from a batch export |
+
+### Spec shape (JSON)
+
+```json
+{
+  "source": "dom-pf",
+  "url": "http://localhost:3000/api-keys?scenario=empty",
+  "title": "API keys",
+  "scenarioId": "empty",
+  "componentList": [
+    { "name": "EmptyState", "importFrom": "@patternfly/react-core" },
+    { "name": "PageSection", "importFrom": "@patternfly/react-core" }
+  ],
+  "layout": "PageSection\n|- EmptyState \"No API keys\"\n  |- EmptyStateBody \"…\"",
+  "tree": { "component": "PageSection", "importFrom": "@patternfly/react-core", "props": {}, "children": [] },
+  "warnings": [
+    { "severity": "warning", "message": "Chip is deprecated in PF v6 — use Label instead", "suggestion": "Label" }
+  ],
+  "extractedAt": "2026-07-22T14:00:00Z"
+}
+```
+
+### Regenerating the browser bundle
+
+After editing `scripts/export-pf-spec.js`:
+
+```bash
+node scripts/export-pf-spec.js --write-browser
+```
