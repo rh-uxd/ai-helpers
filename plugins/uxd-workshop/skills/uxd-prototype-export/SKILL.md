@@ -1,10 +1,11 @@
 ---
 name: uxd-prototype-export
 description: >-
-  Export a prototype page or journey step as static HTML or a React component
-  tree, and install the Prototype Bar (Sources, Prototype|Eval, Scenario, Export).
-  Use when capturing the current view, batch-exporting journey screens and page
-  scenarios, or wiring provenance/eval/scenario navigation into a prototype.
+  Export a prototype page or journey step as static HTML, a React component
+  tree, or a PatternFly implementation spec, and install the Prototype Bar
+  (Sources, Prototype|Eval, Scenario, Export). Use when capturing the current
+  view, batch-exporting journey screens and page scenarios, or wiring
+  provenance/eval/scenario navigation into a prototype.
 ---
 
 # Export Prototype
@@ -18,6 +19,7 @@ the running app (Prototype Bar) and batch export from journey + scenario definit
 |--------|--------|----------|
 | **Static HTML** | Single `.html` with inlined CSS | Share a visual snapshot of a page or UI state (e.g. modal open) |
 | **Component tree** | `.json` + `.txt` outline | Inspect React (or DOM-fallback) hierarchy for the current view |
+| **PF implementation spec** (`pf-spec`) | `.pf-spec.json` + `.pf-spec.txt` (+ rolled-up `implementation-spec.json`) | Hand exact PF component trees/imports to implementation agents |
 
 See [references/export-formats.md](references/export-formats.md).
 
@@ -32,7 +34,7 @@ cd "${CLAUDE_SKILL_DIR}" && npm install
 
 ## Conversational Guidance
 
-If the user says "export", "snapshot", "static HTML", or "component tree" without details, ask:
+If the user says "export", "snapshot", "static HTML", "component tree", or "implementation spec" without details, ask:
 
 > What should I export?
 >
@@ -50,7 +52,7 @@ If the user says "export", "snapshot", "static HTML", or "component tree" withou
 | `--journeys` | path | `.artifacts/{ID}/journeys.json` | Journey definitions |
 | `--scenarios` | path | sibling `scenarios.json` | Page scenario catalog |
 | `--out` | path | `.artifacts/{ID}/exports` | Output directory |
-| `--formats` | `html`, `tree`, or both | `html` | Comma-separated formats |
+| `--formats` | `html`, `tree`, `pf-spec` (comma-separated) | `html` | Export formats |
 | `--source` | path | — | Standalone prototype dir or workspace root (for `--install-bar`) |
 | `--mode` | `standalone`, `workspace` | auto-detect | Install target type |
 
@@ -81,7 +83,7 @@ mock branching (see create skill `references/scenario-mocks.md`).
 bash "${CLAUDE_SKILL_DIR}/scripts/export-current.sh" \
   --url "http://localhost:3000/some-route?scenario=empty" \
   --out ".artifacts/{ID}/exports" \
-  [--formats html,tree]
+  [--formats html,tree,pf-spec]
 ```
 
 **C. Batch-export journey steps × scenarios**
@@ -97,7 +99,7 @@ node "${CLAUDE_SKILL_DIR}/scripts/export-journey.mjs" \
   --journeys ".artifacts/{ID}/journeys.json" \
   --scenarios ".artifacts/{ID}/scenarios.json" \
   --out ".artifacts/{ID}/exports" \
-  --formats html
+  --formats html,pf-spec
 ```
 
 **D. Optional export helper (artifact writes + local Eval serving)**
@@ -109,7 +111,7 @@ node "${CLAUDE_SKILL_DIR}/scripts/export-helper.mjs" \
 
 Listens on `127.0.0.1:9417`.
 
-- **Export:** Prototype Bar POSTs captures here when healthy; otherwise downloads in the browser
+- **Export:** Prototype Bar POSTs captures here when healthy; otherwise downloads in the browser (including on GitLab/GitHub Pages — Export is client-side, not a pre-baked file fetch)
 - **Eval:** `GET /evals/{ID}/` serves `.artifacts/{ID}/eval/evaluation-report.html` so the bar’s Eval control works locally without Pages
 
 **E. Sync / copy bar config for static Pages**
@@ -135,22 +137,26 @@ Expected layout:
 .artifacts/{ID}/exports/
   index.html
   export-manifest.json
+  implementation-spec.json          # when pf-spec is included
   {journeyId}/{stepId}--{scenarioId}.html
   {journeyId}/{stepId}--{scenarioId}.tree.json
   {journeyId}/{stepId}--{scenarioId}.tree.txt
+  {journeyId}/{stepId}--{scenarioId}.pf-spec.json
+  {journeyId}/{stepId}--{scenarioId}.pf-spec.txt
   current/page-{timestamp}.html   # ad-hoc / bar exports
 ```
 
 Report paths to the user. Note that static HTML is a **visual** snapshot — it does
-not rehydrate React interactivity.
+not rehydrate React interactivity. Point implementation agents at
+`implementation-spec.json` (or per-capture `.pf-spec.json`) for PF structure.
 
 ## Prototype Bar zones
 
 | Zone | Controls |
 |------|----------|
 | Left | Brand + **Sources** (outcome / RFE / strat / Figma / description links) |
-| Center | **Prototype \| Eval** view switch + **Scenario ▾** (when ≥2 scenarios for the current route) |
-| Right | **Export** menu + status |
+| Center | **Prototype \| Eval** view switch + **Scenario ▾** (always shown on prototype view; enabled when ≥2 scenarios match the current route) |
+| Right | **Export** menu (Static HTML \| Component tree \| PF implementation spec) + status |
 
 Eval resolution: helper `/evals/{id}/` when healthy → else `views.eval` → else disabled.
 

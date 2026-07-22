@@ -91,7 +91,7 @@ Prototype Plan:
 | `--prototype-bar` / `--no-prototype-bar` | flag | on | Install sticky Prototype Bar (Sources, Prototype\|Eval, Export) after generate |
 | `--export` | flag | off | After artifacts, batch-export journey steps with `export: true` via `uxd-prototype-export` |
 | `--url` | URL | asked if `--export` | Live base URL for Playwright export (and pipeline evaluate) |
-| `--export-formats` | `html`, `tree`, or both | `html` | Formats for `--export` |
+| `--export-formats` | `html`, `tree`, `pf-spec` (comma-separated) | `html,pf-spec` | Formats for `--export` |
 
 **`--target` URL detection:** If the value looks like a git URL (`https://`, `http://`, `git@`, `ssh://`, or ends with `.git`), treat it as the MR/PR base repo. That implies publish type `repo`. Pass the URL to `resolve_workspace.py --upstream` so the clone gets an `upstream` remote; persist as `target_repo_url` / `upstream_url` in pipeline config and workspace analysis.
 
@@ -138,7 +138,7 @@ Parse from the RFE:
 3. **Personas / roles** — prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` when mapping roles via `aliases`; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/` for experience, accessibility, regulation, or team size
 4. **Key entities** — nouns the UI manipulates (cluster, pipeline, key, …)
 5. **Flows / user journeys** — ordered steps the user takes (screens **and** interaction UI states such as “modal open”). Prefer an explicit “User journey” section when present; otherwise infer from stories and ACs.
-6. **Page scenarios** — data/condition variants per page (empty, load error, validation error, alternate selection). Derive from ACs and stories; do not only list the happy path.
+6. **Page scenarios** — data/condition variants per page. Run the brainstorm checklist in [references/scenario-brainstorm.md](references/scenario-brainstorm.md) before writing `scenarios.json`: walk condition axes (presence, association, match quality, availability, post-action outcomes, recovery, errors), not only literal AC bullets. Prefer 3–7 distinct on-load end-states per page; skip duplicates that look identical after load.
 
 If the RFE is thin, document assumptions in `metadata.json`. Store structured stories in `.artifacts/{ID}/user-stories.json`.
 
@@ -152,7 +152,8 @@ If the RFE is thin, document assumptions in `metadata.json`. Store structured st
 **Also write** `.artifacts/{ID}/scenarios.json` (schema in [references/output-formats.md](references/output-formats.md) and `uxd-prototype-export/references/scenarios-schema.md`):
 
 - One `pages[]` entry per distinct journey `route`, with at least a `default` scenario
-- Add empty / error / validation / alternate-branch scenarios when ACs or stories imply them
+- Populate from the Step 4 brainstorm checklist ([references/scenario-brainstorm.md](references/scenario-brainstorm.md)) — not only happy path + one error
+- Each scenario `description` must name the **on-load end-state** (what the page shows immediately when `?scenario=<id>` is set)
 - Scenario `id`s must be filename-safe (`[a-z0-9-]+`); keep modal/drawer open in journey `actions`, not scenarios
 - Mock wiring convention: [references/scenario-mocks.md](references/scenario-mocks.md)
 
@@ -219,7 +220,7 @@ Store all decision artifacts in `.artifacts/{ID}/decisions/` (decision pages, `i
 2. Generate components following the project's conventions (imports, TypeScript, CSS approach)
 3. Register routes and update navigation
 4. Implement each design decision from Step 7
-5. Wire mock data per scenario in `.artifacts/{ID}/scenarios.json` — pages choose data via `window.UxdScenario.get()` or `useUxdScenario` (see [references/scenario-mocks.md](references/scenario-mocks.md)); active scenario is `?scenario=<id>`
+5. Wire mock data **and on-load end-state** per scenario in `.artifacts/{ID}/scenarios.json` — pages read `window.UxdScenario.get()` or `useUxdScenario` and seed the intended UI immediately (see [references/scenario-mocks.md](references/scenario-mocks.md)); active scenario is `?scenario=<id>`. Selecting a scenario must not require further clicks to reveal its state.
 
 ### Standalone Mode
 
@@ -232,7 +233,7 @@ Generate HTML files in `.artifacts/{ID}/prototype/` using PatternFly CDN:
 
 If the PatternFly docs MCP is available, use it for component reference.
 
-Branch each page’s mock data on `UxdScenario.get()` (installed with the Prototype Bar). See [references/scenario-mocks.md](references/scenario-mocks.md).
+Branch each page’s mock data and seed on-load end-state from `UxdScenario.get()` (installed with the Prototype Bar). See [references/scenario-mocks.md](references/scenario-mocks.md).
 
 ### Reachability self-check
 
@@ -243,7 +244,7 @@ After implementing, do a quick pass to confirm every new screen or flow is actua
 - **Inbound links** — CTAs, table row actions, breadcrumbs, and other hyperlinks that should lead to the new UI are wired to the correct paths
 - **Dead ends** — no orphan screens that can only be opened by typing a URL
 - **Journey coverage** — every `route` in `.artifacts/{ID}/journeys.json` is reachable; steps with `actions` have matching interactive elements (stable selectors) so those states can be opened
-- **Scenario coverage** — every non-default scenario in `.artifacts/{ID}/scenarios.json` is selectable via `?scenario=<id>` (or the bar Scenario menu) and shows the intended empty/error/alternate UI
+- **Scenario coverage** — every non-default scenario in `.artifacts/{ID}/scenarios.json` is selectable via `?scenario=<id>` (or the bar Scenario menu) and lands on its intended end-state **with no further clicks**; each scenario is visually distinct from `default` and from the other scenarios on that page (two identical post-load UIs are a fail)
 
 This is a cursory wiring check, not a full UX review. Spend a minute or two; fix obvious misses, then move on.
 
@@ -306,7 +307,7 @@ After install, the bar provides: Sources dropdown (Jira/Figma links), Prototype|
 
 *Skip unless `--export` was set.*
 
-Export captures each exportable journey step × each scenario for that step’s route (`?scenario=<id>`), writing `{journeyId}/{stepId}--{scenarioId}.html` plus `exports/index.html`.
+Export captures each exportable journey step × each scenario for that step’s route (`?scenario=<id>`), writing `{journeyId}/{stepId}--{scenarioId}.html`, PF implementation specs (`.pf-spec.json` / `.pf-spec.txt`), rolled-up `implementation-spec.json`, plus `exports/index.html`.
 
 1. Confirm `.artifacts/{ID}/journeys.json` has at least one step (prefer steps with `"export": true`; if none are marked, pass `--export-all-if-unset`)
 2. Confirm `.artifacts/{ID}/scenarios.json` exists (fallback: export uses `default` only per route)
@@ -321,11 +322,11 @@ node "${EXPORT_SKILL}/scripts/export-journey.mjs" \
   --journeys ".artifacts/{ID}/journeys.json" \
   --scenarios ".artifacts/{ID}/scenarios.json" \
   --out ".artifacts/{ID}/exports" \
-  --formats "{html|html,tree}" \
+  --formats "{html,pf-spec|html,tree,pf-spec}" \
   --export-all-if-unset
 ```
 
-6. Record `exports.path`, `exports.count`, `exports.manifest`, and `exports.index` in `metadata.json` and `prototype-summary.yaml`
+6. Record `exports.path`, `exports.count`, `exports.manifest`, `exports.index`, and `exports.implementation_spec` (when present) in `metadata.json` and `prototype-summary.yaml`
 
 Optional but recommended while viewing locally: keep the export helper running so the Prototype Bar can (a) write Export captures into `.artifacts/{ID}/exports` and (b) open Eval at `http://127.0.0.1:9417/evals/{ID}/` (SPA servers cannot serve `.artifacts/` reports via relative `/evals/…`):
 
@@ -341,7 +342,7 @@ Print a summary showing ID, title, decisions (`skip` / `auto` / `human`), screen
 
 Suggest next steps:
 
-1. Serve the prototype — use the Prototype Bar **Export** menu for ad-hoc static HTML / component tree, or run `uxd-prototype-export`
+1. Serve the prototype — use the Prototype Bar **Export** menu for ad-hoc static HTML / component tree / PF implementation spec, or run `uxd-prototype-export`
 2. Run `uxd-prototype-evaluate {ID} <URL> [--workspace=…]` (Playwright AC + usability)
 3. Re-invoke this skill to refine from FAIL / refinement-suggestions
 4. Publish via `uxd-prototype-publish` (or `${CLAUDE_SKILL_DIR}/scripts/submit_to_repo.py` for repo MR)

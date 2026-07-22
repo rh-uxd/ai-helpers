@@ -207,6 +207,7 @@ prototype_summary:
     count: 2
     manifest: .artifacts/PROJ-298/exports/export-manifest.json
     index: .artifacts/PROJ-298/exports/index.html
+    implementation_spec: .artifacts/PROJ-298/exports/implementation-spec.json  # when pf-spec format included
 
   # Iteration state
   iteration: 0
@@ -306,9 +307,9 @@ Also keep the flat `screens` list in `metadata.json` / `prototype-summary.yaml` 
 
 ## .artifacts/{ID}/scenarios.json
 
-Written during Step 4 (kept in sync if pages/conditions change). Sibling to `journeys.json`. Catalog of **data/condition variants** per page (empty, load error, validation, alternate selection). Interaction states (modal open) stay in journey `actions` — not scenarios.
+Written during Step 4 (kept in sync if pages/conditions change). Sibling to `journeys.json`. Catalog of **data/condition variants** per page (empty, load error, validation, alternate selection, match/availability/recovery branches). Interaction states (modal open) stay in journey `actions` — not scenarios.
 
-Full schema: `uxd-prototype-export/references/scenarios-schema.md`. Mock wiring: [scenario-mocks.md](scenario-mocks.md).
+Brainstorm checklist: [scenario-brainstorm.md](scenario-brainstorm.md). Full schema: `uxd-prototype-export/references/scenarios-schema.md`. Mock wiring: [scenario-mocks.md](scenario-mocks.md).
 
 ```json
 {

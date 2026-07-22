@@ -130,6 +130,8 @@ export function injectPrototypeBar(html, options = {}) {
 
   const cssPath = path.join(TEMPLATE_DIR, 'prototype-bar.css');
   const jsPath = path.join(TEMPLATE_DIR, 'prototype-bar-standalone.js');
+  const serializePath = path.join(TEMPLATE_DIR, 'serialize-page.browser.js');
+  const pfSpecPath = path.join(TEMPLATE_DIR, 'export-pf-spec.browser.js');
   if (!fs.existsSync(cssPath) || !fs.existsSync(jsPath)) {
     throw new Error(`Prototype Bar templates missing under ${TEMPLATE_DIR}`);
   }
@@ -147,7 +149,19 @@ export function injectPrototypeBar(html, options = {}) {
     `<style data-uxd-prototype-bar-style>\n${css}\n</style>`,
   ].join('\n');
 
-  const bodySnippet = `<script data-uxd-prototype-bar="standalone">\n${js}\n</script>`;
+  // Inline export runtime for prototype pages so Export works on static hosts
+  // (GitLab/GitHub Pages) without a backend helper or absolute script paths.
+  const bodyParts = [];
+  if (view !== 'eval' && fs.existsSync(serializePath)) {
+    const serialize = fs.readFileSync(serializePath, 'utf8');
+    bodyParts.push(`<script data-uxd-prototype-bar="serialize">\n${serialize}\n</script>`);
+  }
+  if (view !== 'eval' && fs.existsSync(pfSpecPath)) {
+    const pfSpec = fs.readFileSync(pfSpecPath, 'utf8');
+    bodyParts.push(`<script data-uxd-prototype-bar="pf-spec">\n${pfSpec}\n</script>`);
+  }
+  bodyParts.push(`<script data-uxd-prototype-bar="standalone">\n${js}\n</script>`);
+  const bodySnippet = bodyParts.join('\n');
 
   if (/<\/head>/i.test(out)) {
     out = out.replace(/<\/head>/i, `${headSnippet}\n</head>`);

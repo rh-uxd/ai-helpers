@@ -1,6 +1,6 @@
 # uxd-prototype-export
 
-Export prototype pages and journey UI states (including page scenarios) as self-contained static HTML or a component-tree outline.
+Export prototype pages and journey UI states (including page scenarios) as self-contained static HTML, a component-tree outline, or a PatternFly implementation spec for downstream agents.
 
 ## When to Use
 
@@ -14,6 +14,7 @@ Export prototype pages and journey UI states (including page scenarios) as self-
 |--------|-------------|
 | Static HTML | Single file, inlined CSS, Prototype Bar stripped from capture |
 | Component tree | React fiber walk when available; DOM hierarchy fallback |
+| PF implementation spec (`pf-spec`) | DOM → PF component tree with imports, layout summary, structure warnings |
 
 ## Scripts
 
@@ -21,6 +22,7 @@ Export prototype pages and journey UI states (including page scenarios) as self-
 |--------|---------|
 | `scripts/serialize-page.js` | Shared DOM → single-HTML serializer (Node + Playwright `evaluate`) |
 | `scripts/export-component-tree.js` | React fiber / DOM tree walker |
+| `scripts/export-pf-spec.js` | DOM → PatternFly implementation spec (+ `--write-browser` bundle) |
 | `scripts/export-current.sh` | Capture one URL via Playwright |
 | `scripts/export-journey.mjs` | Batch-export `export: true` steps × scenarios |
 | `scripts/export-helper.mjs` | Localhost writer + `GET /evals/:id` report server (`127.0.0.1:9417`) |
@@ -42,8 +44,8 @@ Sticky top bar:
 | Zone | Controls |
 |------|----------|
 | Left | **Sources** — outcome / RFE / strat / Figma / description links |
-| Center | **Prototype \| Eval** + **Scenario ▾** (when the current page has ≥2 scenarios) |
-| Right | **Export** (Static HTML \| Component tree) + status |
+| Center | **Prototype \| Eval** + **Scenario ▾** (always shown; enabled when the current page has ≥2 scenarios) |
+| Right | **Export** (Static HTML \| Component tree \| PF implementation spec) + status |
 
 Config: `.artifacts/{ID}/prototype-bar.json` → `window.__UXD_PROTOTYPE__` (see `references/prototype-bar-config.md`).
 
@@ -81,6 +83,13 @@ bash scripts/copy-eval-for-pages.sh \
 
 Copies `.artifacts/PROJ-298/eval/evaluation-report.html` → `public/evals/PROJ-298/index.html` so the bar can use same-origin `/evals/PROJ-298/`.
 
+**Eval vs Export on Pages**
+
+| Control | Static hosting behavior |
+|---------|-------------------------|
+| **Eval** | Pre-copied report under `public/evals/{ID}/` — navigation only |
+| **Export** | Client-side capture via inlined/`<base>`-aware `serialize-page.browser.js`, then browser download (no helper). Journey batch HTML under `.artifacts/{ID}/exports/` is separate (CLI `export-journey.mjs`), not what the Export menu serves. |
+
 ## Journey batch export
 
 ```bash
@@ -89,10 +98,10 @@ node scripts/export-journey.mjs \
   --journeys .artifacts/PROJ-298/journeys.json \
   --scenarios .artifacts/PROJ-298/scenarios.json \
   --out .artifacts/PROJ-298/exports \
-  --formats html,tree
+  --formats html,pf-spec
 ```
 
-Writes `{journeyId}/{stepId}--{scenarioId}.html`, `export-manifest.json`, and `index.html` (gallery).
+Writes `{journeyId}/{stepId}--{scenarioId}.html`, `.pf-spec.json` / `.pf-spec.txt`, rolled-up `implementation-spec.json`, `export-manifest.json`, and `index.html` (gallery).
 
 See `references/journeys-schema.md`, `references/scenarios-schema.md`, `references/export-formats.md`, and `references/prototype-bar-config.md`.
 

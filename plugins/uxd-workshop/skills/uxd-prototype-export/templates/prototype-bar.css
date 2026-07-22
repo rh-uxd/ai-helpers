@@ -1,5 +1,12 @@
 /* UXD Prototype Bar — sticky top chrome: Sources, Prototype|Eval, Scenario, Export */
 
+:root {
+  /* Measured at runtime when the bar mounts; fallback ≈ min-height + padding */
+  --uxd-pb-height: 2.75rem;
+  /* Extra clearance for the host app masthead below the bar (PF toasts are position:fixed) */
+  --uxd-pb-toast-clearance: 3.75rem;
+}
+
 #uxd-prototype-bar {
   position: sticky;
   top: 0;
@@ -98,16 +105,16 @@
   cursor: pointer;
 }
 
-#uxd-prototype-bar .uxd-pb-btn:hover,
-#uxd-prototype-bar .uxd-pb-btn:focus-visible {
+#uxd-prototype-bar .uxd-pb-btn:hover:not(:disabled),
+#uxd-prototype-bar .uxd-pb-btn:focus-visible:not(:disabled) {
   background: #3c3f42;
   outline: 1px solid #8a8d90;
   outline-offset: 1px;
 }
 
 #uxd-prototype-bar .uxd-pb-btn:disabled {
-  opacity: 0.55;
-  cursor: wait;
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 #uxd-prototype-bar .uxd-pb-menu {
@@ -209,6 +216,14 @@
   flex-shrink: 1;
 }
 
-body.uxd-prototype-bar-offset {
-  /* reserved for future fixed-bar layouts */
+/*
+ * PatternFly toast AlertGroups use position:fixed against the viewport, so they
+ * ignore the sticky bar's in-flow height and end up under the app masthead.
+ * When the bar is mounted we add this class and set --uxd-pb-height.
+ */
+body.uxd-prototype-bar-offset .pf-v5-c-alert-group.pf-m-toast,
+body.uxd-prototype-bar-offset .pf-v6-c-alert-group.pf-m-toast,
+body.uxd-prototype-bar-offset .pf-c-alert-group.pf-m-toast {
+  top: calc(var(--uxd-pb-height) + var(--uxd-pb-toast-clearance)) !important;
+  inset-block-start: calc(var(--uxd-pb-height) + var(--uxd-pb-toast-clearance)) !important;
 }

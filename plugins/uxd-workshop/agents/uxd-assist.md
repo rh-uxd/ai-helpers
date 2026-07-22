@@ -32,7 +32,7 @@ When the user asks to create, iterate on, evaluate, export, or publish a prototy
 |-------|-------------|
 | `/uxd-prototype-create` | Create or refine a UX prototype from a ticket, Figma design, or idea |
 | `/uxd-prototype-evaluate` | Evaluate prototype quality through rubric scoring and simulated usability testing |
-| `/uxd-prototype-export` | Export pages/journey states as static HTML or a component tree; install Prototype Bar |
+| `/uxd-prototype-export` | Export pages/journey states as static HTML, component tree, or PF implementation spec; install Prototype Bar |
 | `/uxd-prototype-publish` | Publish a prototype to a git repo, GitHub Pages, or other destination |
 
 ## Synthesis guidance

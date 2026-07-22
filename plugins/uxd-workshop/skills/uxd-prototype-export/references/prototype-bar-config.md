@@ -90,7 +90,7 @@ Active scenario on the page: `?scenario=<id>` (default when absent: `default`). 
 | Relative `views.eval` (e.g. `/evals/{id}/`) | Eval navigates only after a probe confirms a real report (not an SPA `historyApiFallback` shell) |
 | No reachable report | Eval disabled; status hints to start `export-helper` on `:9417` for local viewing |
 | ≤1 scenario for current route | Scenario menu hidden |
-| ≥2 scenarios for current route | Scenario ▾ menu; selection sets `?scenario=` and reloads |
+| Scenario ▾ (prototype view) | Always shown; enabled when ≥2 scenarios match the current route (updates on SPA navigation). Disabled with tooltip when none. Selection sets `?scenario=` |
 
 **Local SPA note:** On webpack/Vite apps, bare `/evals/{id}/` usually returns the app shell. Keep `export-helper.mjs` running so Eval can open the HTML report from `.artifacts/`. On GitLab/GitHub Pages, copy the report with `copy-eval-for-pages.sh` so same-origin `/evals/{id}/` is real static HTML.
 
@@ -114,7 +114,12 @@ Keep working artifacts under `.artifacts/{ID}/`. For GitLab/GitHub Pages (no bac
 ```
 public/
   evals/{ID}/index.html     ← copy of .artifacts/{ID}/eval/evaluation-report.html
+  uxd-prototype-bar/        ← serialize-page.browser.js + CSS + config (for Export)
   …                         ← prototype preview (e.g. mr-{iid}/)
 ```
 
 Bar links use same-origin relative paths (`/evals/{ID}/`). No dynamic server required when hosted.
+
+**Export on Pages:** The Export menu does **not** download pre-generated journey captures. It runs the in-page serializer and triggers a browser download (same fallback as when `export-helper` is down). `inject-prototype-bar-into-html.mjs` inlines `serialize-page.browser.js` for prototype HTML; React installs load it via `<base href>`-aware URLs under `uxd-prototype-bar/`.
+
+**Toast / fixed overlays:** Mounting the bar adds `body.uxd-prototype-bar-offset` and sets `--uxd-pb-height` so PatternFly toast groups clear the bar + typical app masthead.
