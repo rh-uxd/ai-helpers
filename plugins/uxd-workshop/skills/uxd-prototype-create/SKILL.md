@@ -289,6 +289,8 @@ If auto-mount fails for a React workspace (script reports "could not find App.*"
 
 After install, the bar provides: Sources dropdown (Jira/Figma links), Prototype|Eval view toggle, Scenario switcher (from `scenarios.json`), and Export menu.
 
+**Re-run after evaluate:** The script also copies the eval report into `public/evals/{ID}/` (Step 3 of the script) when the report exists. Re-run this command after `uxd-prototype-evaluate` completes so the Eval tab becomes active on Pages. Pass `--no-eval-copy` to skip if the report isn't needed in the deployment.
+
 ## Step 11: Post-Change Verification
 
 *Workspace mode only. Mandatory — do not skip.*

@@ -25,6 +25,10 @@ After normal create questions, also ask:
 2. SERVE     → ensure prototype is reachable at {URL}
 2b. EXPORT?  → if --export, run Step 11 (journey static HTML / tree under .artifacts/{ID}/exports)
 3. EVALUATE  → /uxd-prototype-evaluate {ID} {URL} [--workspace=…]
+3b. BAR (refresh) → re-run install-and-sync-prototype-bar.sh after evaluate.
+               This re-syncs the config AND copies the eval report into
+               public/evals/{ID}/ so the Eval tab works on Pages.
+               (Happens automatically — Step 3 in the unified script detects the report.)
 4. REFINE?   → if .artifacts/{ID}/eval/evaluation-report.csv has FAIL → refine (this skill) → re-eval
                skip when FAIL count is 0
 5. PUBLISH?  → /uxd-prototype-publish {ID} --target={target}  (if target ≠ none)
