@@ -1,0 +1,14 @@
+stages:
+  - lint
+
+lint:
+  stage: lint
+  tags:
+    - itup-alm-x86
+  image: python:3.12-slim
+  before_script:
+    - pip install uv
+  script:
+    - uvx skillsaw lint .
+  rules:
+    - if: $CI_MERGE_REQUEST_IID
