@@ -6,6 +6,7 @@ help: ## Show this help
 
 validate: ## Run manifest and doc validation (same as CI)
 	@bash scripts/validate-manifests.sh
+	@bash scripts/validate-skills.sh
 	@bash scripts/generate-plugins-md.sh
 	@echo "Checking generated docs are up to date..."
 	@if ! git diff --quiet PLUGINS.md README.md CONTRIBUTING-SKILLS.md \

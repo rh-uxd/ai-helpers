@@ -86,34 +86,6 @@ find . -name 'plugin.json' -o -name 'marketplace.json' | grep -v node_modules | 
   fi
 done
 
-# 4. Skill name/directory match
-echo ""
-echo "=== Skill name consistency ==="
-find plugins -name 'SKILL.md' | while read -r skill_file; do
-  dir_name=$(basename "$(dirname "$skill_file")")
-  fm_name=$(awk '/^---$/{if(++c==2)exit} c==1 && /^name:/{sub(/^name: */, ""); gsub(/["'"'"']/, ""); print; exit}' "$skill_file")
-
-  if [ -z "$fm_name" ]; then
-    fail "${skill_file}: missing 'name' in frontmatter"
-  elif [ "$fm_name" != "$dir_name" ]; then
-    fail "${skill_file}: frontmatter name '${fm_name}' does not match directory '${dir_name}'"
-  fi
-done
-
-# 5. Agent name/filename match
-echo ""
-echo "=== Agent name consistency ==="
-find plugins -path '*/agents/*.md' -not -path '*/agents/*/*.md' | while read -r agent_file; do
-  file_name=$(basename "$agent_file" .md)
-  fm_name=$(awk '/^---$/{if(++c==2)exit} c==1 && /^name:/{sub(/^name: */, ""); gsub(/["'"'"']/, ""); print; exit}' "$agent_file")
-
-  if [ -z "$fm_name" ]; then
-    fail "${agent_file}: missing 'name' in frontmatter"
-  elif [ "$fm_name" != "$file_name" ]; then
-    fail "${agent_file}: frontmatter name '${fm_name}' does not match filename '${file_name}'"
-  fi
-done
-
 echo ""
 if [ "$ERRORS" -gt 0 ]; then
   echo "${ERRORS} error(s) found."
