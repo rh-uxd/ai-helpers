@@ -1,0 +1,5 @@
+# Default: Jeff owns everything
+* @jpuzz0
+
+# UXD workshop: Andy and Evan can self-approve
+plugins/uxd-workshop/** @andybraren @jaquevan
