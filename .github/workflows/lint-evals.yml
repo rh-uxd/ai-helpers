@@ -1,0 +1,37 @@
+name: Eval Lint
+
+on:
+  pull_request:
+    paths:
+      - 'plugins/**/eval.yaml'
+      - 'plugins/**/eval/*.yaml'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml
+
+      - name: Lint changed eval files
+        run: |
+          CHANGED=$(git diff --name-only --diff-filter=ACM origin/main...HEAD -- 'plugins/**/eval.yaml' 'plugins/**/eval/*.yaml' \
+            | grep -v 'plugins/uxd-workshop/' \
+            | grep -v 'plugins/pf-workshop/' \
+            || true)
+          if [ -z "$CHANGED" ]; then
+            echo "No lintable eval files changed (workshop plugins excluded)"
+            exit 0
+          fi
+          echo "Linting: $CHANGED"
+          python3 scripts/lint-evals.py $CHANGED
