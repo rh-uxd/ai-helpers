@@ -44,7 +44,7 @@ Run the script to fetch the latest release candidate for each canonical PatternF
 bash "$CLAUDE_SKILL_DIR/scripts/latest-release-candidates.sh" --json
 ```
 
-The script queries npm's `prerelease` dist-tag (PatternFly's release candidate channel), then falls back to the highest published candidate version (any version containing `-`). Packages covered:
+The script queries npm's `prerelease` dist-tag, then falls back only to the highest published version whose prerelease identifier is an approved RC channel (`prerelease` or `rc`). If no RC exists, report and skip that package. Packages covered:
 
 `@patternfly/patternfly`, `@patternfly/react-charts`, `@patternfly/react-code-editor`, `@patternfly/react-core`, `@patternfly/react-drag-drop`, `@patternfly/react-icons`, `@patternfly/react-styles`, `@patternfly/react-table`, `@patternfly/react-templates`, `@patternfly/react-tokens`, `@patternfly/react-topology`, `@patternfly/react-virtualized-extension`, `@patternfly/quickstarts`, `@patternfly/react-user-feedback`, `@patternfly/react-console`, `@patternfly/react-log-viewer`, `@patternfly/react-catalog-view-extension`, `@patternfly/react-component-groups`, `@patternfly/react-data-view`, `@patternfly/chatbot`
 
@@ -120,7 +120,7 @@ When build or tests fail after the upgrade, fix the project code — do not pin 
 
 1. **Read the error output** — note the first failing file and whether it is a type error, import error, or runtime/test failure.
 2. **Import paths** — scan for invalid `@patternfly/*` import paths (charts, chatbot, component-groups dynamic paths, missing CSS).
-3. **Deprecated APIs** — query the PatternFly MCP server for current component APIs and migration guidance.
+3. **Deprecated APIs** — check current PatternFly component API and migration documentation for replacement props and guidance.
 4. **CSS classes / tokens** — scan for legacy `pf-c-*`, `pf-v5-*`, or hardcoded values.
 5. **Component structure** — audit component nesting and layout for hierarchy violations exposed by stricter types or DOM changes.
 6. **Snapshot / visual tests** — update snapshots only when the visual change is intentional from the PF upgrade.
@@ -141,7 +141,7 @@ Report to the user:
 - Previous and new versions for each updated `@patternfly/*` package
 - Package manager and commands run
 - Any code changes made to fix build/test failures
-- Remaining risks (e.g. packages that fell back to stable because no release candidate exists)
+- Remaining risks (e.g. packages skipped because no release candidate exists)
 
 ## Monorepo notes
 
@@ -155,6 +155,6 @@ Report to the user:
 |---------|------------|
 | `Module not found: @patternfly/...` | Wrong import path; scan for invalid `@patternfly/*` import paths |
 | Peer dependency warnings on install | Align all `@patternfly/*` packages to the same release candidate set |
-| Type errors on removed props | Check PatternFly MCP for replacement props/APIs |
+| Type errors on removed props | Check PatternFly component API / migration docs for replacement props |
 | CSS/layout regressions | Verify `base.css` and feature CSS imports; scan for legacy classes |
 | Test snapshot failures | Review diff; update only if PF change is expected |

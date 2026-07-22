@@ -32,13 +32,19 @@ PACKAGES=(
   "@patternfly/chatbot"
 )
 
+# Approved RC prerelease identifiers (not alpha/beta/nightly/etc.).
+is_rc_version() {
+  local version="$1"
+  [[ "$version" =~ -(prerelease|rc)(\.|$) ]]
+}
+
 resolve_release_candidate() {
   local pkg="$1"
   local version tag
 
   # PatternFly publishes release candidates under npm's "prerelease" dist-tag.
   tag=$(npm view "$pkg" dist-tags.prerelease 2>/dev/null || true)
-  if [[ -n "$tag" && "$tag" != "undefined" && "$tag" == *-* ]]; then
+  if [[ -n "$tag" && "$tag" != "undefined" ]] && is_rc_version "$tag"; then
     echo "$tag"
     return 0
   fi
@@ -49,13 +55,18 @@ resolve_release_candidate() {
       process.stderr.write('warning: no versions found for ${pkg}\n');
       process.exit(0);
     }
-    const candidates = versions.filter((v) => v.includes('-'));
+    const rcIds = new Set(['prerelease', 'rc']);
+    const candidates = versions.filter((v) => {
+      const dash = v.indexOf('-');
+      if (dash < 0) return false;
+      const id = v.slice(dash + 1).split('.')[0].toLowerCase();
+      return rcIds.has(id);
+    });
     if (candidates.length === 0) {
-      process.stderr.write('warning: no release candidate found for ${pkg}; using latest stable\n');
-      console.log(versions[versions.length - 1]);
-    } else {
-      console.log(candidates[candidates.length - 1]);
+      process.stderr.write('warning: no release candidate found for ${pkg}; skipping\n');
+      process.exit(0);
     }
+    console.log(candidates[candidates.length - 1]);
   ")
 
   echo "$version"
@@ -66,6 +77,7 @@ output_json() {
   echo -n "{"
   for pkg in "${PACKAGES[@]}"; do
     version=$(resolve_release_candidate "$pkg")
+    [[ -z "$version" ]] && continue
     if [ "$first" = true ]; then
       first=false
     else
@@ -80,6 +92,7 @@ output_json() {
 output_lines() {
   for pkg in "${PACKAGES[@]}"; do
     version=$(resolve_release_candidate "$pkg")
+    [[ -z "$version" ]] && continue
     echo "\"$pkg\": \"$version\","
   done
 }

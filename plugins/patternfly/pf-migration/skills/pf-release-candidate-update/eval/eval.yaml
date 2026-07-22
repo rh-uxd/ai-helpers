@@ -49,7 +49,7 @@ judges:
       for path, content in outputs.get("files", {}).items():
           text += "\n" + content.lower()
       script_pattern = re.compile(
-          r'(latest-release-candidates\.sh|claude_skill_dir.*latest-release-candidates|--json|--update)'
+          r'(?:\$?claude_skill_dir/scripts/)?latest-release-candidates\.sh(?:\s+(?:--json|--update)\b)?'
       )
       if not script_pattern.search(text):
           return False, "Did not reference the bundled release-candidate script"
@@ -82,7 +82,7 @@ judges:
       for path, content in outputs.get("files", {}).items():
           text += "\n" + content
       exact_guidance = re.compile(
-          r'(exact|without\s+[\^~]|leave\s+version\s+prefix|no\s+[\^~])',
+          r'(exact|without\s+[\^~]|no\s+[\^~]|remove(?:d)?\s+version\s+prefix)',
           re.IGNORECASE
       )
       rc_version = re.compile(r'\d+\.\d+\.\d+-prerelease\.\d+')
@@ -118,29 +118,41 @@ judges:
     check: |
       import re
       text = outputs.get("conversation", "").lower()
+      resolve_pattern = re.compile(r'latest-release-candidates\.sh(?:\s+.*)?--json')
+      if resolve_pattern.search(text):
+          return False, "Ran resolution script despite user-provided versions"
       skip_pattern = re.compile(
           r'(user\s+provided|provided\s+version|skip\s+the\s+script|use\s+those\s+instead|already\s+have\s+the\s+version)'
       )
       if skip_pattern.search(text):
           return True, "Recognizes user-provided versions and skips resolution"
-      resolve_pattern = re.compile(r'latest-release-candidates\.sh.*--json')
-      if resolve_pattern.search(text):
-          return False, "Ran resolution script despite user-provided versions"
       return True, "Does not run resolution when versions are provided"
 
   - name: uses_provided_version
     description: Applies the exact user-provided RC version
     if: "annotations.get('case_type') == 'user-provided'"
     check: |
+      import re
       version = annotations.get("provided_version", "")
       if not version:
           return False, "Test case missing provided_version annotation"
-      text = outputs.get("conversation", "")
-      for path, content in outputs.get("files", {}).items():
-          text += "\n" + content
-      if version not in text:
-          return False, f"Did not use provided version: {version}"
-      return True, f"Uses provided version: {version}"
+      conversation = outputs.get("conversation", "").lower()
+      if re.search(r'latest-release-candidates\.sh(?:\s+.*)?--json', conversation):
+          return False, "Ran resolution script despite user-provided versions"
+      files = outputs.get("files", {})
+      for path, content in files.items():
+          if path.endswith("package.json") and version in content:
+              return True, f"Uses provided version in package.json: {version}"
+      install_or_update = re.compile(
+          rf'(@patternfly/[^\s"\']+|npm|pnpm|yarn).{{0,80}}{re.escape(version)}|{re.escape(version)}.{{0,80}}(@patternfly/|package\.json)',
+          re.IGNORECASE | re.DOTALL,
+      )
+      haystack = conversation
+      for content in files.values():
+          haystack += "\n" + content
+      if install_or_update.search(haystack):
+          return True, f"Uses provided version in update/install command: {version}"
+      return False, f"Did not apply provided version to package artifact or update command: {version}"
 
 thresholds:
   references_bundled_script:
