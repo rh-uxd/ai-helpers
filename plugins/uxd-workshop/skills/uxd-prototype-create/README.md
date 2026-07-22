@@ -26,6 +26,7 @@ The skill accepts any combination of these — it asks clarifying questions to f
 | Changeset manifest | Markdown listing all created/modified files | `.artifacts/{ID}/changeset.md` |
 | Workspace analysis | JSON with tech stack, conventions, verification commands | `.artifacts/{ID}/workspace-analysis.json` |
 | Metadata | JSON with mode, source, assumptions | `.artifacts/{ID}/metadata.json` |
+| Prototype Bar config | Sources + Prototype\|Eval URLs | `.artifacts/{ID}/prototype-bar.json` |
 | Journeys | Structured steps/screens/states for build + export | `.artifacts/{ID}/journeys.json` |
 | Exports (optional) | Static HTML / component trees when `--export` | `.artifacts/{ID}/exports/` |
 

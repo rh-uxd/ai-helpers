@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
 # Install Prototype Bar assets into a standalone HTML prototype or React workspace.
 # Usage:
-#   bash install-prototype-bar.sh --source <path> [--mode standalone|workspace]
+#   bash install-prototype-bar.sh --source <path> [--mode standalone|workspace] [--config <prototype-bar.json>]
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TEMPLATE_DIR="$(cd "$SCRIPT_DIR/../templates" && pwd)"
 SOURCE=""
 MODE=""
+CONFIG=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --source) SOURCE="${2:-}"; shift 2 ;;
     --mode) MODE="${2:-}"; shift 2 ;;
+    --config) CONFIG="${2:-}"; shift 2 ;;
     -h|--help)
-      echo "Usage: bash install-prototype-bar.sh --source <path> [--mode standalone|workspace]"
+      echo "Usage: bash install-prototype-bar.sh --source <path> [--mode standalone|workspace] [--config <prototype-bar.json>]"
       exit 0
       ;;
     *)
@@ -47,8 +49,71 @@ detect_mode() {
   echo standalone
 }
 
+# Resolve prototype-bar.json: explicit --config, sibling artifacts, or walk up for .artifacts/*/prototype-bar.json
+resolve_config() {
+  if [[ -n "$CONFIG" ]]; then
+    if [[ ! -f "$CONFIG" ]]; then
+      echo "Error: --config file not found: $CONFIG" >&2
+      exit 1
+    fi
+    CONFIG="$(cd "$(dirname "$CONFIG")" && pwd)/$(basename "$CONFIG")"
+    return
+  fi
+
+  if [[ -f "$SOURCE/prototype-bar.json" ]]; then
+    CONFIG="$SOURCE/prototype-bar.json"
+    return
+  fi
+
+  # SOURCE is often .artifacts/{ID}/prototype — config sits next to it
+  if [[ -f "$SOURCE/../prototype-bar.json" ]]; then
+    CONFIG="$(cd "$SOURCE/.." && pwd)/prototype-bar.json"
+    return
+  fi
+
+  # Walk up looking for .artifacts/{ID}/prototype-bar.json
+  local dir="$SOURCE"
+  local i
+  for i in 1 2 3 4 5; do
+    if [[ -d "$dir/.artifacts" ]]; then
+      local found
+      found="$(find "$dir/.artifacts" -maxdepth 2 -type f -name 'prototype-bar.json' 2>/dev/null | head -n 1 || true)"
+      if [[ -n "$found" ]]; then
+        CONFIG="$found"
+        return
+      fi
+    fi
+    # If we're inside .artifacts/{ID}/...
+    if [[ "$(basename "$(dirname "$dir")")" == ".artifacts" ]] && [[ -f "$dir/prototype-bar.json" ]]; then
+      CONFIG="$dir/prototype-bar.json"
+      return
+    fi
+    dir="$(dirname "$dir")"
+  done
+}
+
+config_inline_script() {
+  if [[ -z "$CONFIG" || ! -f "$CONFIG" ]]; then
+    echo ""
+    return
+  fi
+  python3 - "$CONFIG" <<'PY'
+import json, sys
+path = sys.argv[1]
+data = json.load(open(path, encoding="utf-8"))
+print("<script data-uxd-prototype-bar=\"config\">window.__UXD_PROTOTYPE__=" + json.dumps(data, separators=(",", ":")) + ";</script>")
+PY
+}
+
 if [[ -z "$MODE" ]]; then
   MODE="$(detect_mode)"
+fi
+
+resolve_config
+if [[ -n "$CONFIG" ]]; then
+  echo "Using config: $CONFIG"
+else
+  echo "No prototype-bar.json found (Sources/Eval links limited until config is provided)"
 fi
 
 echo "Installing Prototype Bar into $SOURCE (mode=$MODE)"
@@ -59,6 +124,12 @@ install_standalone() {
   cp "$TEMPLATE_DIR/serialize-page.browser.js" "$dest_js/"
   cp "$TEMPLATE_DIR/prototype-bar-standalone.js" "$dest_js/"
   cp "$TEMPLATE_DIR/prototype-bar.css" "$dest_js/"
+  if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
+    cp "$CONFIG" "$dest_js/prototype-bar.json"
+  fi
+
+  local cfg_script
+  cfg_script="$(config_inline_script)"
 
   # Inject into every HTML file under source (max depth 3)
   local html_files
@@ -72,7 +143,29 @@ install_standalone() {
   while IFS= read -r html; do
     [[ -z "$html" ]] && continue
     if grep -q "$marker" "$html" 2>/dev/null; then
-      echo "  skip (already installed): $html"
+      # Refresh inline config if present
+      if [[ -n "$cfg_script" ]]; then
+        python3 - "$html" "$cfg_script" <<'PY'
+import re, sys
+path, cfg = sys.argv[1], sys.argv[2]
+text = open(path, encoding="utf-8").read()
+pat = re.compile(r'<script data-uxd-prototype-bar="config">.*?</script>\s*', re.S)
+if pat.search(text):
+    text = pat.sub(cfg + "\n", text, count=1)
+else:
+    # Insert config before first bar script/link
+    text = re.sub(
+        r'(<link[^>]*data-uxd-prototype-bar="install"[^>]*>)',
+        cfg + r"\n\1",
+        text,
+        count=1,
+    )
+open(path, "w", encoding="utf-8").write(text)
+print("  refreshed config:", path)
+PY
+      else
+        echo "  skip (already installed): $html"
+      fi
       continue
     fi
     # Relative path from html dir to uxd-prototype-bar
@@ -81,13 +174,13 @@ install_standalone() {
     rel="$(python3 -c "import os.path; print(os.path.relpath('$dest_js', '$html_dir'))")"
     local snippet
     snippet="$(cat <<EOF
+${cfg_script}
 <link rel="stylesheet" href="${rel}/prototype-bar.css" ${marker} />
 <script src="${rel}/serialize-page.browser.js" ${marker}></script>
 <script src="${rel}/prototype-bar-standalone.js" ${marker}></script>
 EOF
 )"
     if grep -qi '</body>' "$html"; then
-      # Insert before </body>
       python3 - "$html" "$snippet" <<'PY'
 import sys
 path, snippet = sys.argv[1], sys.argv[2]
@@ -116,7 +209,7 @@ install_workspace() {
   cp "$TEMPLATE_DIR/prototype-bar.css" "$dest_dir/"
   cp "$TEMPLATE_DIR/serialize-page.browser.js" "$dest_dir/"
 
-  # Public copy so the browser can load the serializer without bundler help
+  # Public copy so the browser can load the serializer + config without bundler help
   local public_dir=""
   if [[ -d "$SOURCE/public" ]]; then
     public_dir="$SOURCE/public/uxd-prototype-bar"
@@ -127,7 +220,14 @@ install_workspace() {
     mkdir -p "$public_dir"
     cp "$TEMPLATE_DIR/serialize-page.browser.js" "$public_dir/"
     cp "$TEMPLATE_DIR/prototype-bar.css" "$public_dir/"
+    if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
+      cp "$CONFIG" "$public_dir/prototype-bar.json"
+      echo "  copied config → $public_dir/prototype-bar.json"
+    fi
     echo "  copied public assets → $public_dir"
+  elif [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
+    cp "$CONFIG" "$dest_dir/prototype-bar.json"
+    echo "  copied config → $dest_dir/prototype-bar.json (no public/ — fetch may need a bundler copy)"
   fi
 
   echo "  copied templates → $dest_dir"

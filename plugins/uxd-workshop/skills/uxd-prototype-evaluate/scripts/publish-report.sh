@@ -334,6 +334,37 @@ INDEXEOF
   rm -f "$ROWS_FILE" "$STATS_FILE"
 }
 
+# ── Sync Prototype Bar config (Sources + views.eval) ─────────────────────────
+
+sync_prototype_bar_config() {
+  local export_sync="$SCRIPT_DIR/../../uxd-prototype-export/scripts/sync-prototype-bar-config.mjs"
+  if [[ ! -f "$export_sync" ]]; then
+    echo "Note: sync-prototype-bar-config.mjs not found — skip Prototype Bar update" >&2
+    return 0
+  fi
+  if ! command -v node >/dev/null 2>&1; then
+    echo "Note: node not available — skip Prototype Bar update" >&2
+    return 0
+  fi
+
+  local eval_url=""
+  if [[ -f "$ARTIFACTS_DIR/report-url.txt" ]]; then
+    eval_url="$(tr -d '[:space:]' < "$ARTIFACTS_DIR/report-url.txt")"
+  fi
+  if [[ -z "$eval_url" && -n "$PAGES_BASE_URL" ]]; then
+    eval_url="${PAGES_BASE_URL%/}/evals/${PROTO_KEY}/"
+  fi
+  if [[ -z "$eval_url" ]]; then
+    eval_url="/evals/${PROTO_KEY}/"
+  fi
+
+  local jira_base="${JIRA_BASE_URL:-https://issues.redhat.com/browse/}"
+  node "$export_sync" \
+    --artifacts "$ARTIFACTS_DIR" \
+    --eval-url "$eval_url" \
+    --jira-base "$jira_base" || true
+}
+
 # ── Dispatch ─────────────────────────────────────────────────────────────────
 
 case "$MODE" in
@@ -344,3 +375,5 @@ case "$MODE" in
     exit 1
     ;;
 esac
+
+sync_prototype_bar_config

@@ -1,4 +1,4 @@
-/* UXD Prototype Bar — sticky top chrome for export (and future controls) */
+/* UXD Prototype Bar — sticky top chrome: Sources, Prototype|Eval, Export */
 
 #uxd-prototype-bar {
   position: sticky;
@@ -22,6 +22,13 @@
   box-sizing: border-box;
 }
 
+#uxd-prototype-bar .uxd-pb-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
 #uxd-prototype-bar .uxd-pb-brand {
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -33,9 +40,49 @@
   align-items: center;
   gap: 0.5rem;
   flex: 1;
+  min-width: 0;
 }
 
-#uxd-prototype-bar .uxd-pb-export-wrap {
+#uxd-prototype-bar .uxd-pb-views {
+  display: inline-flex;
+  border: 1px solid #6a6e73;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+#uxd-prototype-bar .uxd-pb-views button {
+  appearance: none;
+  border: 0;
+  border-right: 1px solid #6a6e73;
+  background: #2c2f33;
+  color: #f0f0f0;
+  font: inherit;
+  padding: 0.25rem 0.75rem;
+  cursor: pointer;
+}
+
+#uxd-prototype-bar .uxd-pb-views button:last-child {
+  border-right: 0;
+}
+
+#uxd-prototype-bar .uxd-pb-views button:hover:not(:disabled),
+#uxd-prototype-bar .uxd-pb-views button:focus-visible:not(:disabled) {
+  background: #3c3f42;
+  outline: none;
+}
+
+#uxd-prototype-bar .uxd-pb-views button[aria-current="true"] {
+  background: #4f5255;
+  font-weight: 600;
+}
+
+#uxd-prototype-bar .uxd-pb-views button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+#uxd-prototype-bar .uxd-pb-export-wrap,
+#uxd-prototype-bar .uxd-pb-sources-wrap {
   position: relative;
 }
 
@@ -67,6 +114,7 @@
   top: calc(100% + 4px);
   left: 0;
   min-width: 12rem;
+  max-width: 22rem;
   margin: 0;
   padding: 0.25rem 0;
   list-style: none;
@@ -74,14 +122,31 @@
   border: 1px solid #6a6e73;
   border-radius: 2px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  z-index: 100001;
+}
+
+#uxd-prototype-bar .uxd-pb-sources-menu {
+  min-width: 16rem;
+  padding: 0.35rem 0;
+}
+
+#uxd-prototype-bar .uxd-pb-sources-title {
+  padding: 0.35rem 0.75rem 0.5rem;
+  font-size: 0.75rem;
+  color: #c7c7c7;
+  border-bottom: 1px solid #3c3f42;
+  margin-bottom: 0.25rem;
 }
 
 #uxd-prototype-bar .uxd-pb-menu[hidden] {
   display: none;
 }
 
-#uxd-prototype-bar .uxd-pb-menu button {
-  display: block;
+#uxd-prototype-bar .uxd-pb-menu button,
+#uxd-prototype-bar .uxd-pb-menu a.uxd-pb-source-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   width: 100%;
   text-align: left;
   appearance: none;
@@ -91,21 +156,48 @@
   font: inherit;
   padding: 0.4rem 0.75rem;
   cursor: pointer;
+  text-decoration: none;
 }
 
 #uxd-prototype-bar .uxd-pb-menu button:hover,
-#uxd-prototype-bar .uxd-pb-menu button:focus-visible {
+#uxd-prototype-bar .uxd-pb-menu button:focus-visible,
+#uxd-prototype-bar .uxd-pb-menu a.uxd-pb-source-link:hover,
+#uxd-prototype-bar .uxd-pb-menu a.uxd-pb-source-link:focus-visible {
   background: #3c3f42;
+}
+
+#uxd-prototype-bar .uxd-pb-source-kind {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #a3a3a3;
+  min-width: 3.5rem;
+}
+
+#uxd-prototype-bar .uxd-pb-source-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#uxd-prototype-bar .uxd-pb-source-muted {
+  color: #c7c7c7;
+  cursor: default;
 }
 
 #uxd-prototype-bar .uxd-pb-status {
   margin-left: auto;
   font-size: 0.75rem;
   color: #c7c7c7;
-  max-width: 40%;
+  max-width: 32%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex-shrink: 1;
 }
 
 body.uxd-prototype-bar-offset {

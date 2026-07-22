@@ -114,3 +114,21 @@ test -f "$ARTIFACTS_DIR/evaluation-report.html" && echo "Report generated: $ARTI
 ```
 
 Report the file path and size to the caller.
+
+### Step 5: Sync Prototype Bar config
+
+Merge outcome / strat keys from `outcome-context.json` into `.artifacts/<KEY>/prototype-bar.json` so the live prototype's Sources dropdown and Eval switch stay current:
+
+```bash
+EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
+node "${EXPORT_SKILL}/scripts/sync-prototype-bar-config.mjs" \
+  --artifacts ".artifacts/$KEY"
+```
+
+If `report-url.txt` already exists (after publish-report), the sync script picks up that URL for `views.eval`. Otherwise it sets the conventional relative path `/evals/<KEY>/`.
+
+For local browsing with the Prototype Bar: keep the export helper running so Eval can open `http://127.0.0.1:9417/evals/<KEY>/`:
+
+```bash
+node "${EXPORT_SKILL}/scripts/export-helper.mjs" --out ".artifacts/$KEY/exports"
+```

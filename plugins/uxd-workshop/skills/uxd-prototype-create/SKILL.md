@@ -86,7 +86,7 @@ Prototype Plan:
 | `--branch` | branch name | auto-detected | Git branch to clone |
 | `--dry-run` | flag | off | Skip external writes |
 | `--pipeline` / `--speedrun` | flag | off | Run create → evaluate → refine → publish (see pipeline-mode.md) |
-| `--prototype-bar` / `--no-prototype-bar` | flag | on | Install sticky Prototype Bar (Export menu) after generate |
+| `--prototype-bar` / `--no-prototype-bar` | flag | on | Install sticky Prototype Bar (Sources, Prototype\|Eval, Export) after generate |
 | `--export` | flag | off | After artifacts, batch-export journey steps with `export: true` via `uxd-prototype-export` |
 | `--url` | URL | asked if `--export` | Live base URL for Playwright export (and pipeline evaluate) |
 | `--export-formats` | `html`, `tree`, or both | `html` | Formats for `--export` |
@@ -227,14 +227,9 @@ This is a cursory wiring check, not a full UX review. Spend a minute or two; fix
 
 ### Prototype Bar (default on)
 
-Unless `--no-prototype-bar` was set, install the sticky Prototype Bar (Export → Static HTML | Component tree):
+Unless `--no-prototype-bar` was set, install the sticky Prototype Bar after Step 9 writes `prototype-bar.json` (Sources, Prototype|Eval, Export). See Step 9 for the install command with `--config`.
 
-```bash
-EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
-bash "${EXPORT_SKILL}/scripts/install-prototype-bar.sh" \
-  --source "<prototype-dir-or-workspace>" \
-  --mode standalone|workspace
-```
+If you install earlier for a quick preview, re-run install after syncing the config so Sources are injected.
 
 - **Standalone:** `--source` = `.artifacts/{ID}/prototype/`
 - **Workspace:** `--source` = workspace root from `workspace-analysis.json`
@@ -248,11 +243,26 @@ If auto-mount fails for React, copy templates and mount `<PrototypeBar />` manua
 Write these artifacts after generation:
 
 - `.artifacts/{ID}/changeset.md` — lists all files created/modified with one-line descriptions
-- `.artifacts/{ID}/metadata.json` — prototype ID, title, mode, status, iteration, screens list, `journeys_path`, `prototype_bar`, timestamps
+- `.artifacts/{ID}/metadata.json` — prototype ID, title, mode, status, iteration, screens list, `journeys_path`, `prototype_bar`, `source` / `source_rfes` / `sources`, timestamps
 - `.artifacts/{ID}/prototype-summary.yaml` — structured machine-readable summary for downstream skills and pipeline consumption
+- `.artifacts/{ID}/prototype-bar.json` — Prototype Bar config (Sources + Eval navigation)
 - Ensure `.artifacts/{ID}/journeys.json` is present (from Step 4; update routes/selectors if implementation diverged)
 
 The `prototype-summary.yaml` captures what was built (build mode), what it was built from (source), how decisions were made, and what was produced. Downstream skills like `uxd-prototype-evaluate`, `uxd-prototype-export`, and `uxd-prototype-publish` can consume this directly without parsing human-readable output.
+
+After writing `metadata.json`, sync the Prototype Bar config (maps Jira/Figma/description sources into one Sources list) and install/refresh the bar:
+
+```bash
+EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
+node "${EXPORT_SKILL}/scripts/sync-prototype-bar-config.mjs" \
+  --artifacts ".artifacts/{ID}"
+
+# Unless --no-prototype-bar
+bash "${EXPORT_SKILL}/scripts/install-prototype-bar.sh" \
+  --source "<prototype-dir-or-workspace>" \
+  --mode standalone|workspace \
+  --config ".artifacts/{ID}/prototype-bar.json"
+```
 
 Read [references/output-formats.md](references/output-formats.md) for full schema definitions and examples of each artifact file.
 
