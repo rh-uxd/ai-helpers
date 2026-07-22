@@ -17,8 +17,11 @@ After normal create questions, also ask:
 ## Sequence
 
 ```
-1. CREATE    → follow uxd-prototype-create Steps 1–12
+1. CREATE    → follow uxd-prototype-create Steps 1–13
                (Prototype Bar on by default; optional --export after serve URL is known)
+1b. BAR      → install-and-sync-prototype-bar.sh (ALWAYS unless --no-prototype-bar)
+               Syncs prototype-bar.json from metadata + installs assets into source.
+               Must run BEFORE serve so the bar is visible immediately.
 2. SERVE     → ensure prototype is reachable at {URL}
 2b. EXPORT?  → if --export, run Step 11 (journey static HTML / tree under .artifacts/{ID}/exports)
 3. EVALUATE  → /uxd-prototype-evaluate {ID} {URL} [--workspace=…]
