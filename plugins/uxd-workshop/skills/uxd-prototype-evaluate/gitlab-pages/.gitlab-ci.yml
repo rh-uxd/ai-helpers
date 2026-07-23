@@ -1,0 +1,9 @@
+pages:
+  stage: deploy
+  script:
+    - echo "Deploying eval reports to Pages"
+  artifacts:
+    paths:
+      - public
+  only:
+    - main

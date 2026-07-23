@@ -1,0 +1,17 @@
+{
+  "name": "uxd-prototype-export",
+  "version": "1.0.0",
+  "description": "Export prototype pages as static HTML, component trees, or PatternFly implementation specs",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "postinstall": "npx playwright install chromium || true",
+    "export-journey": "node scripts/export-journey.mjs",
+    "export-helper": "node scripts/export-helper.mjs",
+    "build:pf-spec": "node scripts/export-pf-spec.js --write-browser",
+    "test:pf-spec": "node scripts/export-pf-spec.js"
+  },
+  "dependencies": {
+    "playwright": "^1.61.0"
+  }
+}

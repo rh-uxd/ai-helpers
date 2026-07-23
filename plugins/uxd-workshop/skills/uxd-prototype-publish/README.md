@@ -10,10 +10,15 @@ After creating and evaluating a prototype with `uxd-prototype-create` and `uxd-p
 
 | Target | What happens | Best for |
 |--------|-------------|----------|
-| `repo` | Push to git branch, create GitLab MR | Team review, design feedback |
-| `public` | Sanitize + deploy to GitHub Pages | Stakeholder demos, external sharing |
+| `repo` | Push to git branch, create GitLab MR (fork-aware `glab`) | Team review, design feedback |
+| git URL | Same as `repo`, MR/PR opened **against** that repo (sets `upstream`) | Fork → canonical MR demos |
+| `github` | Sanitize + deploy to GitHub Pages | Stakeholder demos, external sharing |
 | `gitlab` | Sanitize + deploy to GitLab Pages | Self-hosted or gitlab.com sharing |
 | `vercel` | Sanitize + deploy to Vercel | Preview deployments, Vercel-based projects |
+
+## Eval gate
+
+Reads `.artifacts/{ID}/eval/evaluation-report.csv`. Blocks publish when any AC verdict is `FAIL` unless `--force`. `FLAGGED` items warn but do not block by default.
 
 ## Inputs
 
@@ -21,7 +26,7 @@ After creating and evaluating a prototype with `uxd-prototype-create` and `uxd-p
 |-------|-------------|----------|
 | Prototype ID | `.artifacts/{ID}/` directory with prototype output | Yes |
 | `metadata.json` | Prototype state and configuration | Yes |
-| Review summary | Rubric scores from `uxd-prototype-evaluate` | Recommended |
+| Eval report | `.artifacts/{ID}/eval/evaluation-report.csv` from `uxd-prototype-evaluate` | Recommended |
 | Workspace analysis | Clone path and branch info (workspace mode, repo target) | Conditional |
 | Changeset manifest | Modified files list (workspace mode) | Conditional |
 
@@ -31,7 +36,7 @@ After creating and evaluating a prototype with `uxd-prototype-create` and `uxd-p
 |--------|-------------|
 | Published prototype | MR in GitLab, GitHub Pages site, GitLab Pages site, or Vercel deployment |
 | Updated `metadata.json` | Submission record with target, date, URL |
-| Jira comment + labels | Link to prototype, rubric score, status labels (optional) |
+| Jira comment + labels | Link to prototype / Pages preview, eval summary (optional) |
 
 ## Scripts
 
@@ -42,8 +47,8 @@ After creating and evaluating a prototype with `uxd-prototype-create` and `uxd-p
 | `scripts/publish-vercel.sh` | Sanitize and deploy to Vercel |
 | `scripts/frontmatter.py` | YAML frontmatter read/write utility |
 
-The `submit_to_repo.py` script for MR creation lives in `uxd-prototype-create/scripts/` and is referenced from there.
+Repo MR creation: `uxd-prototype-create/scripts/submit_to_repo.py` (fork detection, `glab mr create`, MR verification, optional Pages polling). See `references/repo-submit-details.md`.
 
 ## Sensitive File Handling
 
-The `public`, `gitlab`, and `vercel` targets strip internal files before publishing — agent configs, design history, credentials, CI pipelines, and MCP configurations. See `references/sensitive-files.md` for the full list and additional manual checks to perform before publishing.
+The `github`, `gitlab`, and `vercel` targets strip internal files before publishing — agent configs, design history, credentials, CI pipelines, and MCP configurations. See `references/sensitive-files.md`.

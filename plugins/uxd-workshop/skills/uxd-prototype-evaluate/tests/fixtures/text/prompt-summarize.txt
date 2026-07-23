@@ -1,0 +1,3 @@
+Summarize the following in 3 bullet points, focusing on the key takeaways for a product team:
+
+The latest user research study conducted across 12 enterprise customers revealed that data scientists spend an average of 3.2 hours per week on infrastructure management tasks that could be automated. The most common pain points were GPU quota allocation (cited by 78% of respondents), model deployment configuration (65%), and environment reproducibility (52%). Teams using self-service platforms reported 40% faster time-to-first-experiment compared to those relying on platform engineering tickets. However, 61% of self-service users reported confusion around role-based access controls, particularly when sharing notebooks or model endpoints across project boundaries.

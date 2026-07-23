@@ -1,0 +1,14 @@
+{
+  "name": "uxd-prototype-evaluate",
+  "version": "1.0.0",
+  "description": "Playwright-based prototype evaluation — AC validation, fix loop, persona usability, HTML reports",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "postinstall": "npx playwright install chromium || true"
+  },
+  "dependencies": {
+    "@playwright/test": "^1.61.0",
+    "googleapis": "^173.0.0"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "key": "DEMO",
+  "journeys": [
+    {
+      "id": "settings-save",
+      "steps": [
+        {"id": "step-1", "result": "PASS", "note": "Opened settings"},
+        {"id": "step-3", "result": "FAIL", "note": "No Save control"}
+      ]
+    }
+  ],
+  "usability_dimensions": {
+    "overall_score": "12/21"
+  }
+}

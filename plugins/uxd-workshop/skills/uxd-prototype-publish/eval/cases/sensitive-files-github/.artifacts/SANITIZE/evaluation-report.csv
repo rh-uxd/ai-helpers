@@ -1,0 +1,4 @@
+# ACCEPTANCE CRITERIA
+criterion_id,source,tier,criterion_text,verdict,rationale,evidence,fix_action,fix_file,human_action
+AC-1,jira,1,User can open the settings page,PASS,Settings route renders,step-1,,,
+AC-2,jira,1,User can save profile changes,PASS,Save flow works,step-3,,,

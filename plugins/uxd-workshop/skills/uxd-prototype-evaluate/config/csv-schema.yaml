@@ -1,0 +1,126 @@
+# =============================================================================
+# Canonical CSV Schema for the Prototype Evaluation Pipeline
+# =============================================================================
+#
+# This file is the SOURCE OF TRUTH for CSV column ordering in
+# evaluation-report.csv. Both the evaluate-journey skill and
+# scripts/render-report.js MUST conform to it.
+#
+# Do not add, remove, or reorder columns without updating both consumers.
+# =============================================================================
+
+sections:
+
+  # ---------------------------------------------------------------------------
+  # Section 1: ACCEPTANCE CRITERIA
+  # ---------------------------------------------------------------------------
+  - name: acceptance_criteria
+    description: Per-criterion verdicts from the evaluation pipeline
+    columns:
+      - name: criterion_id
+        description: "Unique ID for the criterion (e.g. AC-1, NAV-1, FLAG-1, EVAL-1)"
+        type: string
+        examples: ["AC-1", "NAV-1", "FLAG-1", "EVAL-1"]
+
+      - name: source
+        description: "Origin of the criterion"
+        type: enum
+        values: ["jira", "inferred"]
+
+      - name: tier
+        description: "Evaluation tier classification (1-4)"
+        type: integer
+        range: [1, 4]
+
+      - name: criterion_text
+        description: "Verbatim text from Jira (for jira source) or evaluator description (for inferred)"
+        type: string
+
+      - name: verdict
+        description: "Evaluation verdict"
+        type: enum
+        values: ["PASS", "FAIL", "FLAGGED"]
+
+      - name: rationale
+        description: "Why this verdict was given"
+        type: string
+
+      - name: evidence
+        description: "Journey step references or source code evidence"
+        type: string
+
+      - name: fix_action
+        description: "Suggested fix (populated for FAIL items, empty for PASS/FLAGGED)"
+        type: string
+
+      - name: fix_file
+        description: "Specific file to change (populated for FAIL items)"
+        type: string
+
+      - name: human_action
+        description: "What the reviewer should check (populated for FLAGGED items)"
+        type: string
+
+  # ---------------------------------------------------------------------------
+  # Section 2: USABILITY DIMENSIONS
+  # ---------------------------------------------------------------------------
+  - name: usability_dimensions
+    description: Per-dimension usability scores with persona breakdowns
+    columns:
+      - name: dimension_id
+        description: "Machine-readable dimension identifier"
+        type: string
+        examples:
+          - workflow_continuity
+          - cross_persona_handoffs
+          - scalability_complexity
+          - system_status
+          - technical_abstraction
+          - mental_model_fidelity
+          - accessibility_inclusion
+
+      - name: dimension_name
+        description: "Human-readable name"
+        type: string
+
+      - name: score
+        description: "Composite score for this dimension"
+        type: integer
+        range: [0, 3]
+
+      - name: confidence
+        description: "Confidence level for this score"
+        type: enum
+        values: ["high", "medium", "low"]
+
+      - name: evidence
+        description: "Which journey steps informed this score"
+        type: string
+
+      - name: persona_scores
+        description: "JSON object mapping persona IDs to individual scores"
+        type: json
+        example: '{"data-scientist+junior": 2, "ml-engineer+senior": 3}'
+
+  # ---------------------------------------------------------------------------
+  # Section 3: BASELINE
+  # ---------------------------------------------------------------------------
+  - name: baseline
+    description: Aggregate metrics computed from the evaluation
+    columns:
+      - name: metric
+        description: "Metric identifier"
+        type: string
+        examples:
+          - total_criteria
+          - pass_rate
+          - usability_composite
+          - journey_pass_rate
+
+      - name: value
+        description: "The metric value"
+        type: string
+
+      - name: source
+        description: "Where this was computed from"
+        type: string

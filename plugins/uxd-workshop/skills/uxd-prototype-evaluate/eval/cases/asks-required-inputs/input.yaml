@@ -1,0 +1,5 @@
+prompt: >-
+  Using the uxd-prototype-evaluate skill: please evaluate my prototype.
+  I have not given you a Jira key or a prototype URL yet. Ask only for the
+  required inputs you need to start — do not install Playwright, open a browser,
+  or begin Phase A.

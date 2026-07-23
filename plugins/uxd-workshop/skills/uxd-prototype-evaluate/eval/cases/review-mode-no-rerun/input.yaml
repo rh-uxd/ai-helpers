@@ -1,0 +1,9 @@
+prompt: >-
+  Using the uxd-prototype-evaluate skill in review mode:
+  /uxd-prototype-evaluate review DEMO
+
+  Prior eval artifacts are under .artifacts/DEMO/ in this case directory
+  (evaluation-report.csv with a FAIL on AC-2, extract-state.json).
+  Summarize the results and offer next actions. Do NOT re-run Playwright,
+  Phase A, or Phase B.
+fixture: .artifacts/DEMO

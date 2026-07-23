@@ -1,0 +1,137 @@
+name: uxd-prototype-publish-eval
+description: Evaluate uxd-prototype-publish's target prompting, AC gating, validation, and sensitive-file handling
+
+skill: uxd-workshop:uxd-prototype-publish
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: case_type for conditional judges
+    - Optional .artifacts/ fixture tree the prompt references
+
+outputs:
+  - path: artifacts
+    schema: |
+      Judges check conversation text for target prompts, AC FAIL blocking,
+      incomplete validation messages, and sensitive-file stripping mentions.
+      Dry-run cases must not push to remotes.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: asks_publish_target
+    description: Asks where to publish when no target is specified
+    if: "annotations.get('case_type') == 'asks-target'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      asks = re.search(
+          r"(where|target|publish|share|deploy).{0,80}(repo|merge request|git URL|GitHub|GitLab|Vercel)",
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      lists_options = (
+          re.search(r"merge request|GitHub|git URL|against", text, re.IGNORECASE)
+          and re.search(r"GitLab|Vercel", text, re.IGNORECASE)
+      )
+      if not asks and not lists_options:
+          return False, "Did not ask for a publish target or list destination options"
+      return True, "Asked for publish destination"
+
+  - name: blocks_ac_fail
+    description: Blocks publish when evaluation-report.csv has FAIL verdicts unless --force
+    if: "annotations.get('case_type') == 'blocks-ac-fail'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      blocks = re.search(
+          r"block|--force|needs-attention|FAIL|cannot publish|won't publish|will not publish|refuse|cannot submit",
+          text,
+          re.IGNORECASE,
+      )
+      if not blocks:
+          return False, "Did not block or require --force for AC FAIL verdicts"
+      proceeded = re.search(
+          r"(pushed|deployed|merge request created|pages url|published to)",
+          text,
+          re.IGNORECASE,
+      )
+      if proceeded and not re.search(r"would|dry-run|not actually", text, re.IGNORECASE):
+          return False, "Appears to have published despite AC FAIL"
+      return True, "Blocked publish due to AC FAIL verdicts"
+
+  - name: reports_incomplete
+    description: Reports missing required prototype files
+    if: "annotations.get('case_type') == 'dry-run-incomplete'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      incomplete = re.search(
+          r"incomplete|missing|required",
+          text,
+          re.IGNORECASE,
+      )
+      mentions_gap = re.search(
+          r"index\.html|metadata\.json",
+          text,
+          re.IGNORECASE,
+      )
+      if not incomplete:
+          return False, "Did not report the prototype as incomplete"
+      if not mentions_gap:
+          return False, "Did not mention missing index.html or metadata.json"
+      return True, "Reported incomplete prototype with missing files"
+
+  - name: mentions_sensitive_strip
+    description: Mentions stripping sensitive files before github publish
+    if: "annotations.get('case_type') == 'sensitive-files-github'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      strip = re.search(
+          r"strip|sanitiz|remov|exclud",
+          text,
+          re.IGNORECASE,
+      )
+      sensitive = re.search(
+          r"AGENTS\.md|\.env|\.agents/|\.cursor/|\.design/",
+          text,
+          re.IGNORECASE,
+      )
+      if not strip:
+          return False, "Did not mention stripping/sanitizing files"
+      if not sensitive:
+          return False, "Did not mention sensitive paths (AGENTS.md, .env, etc.)"
+      return True, "Mentioned stripping sensitive files for github publish"
+
+thresholds:
+  asks_publish_target:
+    min_pass_rate: 1.0
+  blocks_ac_fail:
+    min_pass_rate: 1.0
+  reports_incomplete:
+    min_pass_rate: 1.0
+  mentions_sensitive_strip:
+    min_pass_rate: 1.0

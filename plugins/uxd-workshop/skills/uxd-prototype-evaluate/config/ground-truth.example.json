@@ -1,0 +1,12 @@
+[
+  {
+    "key": "PROJ-298",
+    "lofi": "Pass",
+    "lofiQualifier": "",
+    "hifi": "Fail",
+    "hifiQualifier": "",
+    "navIssue": false,
+    "failReason": "design",
+    "note": "Example ground-truth entry — copy to ground-truth.json and replace with your data."
+  }
+]

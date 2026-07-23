@@ -35,9 +35,10 @@ UXD team tools and skill incubator — prototyping, research, design review, tea
 <tr><th>Skill</th><th>Description</th></tr>
 <tr><td nowrap><code>uxd-evaluate-design-heuristics</code></td><td>Score a design against accessibility, visual hierarchy, content, and state coverage heuristics.</td></tr>
 <tr><td nowrap><code>uxd-figma-read</code></td><td>Retrieve design context from a Figma file.</td></tr>
-<tr><td nowrap><code>uxd-prototype-create</code></td><td>Create or refine a UX prototype from various input sources — a Jira ticket, Figma design, feature description, or just an idea.</td></tr>
-<tr><td nowrap><code>uxd-prototype-evaluate</code></td><td>Evaluate a prototype's quality through rubric scoring, simulated usability testing, and desirability studies.</td></tr>
-<tr><td nowrap><code>uxd-prototype-publish</code></td><td>Publish a prototype to a target destination — push to a git repo as a merge request, or deploy a sanitized copy to GitHub Pages, GitLab Pages, or Vercel.</td></tr>
+<tr><td nowrap><code>uxd-prototype-create</code></td><td>Create or refine a UX prototype from a Jira ticket, Figma design, feature description, or rough idea.</td></tr>
+<tr><td nowrap><code>uxd-prototype-evaluate</code></td><td>Evaluate a running prototype against Jira acceptance criteria with Playwright (x-ray AC validation + optional fix loop), then run persona-based usability walkthroughs and produce an HTML evidence report.</td></tr>
+<tr><td nowrap><code>uxd-prototype-export</code></td><td>Export a prototype page or journey step as static HTML or a React component tree, and install the Prototype Bar (Sources, Prototype|Eval, Export).</td></tr>
+<tr><td nowrap><code>uxd-prototype-publish</code></td><td>Publish a prototype to a git merge request, GitHub Pages, GitLab Pages, or Vercel.</td></tr>
 <tr><td nowrap><code>uxd-research-heuristic-eval</code></td><td>Conduct a heuristic evaluation of a prototype or interface using three independent expert evaluators.</td></tr>
 </table>
 

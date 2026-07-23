@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eval Reports</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #fafbfc;
+    --surface: #ffffff;
+    --border: #e2e8f0;
+    --border-subtle: #f1f5f9;
+    --text: #1a1a2e;
+    --text-muted: #64748b;
+    --primary: #ff6b35;
+    --secondary: #00b4d8;
+    --success: #16a34a;
+    --danger: #dc2626;
+    --warning: #d97706;
+    --font-heading: 'Inter', -apple-system, sans-serif;
+    --font-body: 'Inter', -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --radius-card: 8px;
+    --radius-input: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Nav */
+  .nav {
+    background: var(--surface);
+    border-bottom: 2px solid transparent;
+    border-image: linear-gradient(90deg, var(--primary), var(--secondary)) 1;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 0;
+    text-decoration: none;
+  }
+
+  .nav-brand-text {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 1.3rem;
+    letter-spacing: 0.05em;
+    color: var(--text);
+  }
+
+  .nav-brand-full {
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: max-width 0.3s ease, opacity 0.3s ease, margin 0.3s ease;
+    opacity: 0;
+    margin-left: 0;
+  }
+
+  .nav-brand:hover .nav-brand-full {
+    max-width: 280px;
+    opacity: 1;
+    margin-left: 0.5rem;
+  }
+
+  .nav-tabs {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-left: auto;
+  }
+
+  .nav-tab {
+    padding: 0.875rem 1.25rem;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+    font-weight: 600;
+  }
+
+  /* Seahorse SVG animation */
+  .seahorse {
+    animation: seahorse-float 2s infinite ease-in-out;
+  }
+
+  @keyframes seahorse-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+
+  /* Main content */
+  .main {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    width: 100%;
+    flex: 1;
+  }
+
+  .page-header {
+    margin-bottom: 1.5rem;
+  }
+
+  .page-header h1 {
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+
+  .page-header .subtitle {
+    color: var(--text-muted);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+
+  /* Stats cards */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    padding: 1.25rem 1rem;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.15s, border-color 0.15s;
+  }
+
+  .stat-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-color: var(--secondary);
+  }
+
+  .stat-card .stat-value {
+    font-family: var(--font-mono);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .stat-card .stat-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+  }
+
+  .stat-card.stat-pass .stat-value { color: var(--success); }
+  .stat-card.stat-warn .stat-value { color: var(--warning); }
+  .stat-card.stat-fail .stat-value { color: var(--danger); }
+
+  /* Search bar */
+  .search-bar {
+    margin-bottom: 1rem;
+  }
+
+  .search-bar input {
+    width: 100%;
+    max-width: 360px;
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-input);
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    background: var(--surface);
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+
+  .search-bar input::placeholder { color: var(--text-muted); }
+  .search-bar input:focus {
+    outline: none;
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1);
+  }
+
+  /* Table */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead { background: #f8fafc; }
+
+  th {
+    font-family: var(--font-body);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: color 0.15s;
+  }
+
+  th:hover { color: var(--text); }
+  th[data-sorted="asc"]::after { content: ' ↑'; color: var(--primary); }
+  th[data-sorted="desc"]::after { content: ' ↓'; color: var(--primary); }
+
+  td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+    font-size: 0.85rem;
+  }
+
+  tbody tr { border-left: 3px solid transparent; transition: border-color 0.15s, background 0.1s; }
+  tbody tr:nth-child(even) { background: #f8fafc; }
+  tbody tr:hover { border-left-color: var(--primary); background: rgba(255, 107, 53, 0.03); }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .cell-key {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .cell-key a {
+    color: var(--text);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+
+  .cell-key a:hover { color: var(--primary); }
+
+  .cell-score {
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .score-good { color: var(--success); font-weight: 600; }
+  .score-ok { color: var(--warning); font-weight: 500; }
+  .score-low { color: var(--danger); font-weight: 600; }
+
+  .date-cell {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-input);
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  .badge-pass { background: rgba(22, 163, 74, 0.1); color: var(--success); }
+  .badge-fail { background: rgba(220, 38, 38, 0.1); color: var(--danger); }
+  .badge-mixed { background: rgba(217, 119, 6, 0.1); color: var(--warning); }
+
+  /* Links */
+  a.jira-link {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--secondary);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  a.jira-link:hover { text-decoration: underline; }
+
+  /* Footer */
+  footer {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: 1.5rem;
+    width: 100%;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  footer .footer-meta {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+  }
+
+  /* Empty state */
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-muted);
+  }
+
+  .empty-state .seahorse-large {
+    margin-bottom: 1rem;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .nav { padding: 0 1rem; gap: 1rem; }
+    .main { padding: 1.5rem 1rem; }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .table-wrap { overflow-x: auto; }
+    table { min-width: 700px; }
+    footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-brand">
+    <svg class="seahorse" width="28" height="44" viewBox="0 0 12 22" fill="none" xmlns="http://www.w3.org/2000/svg" style="image-rendering:pixelated">
+      <!-- 16-bit seahorse (flipped right) based on pixel grid reference -->
+      <!-- Head/crown -->
+      <rect x="7" y="0" width="1" height="1" fill="#ff6b35"/>
+      <rect x="8" y="0" width="1" height="1" fill="#ffaa00"/>
+      <rect x="6" y="1" width="1" height="1" fill="#ff6b35"/>
+      <rect x="7" y="1" width="1" height="1" fill="#ff6b35"/>
+      <rect x="8" y="1" width="1" height="1" fill="#ffaa00"/>
+      <rect x="9" y="1" width="1" height="1" fill="#ffaa00"/>
+      <!-- Head -->
+      <rect x="3" y="2" width="1" height="1" fill="#f5f5f5"/>
+      <rect x="4" y="2" width="1" height="1" fill="#ffffff"/>
+      <rect x="5" y="2" width="1" height="1" fill="#ff6b35"/>
+      <rect x="6" y="2" width="1" height="1" fill="#ff6b35"/>
+      <rect x="7" y="2" width="1" height="1" fill="#ff6b35"/>
+      <rect x="8" y="2" width="1" height="1" fill="#ffaa00"/>
+      <rect x="9" y="2" width="1" height="1" fill="#ffaa00"/>
+      <!-- Snout + eye row -->
+      <rect x="2" y="3" width="1" height="1" fill="#f5f5f5"/>
+      <rect x="3" y="3" width="1" height="1" fill="#ff6b35"/>
+      <rect x="4" y="3" width="1" height="1" fill="#ff6b35"/>
+      <rect x="5" y="3" width="1" height="1" fill="#1a1a2e"/>
+      <rect x="6" y="3" width="1" height="1" fill="#ff6b35"/>
+      <rect x="7" y="3" width="1" height="1" fill="#ff6b35"/>
+      <rect x="8" y="3" width="1" height="1" fill="#ff6b35"/>
+      <rect x="9" y="3" width="1" height="1" fill="#ffaa00"/>
+      <!-- Snout -->
+      <rect x="1" y="4" width="1" height="1" fill="#ff6b35"/>
+      <rect x="2" y="4" width="1" height="1" fill="#ff6b35"/>
+      <rect x="3" y="4" width="1" height="1" fill="#ff6b35"/>
+      <rect x="4" y="4" width="1" height="1" fill="#ff6b35"/>
+      <rect x="5" y="4" width="1" height="1" fill="#ff6b35"/>
+      <rect x="6" y="4" width="1" height="1" fill="#ff6b35"/>
+      <rect x="7" y="4" width="1" height="1" fill="#ff6b35"/>
+      <rect x="8" y="4" width="1" height="1" fill="#ffaa00"/>
+      <!-- Neck -->
+      <rect x="2" y="5" width="1" height="1" fill="#ffaa00"/>
+      <rect x="3" y="5" width="1" height="1" fill="#ff6b35"/>
+      <rect x="4" y="5" width="1" height="1" fill="#ff6b35"/>
+      <rect x="5" y="5" width="1" height="1" fill="#ff6b35"/>
+      <rect x="6" y="5" width="1" height="1" fill="#ff6b35"/>
+      <rect x="7" y="5" width="1" height="1" fill="#ff6b35"/>
+      <rect x="8" y="5" width="1" height="1" fill="#ffaa00"/>
+      <!-- Upper body -->
+      <rect x="4" y="6" width="1" height="1" fill="#ff6b35"/>
+      <rect x="5" y="6" width="1" height="1" fill="#ff6b35"/>
+      <rect x="6" y="6" width="1" height="1" fill="#ff6b35"/>
+      <rect x="7" y="6" width="1" height="1" fill="#ff6b35"/>
+      <rect x="8" y="6" width="1" height="1" fill="#ff6b35"/>
+      <!-- Body rows -->
+      <rect x="4" y="7" width="1" height="1" fill="#ff6b35"/>
+      <rect x="5" y="7" width="1" height="1" fill="#ff6b35"/>
+      <rect x="6" y="7" width="1" height="1" fill="#ff6b35"/>
+      <rect x="7" y="7" width="1" height="1" fill="#ff6b35"/>
+      <rect x="8" y="7" width="1" height="1" fill="#ff6b35"/>
+      <!-- Mid body -->
+      <rect x="4" y="8" width="1" height="1" fill="#ff6b35"/>
+      <rect x="5" y="8" width="1" height="1" fill="#ffaa00"/>
+      <rect x="6" y="8" width="1" height="1" fill="#ff6b35"/>
+      <rect x="7" y="8" width="1" height="1" fill="#ff6b35"/>
+      <!-- Belly -->
+      <rect x="3" y="9" width="1" height="1" fill="#ffaa00"/>
+      <rect x="4" y="9" width="1" height="1" fill="#ffaa00"/>
+      <rect x="5" y="9" width="1" height="1" fill="#ff6b35"/>
+      <rect x="6" y="9" width="1" height="1" fill="#ff6b35"/>
+      <rect x="7" y="9" width="1" height="1" fill="#ff6b35"/>
+      <!-- Lower body -->
+      <rect x="4" y="10" width="1" height="1" fill="#ff6b35"/>
+      <rect x="5" y="10" width="1" height="1" fill="#ff6b35"/>
+      <rect x="6" y="10" width="1" height="1" fill="#ff6b35"/>
+      <rect x="7" y="10" width="1" height="1" fill="#ff6b35"/>
+      <rect x="4" y="11" width="1" height="1" fill="#ff6b35"/>
+      <rect x="5" y="11" width="1" height="1" fill="#ff6b35"/>
+      <rect x="6" y="11" width="1" height="1" fill="#ff6b35"/>
+      <!-- Narrow body -->
+      <rect x="4" y="12" width="1" height="1" fill="#ff6b35"/>
+      <rect x="5" y="12" width="1" height="1" fill="#ff6b35"/>
+      <rect x="6" y="12" width="1" height="1" fill="#ff6b35"/>
+      <rect x="4" y="13" width="1" height="1" fill="#ff6b35"/>
+      <rect x="5" y="13" width="1" height="1" fill="#ff6b35"/>
+      <!-- Lower narrow -->
+      <rect x="3" y="14" width="1" height="1" fill="#ff6b35"/>
+      <rect x="4" y="14" width="1" height="1" fill="#ff6b35"/>
+      <rect x="5" y="14" width="1" height="1" fill="#ff6b35"/>
+      <!-- Tail curl -->
+      <rect x="3" y="15" width="1" height="1" fill="#ff6b35"/>
+      <rect x="4" y="15" width="1" height="1" fill="#ffaa00"/>
+      <rect x="3" y="16" width="1" height="1" fill="#ff6b35"/>
+      <rect x="4" y="16" width="1" height="1" fill="#ff6b35"/>
+      <rect x="2" y="17" width="1" height="1" fill="#ff6b35"/>
+      <rect x="3" y="17" width="1" height="1" fill="#ff6b35"/>
+      <rect x="1" y="18" width="1" height="1" fill="#ffaa00"/>
+      <rect x="2" y="18" width="1" height="1" fill="#ff6b35"/>
+      <rect x="3" y="18" width="1" height="1" fill="#ff6b35"/>
+      <rect x="1" y="19" width="1" height="1" fill="#ff6b35"/>
+      <rect x="2" y="19" width="1" height="1" fill="#ff6b35"/>
+      <rect x="3" y="19" width="1" height="1" fill="#ffcc00"/>
+      <rect x="2" y="20" width="1" height="1" fill="#ff6b35"/>
+      <rect x="3" y="20" width="1" height="1" fill="#ff6b35"/>
+      <rect x="4" y="20" width="1" height="1" fill="#ffcc00"/>
+      <rect x="3" y="21" width="1" height="1" fill="#ff6b35"/>
+      <rect x="4" y="21" width="1" height="1" fill="#ff6b35"/>
+    </svg>
+    <span class="nav-brand-text">Eval</span>
+    <span class="nav-brand-full">Structured Criteria, Outcome &amp; Usability Testing</span>
+  </a>
+  <div class="nav-tabs">
+    <a href="index.html" class="nav-tab active">Eval Reports</a>
+    <a href="pain-leaderboard.html" class="nav-tab">Leaderboard of Pain</a>
+  </div>
+</nav>
+
+<main class="main">
+  <div class="page-header">
+    <h1>Eval Reports</h1>
+    <p class="subtitle">Prototype evaluation results — auto-updated on each run.</p>
+  </div>
+
+  <div class="stats-row">
+    {{STATS_CARDS}}
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Filter by key or title…" oninput="filterTable()">
+  </div>
+
+  <div class="table-wrap">
+    <table id="reportTable">
+      <thead>
+        <tr>
+          <th onclick="sortTable(0)">Prototype</th>
+          <th onclick="sortTable(1)">Title</th>
+          <th onclick="sortTable(2)">Result</th>
+          <th onclick="sortTable(3)">AC</th>
+          <th onclick="sortTable(4)">Usability</th>
+          <th onclick="sortTable(5)">Updated</th>
+          <th>Jira</th>
+        </tr>
+      </thead>
+      <tbody>
+{{REPORT_ROWS}}
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<footer>
+  <span class="footer-meta">Last updated: {{LAST_UPDATED}}</span>
+  <span>Internal access only</span>
+</footer>
+
+<script>
+function filterTable() {
+  var input = document.getElementById('searchInput').value.toLowerCase();
+  var rows = document.querySelectorAll('#reportTable tbody tr');
+  rows.forEach(function(row) {
+    row.style.display = row.textContent.toLowerCase().includes(input) ? '' : 'none';
+  });
+}
+
+function sortTable(col) {
+  var table = document.getElementById('reportTable');
+  var headers = table.querySelectorAll('th');
+  var rows = Array.from(table.tBodies[0].rows);
+  var asc = table.dataset.sortCol == col && table.dataset.sortDir !== 'asc';
+
+  headers.forEach(function(h) { h.removeAttribute('data-sorted'); });
+  headers[col].setAttribute('data-sorted', asc ? 'asc' : 'desc');
+
+  rows.sort(function(a, b) {
+    var aVal = a.cells[col].textContent.trim();
+    var bVal = b.cells[col].textContent.trim();
+    if (!isNaN(parseFloat(aVal)) && !isNaN(parseFloat(bVal))) {
+      return asc ? parseFloat(aVal) - parseFloat(bVal) : parseFloat(bVal) - parseFloat(aVal);
+    }
+    return asc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+  });
+
+  rows.forEach(function(row) { table.tBodies[0].appendChild(row); });
+  table.dataset.sortCol = col;
+  table.dataset.sortDir = asc ? 'asc' : 'desc';
+}
+</script>
+</body>
+</html>

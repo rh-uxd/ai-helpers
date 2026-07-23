@@ -1,0 +1,59 @@
+# Product Overlay — defaults for uxd-prototype-evaluate
+# Copy or edit this file for your product. Pass a custom path via --overlay if needed.
+# See references/skill-overlays.md for the overlay pattern.
+
+product:
+  name: "Product"
+  short_name: "product"
+  version: "main"
+
+# Jira configuration — maps project key prefixes to instance URLs
+jira:
+  instances:
+    - prefix: "PROJ-"
+      url: "https://issues.example.com/browse/"
+      type: "story"
+  outcome_project: ""
+  outcome_issue_type: "Outcome"
+  ac_location: "description"  # field where acceptance criteria live in the ticket
+
+# Git configuration — prototype repo conventions
+git:
+  base_branch: "main"
+  remote_url: ""
+  local_workspace: ""
+  pages_base_url: ""
+  mr_branch_pattern: "mr-{number}"
+  diff_url_template: ""
+
+# Design system — PatternFly configuration for consistency checks
+design_system:
+  name: "PatternFly 6"
+  context_path: ".context/consistency-checker/"
+  guidelines_path: ".context/consistency-checker/guidelines/"
+  analyze_script: ".context/consistency-checker/scripts/analyze.py"
+
+# Personas — canonical catalogs live in the plugin; deep YAML is optional bootstrap
+personas:
+  catalog_path: "${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml"
+  cards_path: "${CLAUDE_PLUGIN_ROOT}/knowledge/personas/"
+  overlays_catalog_path: "${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml"
+  overlays_path: "${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/"
+  context_path: ".context/usability-testing/personas/"
+  rubric_path: ".context/usability-testing/prompts/evaluate-flow.md"
+  # Leave empty to use catalog.yaml defaults.pair
+  default_pair: []
+
+# Navigation conventions — adjust to the target prototype codebase
+navigation:
+  sidebar_file: ""
+  routes_file: ""
+  feature_flags_file: ""
+
+# Known MR mapping — optional static map of Jira keys to MR numbers
+known_mrs: {}
+
+# Google Sheet integration (optional — leave sheet_id empty to disable)
+tracking:
+  sheet_id: ""
+  sheet_name: "Automated Eval"
