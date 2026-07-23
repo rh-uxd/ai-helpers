@@ -31,9 +31,10 @@ done
 # Build a map of skill-name → eval.yaml path by scanning the tree
 declare -A EVAL_PATHS
 while IFS= read -r eval_file; do
-  dir=$(dirname "$eval_file")
-  name=$(basename "$dir")
-  # For agent evals, strip the -eval suffix to get the agent name
+  # eval.yaml lives at .../<skill-or-agent>/eval/eval.yaml
+  dir=$(dirname "$eval_file")          # .../<skill>/eval
+  name=$(basename "$(dirname "$dir")") # <skill>
+  # For agent evals named <agent>-eval/, strip the suffix
   if [[ "$eval_file" == *"/agents/"* ]]; then
     name="${name%-eval}"
   fi

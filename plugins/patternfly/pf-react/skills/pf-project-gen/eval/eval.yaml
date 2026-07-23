@@ -1,0 +1,217 @@
+name: pf-project-gen-eval
+description: Evaluate pf-project-gen's PF6-safe scaffolding (deps, imports, starter structure)
+
+skill: pf-react:pf-project-gen
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  # Load the local pf-react plugin so /pf-react:pf-project-gen resolves
+  # even when the marketplace plugin is not installed globally.
+  # Path is resolved from the project root (cwd when eval-run executes).
+  plugin_dirs:
+    - plugins/patternfly/pf-react
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow:
+    - "Skill"
+    - "Bash"
+    - "Read"
+    - "Write"
+    - "Edit"
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic scaffolding request
+    - annotations.yaml: expect_pf_scaffold, expect_charts, prompt_style
+
+    Prompt styles covered:
+    - explicit: names pf-project-gen or asks to scaffold a PF React app
+    - implicit: asks for a PatternFly/React starter without naming the skill
+    - negative: wrong framework (Vue) — must not apply PF React scaffolding
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill scaffolds (or recommends scaffolding) a PatternFly React
+      project — package.json deps, starter App/layout files, CSS imports,
+      and optionally charts packages when requested. Judges inspect
+      conversation text and collected file artifacts.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+# With-skill / without-skill A/B delta
+#
+# Discriminating signal: PF6-safe dependency versions, correct starter
+# imports (base.css), and PF-specific project structure (seed repo /
+# PageSection|Stack|Grid). Baseline Claude may scaffold a generic CRA/Vite
+# React app, pin @patternfly/* to v5, or use outdated CSS import paths.
+#
+# Expected delta:
+# | Case                      | Without skill                              | With skill                                         |
+# |---------------------------|--------------------------------------------|----------------------------------------------------|
+# | explicit-scaffold         | Generic React scaffold; may omit PF6 pins  | Seed or @patternfly/* v6 + base.css + PF layout    |
+# | explicit-with-charts      | May omit react-charts / charts CSS         | Adds charts deps + patternfly-charts.css           |
+# | implicit-admin-dashboard  | Generic admin UI / MUI / raw CSS           | PF6 deps + PageSection/Stack/Grid starter          |
+# | implicit-migration-sandbox| Vague upgrade notes; PF5 leftover patterns | PF6-safe sandbox via seed or current packages      |
+# | contextual-prototype      | Generic Vite React starter                 | patternfly-react-seed or PF6 starter layout        |
+# | negative-vue-app          | N/A (negative control)                     | Vue/Vuetify path — no PF React scaffold            |
+
+judges:
+  - name: recommends_patternfly_setup
+    description: Recommends patternfly-react-seed or installs @patternfly/react-core
+    if: "annotations.get('expect_pf_scaffold') == True"
+    check: |
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_seed = "patternfly-react-seed" in text
+      has_core = "@patternfly/react-core" in text
+      if not has_seed and not has_core:
+          return False, "Neither patternfly-react-seed nor @patternfly/react-core found"
+      signals = []
+      if has_seed:
+          signals.append("seed")
+      if has_core:
+          signals.append("react-core")
+      return True, f"PatternFly setup present: {', '.join(signals)}"
+
+  - name: pf6_not_pf5_deps
+    description: PatternFly packages use v6 (not v4/v5) when versions are specified
+    if: "annotations.get('expect_pf_scaffold') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      # Fail on explicit PF4/PF5 pins for core packages
+      pf5_pin = re.compile(
+          r'@patternfly/(?:react-core|react-icons|react-table|react-charts|react-styles)'
+          r'["\s:@^~>=]*[45](?:\.\d+)?',
+          re.IGNORECASE,
+      )
+      if pf5_pin.search(text):
+          return False, "Pinned PatternFly dependency to v4/v5 — must be PF6-safe"
+      # Strong pass: explicit v6 version pin or PF6 language
+      pf6_pin = re.compile(
+          r'@patternfly/(?:react-core|react-icons|react-table|react-charts|react-styles)'
+          r'["\s:@^~>=]*6(?:\.\d+)?',
+          re.IGNORECASE,
+      )
+      pf6_lang = re.compile(
+          r'\b(patternfly\s*v?6|pf\s*v?6|pf6|patternfly 6)\b',
+          re.IGNORECASE,
+      )
+      if pf6_pin.search(text) or pf6_lang.search(text):
+          return True, "PF6-safe dependency guidance present"
+      # Soft pass: installs @patternfly packages without a major pin (seed / unpinned npm install)
+      if "@patternfly/react-core" in text or "patternfly-react-seed" in text:
+          if re.search(r'@patternfly/[^\s"\']+@[45]\b', text):
+              return False, "Found @patternfly package pinned to v4/v5"
+          return True, "PF packages via seed or unpinned install (no v5 pin)"
+      return False, "No PF6 dependency signal found"
+
+  - name: correct_base_css_import
+    description: Starter imports @patternfly/react-core/dist/styles/base.css
+    if: "annotations.get('expect_pf_scaffold') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      base_css = "@patternfly/react-core/dist/styles/base.css"
+      if base_css not in text:
+          return False, f"Missing required starter CSS import: {base_css}"
+      # Fail if legacy global patternfly.css appears alongside base.css
+      legacy = re.compile(
+          r'@patternfly/patternfly/patternfly\.css',
+          re.IGNORECASE,
+      )
+      if legacy.search(text):
+          return False, "Uses legacy patternfly.css alongside react-core base.css"
+      return True, "Includes react-core base.css starter import"
+
+  - name: pf_layout_starter
+    description: Starter layout uses PatternFly layout components (PageSection, Stack, or Grid)
+    if: "annotations.get('expect_pf_scaffold') == True"
+    check: |
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      layouts = [name for name in ("PageSection", "Stack", "Grid") if name in text]
+      if not layouts:
+          return False, "No PF layout components (PageSection, Stack, Grid) in starter"
+      return True, f"PF layout starter uses: {', '.join(layouts)}"
+
+  - name: charts_deps_when_requested
+    description: When charts are requested, adds react-charts (and preferably charts CSS)
+    if: "annotations.get('expect_charts') == True"
+    check: |
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_charts_pkg = "@patternfly/react-charts" in text
+      has_charts_css = "patternfly-charts.css" in text
+      if not has_charts_pkg:
+          return False, "Charts requested but @patternfly/react-charts missing"
+      if has_charts_css:
+          return True, "Includes react-charts package and patternfly-charts.css"
+      return True, "Includes @patternfly/react-charts (charts CSS optional but preferred)"
+
+  - name: negative_no_pf_react_scaffold
+    description: Wrong-framework requests must not produce a PatternFly React scaffold
+    if: "annotations.get('expect_pf_scaffold') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      # Must acknowledge Vue (or decline PF React scaffolding for this request)
+      vue_signal = re.compile(
+          r'\b(vue|vuetify|create-vue|nuxt)\b',
+          re.IGNORECASE,
+      )
+      if not vue_signal.search(text):
+          return False, "Negative control — expected Vue/Vuetify scaffolding guidance"
+      # Must not install / declare PF React core as the scaffold for a Vue request
+      pf_scaffold = re.compile(
+          r'(npm\s+(?:install|i)\b|yarn\s+add|pnpm\s+add).{0,80}@patternfly/react-core'
+          r'|patternfly-react-seed'
+          r'|create-react-app.{0,40}patternfly'
+          r'|["\']@patternfly/react-core["\']\s*:'
+          r'|(?:from|import)\s+["\']@patternfly/react-core'
+          r'|require\(\s*["\']@patternfly/react-core',
+          re.IGNORECASE | re.DOTALL,
+      )
+      if pf_scaffold.search(text):
+          return False, "Negative control failed — applied PF React scaffolding to a Vue request"
+      return True, "Correctly stayed on Vue path without PF React scaffold"
+
+thresholds:
+  recommends_patternfly_setup:
+    min_pass_rate: 1.0
+  pf6_not_pf5_deps:
+    min_pass_rate: 1.0
+  correct_base_css_import:
+    min_pass_rate: 1.0
+  pf_layout_starter:
+    min_pass_rate: 1.0
+  charts_deps_when_requested:
+    min_pass_rate: 1.0
+  negative_no_pf_react_scaffold:
+    min_pass_rate: 1.0
