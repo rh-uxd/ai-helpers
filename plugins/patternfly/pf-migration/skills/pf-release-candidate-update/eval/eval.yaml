@@ -1,0 +1,171 @@
+name: pf-release-candidate-update-eval
+description: Evaluate pf-release-candidate-update's RC resolution, scoped dependency updates, and upgrade workflow
+
+skill: pf-migration:pf-release-candidate-update
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: case_type and package_manager for conditional judges
+    - Optional package.json or lockfile fixtures the prompt references
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill plans or performs a PatternFly RC upgrade workflow.
+      Judges check conversation text and any updated package.json artifacts.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: references_bundled_script
+    description: Uses the bundled latest-release-candidates.sh script for version resolution
+    if: "annotations.get('case_type') == 'basic'"
+    check: |
+      import re
+      text = outputs.get("conversation", "").lower()
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content.lower()
+      script_pattern = re.compile(
+          r'(?:\$?claude_skill_dir/scripts/)?latest-release-candidates\.sh(?:\s+(?:--json|--update)\b)?'
+      )
+      if not script_pattern.search(text):
+          return False, "Did not reference the bundled release-candidate script"
+      return True, "References the bundled release-candidate script"
+
+  - name: scopes_to_patternfly
+    description: Updates only @patternfly/* packages, not unrelated dependencies
+    if: "annotations.get('case_type') == 'basic'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      if "@patternfly/" not in text:
+          return False, "Did not mention @patternfly/* packages"
+      lodash_update = re.compile(
+          r'(update|bump|set|change).{0,40}lodash',
+          re.IGNORECASE
+      )
+      if lodash_update.search(text):
+          return False, "Incorrectly proposed updating non-PatternFly dependency lodash"
+      return True, "Scopes updates to PatternFly packages only"
+
+  - name: uses_exact_versions
+    description: Uses exact RC versions without ^ or ~ prefixes
+    if: "annotations.get('case_type') == 'basic'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      exact_guidance = re.compile(
+          r'(exact|without\s+[\^~]|no\s+[\^~]|remove(?:d)?\s+version\s+prefix)',
+          re.IGNORECASE
+      )
+      rc_version = re.compile(r'\d+\.\d+\.\d+-prerelease\.\d+')
+      if exact_guidance.search(text) or rc_version.search(text):
+          return True, "Uses or describes exact RC versions"
+      return False, "Did not mention exact RC versions or removing version prefixes"
+
+  - name: includes_build_test
+    description: Plans build and test verification after the upgrade
+    if: "annotations.get('case_type') == 'basic'"
+    check: |
+      import re
+      text = outputs.get("conversation", "").lower()
+      has_build = re.search(r'\b(build|npm run build|pnpm build|yarn build)\b', text)
+      has_test = re.search(r'\b(test|npm test|pnpm test|yarn test)\b', text)
+      if not has_build or not has_test:
+          return False, "Missing build and/or test verification steps"
+      return True, "Includes build and test verification"
+
+  - name: uses_pnpm_install
+    description: Detects pnpm from lockfile and uses pnpm install
+    if: "annotations.get('package_manager') == 'pnpm'"
+    check: |
+      import re
+      text = outputs.get("conversation", "").lower()
+      if not re.search(r'\bpnpm\s+install\b', text):
+          return False, "Did not use pnpm install for a pnpm project"
+      return True, "Correctly uses pnpm install"
+
+  - name: skips_resolution_script
+    description: Uses user-provided versions instead of resolving from npm
+    if: "annotations.get('case_type') == 'user-provided'"
+    check: |
+      import re
+      text = outputs.get("conversation", "").lower()
+      resolve_pattern = re.compile(r'latest-release-candidates\.sh(?:\s+.*)?--json')
+      if resolve_pattern.search(text):
+          return False, "Ran resolution script despite user-provided versions"
+      skip_pattern = re.compile(
+          r'(user\s+provided|provided\s+version|skip\s+the\s+script|use\s+those\s+instead|already\s+have\s+the\s+version)'
+      )
+      if skip_pattern.search(text):
+          return True, "Recognizes user-provided versions and skips resolution"
+      return True, "Does not run resolution when versions are provided"
+
+  - name: uses_provided_version
+    description: Applies the exact user-provided RC version
+    if: "annotations.get('case_type') == 'user-provided'"
+    check: |
+      import re
+      version = outputs.get("annotations", {}).get("provided_version", "")
+      if not version:
+          return False, "Test case missing provided_version annotation"
+      conversation = outputs.get("conversation", "").lower()
+      if re.search(r'latest-release-candidates\.sh(?:\s+.*)?--json', conversation):
+          return False, "Ran resolution script despite user-provided versions"
+      files = outputs.get("files", {})
+      for path, content in files.items():
+          if path.endswith("package.json") and version in content:
+              return True, f"Uses provided version in package.json: {version}"
+      install_or_update = re.compile(
+          rf'(@patternfly/[^\s"\']+|npm|pnpm|yarn).{{0,80}}{re.escape(version)}|{re.escape(version)}.{{0,80}}(@patternfly/|package\.json)',
+          re.IGNORECASE | re.DOTALL,
+      )
+      haystack = conversation
+      for content in files.values():
+          haystack += "\n" + content
+      if install_or_update.search(haystack):
+          return True, f"Uses provided version in update/install command: {version}"
+      return False, f"Did not apply provided version to package artifact or update command: {version}"
+
+thresholds:
+  references_bundled_script:
+    min_pass_rate: 1.0
+  scopes_to_patternfly:
+    min_pass_rate: 1.0
+  uses_exact_versions:
+    min_pass_rate: 1.0
+  includes_build_test:
+    min_pass_rate: 1.0
+  uses_pnpm_install:
+    min_pass_rate: 1.0
+  skips_resolution_script:
+    min_pass_rate: 1.0
+  uses_provided_version:
+    min_pass_rate: 1.0

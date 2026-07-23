@@ -77,7 +77,7 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 <tr><td nowrap><b>uxd-workshop</b></td><td>UXD team tools and skill incubator — prototyping, research, design review, team workflows</td><td>`uxd-evaluate-design-heuristics`, `uxd-figma-read`, `uxd-prototype-create`</td></tr>
 <tr><td nowrap><b>pf-design-audit</b></td><td>Design audit — validate existing code and designs against PatternFly standards</td><td>`pf-color-scan`, `pf-css-token-check`, `pf-figma-check`</td></tr>
 <tr><td nowrap><b>pf-design-guide</b></td><td>Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation</td><td>`pf-ai-guide`, `pf-figma-design-mode`</td></tr>
-<tr><td nowrap><b>pf-migration</b></td><td>PF version migration — breaking change detection, class scanning, upgrade planning</td><td>`pf-css-migration-scan`, `pf-react-migration-scan`</td></tr>
+<tr><td nowrap><b>pf-migration</b></td><td>PF version migration — breaking change detection, class scanning, upgrade planning</td><td>`pf-css-migration-scan`, `pf-react-migration-scan`, `pf-release-candidate-update`</td></tr>
 <tr><td nowrap><b>pf-react</b></td><td>React component development — coding standards, testing, and structure</td><td>`pf-component-check`, `pf-component-reuse-check`, `pf-deploy`</td></tr>
 <tr><td nowrap><b>pf-workshop</b></td><td>PatternFly team tools and skill incubation — issue triage, release management, codebase auditing, new skill development</td><td>`pf-analytics-repo-pruning`, `pf-bug-triage`, `pf-content-review`</td></tr>
 </table>

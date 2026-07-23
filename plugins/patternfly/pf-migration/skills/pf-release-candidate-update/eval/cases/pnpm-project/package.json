@@ -1,0 +1,7 @@
+{
+  "name": "pf-rc-pnpm-fixture",
+  "private": true,
+  "dependencies": {
+    "@patternfly/react-core": "^6.4.0"
+  }
+}

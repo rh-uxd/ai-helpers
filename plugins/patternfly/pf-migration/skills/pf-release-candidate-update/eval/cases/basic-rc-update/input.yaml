@@ -1,0 +1,2 @@
+prompt: "Update this project to the latest PatternFly release candidates. package.json is in the current directory."
+fixture: package.json
