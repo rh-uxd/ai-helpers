@@ -47,7 +47,8 @@ judges:
       for path, content in outputs.get("files", {}).items():
           text += "\n" + content
       text_lower = text.lower()
-      expected = annotations.get("expected_routing", [])
+      annots = outputs.get("annotations", {})
+      expected = annots.get("expected_routing", [])
       found = []
       missing = []
       for skill_name in expected:
