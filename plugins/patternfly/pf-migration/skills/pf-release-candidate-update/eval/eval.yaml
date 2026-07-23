@@ -133,7 +133,7 @@ judges:
     if: "annotations.get('case_type') == 'user-provided'"
     check: |
       import re
-      version = annotations.get("provided_version", "")
+      version = outputs.get("annotations", {}).get("provided_version", "")
       if not version:
           return False, "Test case missing provided_version annotation"
       conversation = outputs.get("conversation", "").lower()
