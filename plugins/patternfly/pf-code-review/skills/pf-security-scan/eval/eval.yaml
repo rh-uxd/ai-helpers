@@ -47,8 +47,9 @@ judges:
     check: |
       text = outputs.get("conversation", "")
       text_lower = text.lower()
-      expected_sinks = annotations.get("expected_sinks", [])
-      expected_severity = str(annotations.get("expected_severity", "critical")).lower()
+      annots = outputs.get("annotations", {})
+      expected_sinks = annots.get("expected_sinks", [])
+      expected_severity = str(annots.get("expected_severity", "critical")).lower()
       if not expected_sinks:
           return False, "Test case missing expected_sinks annotation"
       missing = [s for s in expected_sinks if s.lower() not in text_lower]
@@ -64,8 +65,9 @@ judges:
     check: |
       text = outputs.get("conversation", "")
       text_lower = text.lower()
-      expected_sinks = annotations.get("expected_sinks", [])
-      expected_severity = str(annotations.get("expected_severity", "critical")).lower()
+      annots = outputs.get("annotations", {})
+      expected_sinks = annots.get("expected_sinks", [])
+      expected_severity = str(annots.get("expected_severity", "critical")).lower()
       if not expected_sinks:
           return False, "Test case missing expected_sinks annotation"
       missing = [s for s in expected_sinks if s.lower() not in text_lower]
