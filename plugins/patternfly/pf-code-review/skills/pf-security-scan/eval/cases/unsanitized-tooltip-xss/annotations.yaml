@@ -1,0 +1,7 @@
+expect_violations: true
+violation_type: xss
+expected_severity: CRITICAL
+expected_sinks:
+  - Tooltip
+  - dangerouslySetInnerHTML
+  - bioHtml

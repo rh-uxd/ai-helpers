@@ -1,0 +1,2 @@
+prompt: "Scan this React component for PatternFly security anti-patterns — XSS risks and unsanitized user input."
+fixture: UserProfileCard.tsx

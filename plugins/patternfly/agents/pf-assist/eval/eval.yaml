@@ -47,7 +47,8 @@ judges:
       for path, content in outputs.get("files", {}).items():
           text += "\n" + content
       text_lower = text.lower()
-      expected = annotations.get("expected_routing", [])
+      annots = outputs.get("annotations", {})
+      expected = annots.get("expected_routing", [])
       found = []
       missing = []
       for skill_name in expected:
@@ -73,8 +74,9 @@ judges:
       pf_subskills = [
           "pf-figma-check", "pf-color-scan", "pf-import-check",
           "pf-component-check", "pf-test-gen", "pf-figma-token-check",
-          "pf-css-migration-scan", "pf-project-gen", "pf-icon-finder",
-          "pf-figma-design-mode", "pf-design-comments-setup", "pf-ai-guide"
+          "pf-css-migration-scan", "pf-security-scan", "pf-project-gen",
+          "pf-icon-finder", "pf-figma-design-mode", "pf-design-comments-setup",
+          "pf-ai-guide"
       ]
       found_pf = [s for s in pf_subskills if s in text_lower]
       if found_pf:

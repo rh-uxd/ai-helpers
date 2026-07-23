@@ -30,6 +30,11 @@
       "description": "PF version migration — breaking change detection, upgrade planning"
     },
     {
+      "name": "pf-code-review",
+      "source": "./plugins/patternfly/pf-code-review",
+      "description": "Code review and quality — adversarial review, security patterns"
+    },
+    {
       "name": "pf-mcp",
       "source": "./plugins/patternfly/pf-mcp",
       "description": "PatternFly MCP server — component docs and design tokens via MCP"
