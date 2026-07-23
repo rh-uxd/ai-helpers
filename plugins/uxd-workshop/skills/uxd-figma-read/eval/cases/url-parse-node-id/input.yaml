@@ -1,0 +1,6 @@
+prompt: >-
+  Using the uxd-figma-read skill, parse this Figma URL only — do not call the
+  network, MCP, or REST API. Report the file key and the node ID in the format
+  the Figma REST API expects (colon-separated).
+
+  URL: https://www.figma.com/design/AbCdEfGhIjKlMnOp/Settings-Redesign?node-id=16-1047&t=abc123

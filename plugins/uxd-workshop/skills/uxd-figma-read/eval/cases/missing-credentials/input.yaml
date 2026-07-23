@@ -1,0 +1,7 @@
+prompt: >-
+  Using the uxd-figma-read skill, retrieve design context from this Figma file.
+  Figma MCP tools are unavailable in this environment, and FIGMA_PAT is not set.
+  Follow the skill's error handling — do not invent page names, frames, or
+  screenshots.
+
+  URL: https://www.figma.com/design/AbCdEfGhIjKlMnOp/Settings-Redesign?node-id=16-1047
