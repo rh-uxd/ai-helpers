@@ -37,7 +37,7 @@ dataset:
     - annotations.yaml: expect_pf_scaffold, expect_charts, prompt_style
 
     Prompt styles covered:
-    - explicit: names /pf-project-gen or asks to scaffold a PF React app
+    - explicit: names pf-project-gen or asks to scaffold a PF React app
     - implicit: asks for a PatternFly/React starter without naming the skill
     - negative: wrong framework (Vue) — must not apply PF React scaffolding
 

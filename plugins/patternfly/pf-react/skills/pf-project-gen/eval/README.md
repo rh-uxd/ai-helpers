@@ -8,7 +8,7 @@ Baseline Claude (no skill) often scaffolds a generic CRA/Vite React app, pins `@
 
 | Case | Prompt style | Without skill (expected) | With skill (expected) |
 |------|--------------|--------------------------|------------------------|
-| `explicit-scaffold` | Explicit `/pf-project-gen` | Generic React scaffold; may omit PF6 | Seed or `@patternfly/*` v6 + `base.css` + PF layout |
+| `explicit-scaffold` | Explicit `pf-project-gen` | Generic React scaffold; may omit PF6 | Seed or `@patternfly/*` v6 + `base.css` + PF layout |
 | `explicit-with-charts` | Explicit + charts | May omit charts package/CSS | Adds `@patternfly/react-charts` (+ charts CSS) |
 | `implicit-admin-dashboard` | Implicit PF admin app | Generic admin UI / other design systems | PF6 deps + `PageSection`/`Stack`/`Grid` |
 | `implicit-migration-sandbox` | Implicit PF5→PF6 sandbox | Vague upgrade notes; PF5 leftovers | PF6-safe sandbox via seed or current packages |
