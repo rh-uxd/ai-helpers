@@ -137,13 +137,13 @@ judges:
       base_css = "@patternfly/react-core/dist/styles/base.css"
       if base_css not in text:
           return False, f"Missing required starter CSS import: {base_css}"
-      # Prefer PF6 base.css over legacy global patternfly.css as the primary import
+      # Fail if legacy global patternfly.css appears alongside base.css
       legacy = re.compile(
           r'@patternfly/patternfly/patternfly\.css',
           re.IGNORECASE,
       )
-      if legacy.search(text) and base_css not in text:
-          return False, "Uses legacy patternfly.css without react-core base.css"
+      if legacy.search(text):
+          return False, "Uses legacy patternfly.css alongside react-core base.css"
       return True, "Includes react-core base.css starter import"
 
   - name: pf_layout_starter
@@ -188,11 +188,14 @@ judges:
       )
       if not vue_signal.search(text):
           return False, "Negative control — expected Vue/Vuetify scaffolding guidance"
-      # Must not install PF React core as the primary scaffold for a Vue request
+      # Must not install / declare PF React core as the scaffold for a Vue request
       pf_scaffold = re.compile(
-          r'(npm\s+install|yarn\s+add|pnpm\s+add).{0,80}@patternfly/react-core'
+          r'(npm\s+(?:install|i)\b|yarn\s+add|pnpm\s+add).{0,80}@patternfly/react-core'
           r'|patternfly-react-seed'
-          r'|create-react-app.{0,40}patternfly',
+          r'|create-react-app.{0,40}patternfly'
+          r'|["\']@patternfly/react-core["\']\s*:'
+          r'|(?:from|import)\s+["\']@patternfly/react-core'
+          r'|require\(\s*["\']@patternfly/react-core',
           re.IGNORECASE | re.DOTALL,
       )
       if pf_scaffold.search(text):
