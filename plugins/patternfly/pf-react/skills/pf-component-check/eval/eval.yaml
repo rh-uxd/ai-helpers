@@ -1,7 +1,7 @@
 name: pf-component-check-eval
 description: Evaluate pf-component-check's enforcement of PatternFly React nesting and wrapper hierarchies
 
-skill: pf-component-check
+skill: react:pf-component-check
 
 execution:
   mode: case
@@ -9,9 +9,6 @@ execution:
 
 runner:
   type: claude-code
-  plugin_dirs:
-    - plugins/patternfly/pf-mcp
-    - plugins/patternfly/pf-react
 
 models:
   skill: claude-sonnet-4-6
