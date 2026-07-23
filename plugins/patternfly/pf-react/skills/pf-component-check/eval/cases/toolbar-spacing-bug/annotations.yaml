@@ -1,0 +1,8 @@
+expect_violations: true
+prompt_style: implicit
+required_wrapper: ToolbarContent
+parent_component: Toolbar
+pf_signals:
+  - ToolbarContent
+  - ToolbarItem
+  - Toolbar

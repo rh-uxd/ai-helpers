@@ -1,0 +1,2 @@
+prompt: "The action bar in ResourceToolbar.tsx has broken spacing between buttons — can you figure out what's wrong with the layout?"
+fixture: ResourceToolbar.tsx

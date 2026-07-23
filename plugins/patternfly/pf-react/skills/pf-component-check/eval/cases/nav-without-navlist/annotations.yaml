@@ -1,0 +1,8 @@
+expect_violations: true
+prompt_style: contextual
+required_wrapper: NavList
+parent_component: Nav
+pf_signals:
+  - NavList
+  - NavItem
+  - Nav

@@ -1,0 +1,2 @@
+prompt: "Audit the PatternFly component structure in DashboardPage.tsx for hierarchy violations."
+fixture: DashboardPage.tsx

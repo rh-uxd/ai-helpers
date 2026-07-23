@@ -1,0 +1,197 @@
+name: pf-component-check-eval
+description: Evaluate pf-component-check's enforcement of PatternFly React nesting and wrapper hierarchies
+
+skill: react:pf-component-check
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: expect_violations, required_wrapper, parent_component
+    - A .tsx fixture file the prompt references
+
+    Prompt styles covered:
+    - explicit: names the skill / asks for a structure audit
+    - implicit: describes a spacing or layout symptom without naming PF rules
+    - negative: correctly structured component (no violations)
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces a text report identifying hierarchy violations
+      with file path, line numbers, required wrappers, and fix guidance.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+# With-skill / without-skill A/B delta
+#
+# Discriminating signal: PF-specific nesting rules and required wrappers
+# (PageSection under Page, CardBody under Card, ToolbarContent/ToolbarItem,
+# NavList under Nav, DrawerPanelContent via panelContent prop). Baseline
+# Claude often accepts invalid nesting as "valid React" or suggests generic
+# CSS/layout fixes instead of the missing PatternFly wrapper.
+#
+# Expected delta:
+# | Case                      | Without skill                         | With skill                                      |
+# |---------------------------|---------------------------------------|-------------------------------------------------|
+# | missing-page-section      | May accept raw div under Page         | Flags missing PageSection                       |
+# | missing-card-body         | May treat raw Card children as fine   | Flags missing CardBody                          |
+# | toolbar-spacing-bug       | Suggests CSS padding / flex hacks     | Flags missing ToolbarContent + ToolbarItem      |
+# | drawer-panel-as-child     | Misses panelContent prop requirement  | Moves DrawerPanelContent to panelContent        |
+# | nav-without-navlist       | Misses NavList requirement            | Flags NavItem not under NavList                 |
+# | valid-structure           | N/A (negative control)                | Clean report — no false hierarchy violations    |
+
+judges:
+  - name: flags_missing_wrapper
+    description: Names the required PatternFly wrapper that is missing from the fixture
+    if: "annotations.get('expect_violations') == True"
+    check: |
+      import re
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      wrapper = ann.get("required_wrapper", "")
+      if not wrapper:
+          return False, "Test case missing required_wrapper annotation"
+      # Must mention the wrapper as a finding, not only as a passing example
+      pattern = re.compile(
+          r'(missing|require|need|should|wrap|instead|without|not under|direct child|'
+          r'ERROR|WARN|violation|flag|fix|insert|add).{0,80}'
+          + re.escape(wrapper)
+          + r'|'
+          + re.escape(wrapper)
+          + r'.{0,80}(missing|required|needed|wrap|instead|ERROR|WARN|violation|flag)',
+          re.IGNORECASE | re.DOTALL,
+      )
+      if not pattern.search(text):
+          # Fallback: wrapper appears near parent or "hierarchy"/"structure" language
+          parent = ann.get("parent_component", "")
+          if wrapper in text and (
+              re.search(r'\b(ERROR|WARN|violation|hierarchy|nesting|wrapper)\b', text, re.I)
+              or (parent and parent in text)
+          ):
+              return True, f"Flagged missing wrapper: {wrapper}"
+          return False, f"Did not flag missing PatternFly wrapper: {wrapper}"
+      return True, f"Flagged missing wrapper: {wrapper}"
+
+  - name: suggests_hierarchy_fix
+    description: Recommends the correct PF parent/child hierarchy, not generic React structure advice
+    if: "annotations.get('expect_violations') == True"
+    check: |
+      import re
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      wrapper = ann.get("required_wrapper", "")
+      parent = ann.get("parent_component", "")
+      if not wrapper:
+          return False, "Test case missing required_wrapper annotation"
+      # Fix language should reference wrapping / hierarchy with the PF component
+      fix_pattern = re.compile(
+          r'(wrap|nest|place|put|move|use|add|insert|replace).{0,100}'
+          + re.escape(wrapper)
+          + r'|'
+          + re.escape(wrapper)
+          + r'.{0,100}(wrap|around|inside|under|within|child|prop)',
+          re.IGNORECASE | re.DOTALL,
+      )
+      if not fix_pattern.search(text):
+          return False, f"Did not suggest hierarchy fix involving {wrapper}"
+      # Reject purely generic React advice with no PF wrapper named in a fix context
+      generic_only = re.compile(
+          r'\b(flexbox|css grid|margin|padding|custom css)\b',
+          re.IGNORECASE,
+      )
+      pf_fix = wrapper in text and (
+          parent in text if parent else True
+      )
+      if generic_only.search(text) and not pf_fix:
+          return False, "Suggested generic CSS/layout advice instead of PF hierarchy fix"
+      return True, f"Suggests PF hierarchy fix with {wrapper}"
+
+  - name: pf_specific_not_generic
+    description: Findings cite PatternFly component names, not generic React composition advice alone
+    if: "annotations.get('expect_violations') == True"
+    check: |
+      import re
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf_components = ann.get("pf_signals", [])
+      if not pf_components:
+          pf_components = [
+              ann.get("required_wrapper", ""),
+              ann.get("parent_component", ""),
+          ]
+      pf_components = [c for c in pf_components if c]
+      found = [c for c in pf_components if c in text]
+      if len(found) < 1:
+          return False, f"No PatternFly component names cited from {pf_components}"
+      # Must not be ONLY generic React tree advice
+      if re.search(r'\b(ERROR|WARN|PageSection|CardBody|ToolbarContent|NavList|panelContent)\b', text):
+          return True, f"Cites PF-specific structure: {found}"
+      if found and re.search(r'\b(hierarch|nest|wrapper|structure|composition)\b', text, re.I):
+          return True, f"Cites PF components in structural context: {found}"
+      return False, "Output lacks PF-specific hierarchy language"
+
+  - name: no_false_positives
+    description: Does not invent hierarchy violations for a correctly structured component
+    if: "annotations.get('expect_violations') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      # Hard fail if report claims ERROR violations for known-good wrappers
+      false_positive = re.compile(
+          r'\[ERROR\].{0,120}(missing|should wrap|direct child|instead of)',
+          re.IGNORECASE | re.DOTALL,
+      )
+      if false_positive.search(text):
+          return False, "False positive — reported ERROR hierarchy violations on valid structure"
+      # Soft signals: claiming "0 errors" / clean / no violations is ideal
+      clean = re.compile(
+          r'(no (errors|violations|issues|problems)|errors?:\s*0|clean|correctly structured|valid hierarchy)',
+          re.IGNORECASE,
+      )
+      # Also accept absence of ERROR lines when WARN/INFO only or summary is clean
+      error_lines = re.findall(r'\[ERROR\]', text)
+      if error_lines:
+          return False, f"False positive — found {len(error_lines)} [ERROR] finding(s) on valid structure"
+      if clean.search(text) or not re.search(r'\b(violation|missing wrapper|must wrap)\b', text, re.I):
+          return True, "No false-positive hierarchy errors on valid structure"
+      return False, "Ambiguous report — may be inventing hierarchy issues on valid structure"
+
+thresholds:
+  flags_missing_wrapper:
+    min_pass_rate: 1.0
+  suggests_hierarchy_fix:
+    min_pass_rate: 1.0
+  pf_specific_not_generic:
+    min_pass_rate: 1.0
+  no_false_positives:
+    min_pass_rate: 1.0

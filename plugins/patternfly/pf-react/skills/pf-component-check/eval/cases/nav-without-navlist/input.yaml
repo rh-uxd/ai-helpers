@@ -1,0 +1,2 @@
+prompt: "Looking at SideNav.tsx — does the navigation hierarchy follow PatternFly conventions? Something feels off about how the items are nested."
+fixture: SideNav.tsx

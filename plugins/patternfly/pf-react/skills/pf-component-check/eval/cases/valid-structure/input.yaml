@@ -1,0 +1,2 @@
+prompt: "Audit WorkloadsPage.tsx for PatternFly component structure issues."
+fixture: WorkloadsPage.tsx

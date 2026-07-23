@@ -1,0 +1,7 @@
+expect_violations: true
+prompt_style: explicit
+required_wrapper: PageSection
+parent_component: Page
+pf_signals:
+  - PageSection
+  - Page

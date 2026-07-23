@@ -1,0 +1,2 @@
+prompt: "Run a PatternFly structure audit on ServiceSummaryCard.tsx and report any nesting or wrapper issues."
+fixture: ServiceSummaryCard.tsx
