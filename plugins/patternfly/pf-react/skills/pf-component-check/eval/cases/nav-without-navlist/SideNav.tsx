@@ -6,7 +6,6 @@ interface SideNavProps {
   onSelect: (itemId: string) => void;
 }
 
-/** Invalid: NavItem must be under NavList (or inside NavGroup), not directly under Nav. */
 export const SideNav: React.FC<SideNavProps> = ({ activeItem, onSelect }) => (
   <Nav
     onSelect={(_event, result) => onSelect(String(result.itemId))}

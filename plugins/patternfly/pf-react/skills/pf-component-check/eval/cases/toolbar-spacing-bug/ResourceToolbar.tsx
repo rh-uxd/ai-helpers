@@ -8,10 +8,6 @@ interface ResourceToolbarProps {
   onDelete: () => void;
 }
 
-/**
- * Invalid: Toolbar children must be ToolbarContent; controls need ToolbarItem.
- * Symptom often looks like missing spacing between actions.
- */
 export const ResourceToolbar: React.FC<ResourceToolbarProps> = ({
   search,
   onSearchChange,

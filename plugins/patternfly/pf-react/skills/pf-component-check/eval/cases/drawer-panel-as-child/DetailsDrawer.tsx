@@ -16,10 +16,6 @@ interface DetailsDrawerProps {
   panelBody: React.ReactNode;
 }
 
-/**
- * Invalid: DrawerPanelContent must be passed via DrawerContent's panelContent prop,
- * not nested as a child. Main column also needs DrawerContentBody.
- */
 export const DetailsDrawer: React.FC<DetailsDrawerProps> = ({
   isExpanded,
   onClose,

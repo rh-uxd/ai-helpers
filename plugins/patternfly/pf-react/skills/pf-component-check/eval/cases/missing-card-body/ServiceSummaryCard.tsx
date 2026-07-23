@@ -7,7 +7,6 @@ interface ServiceSummaryCardProps {
   onManage: () => void;
 }
 
-/** Invalid: body content must sit in CardBody (or CardHeader / CardFooter). */
 export const ServiceSummaryCard: React.FC<ServiceSummaryCardProps> = ({
   name,
   description,

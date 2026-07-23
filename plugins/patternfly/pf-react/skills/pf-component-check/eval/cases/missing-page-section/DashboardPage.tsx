@@ -5,7 +5,6 @@ interface DashboardPageProps {
   title: string;
 }
 
-/** Invalid: Page main content must use PageSection (or PageGroup), not a raw div. */
 export const DashboardPage: React.FC<DashboardPageProps> = ({ title }) => (
   <Page>
     <div className="dashboard-content">
