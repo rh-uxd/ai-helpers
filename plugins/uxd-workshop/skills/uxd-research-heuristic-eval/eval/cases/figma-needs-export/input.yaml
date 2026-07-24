@@ -1,0 +1,4 @@
+prompt: >-
+  Using the uxd-research-heuristic-eval skill with --framework nielsen: evaluate
+  https://www.figma.com/design/AbCdEfGhIjKlMnOp/Settings-Redesign?node-id=16-1047
+  Do not call network or MCP.

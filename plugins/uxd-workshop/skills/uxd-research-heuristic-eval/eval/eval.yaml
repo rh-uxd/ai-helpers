@@ -1,0 +1,299 @@
+name: uxd-research-heuristic-eval-eval
+description: >-
+  Evaluate uxd-research-heuristic-eval framework gating, Figma input handling,
+  three-evaluator independence, researcher review gate, and no-recommendation guardrails
+execution:
+  mode: case
+  skill: uxd-workshop:uxd-research-heuristic-eval
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/uxd-workshop
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+  hook: claude-haiku-4-5-20251001
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+inputs:
+  tools:
+    - match: Questions asked to the user via AskUserQuestion.
+      prompt: |
+        Answer based on the test case context in input.yaml and answers.yaml.
+        Use answers.yaml guidance for domain-specific decisions.
+        If asked how to review findings (spreadsheet vs chat), always choose
+        chat / "Here in the chat" (Google Workspace MCP is unavailable offline).
+        If asked which heuristic framework and answers.yaml specifies one, use that.
+        Default: pick the first option or answer "yes" for confirmations.
+
+dataset:
+  path: cases
+  workspace:
+    files:
+      - fixture-ui.md
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: case_type for conditional judges
+    - Optional fixture-ui.md text description of the interface
+    - Optional answers.yaml for AskUserQuestion auto-answer guidance
+
+outputs:
+  - path: artifacts
+    schema: |
+      Judges check conversation text (and whether premature report files were
+      written). Offline cases use fixture-ui.md; no Playwright/Figma/network.
+  - tool: AskUserQuestion
+    schema: Framework and review-format clarifying questions.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: asks_for_framework
+    description: Asks which heuristic framework to use, then applies the chosen one
+    if: "annotations.get('case_type') == 'ask-framework'"
+    check: |
+      import re, json
+
+      text = outputs.get("conversation", "")
+      tool_calls = outputs.get("tool_calls") or []
+      asked_via_tool = any(
+          c.get("name") == "AskUserQuestion"
+          and re.search(r"framework", json.dumps(c.get("input", {})), re.IGNORECASE)
+          for c in tool_calls
+      )
+      asks = re.search(
+          r"(which heuristic framework|framework\(s\) should|which framework\??|"
+          r"select (a |one |more than one )?framework|which .+ framework)",
+          text,
+          re.IGNORECASE,
+      )
+      lists_options = (
+          re.search(r"Nielsen", text, re.IGNORECASE)
+          and re.search(r"Shneiderman|ISO 9241|Gerhardt|Custom|Not sure", text, re.IGNORECASE)
+      )
+      if not asked_via_tool and not asks and not lists_options:
+          return False, "Did not ask which heuristic framework to use"
+
+      declined_default = re.search(
+          r"(question (prompt )?was declined|declined .{0,40}defaulting|"
+          r"defaulting to .{0,40}Nielsen .{0,40}(fallback|per the skill))",
+          text,
+          re.IGNORECASE,
+      )
+      if declined_default and not asked_via_tool:
+          return False, "Defaulted after declined question instead of getting a framework choice"
+
+      silent_default = re.search(
+          r"(I('ll| will) (default to|use) Nielsen|proceeding with Nielsen|"
+          r"using Nielsen('s)? (10 )?by default|no framework was specified, so I.?ll default)",
+          text,
+          re.IGNORECASE,
+      )
+      if silent_default and not asked_via_tool and not asks:
+          return False, "Defaulted to Nielsen without asking the researcher"
+
+      # Interceptor answers Shneiderman via answers.yaml — evaluation may proceed
+      if asked_via_tool:
+          if not re.search(r"Shneiderman", text, re.IGNORECASE):
+              return False, "Did not apply the researcher-selected framework (Shneiderman)"
+          return True, "Asked via AskUserQuestion and applied selected framework"
+
+      # Text-only ask path: must stop without evaluating until answered
+      if not re.search(r"\?", text):
+          return False, "Framework prompt did not include a clarifying question"
+      premature = re.search(
+          r"(Evaluator [ABC]\s*[—-]|V-[ABC]\d+|Candidate Violations)",
+          text,
+          re.IGNORECASE,
+      )
+      if premature:
+          return False, "Started evaluation passes before framework was chosen"
+      return True, "Asked for heuristic framework before evaluating"
+
+  - name: requires_figma_export
+    description: Explains Figma links cannot be inspected; asks for exported screenshots
+    if: "annotations.get('case_type') == 'figma-needs-export'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      cannot = re.search(
+          r"(can'?t access Figma|cannot access Figma|can'?t (open|inspect|read) Figma|"
+          r"unable to (access|open|inspect) Figma|Figma (links? )?cannot|"
+          r"not (able to )?access Figma|Figma directly|need exported|"
+          r"Figma (URL|link|prototype)s? (can'?t|cannot|aren'?t|are not))",
+          text,
+          re.IGNORECASE,
+      )
+      asks_export = re.search(
+          r"(export(ed)? screenshots?|PNG|JPG|export each|"
+          r"screenshots? (from|of)|provide .{0,40}(screenshot|image|PNG|JPG))",
+          text,
+          re.IGNORECASE,
+      )
+      if not cannot:
+          return False, "Did not explain that Figma cannot be accessed directly"
+      if not asks_export:
+          return False, "Did not ask for exported screenshots/images"
+      invented = re.search(
+          r"(Evaluator [ABC]\s*[—-]|V-[ABC]\d+|Candidate Violations)",
+          text,
+          re.IGNORECASE,
+      )
+      if invented:
+          return False, "Invented evaluation findings without inspectable screenshots"
+      return True, "Requested Figma exports instead of inventing findings"
+
+  - name: runs_three_evaluator_passes
+    description: Produces independent Evaluator A/B/C candidate violations
+    if: "annotations.get('case_type') == 'three-evaluator-passes'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      has_a = re.search(r"Evaluator\s*A", text, re.IGNORECASE)
+      has_b = re.search(r"Evaluator\s*B", text, re.IGNORECASE)
+      has_c = re.search(r"Evaluator\s*C", text, re.IGNORECASE)
+      if not (has_a and has_b and has_c):
+          return False, "Missing one or more of Evaluator A/B/C sections"
+      has_va = re.search(r"\bV-A\d+\b", text)
+      has_vb = re.search(r"\bV-B\d+\b", text)
+      has_vc = re.search(r"\bV-C\d+\b", text)
+      if not (has_va and has_vb and has_vc):
+          return False, "Missing per-evaluator violation IDs (V-A# / V-B# / V-C#)"
+      has_heuristic = re.search(r"Heuristic\s*:", text, re.IGNORECASE)
+      has_observation = re.search(r"Observation\s*:", text, re.IGNORECASE)
+      if not (has_heuristic and has_observation):
+          return False, "Candidate violations missing Heuristic/Observation fields"
+      # Soft independence: each lens should show distinct focus language
+      lens_a = re.search(
+          r"(label|layout|visual hierarchy|affordance|spacing|contrast|icon)",
+          text,
+          re.IGNORECASE,
+      )
+      lens_b = re.search(
+          r"(task flow|workflow|transition|after (save|action|click)|lose context|feedback)",
+          text,
+          re.IGNORECASE,
+      )
+      lens_c = re.search(
+          r"(edge case|empty state|error|missing|accessible name|confirmation|"
+          r"unexpected|what's not|what is not)",
+          text,
+          re.IGNORECASE,
+      )
+      if not (lens_a and lens_b and lens_c):
+          return False, "Evaluator passes lack distinct A/B/C lens signals"
+      return True, "Produced three independent evaluator candidate-violation passes"
+
+  - name: gates_on_researcher_review
+    description: Asks for researcher review format before writing final reports
+    if: "annotations.get('case_type') == 'researcher-gate'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      files = outputs.get("files", {}) or {}
+      wrote_report = any(
+          ("heuristic-eval-" in path) and (path.endswith(".md") or path.endswith(".html"))
+          for path in files
+      )
+      if wrote_report:
+          return False, "Wrote final heuristic-eval report files before researcher review"
+      asks_format = re.search(
+          r"(how would you like to review|spreadsheet|here in the chat|"
+          r"review (the )?findings\??|Google Sheet)",
+          text,
+          re.IGNORECASE,
+      )
+      offers_both = (
+          re.search(r"spreadsheet|Google Sheet", text, re.IGNORECASE)
+          and re.search(r"\bchat\b", text, re.IGNORECASE)
+      )
+      if not asks_format and not offers_both:
+          return False, "Did not ask spreadsheet vs chat researcher review format"
+      return True, "Stopped at researcher review without writing final reports"
+
+  - name: avoids_design_recommendations
+    description: Surfaces violations without recommending design fixes
+    if: "annotations.get('case_type') == 'no-recommendations'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      has_violation = re.search(
+          r"(V-\d{2}|Observation\s*:|Heuristic\s*:|consolidated)",
+          text,
+          re.IGNORECASE,
+      )
+      if not has_violation:
+          return False, "Did not present consolidated violations"
+      # Allow "Suggested severity" and disclaimers like
+      # "Design recommendations are not included" — ban design-fix advice only.
+      cleaned = re.sub(
+          r"design recommendations? (are|is) not (included|provided)",
+          "",
+          text,
+          flags=re.IGNORECASE,
+      )
+      recs = re.search(
+          r"(you should (add|change|redesign|fix|replace)|"
+          r"recommend(ed|ation)? (adding|changing|redesigning|that you)|"
+          r"suggested fix|we recommend (adding|changing|fixing)|"
+          r"to fix this,|fix by (adding|changing))",
+          cleaned,
+          re.IGNORECASE,
+      )
+      if recs:
+          return False, "Included design recommendations instead of violations-only output"
+      return True, "Presented violations without design recommendations"
+
+  - name: includes_review_subject_record
+    description: Captures review subject record fields before/with evaluation output
+    if: "annotations.get('case_type') == 'review-subject-record'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      # Accept colon form or markdown table form ("| **Review subject** | ... |")
+      has_subject = re.search(r"Review subject", text, re.IGNORECASE)
+      has_input_type = re.search(r"Input type", text, re.IGNORECASE)
+      has_date = re.search(r"Evaluation date", text, re.IGNORECASE)
+      has_source = re.search(r"Source (URL|files)", text, re.IGNORECASE)
+      if not has_subject:
+          return False, "Missing Review subject field"
+      if not has_input_type:
+          return False, "Missing Input type field"
+      if not has_date:
+          return False, "Missing Evaluation date field"
+      if not has_source:
+          return False, "Missing Source URL or Source files field"
+      if "fixture-ui.md" not in text and "text description" not in text.lower():
+          return False, "Review subject record does not reference the fixture input"
+      return True, "Included required review subject record fields"
+
+thresholds:
+  asks_for_framework:
+    min_pass_rate: 1.0
+  requires_figma_export:
+    min_pass_rate: 1.0
+  runs_three_evaluator_passes:
+    min_pass_rate: 1.0
+  gates_on_researcher_review:
+    min_pass_rate: 1.0
+  avoids_design_recommendations:
+    min_pass_rate: 1.0
+  includes_review_subject_record:
+    min_pass_rate: 1.0
