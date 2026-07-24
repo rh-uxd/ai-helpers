@@ -82,10 +82,12 @@ Prototype Plan:
 | Flag | Values | Default | Description |
 |------|--------|---------|-------------|
 | `--workspace` | local path, git URL, or `standalone` | `standalone` | Where to build (often a fork) |
+| `--workspace-branch` | branch name | auto-detected from URL / default branch | Branch to clone from `--workspace` |
 | `--target` | `repo`, `github`, `gitlab`, `vercel`, `none`, or a git URL | `none` (pipeline) | Where to publish; a git URL means open an MR/PR **against** that repo (implies `repo`) |
+| `--target-branch` | branch name | `--workspace-branch` (legacy fallback) | MR/PR base branch on `--target` |
 | `--decisions` | `skip`, `auto`, `human` | `skip` | Whether / how to run the decision kit |
 | `--depth` | `under`, `normal`, `over` | `normal` | Decision count when `--decisions` is `auto` or `human`: under 2–3, normal 4–7, over 8–12 |
-| `--branch` | branch name | auto-detected | Git branch to clone |
+| `--branch` | branch name | — | **Deprecated** alias for `--workspace-branch` |
 | `--dry-run` | flag | off | Skip external writes |
 | `--pipeline` / `--speedrun` | flag | off | Run create → evaluate → refine → publish (see pipeline-mode.md) |
 | `--prototype-bar` / `--no-prototype-bar` | flag | on | Install sticky Prototype Bar (Sources, Prototype\|Eval, Export) after generate |
@@ -93,7 +95,9 @@ Prototype Plan:
 | `--url` | URL | asked if `--export` | Live base URL for Playwright export (and pipeline evaluate) |
 | `--export-formats` | `html`, `tree`, `pf-spec` (comma-separated) | `html,pf-spec` | Formats for `--export` |
 
-**`--target` URL detection:** If the value looks like a git URL (`https://`, `http://`, `git@`, `ssh://`, or ends with `.git`), treat it as the MR/PR base repo. That implies publish type `repo`. Pass the URL to `resolve_workspace.py --upstream` so the clone gets an `upstream` remote; persist as `target_repo_url` / `upstream_url` in pipeline config and workspace analysis.
+**`--target` URL detection:** If the value looks like a git URL (`https://`, `http://`, `git@`, `ssh://`, or ends with `.git`), treat it as the MR/PR base repo. That implies publish type `repo`. Pass the URL to `resolve_workspace.py --upstream` so the clone gets an `upstream` remote; persist as `target_repo_url` / `upstream_url` in pipeline config and workspace analysis. A branch embedded in the target URL (GitLab `/-/tree/<branch>`, GitHub `/tree/<branch>`, or `#branch`) becomes `target_branch` unless `--target-branch` is set.
+
+**Branch pairing:** `--workspace-branch` selects what to clone; `--target-branch` selects the MR/PR merge base. They are independent — e.g. clone a fork at `main` but open the MR against upstream `release-2.22`.
 
 **Dry run:** Fetches RFEs and creates all local artifacts under `.artifacts/` but skips git operations and any external writes. Local `--export` files are still written when a URL is available.
 
@@ -171,12 +175,15 @@ All create/publish artifacts share the **consumer project** tree at `.artifacts/
 
 ```bash
 python3 "${CLAUDE_SKILL_DIR}/scripts/resolve_workspace.py" "<path-or-url>" \
-  --rfe-key "{KEY}" [--branch "{BRANCH}"] [--upstream "{TARGET_REPO_URL}"]
+  --rfe-key "{KEY}" \
+  [--workspace-branch "{WORKSPACE_BRANCH}"] \
+  [--upstream "{TARGET_REPO_URL}"] \
+  [--target-branch "{TARGET_BRANCH}"]
 ```
 
-Handles local paths, GitHub/GitLab URLs (extracts branch from URL patterns), SSL auto-retry, HTTPS↔SSH fallback on auth/access failures, and shallow clones. When `--upstream` is set (from a `--target` git URL), adds/sets an `upstream` remote on the clone for fork-style MR submission. Output JSON includes `type`, `clone_url`, `branch`, `clone_path` (`.artifacts/{ID}/code`), `upstream_url` (if set), `status`.
+Handles local paths, GitHub/GitLab URLs (extracts branch from URL patterns), SSL auto-retry, HTTPS↔SSH fallback on auth/access failures, and shallow clones. When `--upstream` is set (from a `--target` git URL), adds/sets an `upstream` remote on the clone for fork-style MR submission. `--workspace-branch` (or deprecated `--branch`) overrides the clone branch; `--target-branch` (or a branch in the `--upstream` URL) sets the MR/PR base. Output JSON includes `type`, `clone_url`, `branch`, `clone_path` (`.artifacts/{ID}/code`), `upstream_url` / `target_branch` (if set), `status`.
 
-**Preserve `branch`, `clone_url`, and `upstream_url`** from this output in workspace analysis (Step 6) — `submit_to_repo.py` needs them for the MR target branch, push remote, and fork detection. Set `workspace_path` to the absolute or repo-relative `clone_path` (`.artifacts/{ID}/code`).
+**Preserve `branch`, `target_branch`, `clone_url`, and `upstream_url`** from this output in workspace analysis (Step 6) — `submit_to_repo.py` uses `target_branch` (falling back to `branch`) for the MR base, plus `clone_url` / `upstream_url` for push remote and fork detection. Set `workspace_path` to the absolute or repo-relative `clone_path` (`.artifacts/{ID}/code`).
 
 ## Step 6: Analyze Target Codebase
 
@@ -189,7 +196,7 @@ Detect and record:
 3. Navigation structure and design system usage
 4. Agent instructions (`.cursor/rules/`, `AGENTS.md`) — extract **verification commands** (lint, build, typecheck) for Step 10
 
-Save to `.artifacts/{ID}/workspace-analysis.json` including `clone_url`, `branch`, `workspace_path` (pointing at `.artifacts/{ID}/code`), and `upstream_url` when `--target` was a git URL.
+Save to `.artifacts/{ID}/workspace-analysis.json` including `clone_url`, `branch` (workspace clone branch), `workspace_path` (pointing at `.artifacts/{ID}/code`), and when publishing to a repo: `upstream_url` / `target_branch` from `--target` / `--target-branch`.
 
 ## Step 7: Design Decisions
 

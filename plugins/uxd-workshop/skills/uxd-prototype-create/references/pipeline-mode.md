@@ -29,11 +29,14 @@ After normal create questions, also ask:
                This re-syncs the config AND copies the eval report into
                public/evals/{ID}/ so the Eval tab works on Pages.
                (Happens automatically — Step 3 in the unified script detects the report.)
+               MUST run before publish so public/evals/ exists on disk.
 4. REFINE?   → if .artifacts/{ID}/eval/evaluation-report.csv has FAIL → refine (this skill) → re-eval
                skip when FAIL count is 0
 5. PUBLISH?  → /uxd-prototype-publish {ID} --target={target}  (if target ≠ none)
                When target was a git URL, pass --target=<url> (or --target=repo with
                upstream already set / submit_to_repo.py --upstream <url>)
+               Publish Step 2a re-copies eval + refreshes the bar; repo submit
+               auto-stages public/evals/{ID}/ even if omitted from changeset.md.
 ```
 
 Persist flags to `.artifacts/{ID}/pipeline-config.yaml` so the run survives context compression:
@@ -42,11 +45,13 @@ Persist flags to `.artifacts/{ID}/pipeline-config.yaml` so the run survives cont
 pipeline:
   id: PROJ-298
   workspace: https://gitlab.example.com/user/fork.git
+  workspace_branch: main          # optional; clone branch for --workspace
   decisions: skip
   # depth: normal          # only when decisions is auto or human
   url: http://localhost:3000
   target: repo
   target_repo_url: https://gitlab.example.com/org/canonical.git
+  target_branch: release-2.22     # optional; MR/PR base on --target
   max_refine_cycles: 3
   dry_run: false
   prototype_bar: true
@@ -54,7 +59,7 @@ pipeline:
   export_formats: html,pf-spec
 ```
 
-When `--target` is a git URL, normalize `target` to `repo` and store the URL in `target_repo_url`. Pass that URL to `resolve_workspace.py --upstream` during create and to `submit_to_repo.py --upstream` during publish.
+When `--target` is a git URL, normalize `target` to `repo` and store the URL in `target_repo_url`. Pass that URL to `resolve_workspace.py --upstream` during create and to `submit_to_repo.py --upstream` during publish. Persist `workspace_branch` / `target_branch` when set and pass them as `--workspace-branch` / `--target-branch`.
 
 ## Defaults
 
@@ -82,10 +87,12 @@ When `--target=repo` or `--target` is a git URL, publish uses `submit_to_repo.py
 
 ```
 --workspace https://gitlab.example.com/user/fork.git \
---target https://gitlab.example.com/org/canonical.git
+--workspace-branch main \
+--target https://gitlab.example.com/org/canonical.git \
+--target-branch release-2.22
 ```
 
-`--workspace` is cloned as `origin` (push destination). `--target` URL becomes `upstream` (MR base). Same project path on both → same-repo workflow.
+`--workspace` is cloned as `origin` (push destination); `--workspace-branch` selects the clone ref. `--target` URL becomes `upstream` (MR base repo); `--target-branch` is the MR merge base. Same project path on both → same-repo workflow.
 
 ## Batch
 

@@ -18,7 +18,7 @@ Never write these under the skill install directory (`${CLAUDE_SKILL_DIR}`).
 
 ## .artifacts/{ID}/workspace-analysis.json
 
-Written during Step 6 (codebase analysis). Critical for workspace mode — `submit_to_repo.py` reads `branch`, `clone_url`, and optional `upstream_url` from this file.
+Written during Step 6 (codebase analysis). Critical for workspace mode — `submit_to_repo.py` reads `branch` (workspace clone), `clone_url`, optional `upstream_url`, and optional `target_branch` (MR/PR base) from this file.
 
 ```json
 {
@@ -27,6 +27,7 @@ Written during Step 6 (codebase analysis). Critical for workspace mode — `subm
   "branch": "3.5",
   "clone_url": "https://gitlab.example.com/user/fork.git",
   "upstream_url": "https://gitlab.example.com/org/canonical.git",
+  "target_branch": "main",
   "tech_stack": {
     "framework": "react",
     "language": "typescript",
@@ -51,6 +52,8 @@ Written during Step 6 (codebase analysis). Critical for workspace mode — `subm
 ```
 
 `upstream_url` (alias `target_repo_url`) is set when `--target` was a git URL — the MR/PR base repo. Omit when publishing to the same project as `clone_url` / `origin`.
+
+`branch` is the workspace clone branch (`--workspace-branch`). `target_branch` is the MR/PR merge base (`--target-branch`, or a branch embedded in the `--target` / `--upstream` URL). When `target_branch` is omitted, submit falls back to `branch`.
 
 ## .artifacts/{ID}/metadata.json
 
@@ -375,9 +378,11 @@ JSON output from the workspace resolution script:
   "branch_source": "url",
   "clone_path": ".artifacts/PROJ-298/code",
   "upstream_url": "https://gitlab.example.com/org/canonical.git",
+  "target_branch": "main",
+  "target_branch_source": "flag",
   "upstream_remote": "set",
   "status": "cloned"
 }
 ```
 
-`upstream_url` / `upstream_remote` appear when `--upstream` is passed (from a `--target` git URL).
+`upstream_url` / `upstream_remote` appear when `--upstream` is passed (from a `--target` git URL). `target_branch` / `target_branch_source` appear when `--target-branch` is set or the `--upstream` URL embeds a branch.

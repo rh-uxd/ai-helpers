@@ -3,17 +3,21 @@
 Resolve a workspace argument into a cloneable git URL + branch, or a validated local path.
 
 Handles branch detection from common git hosting URL patterns (GitLab, GitHub)
-and an explicit --branch override flag. Optional --upstream sets an upstream
-remote after clone (MR/PR base when --target is a git URL). On clone auth/access
-failure, retries once with the HTTPS↔SSH alternate URL.
+and an explicit --workspace-branch override (--branch is a deprecated alias).
+Optional --upstream sets an upstream remote after clone (MR/PR base when
+--target is a git URL). Optional --target-branch sets the MR/PR base branch
+(also auto-detected from a branch embedded in the --upstream URL).
+On clone auth/access failure, retries once with the HTTPS↔SSH alternate URL.
 
 Usage:
     # Resolve and clone
     python3 scripts/resolve_workspace.py <url-or-path> --rfe-key PROJ-298 \
-        [--branch 3.5] [--upstream https://gitlab.example.com/org/canonical.git]
+        [--workspace-branch 3.5] [--upstream https://gitlab.example.com/org/canonical.git] \
+        [--target-branch main]
 
     # Resolve only (no clone, just print parsed result)
-    python3 scripts/resolve_workspace.py <url-or-path> --resolve-only [--branch 3.5]
+    python3 scripts/resolve_workspace.py <url-or-path> --resolve-only \
+        [--workspace-branch 3.5]
 
 Output (JSON to stdout):
     {
@@ -24,6 +28,8 @@ Output (JSON to stdout):
       "branch_source": "url",
       "clone_path": ".artifacts/PROJ-298/code",
       "upstream_url": "https://gitlab.example.com/org/canonical.git",
+      "target_branch": "main",
+      "target_branch_source": "flag",
       "status": "cloned"
     }
 """
@@ -105,34 +111,40 @@ def is_git_url(workspace):
 
 
 def normalize_upstream_url(upstream):
-    """Normalize an upstream/MR-base URL to a clean clone URL."""
+    """Normalize an upstream/MR-base URL to a clean clone URL + optional branch.
+
+    Returns (clone_url, url_branch) where url_branch may be None.
+    """
     if not upstream:
-        return None
+        return None, None
     if not is_git_url(upstream):
         print(f'Error: --upstream must be a git URL, got: {upstream}',
               file=sys.stderr)
         sys.exit(1)
-    clone_url, _ = parse_git_url(upstream)
-    return clone_url
+    clone_url, url_branch = parse_git_url(upstream)
+    return clone_url, url_branch
 
 
-def resolve_branch(url_branch, flag_branch):
+def resolve_branch(url_branch, flag_branch, flag_source='flag'):
     """Resolve final branch from URL-detected and flag-specified values.
 
-    Returns (branch, source) where source is 'flag', 'url', or None.
+    Returns (branch, source) where source is flag_source, 'url', or None.
     """
     if flag_branch:
-        return flag_branch, 'flag'
+        return flag_branch, flag_source
     if url_branch:
         return url_branch, 'url'
     return None, None
 
 
 def resolve_workspace(workspace, rfe_key=None, branch_flag=None,
-                      upstream_url=None):
+                      upstream_url=None, target_branch_flag=None,
+                      upstream_url_branch=None, branch_flag_name='workspace-branch'):
     """Resolve a workspace argument to structured metadata.
 
     Returns a dict with type, URLs, branch info, and clone path.
+    `branch` is the workspace clone branch (--workspace-branch).
+    `target_branch` is the MR/PR base branch (--target-branch), when known.
     """
     if not is_git_url(workspace):
         result = {
@@ -141,13 +153,23 @@ def resolve_workspace(workspace, rfe_key=None, branch_flag=None,
             'exists': os.path.isdir(workspace),
         }
         if branch_flag:
-            result['warning'] = '--branch is ignored for local paths'
+            result['warning'] = (
+                f'--{branch_flag_name} is ignored for local paths'
+            )
         if upstream_url:
             result['upstream_url'] = upstream_url
+        target_branch, target_branch_source = resolve_branch(
+            upstream_url_branch, target_branch_flag, flag_source='flag',
+        )
+        if target_branch:
+            result['target_branch'] = target_branch
+            result['target_branch_source'] = target_branch_source
         return result
 
     clone_url, url_branch = parse_git_url(workspace)
-    branch, branch_source = resolve_branch(url_branch, branch_flag)
+    branch, branch_source = resolve_branch(
+        url_branch, branch_flag, flag_source='flag',
+    )
 
     result = {
         'type': 'git',
@@ -160,9 +182,24 @@ def resolve_workspace(workspace, rfe_key=None, branch_flag=None,
     if upstream_url:
         result['upstream_url'] = upstream_url
 
+    target_branch, target_branch_source = resolve_branch(
+        upstream_url_branch, target_branch_flag, flag_source='flag',
+    )
+    if target_branch:
+        result['target_branch'] = target_branch
+        result['target_branch_source'] = target_branch_source
+
     if branch_source == 'flag' and url_branch and url_branch != branch_flag:
         result['override_note'] = (
-            f'--branch={branch_flag} overrides branch {url_branch} from URL'
+            f'--{branch_flag_name}={branch_flag} overrides branch '
+            f'{url_branch} from URL'
+        )
+
+    if (target_branch_source == 'flag' and upstream_url_branch
+            and upstream_url_branch != target_branch_flag):
+        result['target_override_note'] = (
+            f'--target-branch={target_branch_flag} overrides branch '
+            f'{upstream_url_branch} from --upstream URL'
         )
 
     if rfe_key:
@@ -376,6 +413,8 @@ def main():
     workspace = sys.argv[1]
     rfe_key = None
     branch_flag = None
+    branch_flag_name = 'workspace-branch'
+    target_branch_flag = None
     upstream_flag = None
     resolve_only = False
     no_ssl_verify = False
@@ -385,8 +424,22 @@ def main():
         if sys.argv[i] == '--rfe-key' and i + 1 < len(sys.argv):
             rfe_key = sys.argv[i + 1]
             i += 2
-        elif sys.argv[i] == '--branch' and i + 1 < len(sys.argv):
+        elif sys.argv[i] == '--workspace-branch' and i + 1 < len(sys.argv):
             branch_flag = sys.argv[i + 1]
+            branch_flag_name = 'workspace-branch'
+            i += 2
+        elif sys.argv[i] == '--branch' and i + 1 < len(sys.argv):
+            # Deprecated alias for --workspace-branch
+            if branch_flag is None:
+                branch_flag = sys.argv[i + 1]
+                branch_flag_name = 'branch'
+            print(
+                'Warning: --branch is deprecated; use --workspace-branch',
+                file=sys.stderr,
+            )
+            i += 2
+        elif sys.argv[i] == '--target-branch' and i + 1 < len(sys.argv):
+            target_branch_flag = sys.argv[i + 1]
             i += 2
         elif sys.argv[i] == '--upstream' and i + 1 < len(sys.argv):
             upstream_flag = sys.argv[i + 1]
@@ -401,9 +454,13 @@ def main():
             print(f'Unknown argument: {sys.argv[i]}', file=sys.stderr)
             sys.exit(1)
 
-    upstream_url = normalize_upstream_url(upstream_flag)
+    upstream_url, upstream_url_branch = normalize_upstream_url(upstream_flag)
     resolved = resolve_workspace(
-        workspace, rfe_key, branch_flag, upstream_url=upstream_url,
+        workspace, rfe_key, branch_flag,
+        upstream_url=upstream_url,
+        target_branch_flag=target_branch_flag,
+        upstream_url_branch=upstream_url_branch,
+        branch_flag_name=branch_flag_name,
     )
 
     if resolved['type'] == 'local':

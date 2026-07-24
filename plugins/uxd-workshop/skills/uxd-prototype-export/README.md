@@ -55,8 +55,8 @@ Eval navigation:
 
 1. If the helper is healthy and serves a report → `http://127.0.0.1:9417/evals/{ID}/`
 2. Else if `views.eval` is an absolute URL → use it
-3. Else if relative `views.eval` probes as a real report (not SPA fallback) → use it
-4. Else → Eval disabled (hint: start export-helper for local viewing)
+3. Else if relative `views.eval` probes as a real report — first under `<base href>` (e.g. `/mr-218/evals/{ID}/` on GitLab MR Pages), then site-root `/evals/{ID}/`
+4. Else → Eval disabled (local hint: start export-helper; hosted hint: expected `{base}evals/{ID}/`)
 
 ```bash
 # recommended while viewing locally — land exports under .artifacts and serve eval reports

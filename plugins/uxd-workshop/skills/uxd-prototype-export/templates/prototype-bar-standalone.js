@@ -218,6 +218,38 @@
     }
   }
 
+  /** Same-origin eval paths under <base href> (e.g. /mr-218/) then site root. */
+  function evalUrlCandidates(fallback, id) {
+    var out = [];
+    function push(u) {
+      if (u && out.indexOf(u) === -1) out.push(u);
+    }
+    var base = getBasePath(); // normalizePath'd; no trailing slash unless root
+    var fromConfig = String(fallback || '')
+      .replace(/^\//, '')
+      .replace(/\/?$/, '/');
+    if (base && base !== '/') push(base + '/' + fromConfig);
+    push('/' + fromConfig);
+    if (id) {
+      var conventional = 'evals/' + encodeURIComponent(id) + '/';
+      if (base && base !== '/') push(base + '/' + conventional);
+      push('/' + conventional);
+    }
+    return out;
+  }
+
+  function isLocalHostUrl(url) {
+    return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?([/?#]|$)/i.test(url);
+  }
+
+  function isRunningOnLocalHost() {
+    try {
+      return /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+    } catch (e) {
+      return false;
+    }
+  }
+
   async function resolveEvalUrl(cfg) {
     var id = cfg.id;
     if (id && (await helperHealthy())) {
@@ -227,12 +259,23 @@
     var fallback = cfg.views && cfg.views.eval;
     if (!fallback) return null;
     if (/^https?:\/\//i.test(fallback)) return fallback;
-    if (await looksLikeEvalReport(fallback)) return fallback;
+    // Relative paths: try Pages path_prefix first (/mr-218/evals/…), then site-root /evals/…
+    var candidates = evalUrlCandidates(fallback, id);
+    for (var i = 0; i < candidates.length; i++) {
+      if (await looksLikeEvalReport(candidates[i])) return candidates[i];
+    }
     return null;
   }
 
-  var EVAL_UNAVAILABLE_HINT =
-    'Eval report not available yet — for local viewing, run export-helper on :9417';
+  function evalUnavailableHint(cfg) {
+    if (isRunningOnLocalHost()) {
+      return 'Eval report not available yet — for local viewing, run export-helper on :9417';
+    }
+    var id = (cfg && cfg.id) || '…';
+    var base = getBasePath();
+    var prefix = base && base !== '/' ? base + '/' : '/';
+    return 'Eval report not available on this deployment (expected ' + prefix + 'evals/' + id + '/)';
+  }
 
   var RETURN_URL_KEY = 'uxd-prototype-return-url';
 
@@ -246,7 +289,11 @@
   }
 
   function resolvePrototypeUrl(cfg) {
-    if (cfg.views && cfg.views.prototype) return cfg.views.prototype;
+    var configured = cfg.views && cfg.views.prototype;
+    // Ignore stale localhost URLs baked in during create when viewing on Pages
+    if (configured && !(isLocalHostUrl(configured) && !isRunningOnLocalHost())) {
+      return configured;
+    }
     try {
       var stored = sessionStorage.getItem(RETURN_URL_KEY);
       if (stored) return stored;
@@ -259,7 +306,8 @@
     } catch (e) {
       /* ignore */
     }
-    return '/';
+    var base = getBasePath();
+    return base && base !== '/' ? base + '/' : '/';
   }
 
   async function waitForExport() {
@@ -513,7 +561,7 @@
         try {
           var url = await resolveEvalUrl(getConfig());
           if (!url) {
-            setStatus(EVAL_UNAVAILABLE_HINT);
+            setStatus(evalUnavailableHint(getConfig()));
             return;
           }
           if (active === 'eval') {
@@ -532,7 +580,7 @@
       var url = await resolveEvalUrl(cfg);
       if (!url && active !== 'eval') {
         evalBtn.disabled = true;
-        evalBtn.title = EVAL_UNAVAILABLE_HINT;
+        evalBtn.title = evalUnavailableHint(cfg);
       }
     })();
 

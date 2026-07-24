@@ -243,6 +243,7 @@ install_workspace() {
     cp "$TEMPLATE_DIR/export-pf-spec.browser.js" "$public_dir/"
     cp "$TEMPLATE_DIR/uxd-scenario-runtime.js" "$public_dir/"
     cp "$TEMPLATE_DIR/prototype-bar.css" "$public_dir/"
+    cp "$TEMPLATE_DIR/prototype-bar-standalone.js" "$public_dir/"
     if [[ -n "$CONFIG" && -f "$CONFIG" ]]; then
       cp "$CONFIG" "$public_dir/prototype-bar.json"
       echo "  copied config → $public_dir/prototype-bar.json"
@@ -255,6 +256,8 @@ install_workspace() {
 
   # Ensure scenario + export runtimes are loadable from index.html when present.
   # Use relative paths (no leading /) so <base href> works on GitLab/GitHub Pages.
+  # Also refresh inlined Prototype Bar (config + standalone + CSS) when present —
+  # webpack HtmlWebpackPlugin ships src/index.html, so stale inlines break Pages Eval.
   local index_html=""
   for candidate in "$SOURCE/src/index.html" "$SOURCE/index.html" "$SOURCE/public/index.html"; do
     if [[ -f "$candidate" ]]; then
@@ -263,16 +266,19 @@ install_workspace() {
     fi
   done
   if [[ -n "$index_html" && -n "$public_dir" ]]; then
-    python3 - "$index_html" <<'PY'
-import re, sys
-path = sys.argv[1]
-text = open(path, encoding="utf-8").read()
+    python3 - "$index_html" "$CONFIG" "$TEMPLATE_DIR" <<'PY'
+import json, re, sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+config_path = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] else ""
+template_dir = Path(sys.argv[3]) if len(sys.argv) > 3 else None
+text = path.read_text(encoding="utf-8")
 changed = False
 
 def ensure_script(html, src, attr):
     if src.split("/")[-1] in html and attr in html:
         return html, False
-    # Prefer relative src so <base href="/mr-…/"> resolves correctly on Pages
     snippet = f'<script src="{src}" {attr}="true"></script>\n'
     new, n = re.subn(r"</head>", snippet + "</head>", html, count=1, flags=re.I)
     if n == 0:
@@ -300,8 +306,54 @@ changed = changed or did
 if did:
     print("  injected PF implementation-spec runtime into", path)
 
+# Refresh inlined bar pieces used by HtmlWebpackPlugin templates.
+# Use callable replacements so JS/CSS backslashes are not treated as re escapes.
+if config_path and Path(config_path).is_file() and 'data-uxd-prototype-bar="config"' in text:
+    cfg = json.dumps(json.loads(Path(config_path).read_text(encoding="utf-8")), separators=(",", ":"))
+    cfg_script = f'<script data-uxd-prototype-bar="config">window.__UXD_PROTOTYPE__={cfg};</script>'
+    new, n = re.subn(
+        r'<script data-uxd-prototype-bar="config">[\s\S]*?</script>',
+        lambda _m: cfg_script,
+        text,
+        count=1,
+    )
+    if n:
+        text = new
+        changed = True
+        print("  refreshed inlined Prototype Bar config in", path)
+
+if template_dir and template_dir.is_dir() and 'data-uxd-prototype-bar="standalone"' in text:
+    standalone = (template_dir / "prototype-bar-standalone.js").read_text(encoding="utf-8")
+    standalone_script = (
+        f'<script data-uxd-prototype-bar="standalone">\n{standalone}\n</script>'
+    )
+    new, n = re.subn(
+        r'<script data-uxd-prototype-bar="standalone">[\s\S]*?</script>',
+        lambda _m: standalone_script,
+        text,
+        count=1,
+    )
+    if n:
+        text = new
+        changed = True
+        print("  refreshed inlined Prototype Bar standalone runtime in", path)
+
+if template_dir and template_dir.is_dir() and "data-uxd-prototype-bar-style" in text:
+    css = (template_dir / "prototype-bar.css").read_text(encoding="utf-8")
+    style_tag = f'<style data-uxd-prototype-bar-style>\n{css}\n</style>'
+    new, n = re.subn(
+        r'<style[^>]*data-uxd-prototype-bar-style[^>]*>[\s\S]*?</style>',
+        lambda _m: style_tag,
+        text,
+        count=1,
+    )
+    if n:
+        text = new
+        changed = True
+        print("  refreshed inlined Prototype Bar CSS in", path)
+
 if changed:
-    open(path, "w", encoding="utf-8").write(text)
+    path.write_text(text, encoding="utf-8")
 elif (
     "uxd-scenario-runtime.js" in text
     and "serialize-page.browser.js" in text

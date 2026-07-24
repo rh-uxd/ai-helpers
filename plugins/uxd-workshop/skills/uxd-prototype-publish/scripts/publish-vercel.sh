@@ -104,7 +104,6 @@ SENSITIVE_DIRS=(
   ".design"
   ".claude"
   "scripts"
-  "public"
 )
 
 SENSITIVE_FILES=(
@@ -117,6 +116,13 @@ SENSITIVE_FILES=(
   ".cursor-mcp-config.json"
 )
 
+# Keep public/ for webpack/Vite static assets (especially public/evals/ for Prototype Bar).
+# Only strip known internal metadata files inside public/.
+SENSITIVE_PUBLIC_FILES=(
+  "public/fork-descriptions.json"
+  "public/forks.json"
+)
+
 for dir in "${SENSITIVE_DIRS[@]}"; do
   if [[ -d "$TEMP_DIR/$dir" ]]; then
     rm -rf "$TEMP_DIR/$dir"
@@ -125,6 +131,13 @@ for dir in "${SENSITIVE_DIRS[@]}"; do
 done
 
 for file in "${SENSITIVE_FILES[@]}"; do
+  if [[ -f "$TEMP_DIR/$file" ]]; then
+    rm -f "$TEMP_DIR/$file"
+    echo "  Removed file: $file"
+  fi
+done
+
+for file in "${SENSITIVE_PUBLIC_FILES[@]}"; do
   if [[ -f "$TEMP_DIR/$file" ]]; then
     rm -f "$TEMP_DIR/$file"
     echo "  Removed file: $file"

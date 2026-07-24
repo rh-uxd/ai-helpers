@@ -158,7 +158,7 @@ not rehydrate React interactivity. Point implementation agents at
 | Center | **Prototype \| Eval** view switch + **Scenario ▾** (always shown on prototype view; enabled when ≥2 scenarios match the current route) |
 | Right | **Export** menu (Static HTML \| Component tree \| PF implementation spec) + status |
 
-Eval resolution: helper `/evals/{id}/` when healthy → else `views.eval` → else disabled.
+Eval resolution: helper `/evals/{id}/` when healthy → else `views.eval` probed under `<base href>` then site root → else disabled.
 
 Scenario switching: sets `?scenario=<id>` and reloads. Pages read
 `window.UxdScenario.get()` for mock data.

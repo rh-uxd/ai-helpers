@@ -11,7 +11,6 @@ Files and directories that must be stripped before publishing a prototype. Load 
 | `.claude/` | Claude AI local settings and skills |
 | `.design/` | Design history, team context, internal documentation |
 | `scripts/` | Internal fork management or CI scripts |
-| `public/` | Internal static assets, fork metadata, and build artifacts |
 | `node_modules/` | Dependencies (rebuilt from `package.json` during CI) |
 | `dist/` | Build output (rebuilt during CI) |
 | `.git/` | Source history (fresh repo initialized for public push) |
@@ -31,6 +30,18 @@ Files and directories that must be stripped before publishing a prototype. Load 
 | `.cursorignore` | Cursor IDE ignore rules |
 | `.cursorindexingignore` | Cursor indexing ignore rules |
 | `.cursor-mcp-config.json` | MCP configuration with potential credentials |
+| `public/fork-descriptions.json` | Internal fork metadata (not the whole `public/` tree) |
+| `public/forks.json` | Internal fork listing |
+
+## Keep in `public/` (do not strip)
+
+| Path | Why |
+|------|-----|
+| `public/evals/{ID}/` | Static evaluation report for Prototype Bar **Eval** on Pages |
+| `public/uxd-prototype-bar/` | Bar assets + config used by Export / Eval chrome |
+| Other app static assets | Favicons, `_headers`, etc. required by webpack/Vite CopyPlugin |
+
+Removing the entire `public/` directory breaks Eval on GitLab/GitHub Pages: CI builds copy `public/evals/` into the deploy tree (often under a path prefix like `/mr-218/`).
 
 ## Verification
 

@@ -210,14 +210,22 @@ function main() {
       ? existing.scenarios
       : [];
 
+  const isLocalHostUrl = (url) =>
+    typeof url === 'string' &&
+    /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?([/?#]|$)/i.test(url);
+
   let prototypeUrl = opts.prototypeUrl;
   if (prototypeUrl == null && existing.views && existing.views.prototype != null) {
-    prototypeUrl = existing.views.prototype;
+    // Drop stale localhost URLs from local create — they break Eval→Prototype on Pages
+    prototypeUrl = isLocalHostUrl(existing.views.prototype)
+      ? null
+      : existing.views.prototype;
   }
   if (prototypeUrl == null) {
     // Prefer published Pages preview URL so Eval → Prototype works cross-origin
-    const publish = meta.publish || {};
-    prototypeUrl = publish.pages_url || meta.prototype_url || meta.preview_url || null;
+    const publish = meta.publish || meta.submission || {};
+    prototypeUrl =
+      publish.pages_url || meta.prototype_url || meta.preview_url || null;
   }
 
   const config = {

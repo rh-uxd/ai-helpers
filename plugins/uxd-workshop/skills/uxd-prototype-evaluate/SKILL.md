@@ -189,7 +189,7 @@ Create-owned (key root, updated by eval sync — not deleted by `--fresh`):
 |------|-------------|
 | `.artifacts/<KEY>/prototype-bar.json` | Sources + `views.eval` for Prototype Bar |
 
-After rendering the report, sync the Prototype Bar with `--artifacts ${KEY_DIR}` (merges `outcome-context.json` into Sources). See `references/phases/eval-report.md` Step 5. Local Eval browsing: run `uxd-prototype-export`’s `export-helper.mjs` so the bar can open `/evals/<KEY>/` on port 9417 (serves `.artifacts/<KEY>/eval/`). For static Pages, copy with `copy-eval-for-pages.sh` or `publish-report.sh` (`public/evals/<KEY>/`).
+After rendering the report, sync the Prototype Bar with `--artifacts ${KEY_DIR}` (merges `outcome-context.json` into Sources). See `references/phases/eval-report.md` Step 5. Local Eval browsing: run `uxd-prototype-export`’s `export-helper.mjs` so the bar can open `/evals/<KEY>/` on port 9417 (serves `.artifacts/<KEY>/eval/`). For static Pages, copy with `copy-eval-for-pages.sh` / `install-and-sync-prototype-bar.sh` (`public/evals/<KEY>/`) and commit those files — the bar resolves relative eval URLs under the document `<base href>` (e.g. `/mr-218/evals/<KEY>/` on GitLab MR Pages).
 
 **Migration:** move existing eval files from `.artifacts/<KEY>/` into `.artifacts/<KEY>/eval/`; move `.artifacts/runs/` and `.artifacts/pain-leaderboard.html` into `.artifacts/eval/`.
 

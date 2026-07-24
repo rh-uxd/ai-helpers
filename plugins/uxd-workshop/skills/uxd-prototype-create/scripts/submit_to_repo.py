@@ -13,6 +13,7 @@ Usage:
     python3 scripts/submit_to_repo.py --rfe-key PROJ-298 \
         --title "New onboarding wizard" \
         [--upstream https://gitlab.example.com/org/canonical.git] \
+        [--target-branch main] \
         [--no-ssl-verify] \
         [--pages-base-url https://pages.example.com] \
         [--pages-timeout 600] \
@@ -82,6 +83,57 @@ def parse_changeset_files(rfe_key):
                 if '/' in candidate or '.' in candidate:
                     files.append(candidate)
     return files
+
+
+def collect_eval_and_bar_files(workspace_path, rfe_key):
+    """Files needed so Prototype Bar Eval works on GitLab/GitHub Pages.
+
+    Changeset.md usually lists feature source only. Eval reports live under
+    public/evals/{ID}/ (copied by copy-eval-for-pages / install-and-sync) and
+    must be committed so CI CopyPlugin / static hosting can serve them under
+    the Pages path_prefix (e.g. /mr-218/evals/{ID}/).
+    """
+    extras = []
+    seen = set()
+
+    def add_rel(rel):
+        if rel in seen:
+            return
+        full = os.path.join(workspace_path, rel)
+        if os.path.isfile(full):
+            seen.add(rel)
+            extras.append(rel)
+
+    eval_dir = os.path.join(workspace_path, 'public', 'evals', rfe_key)
+    if os.path.isdir(eval_dir):
+        for root, _dirs, files in os.walk(eval_dir):
+            for name in files:
+                full = os.path.join(root, name)
+                rel = os.path.relpath(full, workspace_path).replace('\\', '/')
+                add_rel(rel)
+
+    bar_dir = os.path.join(workspace_path, 'public', 'uxd-prototype-bar')
+    if os.path.isdir(bar_dir):
+        for root, _dirs, files in os.walk(bar_dir):
+            for name in files:
+                full = os.path.join(root, name)
+                rel = os.path.relpath(full, workspace_path).replace('\\', '/')
+                add_rel(rel)
+
+    # Workspace installs often inject the bar into the HTML entry
+    for candidate in ('src/index.html', 'index.html', 'public/index.html'):
+        full = os.path.join(workspace_path, candidate)
+        if not os.path.isfile(full):
+            continue
+        try:
+            with open(full, encoding='utf-8', errors='ignore') as fh:
+                head = fh.read(20000)
+            if 'data-uxd-prototype-bar' in head or 'uxd-prototype-bar' in head:
+                add_rel(candidate)
+        except OSError:
+            continue
+
+    return extras
 
 
 def read_review_score(rfe_key):
@@ -646,6 +698,19 @@ def poll_pages_deployment(mr_url, pages_preview_url, workflow_info, cwd, env,
 # Main
 # ---------------------------------------------------------------------------
 
+def resolve_target_branch(analysis, target_branch_flag=None):
+    """Resolve MR/PR base branch.
+
+    Priority: --target-branch flag > analysis.target_branch > analysis.branch
+    (legacy: workspace clone branch was reused as MR base).
+    """
+    if target_branch_flag:
+        return target_branch_flag
+    if analysis.get('target_branch'):
+        return analysis['target_branch']
+    return analysis.get('branch')
+
+
 def main():
     rfe_key = None
     title = None
@@ -655,6 +720,7 @@ def main():
     pages_timeout = 600
     jira_comment_id = None
     upstream_flag = None
+    target_branch_flag = None
 
     i = 1
     while i < len(sys.argv):
@@ -667,6 +733,9 @@ def main():
             i += 2
         elif arg == '--upstream' and i + 1 < len(sys.argv):
             upstream_flag = sys.argv[i + 1]
+            i += 2
+        elif arg == '--target-branch' and i + 1 < len(sys.argv):
+            target_branch_flag = sys.argv[i + 1]
             i += 2
         elif arg == '--no-ssl-verify':
             no_ssl_verify = True
@@ -693,7 +762,7 @@ def main():
 
     analysis = read_workspace_analysis(rfe_key)
     workspace_path = analysis.get('workspace_path')
-    target_branch = analysis.get('branch')
+    target_branch = resolve_target_branch(analysis, target_branch_flag)
 
     if not workspace_path or not os.path.isdir(workspace_path):
         code_path = f'.artifacts/{rfe_key}/code'
@@ -760,12 +829,23 @@ def main():
             print(f'Branch {branch_name} already existed, checked out.',
                   file=sys.stderr)
 
-    # --- Step 3: Stage only the changeset files ---
+    # --- Step 3: Stage changeset files + Prototype Bar / eval Pages assets ---
     files_to_add = []
     for f in changeset_files:
         full_path = os.path.join(workspace_path, f)
         if os.path.exists(full_path):
             files_to_add.append(f)
+
+    bar_extras = collect_eval_and_bar_files(workspace_path, rfe_key)
+    if bar_extras:
+        print(
+            f'Including {len(bar_extras)} Prototype Bar / eval Pages file(s) '
+            f'beyond the changeset.',
+            file=sys.stderr,
+        )
+        for f in bar_extras:
+            if f not in files_to_add:
+                files_to_add.append(f)
 
     if not files_to_add:
         print('Error: none of the changeset files exist in the workspace',
