@@ -97,6 +97,50 @@ function readJsonOr(filePath, fallback) {
   try { return JSON.parse(raw); } catch { return fallback; }
 }
 
+/**
+ * Persona IDs in journey-log usability_dimensions are often overlay-qualified
+ * (e.g. "ml-engineer+senior"), while persona-results.json, screenshot filenames,
+ * and think-aloud markdown use the base role id ("ml-engineer").
+ */
+function personaBaseId(pid) {
+  return String(pid || '').split('+')[0];
+}
+
+function personaIdsMatch(a, b) {
+  if (!a || !b) return false;
+  return a === b || personaBaseId(a) === personaBaseId(b);
+}
+
+/** Screenshot / think-aloud files may use either the full or base persona id. */
+function listPersonaScreenshotFiles(screenshotsDir, pid) {
+  if (!fs.existsSync(screenshotsDir)) return [];
+  const full = String(pid || '');
+  const base = personaBaseId(pid);
+  return fs.readdirSync(screenshotsDir)
+    .filter((f) => {
+      if (!f.endsWith('.png')) return false;
+      return f.startsWith(`persona-${full}-`) || (base && f.startsWith(`persona-${base}-`));
+    })
+    .sort();
+}
+
+function readThinkAloudForPersona(artifactsDir, pid, taskIdx) {
+  const candidates = [];
+  const ids = [pid, personaBaseId(pid)].filter(Boolean);
+  const unique = [...new Set(ids)];
+  for (const id of unique) {
+    candidates.push(path.join(artifactsDir, `usability-thinkaloud-${id}-task-${taskIdx}.md`));
+    if (taskIdx === 1) {
+      candidates.push(path.join(artifactsDir, `usability-thinkaloud-${id}.md`));
+    }
+  }
+  for (const p of candidates) {
+    const raw = readFileOr(p, '');
+    if (raw) return raw;
+  }
+  return '';
+}
+
 function escapeHtml(str) {
   if (!str) return '';
   return String(str)
@@ -628,9 +672,7 @@ function buildPersonaWalkthroughsHtml() {
     const outcome = trace.outcome || (overlay.abandoned ? 'abandoned' : overlay.would_complete === false ? 'abandoned' : 'completed');
     const outcomeBadge = outcome === 'completed' ? 'badge-pass' : outcome === 'abandoned' ? 'badge-fail' : 'badge-flagged';
 
-    const personaScreenshots = fs.existsSync(screenshotsDir)
-      ? fs.readdirSync(screenshotsDir).filter(f => f.startsWith(`persona-${pid}-`) && f.endsWith('.png')).sort()
-      : [];
+    const personaScreenshots = listPersonaScreenshotFiles(screenshotsDir, pid);
     const stepCount = personaScreenshots.length;
     const taskCount = extractState ? (extractState.tasks_to_be_done || []).length : 1;
 
@@ -739,12 +781,11 @@ function buildPersonaWalkthroughData() {
     const confusionEvents = overlay.confusion_events || [];
 
     // Primary path: use persona-results.json if available for this persona
-    const personaEntries = personaResults ? personaResults.filter(r => r.persona === pid) : [];
+    // Match overlay-qualified ids (ml-engineer+senior) to base ids (ml-engineer).
+    const personaEntries = personaResults ? personaResults.filter(r => personaIdsMatch(r.persona, pid)) : [];
 
     // Detect multi-task screenshots: persona-<id>-task-<N>-step-<M>.png
-    const allPersonaScreenshots = fs.existsSync(screenshotsDir)
-      ? fs.readdirSync(screenshotsDir).filter(f => f.startsWith(`persona-${pid}-`) && f.endsWith('.png')).sort()
-      : [];
+    const allPersonaScreenshots = listPersonaScreenshotFiles(screenshotsDir, pid);
 
     const hasMultiTask = allPersonaScreenshots.some(f => f.match(/task-\d+-step/));
 
@@ -759,11 +800,7 @@ function buildPersonaWalkthroughData() {
           .filter(f => f.match(new RegExp(`task-${taskIdx}-step`)))
           .map(f => ({ file: f, step: parseInt((f.match(/step-(\d+)/) || [])[1] || '0', 10) }));
 
-        const thinkaloudPath = path.join(absArtifacts, `usability-thinkaloud-${pid}-task-${taskIdx}.md`);
-        let thinkaloudRaw = readFileOr(thinkaloudPath, '');
-        if (!thinkaloudRaw && taskIdx === 1) {
-          thinkaloudRaw = readFileOr(path.join(absArtifacts, `usability-thinkaloud-${pid}.md`), '');
-        }
+        let thinkaloudRaw = readThinkAloudForPersona(absArtifacts, pid, taskIdx);
 
         let steps = parseThinkAloudSteps(thinkaloudRaw, screenshots, screenshotsDir, confusionEvents, consistencyReport);
 
@@ -816,18 +853,8 @@ function buildPersonaWalkthroughData() {
         }
       }
 
-      // Load general think-aloud as fallback when task-specific files don't exist
-      const generalTaPath = path.join(absArtifacts, `usability-thinkaloud-${pid}.md`);
-      const generalTaRaw = readFileOr(generalTaPath, '');
-
       for (const [taskIdx, screenshots] of Object.entries(taskScreenshots)) {
-        const thinkaloudPath = path.join(absArtifacts, `usability-thinkaloud-${pid}-task-${taskIdx}.md`);
-        let thinkaloudRaw = readFileOr(thinkaloudPath, '');
-
-        // Fall back to general think-aloud for task 1 if no task-specific file exists
-        if (!thinkaloudRaw && generalTaRaw && parseInt(taskIdx) === 1) {
-          thinkaloudRaw = generalTaRaw;
-        }
+        let thinkaloudRaw = readThinkAloudForPersona(absArtifacts, pid, parseInt(taskIdx, 10));
 
         const taskDef = tasksDefined[parseInt(taskIdx) - 1] || {};
 
@@ -862,8 +889,7 @@ function buildPersonaWalkthroughData() {
       }
     } else {
       // Backward compatible: single task (old format persona-<id>-step-N.png)
-      const thinkaloudPath = path.join(absArtifacts, `usability-thinkaloud-${pid}.md`);
-      const thinkaloudRaw = readFileOr(thinkaloudPath, '');
+      const thinkaloudRaw = readThinkAloudForPersona(absArtifacts, pid, 1);
       const screenshots = allPersonaScreenshots.map(f => {
         const m = f.match(/step-(\d+)/);
         return { file: f, step: m ? parseInt(m[1], 10) : 0 };
@@ -971,13 +997,12 @@ function buildEvidenceViewerData() {
     const overlays = ud.persona_overlays || [];
 
     for (const pid of ud.personas_evaluated) {
-      const overlay = overlays.find(o => o.persona === pid) || {};
+      const overlay = overlays.find(o => o.persona === pid || personaIdsMatch(o.persona, pid)) || {};
       const confusionEvents = overlay.confusion_events || [];
-      const personaEntries = personaResults ? personaResults.filter(r => r.persona === pid) : [];
+      // Overlay-qualified ids (ml-engineer+senior) must match base ids in persona-results.
+      const personaEntries = personaResults ? personaResults.filter(r => personaIdsMatch(r.persona, pid)) : [];
 
-      const allPersonaScreenshots = fs.existsSync(screenshotsDir)
-        ? fs.readdirSync(screenshotsDir).filter(f => f.startsWith(`persona-${pid}-`) && f.endsWith('.png')).sort()
-        : [];
+      const allPersonaScreenshots = listPersonaScreenshotFiles(screenshotsDir, pid);
 
       const displayName = pid.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
       const tasks = [];
@@ -999,6 +1024,14 @@ function buildEvidenceViewerData() {
             let ssB64 = '';
             if (ssEntry) {
               const ssPath = path.join(screenshotsDir, ssEntry.file);
+              if (fs.existsSync(ssPath)) {
+                ssB64 = fs.readFileSync(ssPath).toString('base64');
+              }
+            }
+            // Fall back to explicit screenshot path recorded on the trace step
+            if (!ssB64 && t.screenshot) {
+              const rel = String(t.screenshot).replace(/^screenshots\//, '');
+              const ssPath = path.join(screenshotsDir, rel);
               if (fs.existsSync(ssPath)) {
                 ssB64 = fs.readFileSync(ssPath).toString('base64');
               }
@@ -1100,6 +1133,45 @@ function buildEvidenceViewerData() {
         name: displayName,
         tasks,
         ...getPersonaMetadata(pid)
+      };
+    }
+  }
+
+  // Phase A x-ray journeys — primary AC screenshot evidence when present
+  if (journeyLog && Array.isArray(journeyLog.journeys) && journeyLog.journeys.length > 0) {
+    const journeyTasks = [];
+    for (const j of journeyLog.journeys) {
+      const steps = (j.steps || []).map((s, si) => {
+        const rel = String(s.screenshot || '').replace(/^screenshots\//, '');
+        const ssPath = rel ? path.join(screenshotsDir, rel) : '';
+        const ssB64 = ssPath && fs.existsSync(ssPath) ? fs.readFileSync(ssPath).toString('base64') : '';
+        return {
+          step: s.step || si + 1,
+          what_i_see: s.narration || '',
+          what_im_thinking: '',
+          action: s.target || s.action || `Step ${si + 1}`,
+          confidence: s.result === 'success' ? 'high' : 'medium',
+          patience: 100,
+          screenshot: ssB64 ? `data:image/png;base64,${ssB64}` : '',
+          evidence_for_acs: [],
+          confusion_event: null
+        };
+      });
+      if (steps.length === 0) continue;
+      journeyTasks.push({
+        task: j.title || j.id || 'Journey',
+        covers_acs: j.ac_ids || [],
+        steps
+      });
+    }
+    if (journeyTasks.length > 0) {
+      personas['phase-a-xray'] = {
+        name: 'Phase A — AC journeys',
+        tasks: journeyTasks,
+        role: 'X-ray evaluator',
+        experience: '',
+        exploration: '',
+        patience_level: ''
       };
     }
   }
