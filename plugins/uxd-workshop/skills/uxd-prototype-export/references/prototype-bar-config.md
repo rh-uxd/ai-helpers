@@ -87,12 +87,14 @@ Active scenario on the page: `?scenario=<id>` (default when absent: `default`). 
 | No `sources` or empty | Sources control hidden |
 | Helper `127.0.0.1:9417` healthy + report present | Eval navigates to `http://127.0.0.1:9417/evals/{id}/` (serves `.artifacts/{id}/eval/` or key-root fallback) |
 | Absolute `views.eval` (http/https) | Eval navigates there when helper is down / missing report |
-| Relative `views.eval` (e.g. `/evals/{id}/`) | Eval navigates only after a probe confirms a real report (not an SPA `historyApiFallback` shell) |
-| No reachable report | Eval disabled; status hints to start `export-helper` on `:9417` for local viewing |
+| Relative `views.eval` (e.g. `/evals/{id}/`) | Probes **`<base href>`-prefixed** path first (e.g. `/mr-218/evals/{id}/` on GitLab MR Pages), then site-root `/evals/{id}/`. Only enables Eval when the probe finds a real report (not an SPA `historyApiFallback` shell) |
+| No reachable report | Eval disabled; local hint mentions `export-helper` on `:9417`; on hosted Pages the hint shows the expected `{base}evals/{id}/` path |
 | ≤1 scenario for current route | Scenario menu hidden |
 | Scenario ▾ (prototype view) | Always shown; enabled when ≥2 scenarios match the current route (updates on SPA navigation). Disabled with tooltip when none. Selection sets `?scenario=` |
 
-**Local SPA note:** On webpack/Vite apps, bare `/evals/{id}/` usually returns the app shell. Keep `export-helper.mjs` running so Eval can open the HTML report from `.artifacts/`. On GitLab/GitHub Pages, copy the report with `copy-eval-for-pages.sh` so same-origin `/evals/{id}/` is real static HTML.
+**Local SPA note:** On webpack/Vite apps, bare `/evals/{id}/` usually returns the app shell. Keep `export-helper.mjs` running so Eval can open the HTML report from `.artifacts/`. On GitLab/GitHub Pages, copy the report with `copy-eval-for-pages.sh` into `public/evals/{id}/` (and commit it) so the build emits real static HTML. The bar resolves relative eval URLs against `<base href>` / `ASSET_PATH` (MR previews live under `/mr-{iid}/`, not the site root).
+
+**Prototype URL note:** Do not leave `views.prototype` as `http://localhost:…` in published builds. Sync clears localhost URLs; the bar also ignores them when the current host is not localhost and falls back to the session return URL / `<base href>`.
 
 **Eval page chrome:** The helper, `copy-eval-for-pages.sh`, and `render-report.js` embed the standalone Prototype Bar into evaluation HTML so Prototype|Eval stays available above the report. Clicking Prototype returns via `views.prototype`, else the session return URL stashed when leaving the prototype, else `document.referrer`.
 
@@ -118,7 +120,7 @@ public/
   …                         ← prototype preview (e.g. mr-{iid}/)
 ```
 
-Bar links use same-origin relative paths (`/evals/{ID}/`). No dynamic server required when hosted.
+Bar links use same-origin relative paths (`/evals/{ID}/`), resolved under the document `<base href>` when present (so `/mr-218/evals/{ID}/` works). No dynamic server required when hosted.
 
 **Export on Pages:** The Export menu does **not** download pre-generated journey captures. It runs the in-page serializer and triggers a browser download (same fallback as when `export-helper` is down). `inject-prototype-bar-into-html.mjs` inlines `serialize-page.browser.js` for prototype HTML; React installs load it via `<base href>`-aware URLs under `uxd-prototype-bar/`.
 

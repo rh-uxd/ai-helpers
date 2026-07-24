@@ -47,12 +47,14 @@ Decision depth (`--depth`): `under` (2–3), `normal` (4–7), `over` (8–12). 
 
 Pass `--pipeline` / `--speedrun` or ask for a full run. Sequence: create → serve → `uxd-prototype-evaluate` → optional refine → `uxd-prototype-publish`. See `references/pipeline-mode.md`.
 
-`--target` accepts `repo` / `github` / `gitlab` / `vercel` / `none`, **or a git URL** (MR/PR against that repo). Pair with `--workspace` (often a fork):
+`--target` accepts `repo` / `github` / `gitlab` / `vercel` / `none`, **or a git URL** (MR/PR against that repo). Pair with `--workspace` (often a fork). Use `--workspace-branch` / `--target-branch` when clone ref and MR base differ:
 
 ```
 /uxd-prototype-create --speedrun PROJ-298 \
   --workspace https://gitlab.example.com/user/fork.git \
+  --workspace-branch main \
   --target https://gitlab.example.com/org/canonical.git \
+  --target-branch release-2.22 \
   --decisions skip --headless
 ```
 

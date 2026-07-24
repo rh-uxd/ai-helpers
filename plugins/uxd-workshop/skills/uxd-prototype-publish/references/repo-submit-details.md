@@ -17,6 +17,7 @@ python3 ../uxd-prototype-create/scripts/submit_to_repo.py \
   --rfe-key {ID} \
   --title "{title from metadata}" \
   [--upstream https://gitlab.example.com/org/canonical.git] \
+  [--target-branch main] \
   [--pages-base-url https://example.pages.example.com] \
   [--pages-timeout 600] \
   [--jira-comment-id 12345] \
@@ -26,16 +27,16 @@ python3 ../uxd-prototype-create/scripts/submit_to_repo.py \
 
 Run with `required_permissions: ["all"]` in Cursor (git + `glab` + network).
 
-When `--target` was a git URL during create/pipeline, pass that URL as `--upstream` (or ensure `workspace-analysis.json` has `upstream_url` / `target_repo_url`). The script sets the `upstream` remote and opens the MR against that project.
+When `--target` was a git URL during create/pipeline, pass that URL as `--upstream` (or ensure `workspace-analysis.json` has `upstream_url` / `target_repo_url`). The script sets the `upstream` remote and opens the MR against that project. Pass `--target-branch` (or persist `target_branch` in analysis) when the MR base differs from the workspace clone branch.
 
 ### What the Script Does
 
-1. Reads `.artifacts/{ID}/workspace-analysis.json` for clone URL, original branch, workspace path, and optional `upstream_url`
+1. Reads `.artifacts/{ID}/workspace-analysis.json` for clone URL, workspace path, optional `upstream_url`, and MR base (`target_branch`, else `branch`)
 2. Reads `.artifacts/{ID}/changeset.md` for changed files
 3. If `--upstream` or analysis `upstream_url` is set: ensure `upstream` remote points there
 4. **Detects workflow** — fork (`origin` ≠ `upstream`) vs same-repo
 5. Creates branch `prototype/{ID}`
-6. Stages only changeset files
+6. Stages changeset files **plus** Prototype Bar / eval Pages assets when present (`public/evals/{ID}/**`, `public/uxd-prototype-bar/**`, HTML entry with bar inject)
 7. Commits: `Prototype: {ID} - {title}`
 8. Unshallows if needed (GitLab rejects shallow pushes)
 9. **Pushes to origin** (fork in fork workflows)
@@ -97,8 +98,9 @@ Use `pages_url` in the Jira comment (wiki markup: `[Preview|https://…]`).
 
 ### Prerequisites
 
-- `workspace-analysis.json` must include `branch`, `clone_url`, and `workspace_path`
-- Optional `upstream_url` / `target_repo_url` when MR base differs from `origin`
+- `workspace-analysis.json` must include `branch` (workspace clone), `clone_url`, and `workspace_path`
+- Optional `upstream_url` / `target_repo_url` when MR base repo differs from `origin`
+- Optional `target_branch` when MR merge base differs from workspace `branch`
 - `glab` CLI authenticated for the GitLab host
 - Git credentials configured for push
 
@@ -109,6 +111,7 @@ Use `pages_url` in the Jira comment (wiki markup: `[Preview|https://…]`).
 | `--rfe-key` | Prototype ID (required) |
 | `--title` | MR title |
 | `--upstream` | Git URL for the MR/PR base repo (sets `upstream` remote; from `--target <url>`) |
+| `--target-branch` | MR/PR base branch (overrides analysis `target_branch`, then `branch`) |
 | `--pages-base-url` | Base URL for Pages preview polling |
 | `--pages-timeout` | Seconds to wait for Pages (default 600) |
 | `--jira-comment-id` | Existing Jira comment to update with Pages URL |

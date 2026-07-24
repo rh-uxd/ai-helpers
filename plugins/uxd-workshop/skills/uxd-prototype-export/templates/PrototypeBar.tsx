@@ -114,6 +114,36 @@ async function looksLikeEvalReport(url: string): Promise<boolean> {
   }
 }
 
+/** Same-origin eval paths under <base href> (e.g. /mr-218/) then site root. */
+function evalUrlCandidates(fallback: string, id?: string): string[] {
+  const out: string[] = [];
+  const push = (u: string) => {
+    if (u && !out.includes(u)) out.push(u);
+  };
+  const base = getBaseHref(); // ends with / when non-root
+  const fromConfig = fallback.replace(/^\//, '').replace(/\/?$/, '/');
+  if (base && base !== '/') push(`${base}${fromConfig}`);
+  push(`/${fromConfig}`);
+  if (id) {
+    const conventional = `evals/${encodeURIComponent(id)}/`;
+    if (base && base !== '/') push(`${base}${conventional}`);
+    push(`/${conventional}`);
+  }
+  return out;
+}
+
+function isLocalHostUrl(url: string): boolean {
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?([/?#]|$)/i.test(url);
+}
+
+function isRunningOnLocalHost(): boolean {
+  try {
+    return /^(localhost|127\.0\.0\.1)$/i.test(window.location.hostname);
+  } catch {
+    return false;
+  }
+}
+
 async function resolveEvalUrl(cfg: UxdPrototypeConfig): Promise<string | null> {
   if (cfg.id && (await helperHealthy())) {
     const helperUrl = `${HELPER}/evals/${encodeURIComponent(cfg.id)}/`;
@@ -123,13 +153,22 @@ async function resolveEvalUrl(cfg: UxdPrototypeConfig): Promise<string | null> {
   if (!fallback) return null;
   // Hosted absolute URLs (Pages) — trust without probing (may be cross-origin)
   if (/^https?:\/\//i.test(fallback)) return fallback;
-  // Relative /evals/{id}/ only when it actually serves the report (not SPA fallback)
-  if (await looksLikeEvalReport(fallback)) return fallback;
+  // Relative paths: try Pages path_prefix first (/mr-218/evals/…), then site-root /evals/…
+  for (const url of evalUrlCandidates(fallback, cfg.id)) {
+    if (await looksLikeEvalReport(url)) return url;
+  }
   return null;
 }
 
-const EVAL_UNAVAILABLE_HINT =
-  'Eval report not available yet — for local viewing, run export-helper on :9417';
+function evalUnavailableHint(cfg?: UxdPrototypeConfig): string {
+  if (isRunningOnLocalHost()) {
+    return 'Eval report not available yet — for local viewing, run export-helper on :9417';
+  }
+  const id = cfg?.id || '…';
+  const base = getBaseHref();
+  const prefix = base && base !== '/' ? base : '/';
+  return `Eval report not available on this deployment (expected ${prefix}evals/${id}/)`;
+}
 
 const RETURN_URL_KEY = 'uxd-prototype-return-url';
 
@@ -143,7 +182,11 @@ function rememberPrototypeReturnUrl(): void {
 }
 
 function resolvePrototypeUrl(cfg: UxdPrototypeConfig): string {
-  if (cfg.views?.prototype) return cfg.views.prototype;
+  const configured = cfg.views?.prototype;
+  // Ignore stale localhost URLs baked in during create when viewing on Pages
+  if (configured && !(isLocalHostUrl(configured) && !isRunningOnLocalHost())) {
+    return configured;
+  }
   try {
     const stored = sessionStorage.getItem(RETURN_URL_KEY);
     if (stored) return stored;
@@ -156,7 +199,8 @@ function resolvePrototypeUrl(cfg: UxdPrototypeConfig): string {
   } catch {
     /* ignore */
   }
-  return '/';
+  const base = getBaseHref();
+  return base && base !== '/' ? base : '/';
 }
 
 function getActiveScenarioId(): string {
@@ -527,7 +571,7 @@ export const PrototypeBar: React.FC = () => {
     try {
       const url = await resolveEvalUrl(cfg);
       if (!url) {
-        setStatus(EVAL_UNAVAILABLE_HINT);
+        setStatus(evalUnavailableHint(cfg));
         return;
       }
       if (active === 'eval') {
@@ -634,7 +678,7 @@ export const PrototypeBar: React.FC = () => {
             type="button"
             aria-current={active === 'eval' ? 'true' : undefined}
             disabled={!evalReady && active !== 'eval'}
-            title={!evalReady && active !== 'eval' ? EVAL_UNAVAILABLE_HINT : undefined}
+            title={!evalReady && active !== 'eval' ? evalUnavailableHint(cfg) : undefined}
             onClick={goEval}
           >
             Eval
