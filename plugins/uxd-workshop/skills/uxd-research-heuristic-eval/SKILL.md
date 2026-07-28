@@ -138,9 +138,10 @@ answer before any evaluation passes**. Do not start Evaluator A/B/C,
 do not invent a framework choice, and do not silently default to
 Nielsen's 10.
 
-Prefer `AskUserQuestion` when that tool is available. Present the
-options below (multi-select allowed). If the tool is unavailable, ask
-the same question in chat and stop until the researcher replies.
+Use the environment's interactive question mechanism when available.
+Present the options below (multi-select allowed). If that mechanism is
+unavailable, ask the same question in chat and stop until the researcher
+replies.
 
 > **Which heuristic framework(s) should the evaluators use?**
 > You can select more than one (e.g., "1 and 2").
@@ -161,10 +162,10 @@ the same question in chat and stop until the researcher replies.
 > 5. **Custom** — Provide your own heuristics.
 > 6. **Not sure** — I'll default to Nielsen's 10.
 
-**Decline / cancel / no answer ≠ "Not sure".** If `AskUserQuestion` is
-declined, cancelled, or unanswered, stop and re-ask (or ask in chat).
-Only default to Nielsen's 10 when the researcher explicitly selects
-option 6 ("Not sure").
+**Decline / cancel / no answer ≠ "Not sure".** If the interactive
+question is declined, cancelled, or unanswered, stop and re-ask (or ask
+in chat). Only default to Nielsen's 10 when the researcher explicitly
+selects option 6 ("Not sure").
 
 Load full heuristic definitions from
 [references/heuristic-frameworks.md](references/heuristic-frameworks.md).

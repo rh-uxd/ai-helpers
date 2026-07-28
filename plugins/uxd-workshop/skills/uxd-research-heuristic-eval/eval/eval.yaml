@@ -2,9 +2,11 @@ name: uxd-research-heuristic-eval-eval
 description: >-
   Evaluate uxd-research-heuristic-eval framework gating, Figma input handling,
   three-evaluator independence, researcher review gate, and no-recommendation guardrails
+
+skill: uxd-workshop:uxd-research-heuristic-eval
+
 execution:
   mode: case
-  skill: uxd-workshop:uxd-research-heuristic-eval
   arguments: "{prompt}"
 
 runner:
@@ -22,6 +24,7 @@ permissions:
   deny:
     - "mcp__*"
 
+# Harness generates tool_handlers.yaml from inputs.tools at workspace setup.
 inputs:
   tools:
     - match: Questions asked to the user via AskUserQuestion.
@@ -35,6 +38,7 @@ inputs:
 
 dataset:
   path: cases
+  # Missing files are skipped (figma-needs-export has no fixture-ui.md).
   workspace:
     files:
       - fixture-ui.md
@@ -104,6 +108,50 @@ judges:
       if silent_default and not asked_via_tool and not asks:
           return False, "Defaulted to Nielsen without asking the researcher"
 
+      premature = re.search(
+          r"(Evaluator [ABC]\s*[—-]|V-[ABC]\d+|Candidate Violations)",
+          text,
+          re.IGNORECASE,
+      )
+      # Prefer ordered events when available: framework ask must precede evaluation.
+      # Event shape: {type, text, tools: [{name, input}, ...]}
+      events = outputs.get("events") or []
+      if events and premature:
+          def _is_framework_ask(ev):
+              if not isinstance(ev, dict):
+                  return False
+              tools = ev.get("tools") or []
+              if any(
+                  t.get("name") == "AskUserQuestion"
+                  and re.search(r"framework", json.dumps(t.get("input", {})), re.IGNORECASE)
+                  for t in tools
+                  if isinstance(t, dict)
+              ):
+                  return True
+              return bool(
+                  re.search(
+                      r"(which heuristic framework|framework\(s\) should|which framework)",
+                      ev.get("text") or "",
+                      re.IGNORECASE,
+                  )
+              )
+
+          def _is_eval_output(ev):
+              if not isinstance(ev, dict):
+                  return False
+              return bool(
+                  re.search(
+                      r"(Evaluator [ABC]\s*[—-]|V-[ABC]\d+|Candidate Violations)",
+                      ev.get("text") or "",
+                      re.IGNORECASE,
+                  )
+              )
+
+          ask_idx = next((i for i, ev in enumerate(events) if _is_framework_ask(ev)), None)
+          eval_idx = next((i for i, ev in enumerate(events) if _is_eval_output(ev)), None)
+          if eval_idx is not None and (ask_idx is None or eval_idx < ask_idx):
+              return False, "Started evaluation passes before framework was chosen"
+
       # Interceptor answers Shneiderman via answers.yaml — evaluation may proceed
       if asked_via_tool:
           if not re.search(r"Shneiderman", text, re.IGNORECASE):
@@ -113,11 +161,6 @@ judges:
       # Text-only ask path: must stop without evaluating until answered
       if not re.search(r"\?", text):
           return False, "Framework prompt did not include a clarifying question"
-      premature = re.search(
-          r"(Evaluator [ABC]\s*[—-]|V-[ABC]\d+|Candidate Violations)",
-          text,
-          re.IGNORECASE,
-      )
       if premature:
           return False, "Started evaluation passes before framework was chosen"
       return True, "Asked for heuristic framework before evaluating"
