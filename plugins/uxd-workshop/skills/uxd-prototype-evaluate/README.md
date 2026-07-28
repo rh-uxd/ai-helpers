@@ -29,6 +29,16 @@ Evaluates a prototype's quality through structured scoring, simulated usability 
 | Usability report | Markdown with personas, task walkthroughs, severity-ranked issues | `.artifacts/{ID}/report-usability.md` |
 | Desirability report | Markdown with word associations, emotional map, preference ranking, score | `.artifacts/{ID}/report-desirability.md` |
 | Pipeline report | HTML dashboard summarizing all prototypes | `.artifacts/pipeline-report.html` |
+| Evaluation report | Self-contained HTML report | `.artifacts/{ID}/evaluation-report.html` |
+
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/render-report.js` | Renders the self-contained HTML evaluation report from pipeline artifacts |
+| `scripts/validate-phase-b-output.js` | Validates Phase B (persona discovery) output schemas and score contracts |
+| `scripts/validate-artifact-schemas.js` | Schema validation for all pipeline artifact files |
+| `scripts/validate-report-rendering.js` | Report rendering quality checks (screenshot selection, persona names, fix history, score contract) |
 
 ## Rubric Dimensions
 
