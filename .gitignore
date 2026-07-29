@@ -30,3 +30,6 @@ plugins/uxd-workshop/skills/uxd-research-heuristic-eval-workspace/
 
 # Local Claude Code settings (user-specific)
 .claude/settings.local.json
+
+# Generated artifacts
+.artifacts/
