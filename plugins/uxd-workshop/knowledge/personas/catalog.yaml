@@ -102,7 +102,7 @@ personas:
     card: system-admin.md
 
   - id: security-compliance
-    display_name: Priya
+    display_name: Sara
     role: Security & compliance practitioner
     summary: >-
       Owns vulnerability, hardening, and audit posture. Prefers proactive

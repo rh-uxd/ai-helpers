@@ -26,6 +26,7 @@ Copy [`TEMPLATE.md`](TEMPLATE.md). Required shape:
 2. `#` title matching the role
 3. `## Who`
 4. `## When to use`
+5. `## Sources` — research links that informed the card (when available)
 
 | Field | Purpose |
 |-------|---------|
@@ -34,6 +35,10 @@ Copy [`TEMPLATE.md`](TEMPLATE.md). Required shape:
 | `role` | Short role title |
 | `aliases` | Also-known-as phrases for the same role (matching + human labels); singular only |
 | `default_experience` | Which experience overlay levels to pair for eval |
+
+### Sources section
+
+After **When to use**, include a **Sources** list of research artifacts that grounded the card (slides, docs, surveys). Prefer durable links from the UX research engagements catalog. Keep Who / When to use product-agnostic; study titles in Sources may name products when that is the real artifact name.
 
 ## Aliases (matching)
 
@@ -52,7 +57,7 @@ Cards and IDs are named by **role**:
 | `mlops-operator.md` | `mlops-operator` | Maude |
 | `platform-engineer.md` | `platform-engineer` | Paula |
 | `system-admin.md` | `system-admin` | Sam |
-| `security-compliance.md` | `security-compliance` | Priya |
+| `security-compliance.md` | `security-compliance` | Sara |
 | `infrastructure-architect.md` | `infrastructure-architect` | Ira |
 | `automation-developer.md` | `automation-developer` | Avery |
 | `automation-admin.md` | `automation-admin` | Adrian |
