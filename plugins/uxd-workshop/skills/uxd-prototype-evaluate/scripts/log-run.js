@@ -175,17 +175,6 @@ function main() {
       }
     }
   }
-
-  // Auto-sync to Google Sheet if auth is available
-  const syncScript = path.join(__dirname, 'sync-sheet.js');
-  if (fs.existsSync(syncScript)) {
-    try {
-      console.log(`\n  Syncing to Google Sheet...`);
-      execSync(`node "${syncScript}"`, { cwd: projectRoot, stdio: 'inherit', timeout: 30000 });
-    } catch (e) {
-      console.log(`  Sheet sync skipped (auth not configured or failed)`);
-    }
-  }
 }
 
 main();

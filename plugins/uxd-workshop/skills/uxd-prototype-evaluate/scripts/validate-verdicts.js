@@ -23,25 +23,7 @@ if (!fs.existsSync(csvPath)) {
   process.exit(1);
 }
 
-function parseCSVLine(line) {
-  const result = [];
-  let current = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQuotes) {
-      if (ch === '"' && i + 1 < line.length && line[i + 1] === '"') { current += '"'; i++; }
-      else if (ch === '"') inQuotes = false;
-      else current += ch;
-    } else {
-      if (ch === '"') inQuotes = true;
-      else if (ch === ',') { result.push(current); current = ''; }
-      else current += ch;
-    }
-  }
-  result.push(current);
-  return result;
-}
+const { parseCSVLine } = require('./csv-utils');
 
 const journeyLog = JSON.parse(fs.readFileSync(journeyPath, 'utf8'));
 const csvRaw = fs.readFileSync(csvPath, 'utf8');

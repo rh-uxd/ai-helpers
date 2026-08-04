@@ -64,20 +64,7 @@ if (fs.existsSync(csvPath)) {
   const section1 = raw.includes('# USABILITY') ? raw.split('# USABILITY')[0] : raw;
   const lines = section1.split('\n').filter(l => l.trim() && !l.startsWith('#'));
   if (lines.length >= 2) {
-    // Parse CSV properly handling quoted fields with commas
-    function parseCSVLine(line) {
-      const fields = [];
-      let current = '';
-      let inQuotes = false;
-      for (let i = 0; i < line.length; i++) {
-        const ch = line[i];
-        if (ch === '"') { inQuotes = !inQuotes; }
-        else if (ch === ',' && !inQuotes) { fields.push(current.trim()); current = ''; }
-        else { current += ch; }
-      }
-      fields.push(current.trim());
-      return fields;
-    }
+    const { parseCSVLine } = require('./csv-utils');
     const header = parseCSVLine(lines[0]);
     const vIdx = header.findIndex(h => h.toLowerCase() === 'verdict');
     for (let i = 1; i < lines.length; i++) {

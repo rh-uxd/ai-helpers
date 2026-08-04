@@ -25,15 +25,7 @@ function escapeHtml(str) {
   return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-function parseCSVLine(line) {
-  const result = []; let current = ''; let inQ = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQ) { if (ch === '"' && line[i+1] === '"') { current += '"'; i++; } else if (ch === '"') inQ = false; else current += ch; }
-    else { if (ch === '"') inQ = true; else if (ch === ',') { result.push(current); current = ''; } else current += ch; }
-  }
-  result.push(current); return result;
-}
+const { parseCSVLine } = require('./csv-utils');
 
 function main() {
   if (!fs.existsSync(absEvalsDir)) {
