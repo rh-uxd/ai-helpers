@@ -30,7 +30,8 @@ const RECOVERY_RATES = { High: 10, Medium: 5, Low: 5 };
 function getPersonaPatience(personaId) {
   const yamlPaths = [
     join('.context', 'usability-testing', 'personas', `${personaId}.yaml`),
-    join(process.cwd(), '.context', 'usability-testing', 'personas', `${personaId}.yaml`)
+    join(process.cwd(), '.context', 'usability-testing', 'personas', `${personaId}.yaml`),
+    join(__dirname, '..', 'knowledge', 'personas', `${personaId}.yaml`)
   ];
   for (const p of yamlPaths) {
     if (!existsSync(p)) continue;

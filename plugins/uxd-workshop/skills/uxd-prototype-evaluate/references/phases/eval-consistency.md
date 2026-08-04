@@ -4,6 +4,17 @@ Runs PatternFly design consistency checks against the prototype using vendored g
 
 **Skip this entire skill if `.context/consistency-checker/` does not exist.** Write `{"skipped": true, "reason": "consistency-checker not bootstrapped"}` to `consistency-report.json` and exit.
 
+### Degraded Mode (no consistency-checker, workspace available)
+
+If `.context/consistency-checker/` is missing BUT `--workspace` is provided, run a lightweight fallback before writing the skipped report:
+
+1. Invoke the `pf-css-token-check` skill against the workspace MR delta files (new + modified CSS/SCSS/TSX files only).
+2. Capture its output as `consistency-report.json` with `"source": "pf-css-token-check-fallback"` and `"degraded": true`.
+3. This provides basic PatternFly token compliance (hardcoded colors, spacing, typography) without the full guideline set.
+4. Do NOT run visual mode in degraded mode — only source-level token checks.
+
+This ensures that eval-fix still receives actionable suggestions for the most common violations (hardcoded hex values, missing design tokens) even when the full checker is unavailable.
+
 ## Execution Modes
 
 eval-consistency runs in two modes, invoked separately by the orchestrator:

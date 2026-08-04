@@ -18,9 +18,10 @@ CHECKER_REPO="${CONSISTENCY_CHECKER_REPO:-}"
 echo "Bootstrapping consistency-checker into ${CONTEXT_DIR}..."
 
 if [ -z "$CHECKER_REPO" ]; then
-    echo "Skipping: set CONSISTENCY_CHECKER_REPO to a git URL with guidelines/ and scripts/,"
-    echo "  then re-run this script. Design consistency checks need that context."
-    exit 0
+    echo "WARNING: CONSISTENCY_CHECKER_REPO is not set." >&2
+    echo "  Design consistency checks will be SKIPPED." >&2
+    echo "  Set CONSISTENCY_CHECKER_REPO to a git URL with guidelines/ and scripts/." >&2
+    exit 1
 fi
 
 mkdir -p "$CONTEXT_DIR"

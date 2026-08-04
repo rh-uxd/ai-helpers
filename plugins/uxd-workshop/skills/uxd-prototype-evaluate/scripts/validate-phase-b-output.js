@@ -260,6 +260,12 @@ if (isFlatDict) {
 
 writeFileSync(journeyLogPath, JSON.stringify(journeyLog, null, 2));
 console.log('  ✓ Self-healed — journey-log.json updated with correct schema');
+
+const selfHealLogPath = join(artifactsDir, 'self-heal-log.json');
+const healLog = existsSync(selfHealLogPath) ? JSON.parse(readFileSync(selfHealLogPath, 'utf8')) : [];
+healLog.push({ timestamp: new Date().toISOString(), file: 'journey-log.json', reason: 'schema mismatch auto-corrected' });
+writeFileSync(selfHealLogPath, JSON.stringify(healLog, null, 2));
+
 } // end needsFix
 
 // ═══════════════════ FIX-LOG SELF-HEALING ═══════════════════
