@@ -32,11 +32,21 @@ These prototypes are **functional TypeScript applications** built with Cursor --
 
 ## Procedure
 
-### Step 1: Read extract-state.json
+### Step 1a: Read extract-state.json
 
 Load the AC list, criterion-to-reference map, and `feature_context` from `.artifacts/<KEY>/eval/extract-state.json`.
 
 If `feature_context.ui_enhancements` exists, use it as supplementary signal for tier decisions -- it describes what the prototype is supposed to visually demonstrate.
+
+### Step 1b: Run T3 misclassification guard
+
+```bash
+node ${CLAUDE_SKILL_DIR}/scripts/classify-ac-tier.js .artifacts/<KEY>/eval/
+```
+
+This produces `.artifacts/<KEY>/eval/tier-overrides.json` — a list of ACs that have backend keywords but confirmed UI surfaces. Any AC listed there is locked to the specified tier (typically T1) and MUST NOT be overridden to T3 in Step 2.
+
+If `tier-overrides.json` exists, read it before classifying. For each override entry, set that AC's tier to `forced_tier` and note the `reason` in the rationale column.
 
 ### Step 2: Classify each criterion
 

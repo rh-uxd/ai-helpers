@@ -139,24 +139,7 @@ publish_pages() {
     " 2>/dev/null || true
   fi
 
-  # Copy iteration snapshot reports as subdirectories
-  local ARTIFACTS_DIR
-  ARTIFACTS_DIR="$(dirname "$REPORT_FILE")"
-  for iter_html in "$ARTIFACTS_DIR"/evaluation-report-iter-*.html; do
-    [ -f "$iter_html" ] || continue
-    local iter_num
-    iter_num="$(echo "$iter_html" | grep -o 'iter-[0-9]*' | grep -o '[0-9]*')"
-    if [ -n "$iter_num" ]; then
-      mkdir -p "$REPORTS_PATH/$PROTO_KEY/iter-$iter_num"
-      cp "$iter_html" "$REPORTS_PATH/$PROTO_KEY/iter-$iter_num/index.html"
-    fi
-  done
-
-  # Copy original report (first iteration, full version)
-  if [ -f "$ARTIFACTS_DIR/evaluation-report-original.html" ]; then
-    mkdir -p "$REPORTS_PATH/$PROTO_KEY/original"
-    cp "$ARTIFACTS_DIR/evaluation-report-original.html" "$REPORTS_PATH/$PROTO_KEY/original/index.html"
-  fi
+  # ponytail: only final report published — no iter snapshots or originals
 
   # Regenerate the data.json for the React dashboard
   if [[ -f "$WORK_DIR/pages-repo/scripts/generate-data.cjs" ]]; then

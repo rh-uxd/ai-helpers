@@ -20,6 +20,7 @@ Phase 4 of the eval pipeline. Renders the final HTML report from JSON/CSV artifa
 | File | Description |
 |------|-------------|
 | `.artifacts/<KEY>/eval/evaluation-report.html` | Self-contained HTML report with embedded screenshots |
+| `.artifacts/<KEY>/eval/evaluation-summary.json` | Agent-readable summary: AC verdicts, usability scores, counts, iteration state |
 | `.artifacts/eval/runs/run-log.csv` | Appended run entry for cross-run tracking |
 
 ## Procedure
@@ -41,50 +42,17 @@ test -f "$ARTIFACTS_DIR/extract-state.json" || { echo "ERROR: extract-state.json
 
 If any required file is missing, stop and report which file is absent. The upstream phase that produces it likely failed.
 
-### Step 1b: Validate journey-log.json format (BLOCKING)
+### Step 1b: Validate artifact schemas (BLOCKING)
 
-Before rendering, validate that journey-log.json matches the schema render-report.js expects. Run:
+Before rendering, validate all artifact JSON files against the schemas render-report.js expects:
 
 ```bash
-node -e "
-const jl = JSON.parse(require('fs').readFileSync('$ARTIFACTS_DIR/journey-log.json','utf8'));
-const errors = [];
-if (!jl.journeys || !jl.journeys.length) errors.push('No journeys in journey-log.json');
-for (const j of (jl.journeys || [])) {
-  if (!j.id || !j.id.match(/^journey-\d+$/)) errors.push('Bad journey id: ' + j.id + ' (must be journey-N)');
-  if (j.steps_completed === undefined) errors.push(j.id + ' missing steps_completed');
-  if (j.steps_expected === undefined) errors.push(j.id + ' missing steps_expected');
-  if (!j.source) errors.push(j.id + ' missing source field');
-  for (const s of (j.steps || [])) {
-    if (!s.step) errors.push(j.id + ' has step without step number');
-    if (!s.result || !['success','fail'].includes(s.result)) errors.push(j.id + ' step ' + (s.step||'?') + ' bad result: ' + s.result);
-    if (!s.screenshot) errors.push(j.id + ' step ' + (s.step||'?') + ' missing screenshot');
-    if (!s.narration) errors.push(j.id + ' step ' + (s.step||'?') + ' missing narration');
-  }
-}
-// Usability dimensions MUST be present (Personas tab is empty without this)
-if (!jl.usability_dimensions) errors.push('CRITICAL: usability_dimensions key missing from journey-log.json — Personas tab will be empty');
-const ud = jl.usability_dimensions;
-if (ud) {
-  if (!ud.persona_selection) errors.push('usability_dimensions.persona_selection missing');
-  if (!ud.dimensions || ud.dimensions.length !== 7) errors.push('usability_dimensions.dimensions must have exactly 7 entries (got ' + (ud.dimensions||[]).length + ')');
-  if (!ud.persona_overlays || !ud.persona_overlays.length) errors.push('usability_dimensions.persona_overlays is empty — no patience data for modals');
-  if (!ud.overall_score) errors.push('usability_dimensions.overall_score missing');
-  const validIds = ['workflow_continuity','cross_persona_handoffs','scalability_complexity','system_status','technical_abstraction','mental_model_fidelity','accessibility_inclusion'];
-  for (const d of (ud.dimensions || [])) {
-    if (!d.id) errors.push('Dimension missing id field');
-    else if (!validIds.includes(d.id)) errors.push('Non-standard dimension id: ' + d.id);
-    if (!d.scores) errors.push('Dimension ' + (d.id||'?') + ' missing scores object');
-  }
-}
-if (errors.length) { console.error('FORMAT ERRORS (' + errors.length + '):\n' + errors.join('\n')); process.exit(1); }
-console.log('journey-log.json format validated: ' + jl.journeys.length + ' journeys, all fields present');
-"
+node ${CLAUDE_SKILL_DIR}/scripts/validate-artifact-schemas.js $ARTIFACTS_DIR/
 ```
 
-If validation fails, the journey-log must be fixed before rendering. The format errors will tell you exactly which fields are missing.
+If any violations are found, fix them before proceeding. The script prints specific fix instructions for each violation.
 
-**Note on persona-results.json:** Trace step objects may include an optional `evidence_for_acs: string[]` field containing AC IDs for which that step provides observable evidence. This field is accepted but not required — when absent, the report renderer falls back to task-level `covers_acs` for step highlighting.
+**Note:** `render-report.js` also auto-normalizes common schema drift (absolute screenshot paths, missing step counts, dimension ID aliases, flat dimension scores) via `normalizeJourneyLog` and `normalizeUsabilityDimensions`. But the validation script catches issues normalization can't fix.
 
 ### Step 2: Render the HTML report
 

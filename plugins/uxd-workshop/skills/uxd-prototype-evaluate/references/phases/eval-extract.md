@@ -84,7 +84,7 @@ Fallback if MCP unavailable:
 python3 scripts/fetch_rfe.py <KEY> --fields summary,description,acceptance_criteria,issuelinks --markdown
 ```
 
-
+**Cache raw ticket fields for enrichment phase:** Save `parent` and `issuelinks` from the Jira response into `extract-state.json` as `raw_parent` and `raw_issuelinks`. The enrichment phase (Steps 6-7) needs these to discover the Outcome ticket without re-fetching from Jira.
 
 ### Step 2: Extract Acceptance Criteria
 
@@ -256,6 +256,8 @@ Each entry has `key`, `url`, `validated` (true if confirmed via API).
 
 **Phase gate:** This step runs only with `--phase=enrichment` or no `--phase` flag. Skip when `--phase=core`.
 
+**Use cached data first:** Read `raw_parent` and `raw_issuelinks` from `extract-state.json` (saved during core phase Step 1). These contain the STRAT ticket's parent and issue links — no need to re-fetch from Jira. Only make additional Jira calls if the cached data doesn't contain the Outcome.
+
 Multi-strategy search. **Stop on first match** — do not run remaining strategies:
 
 1. RFE's `parent` field → **if found, stop**
@@ -284,6 +286,10 @@ Categorize changes: new pages/components, modified components, route/nav changes
 Flag navigation gaps: if new pages added but no route/nav files modified.
 
 Write to `.artifacts/<KEY>/eval/mr-delta.json`.
+
+### Step 8b: Select Personas
+
+**Persona selection (deterministic):** Read `config/persona-mapping.json` (relative to the eval skill root). Extract `target_audience_text` from the ticket description or user stories. Match against `mappings[].audience_keywords` (case-insensitive substring match). Select the first matching entry's `personas[]`. Always pick one junior + one senior when the mapping provides both. Validate every selected ID exists in `valid_ids` — if an ID is not in the list, log a warning and skip it (prevents silent file-read failures downstream in eval-usability). If no keywords match, default to `["alex-junior", "alex-senior"]` with reasoning `"no audience keywords matched, defaulting to developer personas"`.
 
 ### Step 9: Write extract-state.json
 
@@ -315,9 +321,11 @@ Assemble all extracted data into the handoff artifact:
     { "id": "journey-1", "title": "...", "persona": "...", "source": "...", "ac_ids": ["AC-1"], "expected_path": [] }
   ],
   "breadcrumb": { "outcome": null, "rfe": null, "strat": {}, "prototype": null, "mr": null },
-  "persona_selection": { "selected": [], "target_audience_text": "", "reasoning": "" },
+  "persona_selection": { "selected": ["<from config/persona-mapping.json>"], "target_audience_text": "<from ticket>", "target_audience_source": "<ticket key>", "reasoning": "<which keywords matched>" },
   "rfe_key": "<key or null>",
-  "decision_context": { "has_decisions": false, "deliberate_descopes": [] }
+  "decision_context": { "has_decisions": false, "deliberate_descopes": [] },
+  "raw_parent": "<parent field from Jira response, cached for enrichment phase>",
+  "raw_issuelinks": "<issuelinks array from Jira response, cached for enrichment phase>"
 }
 ```
 

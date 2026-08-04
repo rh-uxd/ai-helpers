@@ -97,42 +97,67 @@ For each `type: "usability"` suggestion with `confidence != "low"`:
 
 After writing the fix-log, update `refinement-suggestions.json` to mark each successfully applied suggestion so it is not re-attempted on subsequent iterations:
 
-For each entry in the `"applied"` array of fix-log.json, find the matching suggestion in `refinement-suggestions.json` (match by `criterion_id` or `guideline_id` + `type`) and set:
+For each entry in fix-log.json where `applied == true`, find the matching suggestion in `refinement-suggestions.json` (match by `criterion_id` or `guideline_id` + `type`) and set:
 ```json
 { "applied": true, "applied_in_iteration": <current iteration number> }
 ```
 
-fix-log.json format:
+fix-log.json format — a flat array where each entry includes BOTH the semantic
+fields (type, criterion_id, file, change) AND the scorer-required fields
+(description, applied, timestamp). The MLflow scorer `Fix Log Entry Schema`
+validates that each entry has `description`, `applied`, and `timestamp` — without
+them the scorer fails even though the fix data is present.
 
 ```json
-{
-  "key": "<KEY>",
-  "iteration": "<current iteration number>",
-  "fixed_at": "<ISO timestamp>",
-  "applied": [
-    {
-      "type": "consistency",
-      "guideline_id": "icon-style-consistency",
-      "file": "src/pages/AgentCatalog/AgentCatalog.tsx",
-      "change": "Replaced FolderIcon with OutlinedFolderIcon"
-    }
-  ],
-  "skipped": [
-    {
-      "type": "ac_failure",
-      "criterion_id": "AC-7",
-      "reason": "Conflicts with Decision 4"
-    }
-  ],
-  "deferred_to_human": [
-    {
-      "type": "usability",
-      "dimension": "technical_abstraction",
-      "reason": "Low confidence — needs design review"
-    }
-  ]
-}
+[
+  {
+    "type": "consistency",
+    "criterion_id": "icon-style-consistency",
+    "file": "src/pages/AgentCatalog/AgentCatalog.tsx",
+    "change": "Replaced FolderIcon with OutlinedFolderIcon",
+    "confidence": "high",
+    "description": "Replaced FolderIcon with OutlinedFolderIcon for icon-style-consistency",
+    "applied": true,
+    "timestamp": "2026-07-01T15:00:00.000Z"
+  },
+  {
+    "type": "ac_failure",
+    "criterion_id": "AC-7",
+    "file": null,
+    "change": null,
+    "confidence": "low",
+    "description": "AC-7: Conflicts with Decision 4 — skipped",
+    "applied": false,
+    "timestamp": "2026-07-01T15:00:00.000Z"
+  }
+]
 ```
+
+Key rules for each entry:
+- `description`: human-readable summary of what was done (or why it was skipped)
+- `applied`: boolean — `true` if the fix was applied, `false` if skipped/deferred
+- `timestamp`: ISO 8601 string when the fix was applied or skipped
+- `type`, `criterion_id`, `file`, `change`, `confidence`: the semantic detail fields
+
+### Step 7: PatternFly compliance validation (static checks only)
+
+After all fixes are applied, read each modified file and verify the fixes didn't introduce PatternFly violations. These are **source-code-only checks** — no rendering or viewport verification.
+
+**Import completeness:**
+- Every PatternFly component used in the file has a corresponding import from `@patternfly/react-core` or `@patternfly/react-table`
+- Icon components (`*Icon`) are imported from `@patternfly/react-icons`
+
+**Label/status patterns:**
+- Non-interactive `<Label>` components use `variant="outline"` (filled variant implies onClick)
+- Tooltips use `<Tooltip content={...}>` wrapper, not inline `title` attributes
+
+**Table structure (static tables only — skip for `.map()`-rendered dynamic tables):**
+- If columns were added/removed in literal JSX, verify `<Thead>` column count matches `<Tbody>` rows
+- Expandable rows have correct `colSpan` on the expanded `<Td>`
+
+**If any check fails:** Fix the issue before writing fix-log.json.
+
+**Note:** Viewport-level rendering validation (column truncation, responsive layout) cannot be verified from source alone. That's what eval-consistency `--mode=visual` handles post-journey.
 
 ## Rules
 
@@ -144,3 +169,4 @@ fix-log.json format:
 - Every applied fix MUST trace back to a `criterion_id` or `guideline_id` — no speculative improvements
 - Do NOT make changes that aren't backed by a specific suggestion in refinement-suggestions.json
 - Do NOT add features, polish, or enhancements beyond what the failing AC or violated guideline requires
+- **Single-pass file reading:** When multiple suggestions target the same file, read it once, apply all matching fixes in a single pass, then run Step 7 validation. Do not read-fix-read-fix the same file repeatedly.

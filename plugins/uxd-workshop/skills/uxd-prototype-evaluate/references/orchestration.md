@@ -2,12 +2,31 @@
 
 Read and follow this file when running the full evaluate pipeline. Phase procedures live in `references/phases/` — execute each when the orchestrator reaches that step.
 
+## Model Defaults Per Phase
+
+Each phase delegates to `--model` when launched via Task tool. These defaults
+are derived from MLflow comparison runs (2026-07-22, 24 traces).
+
+| Phase | Default model | Rationale |
+|-------|--------------|-----------|
+| eval-extract | `claude-sonnet-5` | Mechanical Jira parsing. No quality difference vs Opus. 3× faster. |
+| eval-classify | `claude-sonnet-5` | Mechanical tier assignment. 34s vs 93s. No quality difference. |
+| eval-journey | `claude-opus-4-6` | Playwright script generation + verdict assignment require careful reasoning. |
+| eval-fix | `claude-opus-4-6` | Code changes require careful reasoning. Shares journey's context window. |
+| eval-usability | `claude-opus-4-6` | Fewer turns = fewer Playwright flakes. Persona simulation needs nuance. |
+| eval-consistency | `claude-opus-4-6` | Focused execution (7 turns vs 23). Precision matters for design audits. |
+| eval-report | `claude-sonnet-5` | Template rendering. No quality-sensitive judgment. |
+
+When `--model` is set, ALL phases use that model (useful for comparison runs).
+
 **Artifact paths:** Pin `UXD_PROJECT_ROOT`, `KEY_DIR`, and absolute `ARTIFACTS_DIR` first (see SKILL.md "Artifact location"). All eval writes use `${ARTIFACTS_DIR}` (absolute = `.artifacts/<KEY>/eval`). Never write under `${CLAUDE_SKILL_DIR}`. After any `cd` (skill install or `.artifacts/<KEY>/code` clone), keep using the absolute `ARTIFACTS_DIR`.
 
 ```
 iteration = 0
 max_iterations = parse --max-iterations (default: 3)
 no_fix = parse --no-fix (default: false)
+no_report = parse --no-report (default: false)
+auto_run = parse --auto-run (default: false)
 
 # ── Pin artifact root (CRITICAL — do this before any writes or --fresh) ──
 export UXD_PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
@@ -147,10 +166,6 @@ LOOP:
   # If violations found (exit 1): fix CSV verdicts to FLAGGED for contradicted ACs before continuing.
   # A journey FAIL + CSV PASS is never acceptable unless journey-log is corrected with visual evidence.
 
-  # ── Archive this iteration ─────────────────────────────────────
-  cp ${ARTIFACTS_DIR}/evaluation-report.csv → ${ARTIFACTS_DIR}/evaluation-report-iter-<iteration>.csv
-  cp -r ${ARTIFACTS_DIR}/screenshots/ → ${ARTIFACTS_DIR}/screenshots-iter-<iteration>/
-
   # ── Compute counts FROM the CSV (source of truth) ──────────────
   Read ${ARTIFACTS_DIR}/evaluation-report.csv Section 1 (ACCEPTANCE CRITERIA)
   Parse using proper CSV quoting (fields may contain commas):
@@ -198,7 +213,7 @@ LOOP:
     # Otherwise continue to fix loop — eval-fix will attempt FLAGGED suggestions
 
   if iteration > 1:
-    Compare current CSV verdicts against previous iteration's archived CSV
+    Compare current CSV verdicts against previous iteration in iteration-log.json
     if any criterion flipped PASS → FAIL:
       Set exit_reason = "regression"
       python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
@@ -243,6 +258,16 @@ LOOP:
 
   GOTO LOOP
 
+# ── Loop integrity check ──────────────────────────────────────────
+# Catches the case where fixes were applied but never re-verified
+if iteration == 1:
+  Read ${ARTIFACTS_DIR}/fix-log.json
+  if fix-log has applied entries (applied == true):
+    echo "WARNING: Fixes were applied in iteration 1 but never re-verified."
+    echo "Setting exit_reason to 'fix_not_reverified' for accurate reporting."
+    python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
+      exit_reason=fix_not_reverified
+
 # ═══════════════════════════════════════════════════════════════════
 # FINAL-STATE CAPTURE (N+1 pass — only when fix loop actually ran)
 # Ensures the report shows post-fix screenshots, not pre-fix evidence
@@ -286,34 +311,37 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-stat
   consistency_visual_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
 # ═══════════════════════════════════════════════════════════════════
-# PRE-PHASE-B: Deferred Context Enrichment
-# Gather data needed only by Phase B (Outcome, tasks, hints).
-# This was deferred from setup to keep Phase A fast.
+# PRE-PHASE-B: Deferred Context (PARALLEL)
+# Three independent skills run in parallel — none depends on
+# another's output. All three feed Phase B or the report.
 # ═══════════════════════════════════════════════════════════════════
 
 python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
-  extract_enrichment_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
+  bridge_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
-Read ${CLAUDE_SKILL_DIR}/references/phases/eval-extract.md and execute it with --phase=enrichment
-# Produces: outcome-context.json, tasks_to_be_done, breadcrumb
-# Uses Outcome ticket for better persona task generation.
-# Falls back to journey titles if Outcome is not discoverable.
+# Launch all three in parallel using Task tool with run_in_background=true:
+#
+# TASK 1: eval-consistency --mode=visual
+#   Uses journey screenshots for visual guideline checks.
+#   Appends visual findings to consistency-report.json.
+#   Informational for report — does NOT re-trigger fix loop.
+#   ERROR HANDLING: If fails, consistency-report.json keeps visual_mode.ran=false. Non-blocking.
+#
+# TASK 2: eval-extract --phase=enrichment
+#   Produces: outcome-context.json, tasks_to_be_done, breadcrumb.
+#   Uses cached raw_parent and raw_issuelinks from extract-state.json (saved during core phase).
+#   ERROR HANDLING: If Outcome not found, falls back to deriving tasks from journey titles.
+#
+# TASK 3: eval-hint (if workspace provided)
+#   Produces: navigation-hints.json (nav_sections + routes only).
+#   Consumed by eval-usability as fallback for stuck-persona navigation.
+#   Runs post-fix so hints reflect final workspace state.
+#   ERROR HANDLING: If fails, eval-usability runs without hints (discovery only, no fallback).
+
+# Wait for all three to complete before proceeding to Phase B.
 
 python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
-  extract_enrichment_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
-
-if workspace provided:
-  python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
-    hint_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
-
-  Read ${CLAUDE_SKILL_DIR}/references/phases/eval-hint.md and execute it
-  # Reads mr-delta.json, scans workspace source for routes and nav hierarchy.
-  # Produces: navigation-hints.json (nav_sections + routes only).
-  # Consumed by eval-usability as fallback for stuck-persona navigation.
-  # Runs here (post-fix) so hints reflect the final workspace state.
-
-  python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
-    hint_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
+  bridge_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
 # ═══════════════════════════════════════════════════════════════════
 # PHASE B: Discovery Persona Walkthroughs
@@ -331,11 +359,20 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-stat
 # Phase B is NOT inference-only scoring — it MUST produce new screenshots.
 # Do NOT skip the Playwright walkthroughs and score from Phase A evidence alone.
 
-Read ${CLAUDE_SKILL_DIR}/references/phases/eval-usability.md and execute it
+# When --no-report is set, pass --screenshots=key-only to eval-usability.
+# This captures 1 screenshot per persona-task (final state) instead of per-step,
+# reducing from ~30 to 6 screenshots and cutting Playwright time + tokens.
+if --no-report:
+  Read ${CLAUDE_SKILL_DIR}/references/phases/eval-usability.md and execute it with --screenshots=key-only
+else:
+  Read ${CLAUDE_SKILL_DIR}/references/phases/eval-usability.md and execute it
 # Use Task tool with run_in_background=true for each persona-task pair when possible.
 # Produces: per-persona screenshots, think-aloud traces, 7-dimension scores,
 #           usability suggestions for human review
 
+# VERIFY: At least 2 personas must have been evaluated.
+# Check: node -e "const pr=require('${ARTIFACTS_DIR}/persona-results.json'); const ids=new Set(pr.map(r=>r.persona)); if(ids.size<2) { console.error('FATAL: Only '+ids.size+' persona(s) evaluated — minimum is 2'); process.exit(1); }"
+#
 # VERIFY: Per-persona screenshots must exist after eval-usability completes.
 # Check: ls ${ARTIFACTS_DIR}/screenshots/persona-*.png
 # If no persona screenshots exist, Phase B did not run correctly.
@@ -349,18 +386,110 @@ Read ${ARTIFACTS_DIR}/persona-results.json
 if any entry has trace == [] (empty array):
   echo "WARNING: persona-results.json has empty trace[] — re-running eval-usability"
   Read ${CLAUDE_SKILL_DIR}/references/phases/eval-usability.md and execute it
-  # This should not happen if Step 1d synchronous writing is followed correctly
+
+# ── Verify Step 8 completion (usability_dimensions in journey-log) ──
+# persona-results.json existing WITHOUT usability_dimensions in journey-log
+# means Step 8 was skipped. This breaks the report, MLflow scorers, and leaderboard.
+Read ${ARTIFACTS_DIR}/journey-log.json
+if "usability_dimensions" not in journey-log.json AND ${ARTIFACTS_DIR}/persona-results.json exists:
+  echo "Step 8 missing — consolidating persona results into journey-log.json"
+  Read ${CLAUDE_SKILL_DIR}/references/phases/eval-usability.md Step 8 and execute ONLY Step 8
+
+python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
+  discover_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
+
+# ── SCHEMA VALIDATION (self-healing) ──────────────────────────────────────────
+# Validates usability_dimensions uses the correct nested schema (not flat dict).
+# If the schema is wrong, it auto-fixes from persona-results.json.
+node ${CLAUDE_SKILL_DIR}/scripts/validate-phase-b-output.js ${ARTIFACTS_DIR}/
 
 # Update iteration log with usability results
 node ${CLAUDE_SKILL_DIR}/scripts/append-iteration-log.js ${ARTIFACTS_DIR}/ <iteration> b
 
+# ── Propagate exit_reason to iteration-log.json ────────────────────
+# The iteration-log.json root-level exit_reason is the canonical field
+# that downstream consumers read (MLflow scorers, leaderboard, report).
+# Without this, the report shows "exit_reason: pending" after clean exit.
+python3 -c "
+import json
+from pathlib import Path
+ad = Path('${ARTIFACTS_DIR}/')
+exit_reason = 'unknown'
+es = ad / 'eval-state.yaml'
+if es.exists():
+    for line in es.read_text().splitlines():
+        if line.strip().startswith('exit_reason:'):
+            exit_reason = line.split(':', 1)[1].strip()
+il = ad / 'iteration-log.json'
+if il.exists():
+    log = json.loads(il.read_text())
+    log['exit_reason'] = exit_reason
+    il.write_text(json.dumps(log, indent=2))
+    print(f'iteration-log.json exit_reason set to: {exit_reason}')
+"
+
 # ═══════════════════════════════════════════════════════════════════
-# REPORT (always runs)
+# ARTIFACT READINESS GATE (prevents race condition with report)
+# ═══════════════════════════════════════════════════════════════════
+# render-report.js reads journey-log.json, persona-results.json, and
+# consistency-report.json at startup. If any background task is still
+# writing these files, the report renders with empty/partial data.
+
+python3 << 'PYEOF'
+import json, time, os
+ad = '${ARTIFACTS_DIR}/'
+required = {
+    'persona-results.json': lambda d: isinstance(d, list) and len(d) > 0,
+    'journey-log.json': lambda d: 'usability_dimensions' in d,
+    'consistency-report.json': lambda d: d is not None,
+}
+for attempt in range(6):
+    missing = []
+    for f, check in required.items():
+        fp = os.path.join(ad, f)
+        if not os.path.exists(fp):
+            missing.append(f'{f} (not found)')
+            continue
+        try:
+            data = json.loads(open(fp).read())
+            if not check(data):
+                missing.append(f'{f} (incomplete)')
+        except:
+            missing.append(f'{f} (unreadable)')
+    if not missing:
+        print('All artifacts ready for report generation')
+        break
+    if attempt < 5:
+        print(f'Waiting for artifacts: {", ".join(missing)}')
+        time.sleep(5)
+    else:
+        print(f'WARNING: Proceeding with incomplete artifacts: {", ".join(missing)}')
+PYEOF
+
+# ═══════════════════════════════════════════════════════════════════
+# SCHEMA VALIDATION (catches drift before report renders broken output)
+# ═══════════════════════════════════════════════════════════════════
+
+node ${CLAUDE_SKILL_DIR}/scripts/validate-artifact-schemas.js ${ARTIFACTS_DIR}/
+# If failures: fix the artifacts in-place then re-run the validator to confirm.
+
+# ═══════════════════════════════════════════════════════════════════
+# REPORT (runs unless --no-report is set)
 # ═══════════════════════════════════════════════════════════════════
 
 REPORT:
-Read ${CLAUDE_SKILL_DIR}/references/phases/eval-report.md and execute it with:
-  --note="Phase A: <exit_reason> (<iteration> iterations). Phase B: <usability status>"
+if --no-report:
+  # Skip heavy report generation — print brief chat summary instead.
+  # Use eval-report later to create the full report from cached artifacts.
+  echo "Pipeline complete. Artifacts saved to ${ARTIFACTS_DIR}/"
+  echo "Run eval-report to generate the full HTML report."
+
+  # Mini-report (compact chat summary):
+  node ${CLAUDE_SKILL_DIR}/scripts/render-mini-report.js ${ARTIFACTS_DIR}/
+
+else:
+  Read ${CLAUDE_SKILL_DIR}/references/phases/eval-report.md and execute it with:
+    --note="Phase A: <exit_reason> (<iteration> iterations). Phase B: <usability status>"
 
 # ═══════════════════════════════════════════════════════════════════
 # NOTIFY (open report + present summary)
@@ -414,10 +543,10 @@ This reduces Playwright execution proportionally to passing criteria count.
 
 ## Regression Detection
 
-After each Phase A iteration (2+), compare verdicts against the previous CSV:
+After each Phase A iteration (2+), compare verdicts against the previous iteration:
 - If a criterion that was PASS becomes FAIL → **regression**
 - Stop immediately, report which criterion regressed and which fix caused it
-- The archived CSVs (`evaluation-report-iter-N.csv`) provide the comparison baseline
+- The `iteration-log.json` provides the comparison baseline
 - Phase B still runs after regression (captures usability of current state)
 
 ## iteration-log.json format
@@ -538,3 +667,10 @@ Only `refinement-suggestions.json` entries of `type: "usability"` with `confiden
 ### What This Enables
 
 Phase B persona walkthroughs currently identify issues like "junior user couldn't find the scheduling column because it requires scrolling right." With the feedback loop, this finding would generate a suggestion like "Add horizontal scroll indicator or move scheduling status column left" that eval-fix can apply, then Phase A re-verifies the fix works.
+
+## Error Handling
+
+- **Prototype URL unreachable:** Wait 10s, retry once. If still down, stop with error.
+- **eval-fix produces no changes:** Stop Phase A — more iterations won't help. Proceed to Phase B.
+- **Dev server crashes after fix:** Stop Phase A, note which files may have caused it. Proceed to Phase B.
+- **Missing .context/ directories:** Phase A runs without consistency. Phase B runs using the plugin persona catalog (`${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml`), which is always bundled with the plugin. Phase B is only skipped if BOTH the plugin catalog AND `.context/usability-testing/` are missing. Always select at least 2 personas.

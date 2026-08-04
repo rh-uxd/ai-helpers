@@ -4,7 +4,9 @@ Phase B of the eval pipeline. Runs discovery-based per-persona Playwright walkth
 
 Each persona navigates at their own competence level — an experienced user explores differently than a junior one. Navigation behavior is driven by the persona YAML fields: `exploration_tendency`, `experience_level`, `domain_knowledge`, and `constraints[]`.
 
-**Skip entirely if neither the plugin persona catalog nor `.context/usability-testing/` is available.** Prefer the catalog for IDs/names; deep behavioral YAML from `.context/` when present.
+**Skip entirely if the plugin persona catalog is not available AND `.context/usability-testing/` does not exist.** The plugin persona catalog (`${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` or `${CLAUDE_SKILL_DIR}/../../knowledge/personas/catalog.yaml`) is bundled with the plugin and should always be present — Phase B should almost never be skipped. Prefer the catalog for IDs/names; deep behavioral YAML from `.context/` when present.
+
+**Minimum persona floor:** Always select at least 2 personas (one junior, one senior/experienced). Even for read-only or single-page prototypes, 2 personas with different experience levels provide meaningful usability signal. If `defaults.pair` resolves to a single persona, compose with both `+junior` and `+senior` overlays.
 
 ## Inputs
 
@@ -127,6 +129,14 @@ For each task:
 - If a task describes a state that can't be shown (feature disabled, RBAC restricted), navigate to the closest relevant page (Settings, Feature Flags, admin panel) and STAY there. Do NOT fall back to the default page.
 - A task about "comparing two things" should show BOTH things side-by-side or in sequence, not just one
 
+**Single-page prototype rule:** If ALL tasks resolve to the same route (e.g., all target the deployments page), differentiation MUST come from interactions:
+- Task 1: navigate + scan table (default view screenshot)
+- Task 2: expand a specific row (expanded content screenshot)
+- Task 3: hover over a status label (tooltip visible screenshot)
+- Task N: scroll to a specific row, open a modal, click a tab, filter the table
+
+**NEVER generate multiple task functions that all just navigate and screenshot the default table view.** Each task function's final screenshot must show a visually distinct state. If the component-map.json shows interactive_elements (tooltips, expandable rows), tasks MUST use them.
+
 **Write the task route mapping** as a comment block at the top of `.artifacts/<KEY>/eval/scripts/persona-walkthrough.mjs` (pinned: `${ARTIFACTS_DIR}/scripts/persona-walkthrough.mjs`). Never write this file into `${CLAUDE_SKILL_DIR}` or the project root.
 
 ```
@@ -140,7 +150,31 @@ This mapping drives all downstream Playwright generation. If the mapping shows t
 
 ### Step 1d: Per-Persona Playwright Walkthroughs
 
+**Screenshot mode** (passed from eval-iterate):
+- `--screenshots=full` (default): Capture a screenshot at every navigation step.
+  Names: `persona-<id>-task-<N>-step-<M>.png`
+- `--screenshots=key-only`: Capture ONE screenshot per persona per task — the
+  final interaction state before the persona completes or abandons. This reduces
+  volume from ~30 screenshots to 6 (2 personas x 3 tasks), cutting Playwright
+  execution time and output token cost. The final-state screenshot shows the
+  designer what the persona actually saw at the decision point.
+  Names: `persona-<id>-task-<N>-final.png`
+
+When `--screenshots=key-only` is set, also skip writing `usability-thinkaloud-*.md`
+files — the trace data in `persona-results.json` is sufficient for scoring, and
+the markdown files are only consumed by the full HTML report renderer.
+
 Each persona runs their OWN Playwright walkthrough as an independent sub-agent. Navigation behavior is driven by the persona's YAML fields — not a shared script.
+
+**Step 1d-gen: Generate the walkthrough script scaffold:**
+
+```bash
+node ${CLAUDE_SKILL_DIR}/scripts/generate-journey-script.js ${ARTIFACTS_DIR}/ --mode=discover --screenshots=<full|key-only>
+```
+
+This produces `${ARTIFACTS_DIR}/persona-walkthrough.mjs` with mechanical scaffolding (browser setup, PF6 utilities, per-task function shells, main loop). The script uses a content-based cache hash — if inputs haven't changed since last run, it skips regeneration.
+
+**Fill LLM_FILL blocks:** Read the generated script and complete `// LLM_FILL:` comment blocks with task-specific navigation, persona-driven interactions, and step-by-step screenshots. The mechanical sections (browser launch, viewport, addInitScript, utilities) are pre-filled and must not be modified.
 
 **REQUIRED script structure for `.artifacts/<KEY>/eval/scripts/persona-walkthrough.mjs`:**
 
@@ -204,6 +238,35 @@ async function runTask1(page, persona) {
 - Feature exploration: 4-8 steps (find feature, try it, observe feedback, try edge case)
 
 ```javascript
+import { chromium } from 'playwright';
+// MANDATORY: 1920x900 viewport in every context. Default 800x600 truncates tables. 1440 is insufficient for tables with 10+ columns.
+const browser = await chromium.launch({ headless: true });
+
+// MANDATORY: Pre-seed "All projects" in localStorage BEFORE React mounts.
+// Many prototypes default to a project with no mock data (e.g., "AI Platform Team").
+// Without this, every fresh context renders an empty table.
+// This MUST be called via page.addInitScript() on EVERY new page, BEFORE page.goto().
+//
+// IMPORTANT: When addInitScript is already in place, do NOT call ensureAllProjects()
+// before screenshots — it opens the project dropdown which covers the data rows.
+// Only call ensureAllProjects() as a diagnostic fallback if tbody has 0 rows despite addInitScript.
+
+// Fallback only: click-based project selection (opens dropdown — may cover data rows)
+async function ensureAllProjects(page) {
+  const dropdown = page.locator('.pf-v6-c-menu-toggle, [data-testid="project-selector"]').first();
+  if (await dropdown.isVisible({ timeout: 2000 }).catch(() => false)) {
+    const currentText = await dropdown.textContent().catch(() => '');
+    if (!currentText.includes('All projects')) {
+      await dropdown.click();
+      const allOpt = page.locator('text=All projects').first();
+      if (await allOpt.isVisible({ timeout: 2000 }).catch(() => false)) {
+        await allOpt.click();
+        await page.waitForTimeout(1000);
+      }
+    }
+  }
+}
+
 // CORRECT structure:
 async function runTask1(page, persona) { /* navigate to deployments, expand pending row */ }
 async function runTask2(page, persona) { /* navigate to settings/feature-flags */ }
@@ -212,8 +275,21 @@ async function runTask3(page, persona) { /* navigate to deployments, filter/scro
 async function main() {
   for (const persona of personas) {
     for (let i = 0; i < tasks.length; i++) {
-      const ctx = await browser.newContext(...);
+      const ctx = await browser.newContext({ viewport: { width: 1920, height: 900 } });
       const page = await ctx.newPage();
+
+      // MANDATORY: Pre-seed project selection and feature flags BEFORE page.goto().
+      // Without this, the app defaults to a project which has no mock data,
+      // producing empty-table screenshots that get embedded in the report.
+      await page.addInitScript(() => {
+        try { localStorage.setItem('selectedProject', JSON.stringify('All projects')); } catch {}
+        try {
+          const flags = JSON.parse(localStorage.getItem('featureFlags') || '{}');
+          flags._lastModified = new Date().toISOString();
+          localStorage.setItem('featureFlags', JSON.stringify(flags));
+        } catch {}
+      });
+
       if (i === 0) await runTask1(page, persona);
       else if (i === 1) await runTask2(page, persona);
       else if (i === 2) await runTask3(page, persona);
@@ -221,6 +297,12 @@ async function main() {
     }
   }
 }
+```
+
+**Pre-flight validation:** After generating the walkthrough script, verify BOTH viewport AND project seeding before running:
+```bash
+grep -q "viewport" ${ARTIFACTS_DIR}/scripts/persona-walkthrough.mjs || { echo "FATAL: Missing viewport. Regenerate."; exit 1; }
+grep -q "addInitScript" ${ARTIFACTS_DIR}/scripts/persona-walkthrough.mjs || { echo "FATAL: Missing addInitScript project seed. Regenerate."; exit 1; }
 ```
 
 **How persona fields drive navigation AND interaction:**
@@ -268,6 +350,11 @@ patience, and constraints define exactly how you navigate.
 Navigate to <prototype-base-url> (the application homepage).
 You see the application's left navigation sidebar — just as a real user would when
 they first open the application. You have NOT been told where to go.
+
+IMPORTANT: If you land on a page with an empty table or "No items found", check for a
+project filter/dropdown at the top of the page. Many prototypes default to a specific
+project that has no data. Switch to "All projects" before concluding the page is empty.
+This is normal user behavior, not a workaround.
 
 Your task: <task from tasks_to_be_done[N].task>
 (Example: "Find out why your model deployment is queued and when it will be ready")
@@ -349,28 +436,32 @@ For each selected persona, at least ONE file matching `persona-<persona-id>-task
 
 **Screenshot uniqueness validation (FATAL — will block Phase B):**
 
-Different tasks MUST produce visually different screenshots (they test different features/flows). After capture, verify:
+Different tasks MUST produce visually different screenshots (they test different features/flows). After capture, verify dynamically based on the actual task count from `extract-state.json > tasks_to_be_done`:
 
 ```bash
-md5sum .artifacts/<KEY>/eval/screenshots/persona-*-task-1-step-2.png .artifacts/<KEY>/eval/screenshots/persona-*-task-2-step-2.png .artifacts/<KEY>/eval/screenshots/persona-*-task-3-step-2.png
-md5sum .artifacts/<KEY>/eval/screenshots/persona-*-task-1-step-3.png .artifacts/<KEY>/eval/screenshots/persona-*-task-2-step-3.png .artifacts/<KEY>/eval/screenshots/persona-*-task-3-step-3.png
+# Loop over actual tasks (do NOT hardcode task-1, task-2, task-3)
+TASK_COUNT=$(node -e "const d=require('.artifacts/<KEY>/eval/extract-state.json'); console.log(d.tasks_to_be_done.length)")
+for persona in <selected personas>; do
+  for i in $(seq 1 $TASK_COUNT); do
+    for j in $(seq $((i+1)) $TASK_COUNT); do
+      md5sum .artifacts/<KEY>/eval/screenshots/persona-${persona}-task-${i}-step-2.png .artifacts/<KEY>/eval/screenshots/persona-${persona}-task-${j}-step-2.png 2>/dev/null
+    done
+  done
+done
 ```
 
-Compare step-2 AND step-3 across tasks for each persona. Tasks on the same page that differ by interaction may have identical step-2 (same page load) but MUST differ by step-3 (after the distinguishing interaction).
+Compare step-2+ across tasks for each persona. Tasks on the same page may have identical step-1 (same entry) but MUST differ by step-2+ (after the distinguishing interaction).
 
-**If ANY two tasks share the same MD5 hash for BOTH step-2 AND step-3:**
+**If ANY two tasks for the same persona share the same MD5 hash for step-2 AND step-3:**
 
-1. **DELETE** `${ARTIFACTS_DIR}/scripts/persona-walkthrough.mjs` and ALL `${ARTIFACTS_DIR}/screenshots/persona-*.png` screenshots
-2. **Re-read** the task-to-route mapping from Step 1c-routes
-3. **Verify** the mapping has distinct interactions per task (not just different routes). If not, revise the mapping first.
-4. **Regenerate** `${ARTIFACTS_DIR}/scripts/persona-walkthrough.mjs` with per-task functions that produce different visual states
-5. **Re-run** Playwright
-6. **Re-check** MD5 hashes
+1. **Diagnose the cause** before retrying:
+   - Both screenshots show empty table / "No items found" → **project filter issue** (persona didn't select "All projects"). Fix: ensure `ensureAllProjects()` ran.
+   - Both screenshots show homepage / Projects page → **navigation failure** (persona never left the landing page). Fix: check task-to-route mapping.
+   - Both screenshots show same data page with same scroll position → **interaction failure** (task functions didn't produce different visual states). Fix: revise task function to include a distinguishing interaction.
+2. **Re-run ONLY the colliding persona-task pair** (not the entire script)
+3. If still identical after one retry, log as `"screenshot_uniqueness_failed": true` with the diagnosed cause and continue
 
-If screenshots are STILL identical after one regeneration attempt:
-- FAIL Phase B with note: "Tasks converge on same view despite distinct route mapping. tasks_to_be_done may need redesign or prototype lacks distinct pages for these flows."
-- Continue to report generation (Phase B scores will be absent/incomplete)
-- Log this in `iteration-log.json` phase_b as `"screenshot_uniqueness_failed": true`
+**Cross-persona check:** For the same task, different personas SHOULD produce different screenshots (different navigation paths, scroll positions, or interaction states based on experience level). If two personas have identical step-2+ screenshots for the same task, log a warning — the persona differentiation may not be working. This is a quality warning, not a blocking failure.
 
 **If persona screenshots do NOT exist:**
 - Step 1d was NOT completed — the persona walkthroughs did not actually run
@@ -405,7 +496,19 @@ After persona walkthroughs complete, read each persona's output:
 
 For each persona's trace, assess:
 1. **Comprehension** — did the persona understand the UI elements? Check against domain_knowledge map.
-2. **Patience drain and recovery** — apply the model from `.context/usability-testing/prompts/evaluate-flow.md` exactly as specified:
+2. **Patience drain and recovery** — run the deterministic calculator:
+
+   ```bash
+   node ${CLAUDE_SKILL_DIR}/scripts/compute-patience-drain.js ${ARTIFACTS_DIR}/
+   ```
+
+   This reads `persona-results.json` trace events and each persona's patience attribute, then recalculates `patience_end` using the exact rubric formula. The script overwrites `patience_end` and `confusion_events` in persona-results.json.
+
+   Do NOT manually compute patience drain — the script enforces the formula mechanically.
+
+   Reference model from `.context/usability-testing/prompts/evaluate-flow.md`:
+
+   **CRITICAL: Patience resets to 100% at the start of each task** (each task runs in an independent browser context/sub-agent). Per-task patience values in `persona-results.json` are independent — do NOT carry patience from task 1 into task 2.
 
    **Drain rates (per persona patience attribute from YAML):**
    - High patience: -5% per confusion event, -10% per dead end
@@ -462,6 +565,20 @@ Write `"score": "N/A"` in the CSV usability section and note "single-user featur
 
 If the feature involves ANY cross-role interaction (e.g., admin creates policy, user consumes it):
 Score normally using the full rubric criteria.
+
+**N/A SCORING RULES (general):**
+Any dimension may be scored N/A when the prototype context makes it inapplicable.
+When `composite_score` is null or `"N/A"`, you MUST populate `note` with a brief reason.
+
+Common N/A scenarios beyond Dimension 2:
+- **Dimension 3 (Scalability & Progressive Complexity):** Feature has no error states to test (pure read-only view).
+- **Dimension 4 (System Status, Observability & Trust):** Feature is a first-time wizard with no repeat-use path.
+- **Dimension 7 (Accessibility & Inclusion):** Feature has no help content and none is expected.
+
+When scoring N/A, set `composite_score: null` and `note: "<reason>"` in the dimension object.
+Compute overall_score from only the scored dimensions (e.g., 6 scored dims → max 18).
+
+If the feature involves ANY interaction relevant to the dimension, score normally.
 
 ### Step 4: Append Section 2 to CSV
 
@@ -582,6 +699,21 @@ For each AC that passed Phase A, check whether ANY persona trace step has `evide
 
 Write to: `.artifacts/<KEY>/eval/persona-results.json`
 
+**Post-write validation** — after writing persona-results.json, verify every entry
+has a non-null `persona` field and a valid `task_index`. Entries with
+`persona: null` or `persona: None` break two downstream consumers:
+the `persona_ids_present` scorer rejects the entire file, and Step 8's
+usability_dimensions consolidation silently drops entries it cannot key by persona.
+
+```python
+# Validate immediately after writing:
+import json
+pr = json.loads(open('.artifacts/<KEY>/eval/persona-results.json').read())
+for i, e in enumerate(pr):
+    assert e.get("persona"), f"Entry {i} missing persona field"
+    assert e.get("task_index") is not None, f"Entry {i} missing task_index"
+```
+
 Format: array of persona-task results, one entry per persona per task:
 
 ```json
@@ -642,6 +774,32 @@ Rules:
 - Do NOT suggest fixes for FLAGGED criteria
 - `confidence: "low"` items are logged but NOT auto-applied by eval-fix
 
+### Step 7b: Capture final-state screenshot (skip if no fix loop ran)
+
+**Skip this step if no fix loop ran** (check: `fix-log.json` does not exist OR `iteration-log.json` shows `iteration: 1` with `fail_count: 0`). The baseline-after screenshot is only meaningful when comparing against baseline-before to show fix impact. When no fixes were applied, both screenshots would be identical — wasted Playwright invocation and report bloat.
+
+If the fix loop DID run, capture a screenshot of the **primary page being tested** (the same page eval-verify captured for `baseline-before.png`):
+
+```javascript
+const ctx = await browser.newContext({ viewport: { width: 1920, height: 900 } });
+const page = await ctx.newPage();
+await page.addInitScript(() => {
+  try { localStorage.setItem('selectedProject', JSON.stringify('All projects')); } catch {}
+  try {
+    const flags = JSON.parse(localStorage.getItem('featureFlags') || '{}');
+    flags._lastModified = new Date().toISOString();
+    localStorage.setItem('featureFlags', JSON.stringify(flags));
+  } catch {}
+});
+await page.goto(`${baseUrl}${primaryRoute || ''}`);
+await page.waitForSelector('tbody tr', { timeout: 8000 }).catch(() => null);
+await page.waitForTimeout(2000);
+await page.screenshot({ path: '.artifacts/<KEY>/eval/screenshots/baseline-after.png', fullPage: false });
+await ctx.close();
+```
+
+This pairs with `baseline-before.png` to show how the prototype changed during evaluation. Both captures use identical `addInitScript` setup — the only visual difference should be actual code changes from the fix loop, not browser state differences.
+
 ### Step 8: Write usability_dimensions to journey-log.json
 
 **BLOCKING FORMAT REQUIREMENTS — render-report.js will produce broken output without these exact fields:**
@@ -649,7 +807,13 @@ Rules:
 The following top-level fields inside `usability_dimensions` are REQUIRED:
 - `personas_evaluated` — array of composed IDs (e.g., `["mlops-operator+experienced", "mlops-operator+junior"]`). NOT inside persona_selection — at the TOP level.
 - `dimensions[].composite_score` — number, the average of persona scores for that dimension. NOT just `score`.
-- `think_aloud.traces` — array with one entry per persona containing `narration_summary`, `confusion_events` count, `dimension_scores`
+- `think_aloud.traces` — array with one entry **per persona per task** containing `narration_summary`, `confusion_events` count, `dimension_scores`, `task_index`, and per-task `patience_end`
+
+**CRITICAL — per-task patience tracking:**
+- Patience resets to 100% at the start of each task (each task runs in an independent browser context/sub-agent).
+- `persona_overlays` entries MUST include `task_index` and pull `patience_start`, `patience_end`, `confusion_events` from the matching `persona-results.json` entry — NOT collapsed across tasks.
+- `think_aloud.traces` entries MUST include `task_index` and use per-task values from `persona-results.json` — NOT broadcast the same persona-level aggregate to every task.
+- If two confusion events from different tasks both occurred at step 3, they are disambiguated by `task_index`.
 
 Also in Step 6 (`persona-results.json`): output MUST be an **array** of objects, NOT a dict keyed by persona ID.
 
@@ -670,18 +834,29 @@ Also in Step 6 (`persona-results.json`): output MUST be an **array** of objects,
         "composite_score": 2.5
       }
     ],
-    "overall_score": "15.5/21",
+    "overall_score": 15.5,
     "persona_overlays": [
       {
         "persona": "mlops-operator+experienced",
         "persona_name": "Maude - Experienced MLOps Engineer",
-        "journey_id": "journey-1",
+        "task_index": 1,
         "patience_start": 100,
-        "patience_end": 85,
+        "patience_end": 100,
         "abandoned": false,
         "confusion_events": [
-          { "step": 2, "trigger": "Column headers truncated", "knowledge_gap": "ui: expected", "patience_cost": -5 }
+          { "step": 3, "trigger": "Column headers truncated", "knowledge_gap": "ui: expected", "patience_cost": -5 }
         ],
+        "cli_escapes": 0,
+        "would_complete": true
+      },
+      {
+        "persona": "mlops-operator+experienced",
+        "persona_name": "Maude - Experienced MLOps Engineer",
+        "task_index": 2,
+        "patience_start": 100,
+        "patience_end": 100,
+        "abandoned": false,
+        "confusion_events": [],
         "cli_escapes": 0,
         "would_complete": true
       }
@@ -691,17 +866,28 @@ Also in Step 6 (`persona-results.json`): output MUST be an **array** of objects,
       "traces": [
         {
           "persona": "mlops-operator+experienced",
+          "task_index": 1,
           "outcome": "completed",
-          "patience_end": 85,
+          "patience_end": 100,
           "confusion_events": 1,
           "cli_escapes": 0,
           "response_strategies": { "help_seeking": 0, "guess_and_continue": 0, "abandon": 0 },
           "expected_vs_actual": [
-            { "step": 2, "expected": "Hover tooltip", "actual": "Expandable row", "impact": "Better than expected" }
+            { "step": 3, "expected": "Hover tooltip", "actual": "Expandable row", "impact": "Better than expected" }
           ],
           "missing_feedback": [],
           "dimension_scores": { "workflow_continuity": { "score": 3, "confidence": "High" } },
-          "narration_summary": "First-person narrative of what the persona experienced..."
+          "narration_summary": "1-2 sentence summary of this persona's experience on this specific task."
+        },
+        {
+          "persona": "mlops-operator+experienced",
+          "task_index": 2,
+          "outcome": "completed",
+          "patience_end": 100,
+          "confusion_events": 0,
+          "cli_escapes": 0,
+          "dimension_scores": { "workflow_continuity": { "score": 3, "confidence": "High" } },
+          "narration_summary": "Summary of task 2 experience."
         }
       ]
     }
@@ -711,11 +897,64 @@ Also in Step 6 (`persona-results.json`): output MUST be an **array** of objects,
 
 #### CRITICAL FORMAT RULES for render-report.js
 
-- `persona_overlays` MUST always be populated (one entry per persona per journey)
+- `persona_overlays` MUST always be populated (one entry per persona **per task** — NOT collapsed across tasks)
 - `confusion_events[].step` MUST be a NUMBER matching `journey.steps[].step` (e.g., `2`, not `"journey-1 step 2"`)
-- `dimensions[].id` MUST use the 7 standard IDs (workflow_continuity, cross_persona_handoffs, etc.)
+- `dimensions[].id` MUST use the 7 standard IDs (workflow_continuity, cross_persona_handoffs, etc.) — NOT `dimension_id`, which breaks the MLflow scorer
+- `dimensions[].name` MUST be present (e.g., "Workflow Continuity & Integrity") — the scorer checks for this key
 - `dimensions[].scores` MUST be keyed by persona ID with `{score, confidence, finding}`
 - `think_aloud.traces` MUST be populated when `--usability=deep` — this is what renders the persona insights in the report
-- `think_aloud.traces[].confusion_events` scalar MUST equal `expected_vs_actual.length + missing_feedback.length` (count BOTH types)
+- `think_aloud.traces[].task_index` MUST be present — one trace entry per persona per task, NOT one per persona
+- `think_aloud.traces[].patience_end` MUST be the per-task value from `persona-results.json`, NOT the persona-level aggregate
+- `think_aloud.traces[].confusion_events` scalar MUST equal the count for THAT SPECIFIC TASK, pulled from the matching `persona-results.json` entry
 - `think_aloud.traces[].narration_summary` appears in the Personas tab as the think-aloud narrative
-- `overall_score` MUST be a string in "X/21" format
+- `persona_overlays[].task_index` MUST be present — without it the MLflow scorer fails
+- `overall_score` MUST be a number (e.g. 15.5) — the denominator is derived from scored dimensions
+
+#### POST-WRITE VALIDATION (BLOCKING)
+
+After writing `usability_dimensions` to `journey-log.json`, run this validation
+immediately — do NOT proceed to the report step if it fails. These checks catch
+the exact schema drift patterns that break MLflow scorers and render-report.js:
+
+```python
+import json
+jl = json.loads(open('.artifacts/<KEY>/eval/journey-log.json').read())
+ud = jl.get('usability_dimensions', {})
+errors = []
+
+# 1. persona_selection must exist at top level
+if 'persona_selection' not in jl:
+    errors.append('MISSING: persona_selection not in journey-log.json top level')
+
+# 2. dimensions must use "id" not "dimension_id", and must have "name"
+for i, d in enumerate(ud.get('dimensions', [])):
+    if 'dimension_id' in d and 'id' not in d:
+        errors.append(f'dimensions[{i}]: uses "dimension_id" instead of "id"')
+    if 'id' not in d:
+        errors.append(f'dimensions[{i}]: missing "id"')
+    if 'name' not in d:
+        errors.append(f'dimensions[{i}]: missing "name"')
+    if 'composite_score' not in d:
+        errors.append(f'dimensions[{i}]: missing "composite_score"')
+    if d.get('composite_score') is None and not d.get('note'):
+        errors.append(f'dimensions[{i}]: composite_score is null but "note" is missing (required for N/A dimensions)')
+
+# 3. persona_overlays must have task_index
+for i, o in enumerate(ud.get('persona_overlays', [])):
+    if 'task_index' not in o:
+        errors.append(f'persona_overlays[{i}]: missing "task_index"')
+
+# 4. think_aloud traces must have task_index
+for i, t in enumerate(ud.get('think_aloud', {}).get('traces', [])):
+    if 'task_index' not in t:
+        errors.append(f'think_aloud.traces[{i}]: missing "task_index"')
+
+if errors:
+    print('SCHEMA ERRORS (fix before continuing):')
+    for e in errors:
+        print(f'  - {e}')
+else:
+    print('Schema validation passed')
+```
+
+If errors are found, fix the journey-log.json in place before continuing.

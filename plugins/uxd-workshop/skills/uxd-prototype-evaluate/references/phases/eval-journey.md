@@ -13,6 +13,8 @@ Executes Playwright walkthroughs for each journey defined by eval-extract. Opera
 | Prototype URL | Live URL to test against (e.g., `http://localhost:4200`) | Yes |
 | `--mode` | `informed` (x-ray mode, the only mode for this skill) | No |
 | `--rerun-only` | Comma-separated AC IDs — only run journeys testing these ACs | No |
+| `--capture-only` | Re-capture screenshots without changing verdicts | No |
+| `--all-journeys` | Run all journeys (not just rerun set) | No |
 | `tests/fixtures/manifest.json` | Test fixtures for file uploads and chat input | No |
 
 ## Outputs
@@ -86,17 +88,32 @@ fi
 mkdir -p "${ARTIFACTS_DIR}/scripts" "${ARTIFACTS_DIR}/screenshots"
 ```
 
-**Browser selection:** Use Firefox by default (more reliable CSS rendering for PatternFly expandable components). Chromium's headless mode can incorrectly collapse `isExpanded={false}` rows to zero height.
+**Browser selection:** Use Chromium (headless). Firefox caused blank screenshots in 3/4
+pipeline runs due to PatternFly CSS rendering failures in headless mode.
 
 ```javascript
-import { firefox } from 'playwright';  // preferred
-// fallback: import { chromium } from 'playwright';
-const browser = await firefox.launch({ headless: true });
+import { chromium } from 'playwright';
+const browser = await chromium.launch({ headless: true });
+// MANDATORY: 1920x900 viewport. Default 800x600 truncates table columns.
+// 1440 is insufficient for tables with 10+ columns.
+const context = await browser.newContext({ viewport: { width: 1920, height: 900 } });
+const page = await context.newPage();
 ```
 
-If Firefox is not installed, fall back to Chromium. The script should import and try Firefox first.
+**Blank screenshot detection:** After each screenshot, check the file size. Images under
+10 KB are likely blank (rendering not yet complete). When detected:
+1. Wait 2 seconds and retry once (the page may still be loading)
+2. If still blank after retry, log a warning and continue — base the verdict on DOM state
+   (selectors, getBoundingClientRect), not screenshot appearance
 
-### Step 2: Prepare screenshots directory
+**Hidden row detection:** PatternFly's `Tr` component treats any explicit `isExpanded` value
+(including `false`) as its own visibility control, rendering rows with `hidden=""`. Before
+reporting AC failures for missing table data, check whether rows exist in the DOM but have
+zero bounding rect (`getBoundingClientRect().height === 0`). If so, report ONE root cause
+("N rows exist but are hidden by isExpanded={false}") instead of separate per-AC failures —
+this is a single prototype bug, not N independent issues.
+
+### Step 2: Prepare screenshots directory and capture baseline
 
 ```bash
 rm -rf "${ARTIFACTS_DIR}/screenshots"
@@ -105,7 +122,88 @@ mkdir -p "${ARTIFACTS_DIR}/screenshots"
 
 On re-iterations with `--rerun-only`, only clear screenshots for re-run journeys (preserve PASS journey screenshots).
 
-### Step 3: Load navigation hints as FALLBACK (the "colleague" pattern)
+**Baseline screenshot (before any evaluation or fixes):** On iteration 1 only, navigate to the **primary page being tested** (not the homepage) and capture a screenshot as the "before" state.
+
+Determine the primary page from `extract-state.json > journey_definitions` — find the route most journeys target:
+
+```javascript
+const journeys = extractState.journey_definitions || [];
+const firstSteps = journeys.map(j => (j.expected_path || [])[0]).filter(Boolean);
+const primaryRoute = componentMap ? componentMap.target_page : inferPrimaryRoute(firstSteps);
+
+// PAIRED with eval-usability Step 7b (baseline-after.png).
+// Both captures MUST use identical addInitScript setup.
+const context = await browser.newContext({ viewport: { width: 1920, height: 900 } });
+const page = await context.newPage();
+await page.addInitScript(() => {
+  try { localStorage.setItem('selectedProject', JSON.stringify('All projects')); } catch {}
+});
+await page.goto(`${baseUrl}${primaryRoute || ''}`);
+await page.waitForSelector('tbody tr', { timeout: 8000 }).catch(() => null);
+await page.waitForTimeout(2000);
+await page.screenshot({ path: `${ARTIFACTS_DIR}/screenshots/baseline-before.png`, fullPage: false });
+await context.close();
+```
+
+### Step 2b: Source pre-scan — write component-map.json
+
+**Before generating any Playwright script**, read the target component files from `mr-delta.json` and write a structured JSON file that the script generator MUST reference.
+
+Read workspace source files (`modified_files` and `new_files` from `mr-delta.json`) and extract:
+
+- **target_page**: The route where the feature lives
+- **table_columns**: Actual `<Th>` labels or column config array values in order
+- **ac_column_mapping**: For each AC, which column it actually maps to (AC text may say "Status column" but the feature is in a different column)
+- **interactive_elements**: Tooltips (`<Tooltip content=`), expandable rows (`<Tr isExpanded`), popovers, modals — with the component that wraps them
+- **feature_flags**: Conditional rendering gates and what they show/hide
+- **status_values**: Actual string values that appear as labels (from mock data or enums)
+
+Write to `${ARTIFACTS_DIR}/component-map.json`:
+
+```json
+{
+  "target_page": "/page/route",
+  "table_columns": ["Column A", "Column B", "..."],
+  "ac_column_mapping": {
+    "AC-1": { "column": "Column B", "index": 1, "reason": "..." }
+  },
+  "feature_flags": {},
+  "status_values": [],
+  "interactive_elements": {
+    "tooltips": [],
+    "expandable_rows": []
+  }
+}
+```
+
+**The Playwright script generator in Step 3 MUST read `component-map.json` and use its data for:**
+- Column indices (never guess from AC text — use `ac_column_mapping`)
+- Interaction types (hover vs click — use `interactive_elements`)
+- Expected values (use `status_values` to know what to look for)
+- Target page route (use `target_page` for navigation)
+
+**Refresh rule:** Step 2b re-runs unconditionally when `--capture-only` is set (FINAL-STATE CAPTURE pass). On normal iterations, Step 2b only runs if `component-map.json` does not exist.
+
+**Validation:** If `component-map.json` does not exist when Step 3 starts, STOP and go back to Step 2b. Do not generate a script without a component map.
+
+### Step 3: Generate and run Playwright script
+
+**Step 3a: Run the deterministic generator:**
+
+```bash
+node ${CLAUDE_SKILL_DIR}/scripts/generate-journey-script.js ${ARTIFACTS_DIR}/ --mode=verify
+```
+
+This produces `${ARTIFACTS_DIR}/journey-test.mjs` with ~80% of code filled in mechanically from `component-map.json` and `extract-state.json`. The script uses a content-based cache hash — if inputs haven't changed since last run, it skips regeneration.
+
+**Step 3b: Fill LLM_FILL blocks.** Read the generated `journey-test.mjs` and complete any `// LLM_FILL:` comment blocks. These are the ~20% that require judgment. Do NOT modify mechanical sections (marked "do not edit").
+
+**Viewport validation:** After generation, verify the script contains `viewport` before running:
+```bash
+grep -q "viewport" ${ARTIFACTS_DIR}/journey-test.mjs || { echo "FATAL: Generated script missing viewport. Regenerate."; exit 1; }
+```
+
+### Step 4: Load navigation hints as FALLBACK (the "colleague" pattern)
 
 If `.artifacts/<KEY>/eval/navigation-hints.json` exists (produced by eval-hint), it is available as a **fallback safety net** — NOT pre-loaded knowledge.
 
@@ -129,13 +227,13 @@ The generated Playwright script navigates using ONLY visible UI elements first. 
 
 **The key principle:** A persona who needs a hint to find something is revealing a discoverability problem. The hint prevents the walkthrough from being totally blocked while preserving the signal that "a real user would struggle here."
 
-### Step 3b: Journey skip check (when `--rerun-only` set)
+### Step 4b: Journey skip check (when `--rerun-only` set)
 
 For each journey, check if ANY of its `ac_ids` are in `--rerun-only`. If none are, skip the journey — carry forward its previous `journey-log.json` entry and screenshots.
 
-### Step 4: Generate and run Playwright script
+### Step 5: Run Playwright script
 
-Generate `.artifacts/<KEY>/eval/scripts/journey-test.mjs` with two phases in a single browser session.
+Run the generated `.artifacts/<KEY>/eval/scripts/journey-test.mjs` (from Step 3). The script has two phases in a single browser session.
 
 **Path rules:** Write the script under the pinned `${ARTIFACTS_DIR}/scripts/` (consumer repo `.artifacts/<KEY>/eval/scripts/`). Never write `journey-test.mjs` into `${CLAUDE_SKILL_DIR}` or the project root. Create the directory first: `mkdir -p "${ARTIFACTS_DIR}/scripts"`.
 
@@ -271,6 +369,28 @@ async function runJourney5(page) {
 
 But the function MUST exist and MUST produce a verdict. No journey definition may be skipped.
 
+#### Visual Differentiation Rule (MANDATORY)
+
+**Each journey MUST produce a screenshot showing a UNIQUE visual state.** Never screenshot the same default table view for multiple journeys. Before capturing the final screenshot, each journey must perform at least one interaction that visibly changes the page:
+
+| AC type | Required interaction before screenshot |
+|---|---|
+| Feature visibility (columns, labels) | Default table view is acceptable for ONE journey only |
+| Tooltip content ("hover over X") | `page.hover()` → screenshot WITH tooltip visible on screen |
+| Expandable row ("details", "resource info") | Click expand toggle → screenshot showing expanded content |
+| Feature absence ("when disabled", "no indicators") | Source verification → FLAGGED (can't toggle in prototype) |
+| Error absence ("no errors", "graceful degradation") | Check DOM for errors → screenshot (can share default view if no errors) |
+| Unmanaged/alternative state | Scroll to or highlight the specific row showing different state |
+| Multiple resource types | Expand a row showing the specific type, or navigate to a detail view |
+
+**Enforcement:** After generating the script, verify that no two journey functions produce screenshots at the same page state. If journeys 1, 3, and 4 all just navigate to the same page and screenshot the same table, the script is INVALID — add interactions (hover, expand, scroll) to differentiate them.
+
+**POST-GENERATION VALIDATION:** After generating `journey-test.mjs`, scan the script
+for screenshot calls. If all `screenshot()` calls share the same page state (no
+`hoverElement`, `expandRow`, `navigateTo`, `click`, or `scrollIntoView` between
+baseline and any journey screenshot), the script will produce identical screenshots.
+Regenerate with actual interactions.
+
 #### Journey Step Relevance Rule
 
 Every step in a journey MUST be necessary to verify the AC. Do not add steps that:
@@ -291,13 +411,18 @@ For Tier 1 criteria, a PASS verdict requires AT LEAST ONE screenshot showing the
 
 Extra exploration (checking adjacent pages, testing edge cases) goes in the `exploration[]` section, NOT in the journey steps. Journey steps are the minimum path to verify the AC.
 
+**Viewport validation:** After generating `journey-test.mjs`, verify the script contains `viewport` before running it:
+```bash
+grep -q "viewport" "${ARTIFACTS_DIR}/scripts/journey-test.mjs" || { echo "FATAL: Generated script missing viewport. Regenerate."; exit 1; }
+```
+
 Run the script:
 ```bash
 node "${ARTIFACTS_DIR}/scripts/journey-test.mjs"
 # equivalent: node .artifacts/<KEY>/eval/scripts/journey-test.mjs  (from UXD_PROJECT_ROOT only)
 ```
 
-### Step 5: Screenshot capture rules
+### Step 6: Screenshot capture rules
 
 Capture at key moments only:
 - New view reached (after navigation settles)
@@ -392,9 +517,27 @@ async function runJourney1(page) {
 - If a step's `screenshot` field in journey-log.json references a DIFFERENT step's file (e.g., step 4 points to `journey-1-step-3.png`), AND `"screenshot_reused": true` is NOT set on that step, the journey is INVALID and must be re-run with a corrected script.
 - After running `journey-test.mjs`, validate: count screenshot files per journey matches step count. If mismatch, regenerate and re-run before writing journey-log.json.
 
-### Step 6: Assign verdicts (EVERY AC must get exactly one verdict)
+### Step 7: Assign verdicts (EVERY AC must get exactly one verdict)
 
 After all journeys complete, assign verdicts for EVERY AC in the CSV.
+
+**CRITICAL: The CSV is the source of truth for the report.** The report renders verdicts from the CSV, not the journey-log. If the CSV says FAIL but journey-log says PASS, the report shows FAIL.
+
+**Verdict determination flow (do NOT write to CSV until all judgment is complete):**
+
+1. Run Playwright script → collect raw results (element found/not found, visible/invisible)
+2. Apply ALL verdict rules to the raw results:
+   - Visual Truth Rule (screenshots show it working → PASS)
+   - Default-state ACs (visible state matches AC description → PASS)
+   - Source analysis (component-map confirms feature exists → informs verdict)
+   - Error/RBAC detection (no errors on page → PASS for graceful degradation ACs)
+3. Produce a FINAL verdict per AC — this is the verdict AFTER judgment, not the raw Playwright result
+4. Write the FINAL verdict to BOTH:
+   - `evaluation-report.csv` Section 1 (verdicts, rationale, evidence columns)
+   - `journey-log.json` journey verdict fields
+5. **Both files MUST have identical verdicts for every AC.** If you write PASS to journey-log, you MUST also write PASS to the CSV.
+
+**NEVER write raw Playwright results to the CSV.** The CSV gets the final judged verdict only. If Playwright selectors timed out but screenshots show the feature working, the verdict is PASS (Visual Truth Rule) — and PASS goes to both files.
 
 **T3 criteria (backend-only):** These are pre-assigned verdict=PASS at classify time with a note. Do not generate journey steps for T3 ACs — they have no UI surface to test.
 
@@ -440,6 +583,12 @@ Do NOT flag or fail ACs solely because their backend portion cannot be verified.
 | Subjective quality judgment (T4) | FLAGGED | Human call |
 | Source code confirms feature but screenshot shows nothing | FAIL | Visual truth wins |
 | Hardware API (mic, camera, etc.) | PASS (noted) | Code exists; hardware demo not possible in headless |
+| AC describes absent/disabled state AND current UI matches | PASS | Current visible state satisfies the AC |
+| No errors/403s on page when AC tests graceful degradation | PASS | Absence of errors IS the expected behavior |
+
+**Default-state ACs:** If an AC describes what should happen when a feature is absent or disabled (e.g., "no Kueue indicators when disabled", "normal status with no Kueue indicators", "no error indicators"), and the current prototype state matches that description, the verdict is **PASS** — not FLAGGED. The AC is satisfied by the current visible state. Only FLAG if the AC requires demonstrating a STATE TRANSITION (enabled → disabled) that the prototype can't toggle.
+
+**Example:** AC-3 says "InferenceService with no associated Workload CR displays normal KServe-derived status with no Kueue indicators." If the table has rows showing "Unmanaged" with standard status and no Kueue columns for that row, that IS the AC being satisfied — PASS, not FLAGGED.
 
 **Verdict rules:**
 - Simulated/placeholder responses in prototypes = PASS (UI flow works)
@@ -468,7 +617,7 @@ If this script exits with code 1 (violations found), you MUST fix the CSV before
 - If the journey FAIL was legitimate (feature not demonstrated visually), change CSV verdict to FAIL or FLAGGED.
 - If the journey FAIL was a locator/timing issue but the feature IS visible in screenshots, keep CSV as PASS and update the journey-log.json entry to reflect the corrected verdict with rationale.
 
-### Step 7: Write journey-log.json
+### Step 8: Write journey-log.json
 
 The output MUST match this exact schema. `render-report.js` reads these specific field names — any deviation produces a broken report with missing screenshots, empty journey sections, and no scores.
 
@@ -526,7 +675,7 @@ The output MUST match this exact schema. `render-report.js` reads these specific
 
 **If any field is missing, the report will render with blank sections, no embedded images, and broken path comparison tables.**
 
-### Step 7b: Verify AC Coverage (BLOCKING)
+### Step 8b: Verify AC Coverage (BLOCKING)
 
 After writing journey-log.json, verify every AC has been tested:
 
@@ -544,7 +693,7 @@ After writing journey-log.json, verify every AC has been tested:
 
 **This step is BLOCKING** — do not proceed to eval-usability until every AC in the CSV has a non-empty verdict.
 
-### Step 8: Generate refinement suggestions for FAILs
+### Step 9: Generate refinement suggestions for FAILs
 
 For each FAIL verdict, write an entry to `.artifacts/<KEY>/eval/refinement-suggestions.json`:
 

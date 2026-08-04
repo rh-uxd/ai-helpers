@@ -75,6 +75,56 @@ Self-contained HTML at `.artifacts/<KEY>/eval/evaluation-report.html` plus CSV/J
 
 Set `tracking.sheet_id` in `config/product-overlay.yaml` (or `EVAL_SHEET_ID`). Leave empty to disable. Requires `gcloud auth login --enable-gdrive-access`.
 
+## Validators
+
+Scripts that check pipeline output quality:
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/validate-phase-b-output.js` | Validates Phase B persona discovery output schemas and score contracts |
+| `scripts/validate-artifact-schemas.js` | Schema validation for all pipeline artifact files |
+| `scripts/validate-report-rendering.js` | Report rendering quality checks (screenshot selection, persona names, fix history, score contract) |
+
+## Claude Code permissions
+
+The eval pipeline shells out to bundled Node/bash scripts and Playwright. By default, Claude Code prompts for approval on each invocation. To auto-approve these scripts, add the following to your project's `.claude/settings.json` (or user-level `~/.claude/settings.json`):
+
+```json
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*validate-artifact-schemas*)",
+      "Bash(node:*validate-phase-b-output*)",
+      "Bash(node:*validate-report-rendering*)",
+      "Bash(node:*render-report*)",
+      "Bash(node:*render-mini-report*)",
+      "Bash(node:*classify-ac-tier*)",
+      "Bash(node:*compute-patience-drain*)",
+      "Bash(node:*generate-journey-script*)",
+      "Bash(node:*validate-verdicts*)",
+      "Bash(node:*hydrate-persona-results*)",
+      "Bash(node:*resolve-root*)",
+      "Bash(node:*append-iteration-log*)",
+      "Bash(node:*compare-runs*)",
+      "Bash(node:*compare-ground-truth*)",
+      "Bash(node:*build-leaderboard*)",
+      "Bash(node:*sync-sheet*)",
+      "Bash(node:*generate-dashboard*)",
+      "Bash(node:*log-run*)",
+      "Bash(bash:*pipeline-setup*)",
+      "Bash(bash:*publish-report*)",
+      "Bash(bash:*bootstrap-usability-testing*)",
+      "Bash(bash:*bootstrap-consistency-checker*)",
+      "Bash(npx:playwright*)",
+      "Bash(npm:install*)",
+      "Bash(python3:*eval_state*)"
+    ]
+  }
+}
+```
+
+Contributors working inside the `ai-helpers` repo get these permissions automatically via the repo's `.claude/settings.json` (accepted once via the workspace trust dialog).
+
 ## Phase procedures
 
 Orchestration is in `SKILL.md`. Detailed phase instructions:
