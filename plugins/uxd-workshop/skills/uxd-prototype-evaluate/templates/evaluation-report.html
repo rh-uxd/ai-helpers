@@ -418,7 +418,7 @@ details[open] summary .section-icon{opacity:0.8}
 .ev-sidebar{width:230px;border-right:1px solid var(--border);overflow-y:auto;padding:0.75rem 0;flex-shrink:0;background:var(--bg-secondary)}
 .ev-main{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:1rem}
 .ev-main-split{display:flex;flex:1;gap:0.75rem;overflow:hidden;min-height:0}
-.ev-screenshot{flex:1.4;overflow:auto;display:flex;align-items:center;justify-content:center;background:var(--bg-secondary);border-radius:0.5rem;min-height:0}
+.ev-screenshot{flex:1.4;overflow:auto;display:flex;align-items:center;justify-content:center;background:var(--bg-secondary);border-radius:0.5rem;min-height:0;position:relative}
 .ev-screenshot img{max-width:100%;max-height:100%;object-fit:contain;border-radius:0.375rem}
 .ev-context{flex:0.6;padding:0.75rem 1rem;background:var(--bg-secondary);border-radius:0.5rem;font-size:0.8125rem;line-height:1.6;color:var(--text-secondary);overflow-y:auto;min-height:0}
 .ev-context strong{color:var(--text);display:block;margin-top:0.5rem;font-size:0.75rem;font-family:var(--font-mono);font-weight:400}
@@ -1417,7 +1417,11 @@ function renderStepDetail() {
 
   var ssEl = document.getElementById('ev-screenshot');
   if (step.screenshot) {
-    ssEl.innerHTML = '<img src="' + step.screenshot + '" alt="Step ' + (step.step || evState.step + 1) + '">';
+    var ssHtml = '<img src="' + step.screenshot + '" alt="Step ' + (step.step || evState.step + 1) + '">';
+    if (step.duplicateOf) {
+      ssHtml += '<div style="position:absolute;top:0.5rem;left:0.5rem;background:rgba(217,119,6,0.9);color:#fff;font-size:0.7rem;padding:0.2rem 0.5rem;border-radius:0.25rem;font-weight:600;pointer-events:none">Same view as ' + escHtml(step.duplicateOf.persona) + ' \u00B7 Step ' + step.duplicateOf.step + '</div>';
+    }
+    ssEl.innerHTML = ssHtml;
   } else {
     ssEl.innerHTML = '<span style="color:var(--text-secondary);font-size:0.8rem;">No screenshot</span>';
   }

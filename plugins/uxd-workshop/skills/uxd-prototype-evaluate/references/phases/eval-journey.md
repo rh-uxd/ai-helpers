@@ -383,7 +383,15 @@ But the function MUST exist and MUST produce a verdict. No journey definition ma
 | Unmanaged/alternative state | Scroll to or highlight the specific row showing different state |
 | Multiple resource types | Expand a row showing the specific type, or navigate to a detail view |
 
-**Enforcement:** After generating the script, verify that no two journey functions produce screenshots at the same page state. If journeys 1, 3, and 4 all just navigate to the same page and screenshot the same table, the script is INVALID — add interactions (hover, expand, scroll) to differentiate them.
+**Highlight technique:** When verifying a specific row or element on a shared page view, add a CSS outline before screenshotting so the image is visually distinct:
+
+```javascript
+await targetRow.evaluate(el => el.style.outline = '3px solid #0066cc');
+await page.screenshot({ path: screenshotPath });
+await targetRow.evaluate(el => el.style.outline = '');
+```
+
+**Enforcement:** After generating the script, verify that no two journey functions produce screenshots at the same page state. If journeys 1, 3, and 4 all just navigate to the same page and screenshot the same table, the script is INVALID — add interactions (hover, expand, scroll, or CSS highlights) to differentiate them.
 
 **POST-GENERATION VALIDATION:** After generating `journey-test.mjs`, scan the script
 for screenshot calls. If all `screenshot()` calls share the same page state (no

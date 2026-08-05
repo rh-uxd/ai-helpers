@@ -601,7 +601,9 @@ const { parseCSVLine } = require('./csv-utils');
 
 function loadScreenshots(screenshotsDir) {
   const map = {};
-  if (!fs.existsSync(screenshotsDir)) return map;
+  const fileToHash = {};
+  const hashToFirstFile = {};
+  if (!fs.existsSync(screenshotsDir)) return { map, fileToHash, hashToFirstFile };
   const files = fs.readdirSync(screenshotsDir).filter(f => f.endsWith('.png')).sort();
 
   const journeyLogPath = path.join(path.dirname(screenshotsDir), 'journey-log.json');
@@ -622,6 +624,7 @@ function loadScreenshots(screenshotsDir) {
     }
     const data = fs.readFileSync(filePath);
     const hash = require('crypto').createHash('md5').update(data).digest('hex');
+    fileToHash[file] = hash;
 
     if (hashToDataUri.has(hash)) {
       map[file] = hashToDataUri.get(hash);
@@ -629,6 +632,7 @@ function loadScreenshots(screenshotsDir) {
     } else {
       const dataUri = 'data:image/png;base64,' + data.toString('base64');
       hashToDataUri.set(hash, dataUri);
+      hashToFirstFile[hash] = file;
       map[file] = dataUri;
     }
   }
@@ -639,7 +643,7 @@ function loadScreenshots(screenshotsDir) {
   if (dedupSaved > 0) {
     console.log(`  Screenshot dedup: ${files.length} files → ${hashToDataUri.size} unique images (${dedupSaved} duplicates reuse shared data URIs)`);
   }
-  return map;
+  return { map, fileToHash, hashToFirstFile };
 }
 
 const _ssFileCache = new Map();
@@ -1178,6 +1182,7 @@ function getPersonaMetadata(pid) {
 function buildEvidenceViewerData() {
   const screenshotsDir = path.join(absArtifacts, 'screenshots');
   const { personaResults, ud, tasksDefined, screenshotsByPersona, personaNameMap } = loadPersonaData(absArtifacts, screenshotsDir);
+  const { fileToHash, hashToFirstFile } = loadScreenshots(screenshotsDir);
   const csvRaw = readFileOr(path.join(absArtifacts, 'evaluation-report.csv'), '');
   const csvRows = parseCsv(csvRaw);
 
@@ -1373,6 +1378,24 @@ function buildEvidenceViewerData() {
     }
 
     acToSteps[ac.id] = refs;
+  }
+
+  // Annotate duplicate screenshots across all personas/tasks
+  const seenHashes = {};
+  for (const [pid, pData] of Object.entries(personas)) {
+    for (const task of pData.tasks) {
+      for (const step of task.steps) {
+        if (!step.screenshot) continue;
+        const ssFile = path.basename(step.screenshot);
+        const hash = fileToHash[ssFile];
+        if (!hash) continue;
+        if (seenHashes[hash]) {
+          step.duplicateOf = seenHashes[hash];
+        } else {
+          seenHashes[hash] = { persona: pData.name, task: task.task, step: step.step };
+        }
+      }
+    }
   }
 
   return { personas, ac_list: acList, ac_to_steps: acToSteps };
@@ -2436,7 +2459,7 @@ function buildTokens(opts = {}) {
   const journeyLog = readJsonOr(opts.journeyLogPath || path.join(absArtifacts, 'journey-log.json'), null);
   const extractState = readJsonOr(path.join(absArtifacts, 'extract-state.json'), null);
   const screenshotsDir = opts.screenshotsDir || path.join(absArtifacts, 'screenshots');
-  const screenshots = loadScreenshots(screenshotsDir);
+  const { map: screenshots, fileToHash: ssFileToHash, hashToFirstFile: ssHashToFirstFile } = loadScreenshots(screenshotsDir);
 
   // Normalize usability_dimensions fields (handle common LLM output variants)
   const ud = journeyLog ? normalizeUsabilityDimensions(journeyLog.usability_dimensions) : null;
@@ -2761,6 +2784,8 @@ function buildTokens(opts = {}) {
   const journeyColors = ['#0066cc', '#3e8635', '#f0ab00', '#6753ac', '#009596', '#c9190b'];
   let journeyBlocksHtml = '';
   const pathRows = [];
+  // Track rendered screenshot hashes to annotate duplicate views across journeys
+  const renderedHashOrigins = new Map();
 
   for (const journey of journeys) {
     const jIdx = journeys.indexOf(journey);
@@ -2915,7 +2940,15 @@ function buildTokens(opts = {}) {
 
         const idx = registerScreenshot(ssFilename, mergedNarrations, stepCtx, screenshots, ssState);
         if (idx >= 0) {
+          const ssHash = ssFileToHash[ssFilename];
+          const dupOrigin = ssHash ? renderedHashOrigins.get(ssHash) : null;
+          if (ssHash && !dupOrigin) {
+            renderedHashOrigins.set(ssHash, { journey: journey.title, step: step.step });
+          }
           block += `<div class="screenshot-card">`;
+          if (dupOrigin) {
+            block += `<div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.25rem"><span class="badge" style="background:rgba(217,119,6,0.1);color:#d97706;font-size:0.6rem">Same view as ${escapeHtml(dupOrigin.journey)} Step ${dupOrigin.step}</span></div>`;
+          }
           block += `<div class="screenshot" data-idx="${idx}" onclick="openImageLightbox(this.querySelector('img').src)" style="cursor:pointer"><img loading="lazy" src="screenshots/${ssFilename}" alt="Step ${step.step}"></div>`;
 
           if (mergedNarrations) {
