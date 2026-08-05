@@ -1,0 +1,16 @@
+{
+  "key": "ITER-DEMO",
+  "title": "Kueue integration prototype",
+  "ac_list": [
+    {"criterion_id": "AC1", "criterion_text": "Kueue scheduling states in Status column"},
+    {"criterion_id": "AC2", "criterion_text": "No Kueue indicators when disabled"},
+    {"criterion_id": "AC3", "criterion_text": "Non-Kueue services show normal status"},
+    {"criterion_id": "AC4", "criterion_text": "Status updates within 5 seconds"},
+    {"criterion_id": "AC5", "criterion_text": "Graceful RBAC degradation"},
+    {"criterion_id": "AC6", "criterion_text": "Expandable row shows Kueue details"},
+    {"criterion_id": "AC7", "criterion_text": "Tooltip explains scheduling state"},
+    {"criterion_id": "AC8", "criterion_text": "Filter by Kueue status"},
+    {"criterion_id": "AC9", "criterion_text": "Sort by scheduling state"},
+    {"criterion_id": "AC10", "criterion_text": "Batch actions for Kueue services"}
+  ]
+}

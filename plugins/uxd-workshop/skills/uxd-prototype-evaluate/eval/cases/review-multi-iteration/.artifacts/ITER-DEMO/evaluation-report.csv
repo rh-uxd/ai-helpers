@@ -1,0 +1,21 @@
+# ACCEPTANCE CRITERIA
+criterion_id,source,tier,criterion_text,verdict,rationale,evidence,fix_action,fix_file,human_action
+AC1,jira,1,Kueue scheduling states in Status column,PASS,Status column shows Queued/Admitted/Evicted labels,step-1,,,
+AC2,jira,1,No Kueue indicators when disabled,PASS,Clean render with no Kueue elements,step-2,,,
+AC3,jira,1,Non-Kueue services show normal status,PASS,Normal KServe status alongside Kueue rows,step-3,,,
+AC4,jira,1,Status updates within 5 seconds,PASS,Transitions from Quota Pending to Admitted in 3s,step-4,,,
+AC5,jira,1,Graceful RBAC degradation,PASS,No errors when RBAC prevents Workload CR access,step-5,,,
+AC6,jira,1,Expandable row shows Kueue details,PASS,Expandable row renders Workload status,step-6,,,
+AC7,jira,1,Tooltip explains scheduling state,PASS,Tooltip shows Kueue state explanation,step-7,,,
+AC8,jira,1,Filter by Kueue status,PASS,Filter dropdown includes Kueue states,step-8,,,
+AC9,jira,1,Sort by scheduling state,PASS,Column sort works for scheduling state,step-9,,,
+AC10,jira,1,Batch actions for Kueue services,PASS,Batch suspend/resume available,step-10,,,
+# USABILITY DIMENSIONS
+dimension_id,dimension_name,score,confidence,evidence,persona_scores
+D1,Workflow Continuity & Integrity,2,high,Smooth task flow,mlops-operator:2 ml-engineer:2 data-scientist:2
+D2,Cross-Persona Context & Handoffs,2,high,Role-based views consistent,mlops-operator:2 ml-engineer:2 data-scientist:2
+D3,Scalability & Progressive Complexity,2,high,Handles 50+ deployments,mlops-operator:2 ml-engineer:2 data-scientist:2
+D4,System Status Observability & Trust,2,high,Clear status indicators,mlops-operator:2 ml-engineer:2 data-scientist:2
+D5,Technical Abstraction & Signal-to-Noise,2,medium,Moderate noise for non-admin,mlops-operator:2 ml-engineer:2 data-scientist:2
+D6,Mental Model Fidelity,2,high,Matches K8s mental model,mlops-operator:2 ml-engineer:2 data-scientist:2
+D7,Accessibility & Inclusion,2,high,Keyboard nav and screen reader,mlops-operator:2 ml-engineer:2 data-scientist:2

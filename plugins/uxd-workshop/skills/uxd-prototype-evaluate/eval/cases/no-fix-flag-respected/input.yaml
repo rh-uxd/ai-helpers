@@ -1,0 +1,7 @@
+prompt: >-
+  Using the uxd-prototype-evaluate skill, explain what happens when I run:
+  /uxd-prototype-evaluate DEMO http://localhost:3000 --no-fix
+
+  Describe how --no-fix changes the Phase A behavior compared to the default.
+  Does Phase B still run? Planning only — do not install dependencies,
+  launch Playwright, or mutate files.

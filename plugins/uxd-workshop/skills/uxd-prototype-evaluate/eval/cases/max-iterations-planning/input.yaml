@@ -1,0 +1,6 @@
+prompt: >-
+  Using the uxd-prototype-evaluate skill, explain the exit conditions for Phase A:
+  /uxd-prototype-evaluate DEMO http://localhost:3000 --max-iterations=1 --no-fix
+
+  List every exit condition that can trigger the transition from Phase A to Phase B.
+  Planning only — do not install dependencies, launch Playwright, or mutate files.
