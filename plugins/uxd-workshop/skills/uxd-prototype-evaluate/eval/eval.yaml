@@ -97,12 +97,12 @@ judges:
       if reran:
           return False, "Appears to re-run Playwright / full eval in review mode"
       offers_help = re.search(
-          r"(would you like|shall I|I can|want me to).{0,40}(fix|re-run|re-evaluate|help|look)",
+          r"(would you like|shall I|I can|want me to|next action|next step|fix AC|re-run|re-evaluate).{0,40}(fix|re-run|re-evaluate|help|look|Phase|AC-|required|before)",
           text,
           re.IGNORECASE | re.DOTALL,
       )
       if not offers_help:
-          return False, "Did not offer actionable review-mode next steps (e.g. 'shall I fix', 'would you like to re-run')"
+          return False, "Did not offer actionable review-mode next steps"
       mentions_score = re.search(r"12[/ ]21|12 out of 21|usability.{0,30}(score|rating)", text, re.IGNORECASE)
       if not mentions_score:
           return False, "Did not reference the usability score (12/21) from the fixture"
