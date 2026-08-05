@@ -1,0 +1,7 @@
+[
+  {
+    "name": "atat/carbonite",
+    "url": "https://gitlab.cee.redhat.com/atat/carbonite",
+    "description": "Portable AI agent sandboxes with credential management, sandbox lifecycle tooling, and multi-platform support"
+  }
+]

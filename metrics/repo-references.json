@@ -1,0 +1,28 @@
+[
+  {
+    "name": "openshift-eng/ai-helpers",
+    "url": "https://github.com/openshift-eng/ai-helpers",
+    "description": "Developer productivity tools for Claude Code & other AI assistants",
+    "files": [
+      ".claude-plugin/marketplace.json"
+    ]
+  },
+  {
+    "name": "patternfly/patternfly-mcp",
+    "url": "https://github.com/patternfly/patternfly-mcp",
+    "description": "An MCP server that provides access to PatternFly rules and documentation.",
+    "files": [
+      "src/docs.json"
+    ]
+  },
+  {
+    "name": "patternfly/patternfly-org",
+    "url": "https://github.com/patternfly/patternfly-org",
+    "description": "Home of patternfly.org",
+    "files": [
+      "packages/documentation-site/patternfly-docs/content/AI/marketplace/marketplace.md",
+      "packages/documentation-site/patternfly-docs/content/AI/rapid-prototyping/new-prototypes.md",
+      "packages/documentation-site/patternfly-docs/content/AI/rapid-prototyping/enhancing-existing-projects.md"
+    ]
+  }
+]
