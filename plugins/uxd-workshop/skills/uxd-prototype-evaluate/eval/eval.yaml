@@ -9,6 +9,8 @@ execution:
 
 runner:
   type: claude-code
+  plugin_dirs:
+    - ../../..
 
 models:
   skill: claude-sonnet-4-6
