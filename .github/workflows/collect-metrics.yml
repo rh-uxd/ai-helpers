@@ -23,18 +23,18 @@ jobs:
           REPO="${{ github.repository }}"
           DATE=$(date -u +%Y-%m-%d)
 
-          VIEWS_JSON=$(gh api "repos/${REPO}/traffic/views" 2>/dev/null || echo '{"count":0,"uniques":0}')
-          VISITORS=$(echo "${VIEWS_JSON}" | jq '.uniques // 0')
-          TOTAL_VIEWS=$(echo "${VIEWS_JSON}" | jq '.count // 0')
+          VIEWS_JSON=$(gh api "repos/${REPO}/traffic/views")
+          VISITORS=$(echo "${VIEWS_JSON}" | jq '.uniques')
+          TOTAL_VIEWS=$(echo "${VIEWS_JSON}" | jq '.count')
 
-          REPO_REFS_RAW=$(gh api "search/code?q=%22rh-uxd/ai-helpers%22+NOT+repo:rh-uxd/ai-helpers+NOT+repo:rh-uxd/ai-helpers-internal&per_page=100" 2>/dev/null || echo '{"total_count":0,"items":[]}')
-          REPO_REFS=$(echo "${REPO_REFS_RAW}" | jq '.total_count // 0')
-          echo "${REPO_REFS_RAW}" | jq '[.items | group_by(.repository.full_name)[] | {name: .[0].repository.full_name, url: .[0].repository.html_url, description: (.[0].repository.description // ""), files: [.[].path]}] | sort_by(.name)' > metrics/repo-references.json 2>/dev/null || echo "[]" > metrics/repo-references.json
+          REPO_REFS_RAW=$(gh api "search/code?q=%22rh-uxd/ai-helpers%22+NOT+repo:rh-uxd/ai-helpers+NOT+repo:rh-uxd/ai-helpers-internal&per_page=100")
+          REPO_REFS=$(echo "${REPO_REFS_RAW}" | jq '.total_count')
+          echo "${REPO_REFS_RAW}" | jq '[.items | group_by(.repository.full_name)[] | {name: .[0].repository.full_name, url: .[0].repository.html_url, description: (.[0].repository.description // ""), files: [.[].path]}] | sort_by(.name)' > metrics/repo-references.json
 
           # GITHUB_TOKEN lacks org:read — hardcoded maintainers list (update when team changes)
           MAINTAINERS="-author:jpuzz0+-author:dlabaj+-author:andybraren"
-          EXTERNAL_ISSUES=$(gh api "search/issues?q=repo:${REPO}+is:issue+is:open+${MAINTAINERS}" --jq '.total_count // 0' 2>/dev/null || echo 0)
-          EXTERNAL_PRS=$(gh api "search/issues?q=repo:${REPO}+is:pr+${MAINTAINERS}" --jq '.total_count // 0' 2>/dev/null || echo 0)
+          EXTERNAL_ISSUES=$(gh api "search/issues?q=repo:${REPO}+is:issue+is:open+${MAINTAINERS}" --jq '.total_count')
+          EXTERNAL_PRS=$(gh api "search/issues?q=repo:${REPO}+is:pr+${MAINTAINERS}" --jq '.total_count')
 
           PLUGINS=$(find plugins -name 'plugin.json' -path '*/.claude-plugin/*' | wc -l | tr -d ' ')
           SKILLS=$(find plugins -name 'SKILL.md' | wc -l | tr -d ' ')
@@ -43,7 +43,7 @@ jobs:
           plugin_refs() {
             local name="$1"
             sleep 1
-            gh api "search/code?q=%22${name}%22+%22rh-uxd/ai-helpers%22+NOT+repo:rh-uxd/ai-helpers" --jq '.total_count // 0' 2>/dev/null || echo 0
+            gh api "search/code?q=%22${name}%22+%22rh-uxd/ai-helpers%22+NOT+repo:rh-uxd/ai-helpers" --jq '.total_count'
           }
           PF_REFS=$(plugin_refs "patternfly")
           PF_REACT_REFS=$(plugin_refs "pf-react")
@@ -54,10 +54,10 @@ jobs:
           PF_MCP_REFS=$(plugin_refs "pf-mcp")
           UXD_WORKSHOP_REFS=$(plugin_refs "uxd-workshop")
 
-          REFERRERS=$(gh api "repos/${REPO}/traffic/popular/referrers" 2>/dev/null || echo "[]")
-          PATHS=$(gh api "repos/${REPO}/traffic/popular/paths" 2>/dev/null || echo "[]")
-          echo "${REFERRERS}" | jq -r --arg d "$DATE" '.[] | [$d, "referrer", .referrer, (.count|tostring), (.uniques|tostring)] | @csv' >> metrics/traffic-discovery.csv 2>/dev/null || true
-          echo "${PATHS}" | jq -r --arg d "$DATE" '.[] | [$d, "path", .path, (.count|tostring), (.uniques|tostring)] | @csv' >> metrics/traffic-discovery.csv 2>/dev/null || true
+          REFERRERS=$(gh api "repos/${REPO}/traffic/popular/referrers")
+          PATHS=$(gh api "repos/${REPO}/traffic/popular/paths")
+          echo "${REFERRERS}" | jq -r --arg d "$DATE" '.[] | [$d, "referrer", .referrer, (.count|tostring), (.uniques|tostring)] | @csv' >> metrics/traffic-discovery.csv
+          echo "${PATHS}" | jq -r --arg d "$DATE" '.[] | [$d, "path", .path, (.count|tostring), (.uniques|tostring)] | @csv' >> metrics/traffic-discovery.csv
 
           echo "${DATE},${VISITORS},${TOTAL_VIEWS},${REPO_REFS},${EXTERNAL_ISSUES},${EXTERNAL_PRS},${PLUGINS},${SKILLS},${AGENTS},${PF_REFS},${PF_REACT_REFS},${PF_DESIGN_GUIDE_REFS},${PF_DESIGN_AUDIT_REFS},${PF_MIGRATION_REFS},${PF_CODE_REVIEW_REFS},${PF_MCP_REFS},${UXD_WORKSHOP_REFS}" >> metrics/adoption-metrics.csv
 

@@ -102,13 +102,15 @@
 
     <div class="charts" id="charts-container"></div>
 
+    <p class="section-label">Traffic Sources</p>
+    <div id="traffic-sources" class="charts" style="margin-bottom:28px"></div>
+
     <p class="footer">Updated <span id="last-updated"></span> · Collected weekly by GitHub Actions</p>
   </div>
 
   <div id="empty-state" class="empty-state" style="display:none">
     <h2>No data yet</h2>
     <p>Metrics will appear after the first weekly collection run.</p>
-    <p>Trigger manually: Actions &rarr; Collect Adoption Metrics &rarr; Run workflow</p>
   </div>
 
   <script>
@@ -378,6 +380,68 @@
       }
     }
 
+    async function loadTrafficCSV() {
+      try {
+        const resp = await fetch('traffic-discovery.csv');
+        if (!resp.ok) return [];
+        const text = await resp.text().then(t => t.trim());
+        if (!text) return [];
+        return text.split('\n').map(line => {
+          const [date, type, name, count, uniques] = line.split(',').map(v => v.replace(/^"|"$/g, ''));
+          return { date, type, name, count: parseInt(count) || 0, uniques: parseInt(uniques) || 0 };
+        });
+      } catch { return []; }
+    }
+
+    function renderTrafficSources(trafficRows) {
+      const container = document.getElementById('traffic-sources');
+      if (!trafficRows.length) {
+        container.innerHTML = '<div class="chart-card full-width"><h2>Traffic Sources</h2><p class="empty-hint">Traffic data will appear after the first weekly collection run.</p></div>';
+        return;
+      }
+
+      const latest = trafficRows.map(r => r.date).sort().pop();
+      const latestRows = trafficRows.filter(r => r.date === latest);
+      const referrers = latestRows.filter(r => r.type === 'referrer').sort((a, b) => b.count - a.count);
+      const paths = latestRows.filter(r => r.type === 'path').sort((a, b) => b.count - a.count);
+
+      if (referrers.length) {
+        const card = document.createElement('div');
+        card.className = 'chart-card';
+        card.innerHTML = `<h2>Top Referrers</h2><canvas id="referrers-chart"></canvas>`;
+        container.appendChild(card);
+        new Chart(document.getElementById('referrers-chart'), {
+          type: 'bar',
+          data: {
+            labels: referrers.map(r => r.name),
+            datasets: [
+              { label: 'Views', data: referrers.map(r => r.count), backgroundColor: themeColor('--blue') },
+              { label: 'Unique', data: referrers.map(r => r.uniques), backgroundColor: themeColor('--purple') },
+            ],
+          },
+          options: chartOpts({ indexAxis: 'y', plugins: { legend: { position: 'bottom', labels: { color: themeColor('--text-muted'), boxWidth: 10, padding: 16, font: { size: 11 } } } } }),
+        });
+      }
+
+      if (paths.length) {
+        const card = document.createElement('div');
+        card.className = 'chart-card';
+        card.innerHTML = `<h2>Popular Paths</h2><canvas id="paths-chart"></canvas>`;
+        container.appendChild(card);
+        new Chart(document.getElementById('paths-chart'), {
+          type: 'bar',
+          data: {
+            labels: paths.map(r => r.name),
+            datasets: [
+              { label: 'Views', data: paths.map(r => r.count), backgroundColor: themeColor('--green') },
+              { label: 'Unique', data: paths.map(r => r.uniques), backgroundColor: themeColor('--cyan') },
+            ],
+          },
+          options: chartOpts({ indexAxis: 'y', plugins: { legend: { position: 'bottom', labels: { color: themeColor('--text-muted'), boxWidth: 10, padding: 16, font: { size: 11 } } } } }),
+        });
+      }
+    }
+
     (async () => {
       try {
         const rows = await loadCSV();
@@ -389,6 +453,8 @@
         renderStats(rows);
         renderRepoRefs();
         renderCharts(rows);
+        const trafficRows = await loadTrafficCSV();
+        renderTrafficSources(trafficRows);
       } catch {
         document.getElementById('empty-state').style.display = 'block';
       }
