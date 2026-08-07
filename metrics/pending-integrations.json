@@ -1,0 +1,12 @@
+[
+  {
+    "name": "opendatahub-io/skills-registry",
+    "url": "https://github.com/opendatahub-io/skills-registry/pull/97",
+    "description": "Central registry for AI skills and plugins developed across the opendatahub-io organization"
+  },
+  {
+    "name": "hybrid-platforms/org",
+    "url": "https://gitlab.cee.redhat.com/hybrid-platforms/org/-/merge_requests/1076",
+    "description": "Source of truth for organizational structure, teams, roles, and software component ownership"
+  }
+]

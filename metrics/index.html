@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Skills Marketplace — Adoption Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root, [data-theme="dark"] {
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #e6edf3; --text-muted: #8b949e; --text-dim: #484f58;
+      --blue: #58a6ff; --green: #3fb950; --purple: #bc8cff;
+      --orange: #d29922; --red: #f85149; --cyan: #76d9e6;
+      --grid: #21262d; --code-bg: #0d1117; --pending-border: rgba(255,255,255,0.12);
+    }
+    [data-theme="light"] {
+      --bg: #ffffff; --surface: #f6f8fa; --border: #d0d7de;
+      --text: #1f2328; --text-muted: #656d76; --text-dim: #8b949e;
+      --blue: #0969da; --green: #1a7f37; --purple: #8250df;
+      --orange: #9a6700; --red: #cf222e; --cyan: #0a7d8c;
+      --grid: #eaeef2; --code-bg: #eef1f5; --pending-border: rgba(0,0,0,0.15);
+    }
+    [data-theme="sunset"] {
+      --bg: #1c1410; --surface: #261e16; --border: #3d3226;
+      --text: #e8dcc8; --text-muted: #a89880; --text-dim: #6d5e4a;
+      --blue: #e8a849; --green: #8fb86a; --purple: #d4899e;
+      --orange: #cc7a3a; --red: #d4735e; --cyan: #c9a84c;
+      --grid: #332a20; --code-bg: #1c1410; --pending-border: rgba(200,160,100,0.2);
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); padding: 32px; max-width: 1200px; margin: 0 auto; transition: background 0.3s, color 0.3s; }
+    h1 { font-size: 1.5rem; font-weight: 600; }
+    .header { display: flex; align-items: center; justify-content: space-between; }
+    .theme-toggle { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 6px 14px; color: var(--text-muted); font-size: 0.75rem; cursor: pointer; transition: border-color 0.15s, background 0.3s; display: flex; align-items: center; gap: 6px; line-height: 1; }
+    .theme-toggle:hover { border-color: var(--blue); }
+    .theme-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .subtitle { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 28px; }
+    .section-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; font-weight: 600; }
+    .hero { display: flex; gap: 16px; margin-bottom: 28px; }
+    .hero-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px 28px; flex: 1; text-align: center; transition: background 0.3s, border-color 0.3s; }
+    .hero-value { font-size: 2.5rem; font-weight: 700; }
+    .hero-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+    .hero-delta { font-size: 0.7rem; margin-top: 6px; }
+    .hero-delta.positive { color: var(--green); }
+    .hero-delta.negative { color: var(--red); }
+    .hero-delta.neutral { color: var(--text-dim); }
+    .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+    .stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 14px 20px; min-width: 120px; flex: 1; transition: background 0.3s, border-color 0.3s; }
+    .stat[style*="cursor"]:hover { border-color: var(--blue); }
+    .stat-value { font-size: 1.5rem; font-weight: 700; }
+    .stat-label { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; }
+    .stat-hint { font-size: 0.65rem; color: var(--text-dim); margin-top: 4px; }
+    .stat-delta { font-size: 0.7rem; margin-top: 4px; }
+    .stat-delta.positive { color: var(--green); }
+    .stat-delta.negative { color: var(--red); }
+    .stat-delta.neutral { color: var(--text-dim); }
+    .charts { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; transition: background 0.3s, border-color 0.3s; }
+    .chart-card h2 { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+    .chart-card.full-width { grid-column: 1 / -1; }
+    canvas { width: 100% !important; }
+    .footer { color: var(--text-dim); font-size: 0.75rem; text-align: center; margin-top: 28px; }
+    .empty-state { text-align: center; padding: 80px 24px; color: var(--text-muted); }
+    .empty-state h2 { margin-bottom: 8px; color: var(--text); }
+
+    .refs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+    .refs-col-pending { border-left: 2px dashed var(--pending-border); padding-left: 24px; }
+    .refs-section h3 { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin: 14px 0 6px; font-weight: 600; }
+    .refs-section h3:first-child { margin-top: 0; }
+    .refs-section table { width: 100%; border-collapse: collapse; }
+    .refs-section td { padding: 6px 0; font-size: 0.8rem; color: var(--text-muted); vertical-align: top; }
+    .refs-section td:first-child { font-weight: 500; white-space: nowrap; padding-right: 24px; }
+    .refs-section a { color: var(--blue); text-decoration: none; }
+    .refs-section a:hover { text-decoration: underline; }
+    .refs-section code { font-size: 0.75rem; color: var(--text-dim); background: var(--code-bg); padding: 2px 6px; border-radius: 3px; }
+    .refs-section .empty-hint { color: var(--text-dim); font-size: 0.75rem; }
+    @media (max-width: 768px) {
+      .hero { flex-direction: column; }
+      .charts { grid-template-columns: 1fr; }
+      .refs-grid { grid-template-columns: 1fr; }
+      .refs-col-pending { border-left: none; border-top: 2px dashed var(--pending-border); padding-left: 0; padding-top: 14px; margin-top: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>AI Skills Marketplace</h1>
+    <button class="theme-toggle" onclick="cycleTheme()" aria-label="Toggle theme"><span id="theme-dot" class="theme-dot"></span> <span id="theme-label"></span></button>
+  </div>
+  <p class="subtitle">Adoption Dashboard · <a href="https://github.com/rh-uxd/ai-helpers" target="_blank" rel="noopener noreferrer" style="color:var(--blue);text-decoration:none">rh-uxd/ai-helpers</a></p>
+
+  <div id="content" style="display:none">
+    <p class="section-label">Portfolio</p>
+    <div class="hero" id="hero"></div>
+
+    <p class="section-label">Reach</p>
+    <div class="stats" id="stats-reach"></div>
+    <div id="refs-card" class="chart-card" style="margin-bottom:28px">
+      <h2>Repo References</h2>
+      <div id="refs-detail" class="refs-section"></div>
+    </div>
+
+    <div class="charts" id="charts-container"></div>
+
+    <p class="section-label">Traffic Sources</p>
+    <div id="traffic-sources" class="charts" style="margin-bottom:28px"></div>
+
+    <p class="footer">Updated <span id="last-updated"></span> · Collected weekly by GitHub Actions</p>
+  </div>
+
+  <div id="empty-state" class="empty-state" style="display:none">
+    <h2>No data yet</h2>
+    <p>Metrics will appear after the first weekly collection run.</p>
+  </div>
+
+  <script>
+    const THEMES = [
+      { key: 'dark', label: 'Dark', dot: '#8b949e' },
+      { key: 'light', label: 'Light', dot: '#0969da' },
+      { key: 'sunset', label: 'Sunset', dot: '#e8a849' },
+    ];
+    function applyTheme(key) {
+      document.documentElement.setAttribute('data-theme', key);
+      const t = THEMES.find(t => t.key === key) || THEMES[0];
+      document.getElementById('theme-dot').style.backgroundColor = t.dot;
+      document.getElementById('theme-label').textContent = t.label;
+      try { localStorage.setItem('dashboard-theme', key); } catch {}
+    }
+    function cycleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'dark';
+      const idx = THEMES.findIndex(t => t.key === current);
+      applyTheme(THEMES[(idx + 1) % THEMES.length].key);
+    }
+    applyTheme((() => { try { return localStorage.getItem('dashboard-theme') || 'dark'; } catch { return 'dark'; } })());
+
+    const CSV_PATH = 'adoption-metrics.csv';
+    const MIN_TREND_POINTS = 3;
+
+    async function loadCSV() {
+      const resp = await fetch(CSV_PATH);
+      if (!resp.ok) return null;
+      const text = await resp.text();
+      const lines = text.trim().split('\n');
+      if (lines.length < 2) return null;
+      const headers = lines[0].split(',');
+      return lines.slice(1).map(line => {
+        const vals = line.split(',');
+        const obj = {};
+        headers.forEach((h, i) => { obj[h.trim()] = vals[i]?.trim(); });
+        return obj;
+      });
+    }
+
+    function deltaText(current, previous) {
+      const diff = current - previous;
+      if (diff > 0) return { text: `+${diff} from last week`, cls: 'positive' };
+      if (diff < 0) return { text: `${diff} from last week`, cls: 'negative' };
+      return null;
+    }
+
+    function heroStat(container, value, label, color, prev, showDelta) {
+      const div = document.createElement('div');
+      div.className = 'hero-stat';
+      div.style.borderTop = `3px solid ${color}`;
+      let deltaHtml = '';
+      if (showDelta) {
+        const d = deltaText(parseInt(value), parseInt(prev));
+        if (d) deltaHtml = `<div class="hero-delta ${d.cls}">${d.text}</div>`;
+      }
+      div.innerHTML = `
+        <div class="hero-value">${parseInt(value).toLocaleString()}</div>
+        <div class="hero-label">${label}</div>
+        ${deltaHtml}`;
+      container.appendChild(div);
+    }
+
+    function stat(container, m) {
+      const div = document.createElement('div');
+      div.className = 'stat';
+      if (m.link) {
+        div.style.cursor = 'pointer';
+        div.onclick = () => window.open(m.link, '_blank');
+      }
+      let deltaHtml = '';
+      if (m.showDelta) {
+        const d = deltaText(parseInt(m.value), parseInt(m.prev));
+        if (d) deltaHtml = `<div class="stat-delta ${d.cls}">${d.text}</div>`;
+      }
+      const indicator = m.link ? ' ↗' : '';
+      div.innerHTML = `
+        <div class="stat-value">${parseInt(m.value).toLocaleString()}</div>
+        <div class="stat-label">${m.label}${indicator}</div>
+        ${m.hint ? `<div class="stat-hint">${m.hint}</div>` : ''}
+        ${deltaHtml}`;
+      container.appendChild(div);
+    }
+
+    function themeColor(varName) { return getComputedStyle(document.documentElement).getPropertyValue(varName).trim(); }
+    function chartOpts(overrides) {
+      const muted = themeColor('--text-muted'), dim = themeColor('--text-dim'), grid = themeColor('--grid');
+      return Object.assign({
+        responsive: true,
+        plugins: {
+          legend: { position: 'bottom', labels: { color: muted, boxWidth: 10, padding: 16, font: { size: 11 } } },
+        },
+        scales: {
+          x: { ticks: { color: dim, font: { size: 10 } }, grid: { color: grid } },
+          y: { beginAtZero: true, ticks: { color: dim, font: { size: 10 } }, grid: { color: grid } },
+        },
+      }, overrides || {});
+    }
+
+    function renderStats(rows) {
+      const latest = rows[rows.length - 1];
+      const prev = rows.length > 1 ? rows[rows.length - 2] : null;
+      const showDelta = prev !== null;
+
+      document.getElementById('last-updated').textContent = latest.date;
+
+      const hero = document.getElementById('hero');
+      heroStat(hero, latest.skills, 'Skills', '#58a6ff', prev?.skills, showDelta);
+      heroStat(hero, latest.agents, 'Agents', '#d29922', prev?.agents, showDelta);
+      heroStat(hero, latest.plugins, 'Plugins', '#bc8cff', prev?.plugins, showDelta);
+
+      const REPO = 'rh-uxd/ai-helpers';
+
+      const reach = document.getElementById('stats-reach');
+      [
+        { label: 'Unique Visitors', value: latest.unique_visitors_14d, prev: prev?.unique_visitors_14d, hint: '14-day window', showDelta },
+        { label: 'Page Views', value: latest.total_views_14d, prev: prev?.total_views_14d, hint: '14-day window', showDelta },
+      ].forEach(m => stat(reach, m));
+
+    }
+
+    function renderCharts(rows) {
+      const container = document.getElementById('charts-container');
+      const latest = rows[rows.length - 1];
+
+      // Trend charts — only show with enough data
+      if (rows.length >= MIN_TREND_POINTS) {
+        const labels = rows.map(r => r.date);
+
+        const refsCard = document.createElement('div');
+        refsCard.className = 'chart-card';
+        refsCard.innerHTML = '<h2>Repo References Over Time</h2><canvas id="refs-chart"></canvas>';
+        container.appendChild(refsCard);
+
+        new Chart(document.getElementById('refs-chart'), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Repo References',
+              data: rows.map(r => parseInt(r.repo_refs)),
+              borderColor: '#bc8cff', backgroundColor: 'rgba(188,140,255,0.08)',
+              fill: true, tension: 0.3, pointRadius: 3,
+            }],
+          },
+          options: chartOpts(),
+        });
+
+        const trafficCard = document.createElement('div');
+        trafficCard.className = 'chart-card';
+        trafficCard.innerHTML = '<h2>Weekly Visitors</h2><canvas id="traffic-chart"></canvas>';
+        container.appendChild(trafficCard);
+
+        new Chart(document.getElementById('traffic-chart'), {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [
+              { label: 'Unique Visitors', data: rows.map(r => parseInt(r.unique_visitors_14d)), backgroundColor: '#58a6ff' },
+            ],
+          },
+          options: chartOpts(),
+        });
+
+        const engagementCard = document.createElement('div');
+        engagementCard.className = 'chart-card';
+        engagementCard.innerHTML = '<h2>Community Engagement</h2><canvas id="engagement-chart"></canvas>';
+        container.appendChild(engagementCard);
+
+        new Chart(document.getElementById('engagement-chart'), {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              { label: 'Community PRs', data: rows.map(r => parseInt(r.prs_external_total)), borderColor: '#3fb950', backgroundColor: 'rgba(63,185,80,0.08)', fill: true, tension: 0.3, pointRadius: 3 },
+              { label: 'Community Issues', data: rows.map(r => parseInt(r.open_issues_external)), borderColor: '#d29922', backgroundColor: 'rgba(210,153,34,0.08)', fill: true, tension: 0.3, pointRadius: 3 },
+            ],
+          },
+          options: chartOpts(),
+        });
+
+        // Per-plugin adoption — only show when there's real data
+        const pluginKeys = ['patternfly_refs', 'pf_react_refs', 'pf_design_guide_refs', 'pf_design_audit_refs', 'pf_migration_refs', 'pf_code_review_refs', 'pf_mcp_refs', 'uxd_workshop_refs'];
+        const hasPluginData = pluginKeys.some(k => parseInt(latest[k] || 0) > 0);
+
+        if (hasPluginData) {
+          const pluginNames = ['patternfly', 'pf-react', 'pf-design-guide', 'pf-design-audit', 'pf-migration', 'pf-code-review', 'pf-mcp', 'uxd-workshop'];
+          const pluginColors = ['#bc8cff', '#58a6ff', '#3fb950', '#d29922', '#f85149', '#e67e73', '#76d9e6', '#8b949e'];
+
+          const pluginCard = document.createElement('div');
+          pluginCard.className = 'chart-card full-width';
+          pluginCard.innerHTML = '<h2>Per-Plugin Adoption</h2><canvas id="plugin-chart"></canvas>';
+          container.appendChild(pluginCard);
+
+          new Chart(document.getElementById('plugin-chart'), {
+            type: 'bar',
+            data: {
+              labels: pluginNames,
+              datasets: [{
+                label: 'References in other repos',
+                data: pluginKeys.map(k => parseInt(latest[k] || 0)),
+                backgroundColor: pluginColors,
+                borderRadius: 4,
+              }],
+            },
+            options: {
+              responsive: true,
+              indexAxis: 'y',
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { beginAtZero: true, ticks: { color: themeColor('--text-dim'), stepSize: 1, font: { size: 10 } }, grid: { color: themeColor('--grid') } },
+                y: { ticks: { color: themeColor('--text-muted'), font: { size: 11 } }, grid: { display: false } },
+              },
+            },
+          });
+        }
+      }
+    }
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+    function safeUrl(url) { try { const u = new URL(url); return ['http:', 'https:'].includes(u.protocol) ? u.href : '#'; } catch { return '#'; } }
+
+    async function renderRepoRefs() {
+      const panel = document.getElementById('refs-detail');
+      try {
+        const [autoResp, manualResp] = await Promise.all([
+          fetch('repo-references.json').catch(() => null),
+          fetch('manual-references.json').catch(() => null),
+        ]);
+        const autoRefs = autoResp?.ok ? await autoResp.json() : [];
+        const manualRefs = manualResp?.ok ? await manualResp.json() : [];
+        const repos = [...autoRefs, ...manualRefs];
+        if (!repos.length) { panel.innerHTML = '<p class="empty-hint">No references found yet.</p>'; return; }
+
+        const ECOSYSTEM_ORGS = ['patternfly', 'rh-uxd'];
+        const ecosystem = repos.filter(r => ECOSYSTEM_ORGS.some(org => r.name.startsWith(org + '/')));
+        const external = repos.filter(r => !ECOSYSTEM_ORGS.some(org => r.name.startsWith(org + '/')));
+
+        const repoTable = (list) => list.map(r =>
+          `<tr><td><a href="${safeUrl(r.url)}" target="_blank" rel="noopener noreferrer">${esc(r.name)}</a></td><td>${r.description ? esc(r.description) : ''}</td></tr>`
+        ).join('');
+
+        let refsHtml = '';
+        if (ecosystem.length) refsHtml += `<h3>Ecosystem</h3><table>${repoTable(ecosystem)}</table>`;
+        if (external.length) refsHtml += `<h3>External</h3><table>${repoTable(external)}</table>`;
+
+        let pendingHtml = '';
+        try {
+          const pendingResp = await fetch('pending-integrations.json');
+          if (pendingResp.ok) {
+            const pending = await pendingResp.json();
+            if (pending.length) {
+              pendingHtml = `<h3>In Progress</h3><table>${pending.map(p =>
+                `<tr><td><a href="${safeUrl(p.url)}" target="_blank" rel="noopener noreferrer">${esc(p.name)}</a></td><td>${p.description ? esc(p.description) : ''}</td></tr>`
+              ).join('')}</table>`;
+            }
+          }
+        } catch (e) {}
+
+        if (pendingHtml) {
+          panel.innerHTML = `<div class="refs-grid"><div>${refsHtml}</div><div class="refs-col-pending">${pendingHtml}</div></div>`;
+        } else {
+          panel.innerHTML = refsHtml;
+        }
+      } catch (e) {
+        panel.innerHTML = '<p class="empty-hint">References data not available yet.</p>';
+      }
+    }
+
+    async function loadTrafficCSV() {
+      try {
+        const resp = await fetch('traffic-discovery.csv');
+        if (!resp.ok) return [];
+        const text = await resp.text().then(t => t.trim());
+        if (!text) return [];
+        return text.split('\n').map(line => {
+          const [date, type, name, count, uniques] = line.split(',').map(v => v.replace(/^"|"$/g, ''));
+          return { date, type, name, count: parseInt(count) || 0, uniques: parseInt(uniques) || 0 };
+        });
+      } catch { return []; }
+    }
+
+    function renderTrafficSources(trafficRows) {
+      const container = document.getElementById('traffic-sources');
+      if (!trafficRows.length) {
+        container.innerHTML = '<div class="chart-card full-width"><h2>Traffic Sources</h2><p class="empty-hint">Traffic data will appear after the first weekly collection run.</p></div>';
+        return;
+      }
+
+      const latest = trafficRows.map(r => r.date).sort().pop();
+      const latestRows = trafficRows.filter(r => r.date === latest);
+      const referrers = latestRows.filter(r => r.type === 'referrer').sort((a, b) => b.count - a.count);
+      const paths = latestRows.filter(r => r.type === 'path').sort((a, b) => b.count - a.count);
+
+      if (referrers.length) {
+        const card = document.createElement('div');
+        card.className = 'chart-card';
+        card.innerHTML = `<h2>Top Referrers</h2><canvas id="referrers-chart"></canvas>`;
+        container.appendChild(card);
+        new Chart(document.getElementById('referrers-chart'), {
+          type: 'bar',
+          data: {
+            labels: referrers.map(r => r.name),
+            datasets: [
+              { label: 'Views', data: referrers.map(r => r.count), backgroundColor: themeColor('--blue') },
+              { label: 'Unique', data: referrers.map(r => r.uniques), backgroundColor: themeColor('--purple') },
+            ],
+          },
+          options: chartOpts({ indexAxis: 'y', plugins: { legend: { position: 'bottom', labels: { color: themeColor('--text-muted'), boxWidth: 10, padding: 16, font: { size: 11 } } } } }),
+        });
+      }
+
+      if (paths.length) {
+        const card = document.createElement('div');
+        card.className = 'chart-card';
+        card.innerHTML = `<h2>Popular Paths</h2><canvas id="paths-chart"></canvas>`;
+        container.appendChild(card);
+        new Chart(document.getElementById('paths-chart'), {
+          type: 'bar',
+          data: {
+            labels: paths.map(r => r.name),
+            datasets: [
+              { label: 'Views', data: paths.map(r => r.count), backgroundColor: themeColor('--green') },
+              { label: 'Unique', data: paths.map(r => r.uniques), backgroundColor: themeColor('--cyan') },
+            ],
+          },
+          options: chartOpts({ indexAxis: 'y', plugins: { legend: { position: 'bottom', labels: { color: themeColor('--text-muted'), boxWidth: 10, padding: 16, font: { size: 11 } } } } }),
+        });
+      }
+    }
+
+    (async () => {
+      try {
+        const rows = await loadCSV();
+        if (!rows || rows.length === 0) {
+          document.getElementById('empty-state').style.display = 'block';
+          return;
+        }
+        document.getElementById('content').style.display = 'block';
+        renderStats(rows);
+        renderRepoRefs();
+        renderCharts(rows);
+        const trafficRows = await loadTrafficCSV();
+        renderTrafficSources(trafficRows);
+      } catch {
+        document.getElementById('empty-state').style.display = 'block';
+      }
+    })();
+  </script>
+</body>
+</html>
