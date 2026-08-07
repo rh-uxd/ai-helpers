@@ -1,0 +1,108 @@
+name: Security Scan
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Scan for internal URLs and secrets
+        run: |
+          EXIT_CODE=0
+
+          echo "=== Scanning for internal URLs ==="
+          if grep -rn \
+            --include='*.md' --include='*.json' --include='*.yaml' --include='*.yml' \
+            --include='*.sh' --include='*.js' --include='*.ts' --include='*.py' \
+            -E '(\.corp\.|enterprise\.slack\.com|pages\.redhat\.com|mcp\.dataverse\.)' \
+            --exclude-dir=.git \
+            --exclude-dir='eval' \
+            --exclude='security-scan.yml' \
+            . \
+            | grep -v 'example\.com' \
+            | grep -v 'SECURITY\.md' ; then
+            echo "::error::Found internal URLs in tracked files. Replace with environment variable references or remove."
+            EXIT_CODE=1
+          fi
+
+          echo ""
+          echo "=== Scanning for potential secrets ==="
+          if grep -rn \
+            --include='*.md' --include='*.json' --include='*.yaml' --include='*.yml' \
+            --include='*.sh' --include='*.js' --include='*.ts' --include='*.py' \
+            -E '(ATATT3x|xoxb-|xoxp-|ghp_|ghs_|sk-[a-zA-Z0-9]{20,})' \
+            --exclude-dir=.git \
+            --exclude-dir='eval' \
+            --exclude='security-scan.yml' \
+            . ; then
+            echo "::error::Found potential secrets in tracked files."
+            EXIT_CODE=1
+          fi
+
+          exit $EXIT_CODE
+
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        if: always()
+        with:
+          python-version: '3.12'
+
+      - name: Run AI Guardian scan
+        id: guardian
+        if: always()
+        continue-on-error: true
+        run: |
+          uvx ai-guardian scan plugins/ \
+            --diff \
+            --exit-code \
+            --sarif-output /tmp/ai-guardian.sarif \
+            --json-output /tmp/ai-guardian.json \
+            --exclude '**/eval/cases/**'
+
+      - name: Upload SARIF to GitHub Security tab
+        if: always() && github.event.pull_request.head.repo.full_name == github.repository
+        uses: github/codeql-action/upload-sarif@c3400c2f38909e0dcf3c3a41f2030a8217be5d3e # v3
+        with:
+          sarif_file: /tmp/ai-guardian.sarif
+          category: ai-guardian
+        continue-on-error: true
+
+      - name: Post summary
+        if: always()
+        run: |
+          echo "## Security Scan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          echo "### AI Guardian" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.guardian.outcome }}" = "failure" ]; then
+            echo "> **Findings detected** — review the results below." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "> No security findings from AI Guardian." >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Scans for credential exfiltration, prompt injection," >> $GITHUB_STEP_SUMMARY
+          echo "code security issues, and unsafe patterns in bundled scripts." >> $GITHUB_STEP_SUMMARY
+          echo "This scan is **advisory only** and does not block merge." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f /tmp/ai-guardian.json ] && [ -s /tmp/ai-guardian.json ]; then
+            echo "<details><summary>Detailed findings</summary>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo '```json' >> $GITHUB_STEP_SUMMARY
+            cat /tmp/ai-guardian.json >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "</details>" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "*Powered by [AI Guardian](https://github.com/RedHatProductSecurity/ai-guardian).*" >> $GITHUB_STEP_SUMMARY

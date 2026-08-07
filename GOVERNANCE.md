@@ -2,7 +2,9 @@
 
 Every contribution passes through three layers before it can affect a user's system.
 
-## Layer 1: Automated Review (CodeRabbit)
+## Layer 1: Automated Review
+
+### CodeRabbit
 
 CodeRabbit reviews every pull request automatically. For this repo, it checks:
 
@@ -11,6 +13,16 @@ CodeRabbit reviews every pull request automatically. For this repo, it checks:
 - Manifest consistency between `.claude-plugin/` and `.cursor-plugin/`
 
 Configuration: [.coderabbit.yaml](.coderabbit.yaml)
+
+### AI Guardian
+
+[AI Guardian](https://github.com/RedHatProductSecurity/ai-guardian) runs on every PR that touches `plugins/` and scans for:
+
+- Credential exfiltration patterns (tokens passed to HTTP headers/URLs)
+- Code security vulnerabilities (bandit, semgrep)
+- Prompt injection detection in skill definitions
+
+Results are advisory and appear in the GitHub Security tab (SARIF). Maintained by Red Hat Product Security.
 
 ## Layer 2: Human Review
 

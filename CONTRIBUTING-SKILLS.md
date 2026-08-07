@@ -2,13 +2,9 @@
 
 ## Before you start: which repo?
 
-If your skill accesses any of these, it belongs in the [internal repo](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers) (VPN required):
-
-- Employee data (names, managers, reporting lines)
-- Internal APIs or MCP endpoints
-- Internal spreadsheets, Slack workspaces, or GitLab projects
-
-Everything else belongs here. If you're not sure, start here — PR review will catch it.
+> **Does your skill touch internal data or VPN-only systems?**
+> Yes → [internal repo on GitLab](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers)
+> No or not sure → **this repo.** PR review will catch anything that should move.
 
 ## Step 1: Create your skill locally
 
@@ -96,7 +92,6 @@ Plugin names must tell a user exactly what the plugin helps them do. A user brow
 <!-- BEGIN GOOD NAMES -->
 **Good names** describe the capability:
 - `patternfly` — Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
-- `uxd-workshop` — UXD team tools and skill incubator — prototyping, research, design review, team workflows
 - `pf-code-review` — Code review and quality — adversarial review, security patterns
 - `pf-design-audit` — Design audit — validate existing code and designs against PatternFly standards
 - `pf-design-guide` — Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation
@@ -287,6 +282,19 @@ In addition to the skill-creator guidance, skills in this repo must follow these
   ```
 - Use `$CLAUDE_SKILL_DIR` to reference scripts relative to the skill directory — it resolves to the directory containing SKILL.md regardless of where the repo is cloned
 
+### Skill maturity
+
+A skill's maturity is determined by whether it has a passing eval suite — the eval directory is the source of truth.
+
+| Maturity | Signal | Meaning |
+|----------|--------|---------|
+| **Stable** | `eval/eval.yaml` exists | Eval-gated. The skill's behavior is tested by automated judges. |
+| **Experimental** | No `eval/` directory | Functional but unproven by automated testing. |
+
+A `status` field in frontmatter is **optional**. Contributors may include it for readability, but the eval directory is always the canonical source of truth. PLUGINS.md (auto-generated) derives eval coverage from the filesystem for every skill at a glance.
+
+**Graduating from experimental to stable:** Add an eval that tests what the skill uniquely contributes (not what the base model already knows). See the Evals section below.
+
 ### Evals
 
 Evals are **expected** for consumer-facing skills. A skill graduating from a workshop to a consumer plugin should have an eval that proves its value.
@@ -317,6 +325,22 @@ Existing violations are baselined. You'll only see issues introduced by your cha
 
 *Inspired by [RedHatProductSecurity/prodsec-skills](https://github.com/RedHatProductSecurity/prodsec-skills).*
 
+### AI Guardian
+
+[AI Guardian](https://github.com/RedHatProductSecurity/ai-guardian) scans bundled scripts and skill files for security issues that content linters miss: credential exfiltration patterns, code vulnerabilities (via bandit/semgrep), and prompt injection attacks.
+
+**You don't need to install anything.** AI Guardian runs in CI on every PR that touches `plugins/`. If you want to run it locally:
+
+```bash
+make security
+```
+
+This uses `uvx` (zero-install) to run AI Guardian against the plugins directory. You need [uv](https://docs.astral.sh/uv/getting-started/installation/) installed.
+
+AI Guardian findings are **advisory, not blocking** — your PR won't be held up. But credential exfiltration and code security findings in bundled scripts should be addressed before merge.
+
+*A cross-team collaboration with [Red Hat Product Security](https://github.com/RedHatProductSecurity).*
+
 ### Security rules
 
 Skills are instructions that an AI tool follows on behalf of a user. Contributors must not include instructions that:
@@ -327,7 +351,7 @@ Skills are instructions that an AI tool follows on behalf of a user. Contributor
 - Use `eval`, `exec`, or `curl | bash` patterns in bundled scripts
 - Access files outside the target project without stating why
 
-Bundled scripts (`.sh`, `.js`, `.py`, `.ts`) are reviewed for these patterns automatically by CodeRabbit. See [GOVERNANCE.md](GOVERNANCE.md) for the full review process.
+Bundled scripts (`.sh`, `.js`, `.py`, `.ts`) are reviewed for these patterns automatically by CodeRabbit and [AI Guardian](#ai-guardian). See [GOVERNANCE.md](GOVERNANCE.md) for the full review process.
 
 ## Skill ideas to get you started
 
