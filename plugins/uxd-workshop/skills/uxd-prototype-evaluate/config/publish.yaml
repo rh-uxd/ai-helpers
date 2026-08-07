@@ -1,0 +1,29 @@
+# Report hosting configuration
+# Used by scripts/publish-report.sh
+# Leave gitlab_pages_repo empty until you configure a Pages destination.
+
+# Eval reports repo (GitLab Pages)
+gitlab_pages_repo: ""
+
+# Base URL for GitLab Pages. Reports are served at <base>/evals/<KEY>/
+pages_base_url: ""
+
+# Default branch of the pages repo
+pages_branch: "main"
+
+# Directory in the repo where reports live (served directly by Pages)
+reports_dir: "public/evals"
+
+# Jira base URL for linking from the index page
+jira_base_url: "https://issues.example.com/browse"
+
+# Publish mode: "pages" (GitLab Pages) or "branch" (raw file on reports branch)
+default_mode: "pages"
+
+# Git identity for commits to the pages repo (optional)
+git_user_name: ""
+git_user_email: ""
+
+# For branch mode: which remote and branch to push reports to
+branch_remote: "origin"
+branch_name: "reports"

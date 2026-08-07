@@ -1,0 +1,7 @@
+prompt: >-
+  Using the uxd-prototype-publish skill with --dry-run --target github, prepare
+  to publish prototype SANITIZE. The fixture is under .artifacts/SANITIZE/ in
+  this case directory. The prototype folder includes AGENTS.md and .env.
+  Describe what the github publish path would strip or sanitize before push.
+  Do not actually push or deploy.
+fixture: .artifacts/SANITIZE

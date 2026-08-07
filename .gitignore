@@ -21,3 +21,6 @@ tmp/
 
 # Local Claude Code settings (user-specific)
 .claude/settings.local.json
+
+# Generated artifacts
+.artifacts/

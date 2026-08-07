@@ -21,7 +21,7 @@ SCHEMAS = {
         'title': {'type': 'string', 'required': True},
         'source_rfe': {'type': 'string', 'required': True},
         'jira_key': {'type': 'string', 'required': False},
-        'mode': {'type': 'string', 'required': True, 'values': ['auto', 'decide']},
+        'mode': {'type': 'string', 'required': True, 'values': ['skip', 'auto', 'human']},
         'status': {'type': 'string', 'required': True, 'values': ['draft', 'reviewed', 'refined', 'submitted']},
         'iteration': {'type': 'int', 'required': False, 'default': 0},
         'created_at': {'type': 'datetime', 'required': True},
@@ -46,8 +46,10 @@ SCHEMAS = {
         'decided_at': {'type': 'datetime', 'required': True},
     },
     'submission': {
+        # Enum only — when --target is a git URL, normalize to 'repo' and store
+        # the URL in metadata submission.url / workspace-analysis upstream_url.
         'prototype_id': {'type': 'string', 'required': True},
-        'target': {'type': 'string', 'required': True, 'values': ['repo', 'public', 'gitlab', 'vercel']},
+        'target': {'type': 'string', 'required': True, 'values': ['repo', 'github', 'gitlab', 'vercel']},
         'submitted_at': {'type': 'datetime', 'required': True},
         'url': {'type': 'string', 'required': False},
     },

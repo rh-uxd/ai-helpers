@@ -94,7 +94,8 @@ plugins/<plugin-name>/
 ├── .cursor-plugin/
 │   └── plugin.json
 ├── skills/
-└── agents/
+├── agents/
+└── knowledge/
 ```
 
 2. Write identical `plugin.json` files for both `.claude-plugin/` and `.cursor-plugin/`:
