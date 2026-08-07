@@ -33,7 +33,7 @@ design_system:
   guidelines_path: ".context/consistency-checker/guidelines/"
   analyze_script: ".context/consistency-checker/scripts/analyze.py"
 
-# Personas — canonical catalogs live in the plugin; deep YAML is optional bootstrap
+# Personas — canonical catalogs live in the plugin; deep behavioral YAML from .context/usability-testing/
 personas:
   catalog_path: "${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml"
   cards_path: "${CLAUDE_PLUGIN_ROOT}/knowledge/personas/"

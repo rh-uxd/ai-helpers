@@ -9,9 +9,9 @@ design_system:
   context_path: .context/design-system/
 
 # --- Usability Testing Integration ---
-# Set USABILITY_TESTING_REPO when running bootstrap-usability-testing.sh
+# Cloned automatically by bootstrap-usability-testing.sh (override with USABILITY_TESTING_REPO)
 usability_testing:
-  repo: ""  # git URL — configure locally, do not commit product-specific repos
+  repo: "git@gitlab.cee.redhat.com:zbodnar/automated-usability-testing.git"
   context_path: .context/usability-testing/
   personas_dir: personas/
   rubric: prompts/evaluate-flow.md

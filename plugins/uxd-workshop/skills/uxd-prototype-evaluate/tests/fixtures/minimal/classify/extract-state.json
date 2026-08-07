@@ -1,0 +1,12 @@
+{
+  "key": "TEST-CLASSIFY",
+  "title": "Test Feature for Classification",
+  "ac_list": [
+    { "id": "AC-1", "text": "Status column displays scheduling states", "source": "jira" },
+    { "id": "AC-2", "text": "No Kueue indicators when disabled", "source": "jira" },
+    { "id": "AC-3", "text": "Normal status with no Workload CR", "source": "jira" },
+    { "id": "AC-4", "text": "Status updates within 5 seconds", "source": "jira" },
+    { "id": "AC-5", "text": "RBAC fallback shows normal status", "source": "jira" },
+    { "id": "AC-6", "text": "Tooltip shows resource allocation", "source": "jira" }
+  ]
+}

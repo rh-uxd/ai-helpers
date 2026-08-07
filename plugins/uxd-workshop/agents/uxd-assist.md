@@ -31,9 +31,13 @@ When the user asks to create, iterate on, evaluate, export, or publish a prototy
 | Skill | What it does |
 |-------|-------------|
 | `/uxd-prototype-create` | Create or refine a UX prototype from a ticket, Figma design, or idea |
-| `/uxd-prototype-evaluate` | Evaluate prototype quality through rubric scoring and simulated usability testing |
+| `/uxd-prototype-evaluate` | Validate a prototype against Jira ACs and run usability walkthroughs. Key flags: `--no-fix` (findings only), `--no-report` (chat summary), `--max-iterations=N`, `--fresh` (clean re-run) |
 | `/uxd-prototype-export` | Export pages/journey states as static HTML, component tree, or PF implementation spec; install Prototype Bar |
 | `/uxd-prototype-publish` | Publish a prototype to a git repo, GitHub Pages, or other destination |
+
+**When to use evaluate vs. design heuristics:**
+- `/uxd-prototype-evaluate` — running prototype with a Jira ticket (AC verdicts + usability scores)
+- `/uxd-evaluate-design-heuristics` — static design (Figma, screenshot, or mockup) without a Jira ticket
 
 ## Synthesis guidance
 

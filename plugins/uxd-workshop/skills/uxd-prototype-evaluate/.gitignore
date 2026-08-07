@@ -1,2 +1,12 @@
 node_modules/
 package-lock.json
+
+# Stray Playwright scripts from eval runs
+scripts/journey-test-*.mjs
+scripts/persona-walkthrough-*.mjs
+
+# Test results (generated, not source)
+test-results/
+
+# Temporary golden fixtures (copied from live eval runs, not committed)
+tests/fixtures/.golden-*/

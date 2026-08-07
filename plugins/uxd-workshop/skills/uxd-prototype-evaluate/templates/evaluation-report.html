@@ -483,13 +483,26 @@ details[open] summary .section-icon{opacity:0.8}
 .rv-header{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;border-bottom:1px solid var(--border);background:var(--bg-secondary)}
 .rv-title{font-family:var(--font-heading);font-size:0.9rem;font-weight:700;color:var(--text)}
 .rv-close{background:none;border:none;font-size:1.5rem;color:var(--text-secondary);cursor:pointer}
-.rv-queue{padding:0.5rem;border-bottom:1px solid var(--border);max-height:200px;overflow-y:auto}
+.rv-info-callout{padding:0.5rem 0.75rem;margin:0.5rem 0.5rem 0;background:rgba(0,102,204,0.06);border-radius:0.375rem;font-size:0.7rem;color:var(--text-secondary);line-height:1.5;border-left:3px solid var(--link)}
+.rv-queue{padding:0.5rem;border-bottom:1px solid var(--border);max-height:220px;overflow-y:auto}
+.rv-bulk-bar{display:none;padding:0.4rem 0.75rem;background:var(--bg-secondary);border-bottom:1px solid var(--border);align-items:center;gap:0.5rem;font-size:0.75rem}
+.rv-bulk-bar.visible{display:flex}
+.rv-bulk-bar button{padding:0.25rem 0.5rem;border-radius:0.25rem;font-size:0.7rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary)}
+.rv-bulk-bar button:hover{background:var(--bg-secondary);border-color:var(--text-secondary)}
+.rv-bulk-bar .bulk-pass{color:var(--success-text);border-color:var(--status-success)}
+.rv-bulk-bar .bulk-pass:hover{background:rgba(62,134,53,0.1)}
+.rv-bulk-bar .bulk-fail{color:var(--danger-text);border-color:var(--status-danger)}
+.rv-bulk-bar .bulk-fail:hover{background:rgba(201,25,11,0.1)}
+.rv-bulk-bar .bulk-count{flex:1;color:var(--text-secondary)}
 .rv-queue-item{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border-radius:0.375rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary)}
 .rv-queue-item:hover{background:var(--bg-secondary)}
 .rv-queue-item.active{background:rgba(0,102,204,0.06);color:var(--text)}
 .rv-queue-item.reviewed{opacity:0.6}
-.rv-queue-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:0.6rem;flex-shrink:0}
-.rv-queue-check.done{background:var(--status-success);border-color:var(--status-success);color:#fff}
+.rv-select-checkbox{width:14px;height:14px;cursor:pointer;flex-shrink:0;accent-color:var(--link)}
+.rv-queue-status{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;flex-shrink:0;border-radius:50%;color:var(--text-secondary)}
+.rv-queue-status.neutral{width:8px;height:8px;background:var(--border);margin:0 4px}
+.rv-queue-status.pass{color:var(--status-success);font-size:0.8rem}
+.rv-queue-status.fail{color:var(--status-danger);font-size:0.8rem}
 .rv-queue-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rv-queue-verdict{font-size:0.75rem;font-weight:400;font-family:var(--font-mono);padding:2px 5px;border-radius:0.25rem}
 .rv-queue-verdict.flagged{background:rgba(240,171,0,0.12);color:var(--warning-text)}
@@ -514,14 +527,24 @@ details[open] summary .section-icon{opacity:0.8}
 .rv-verdict-btn.selected-fail{background:rgba(201,25,11,0.1);border-color:var(--status-danger);color:var(--danger-text)}
 .rv-textarea{width:100%;min-height:80px;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:0.375rem;font-family:var(--font-body);font-size:0.8rem;resize:vertical;color:var(--text);background:var(--bg);line-height:1.5}
 .rv-textarea:focus{outline:none;border-color:var(--link)}
+.rv-save-btn{display:inline-flex;align-items:center;gap:0.35rem;margin-top:0.5rem;padding:0.45rem 0.9rem;border-radius:0.25rem;font-family:var(--font-body);font-size:0.8rem;font-weight:700;cursor:pointer;background:var(--link);color:#fff;border:none;transition:opacity 0.15s}
+.rv-save-btn:hover{opacity:0.9}
+.rv-saved-toast{display:inline-block;margin-left:0.75rem;font-size:0.7rem;color:var(--status-success);font-weight:600;opacity:0;transition:opacity 0.3s}
+.rv-saved-toast.show{opacity:1}
 .rv-actions{padding:0.75rem 1rem;border-top:1px solid var(--border);background:var(--bg-secondary)}
-.rv-actions-progress{font-size:0.7rem;color:var(--text-secondary);margin-bottom:0.5rem}
+.rv-actions-progress{font-size:0.75rem;color:var(--text);margin-bottom:0.5rem;font-weight:600}
+.rv-progress-bar{height:4px;background:var(--border);border-radius:2px;margin-top:0.35rem;overflow:hidden}
+.rv-progress-fill{height:100%;background:var(--status-success);border-radius:2px;transition:width 0.3s}
 .rv-action-btn{display:block;width:100%;padding:0.55rem;border-radius:0.25rem;font-family:var(--font-body);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:center;margin-bottom:0.4rem;border:none}
 .rv-action-btn.primary{background:var(--link);color:#fff}
 .rv-action-btn.primary:hover{opacity:0.9}
-.rv-action-btn.secondary{background:var(--bg);border:1px solid var(--border);color:var(--text)}
-.rv-action-btn.secondary:hover{background:var(--bg-secondary)}
-.rv-action-status{font-size:0.7rem;color:var(--text-secondary);text-align:center;margin-top:0.25rem}
+.rv-action-btn.primary:disabled{opacity:0.5;cursor:not-allowed}
+.rv-action-links{display:flex;justify-content:center;gap:1rem;margin-top:0.35rem;font-size:0.7rem}
+.rv-action-links a{color:var(--text-secondary);text-decoration:none;cursor:pointer}
+.rv-action-links a:hover{color:var(--link);text-decoration:underline}
+.rv-reiterate-success{margin-top:0.5rem;padding:0.5rem 0.75rem;background:rgba(62,134,53,0.08);border-radius:0.375rem;border:1px solid rgba(62,134,53,0.2);font-size:0.75rem;color:var(--success-text)}
+.rv-reiterate-success summary{cursor:pointer;font-weight:600;font-size:0.7rem;margin-bottom:0.25rem}
+.rv-reiterate-success pre{font-size:0.65rem;white-space:pre-wrap;max-height:120px;overflow-y:auto;margin:0.25rem 0 0;color:var(--text-secondary)}
 body.rv-open{margin-right:600px;transition:margin-right 0.25s ease}
 tr.dim-na{opacity:0.6;font-style:italic}
 .score-na{color:var(--text-secondary);font-style:italic;font-size:0.85em}
@@ -535,7 +558,7 @@ tr.dim-na{opacity:0.6;font-style:italic}
   <a href="https://scout-evals-e89fda.pages.redhat.com/" style="font-size:0.75rem;color:var(--text-secondary);text-decoration:none;margin-right:0.5rem" title="Back to Dashboard" data-tour="dashboard">&larr; Dashboard</a>
   <h1>{{REPORT_TITLE}}</h1>
   <div class="header-links" data-tour="breadcrumb">
-    <a href="{{OUTCOME_LINK_URL}}" target="_blank" style="{{OUTCOME_DISPLAY}}">Outcome</a>
+    <a href="{{OUTCOME_LINK_URL}}" target="_blank" style="{{OUTCOME_DISPLAY}}">{{OUTCOME_LABEL}}</a>
     <span class="arrow" style="{{OUTCOME_DISPLAY}}">→</span>
     <a href="{{RFE_URL}}" target="_blank">RFE</a>
     <span class="arrow">→</span>
@@ -565,6 +588,9 @@ tr.dim-na{opacity:0.6;font-style:italic}
 <!-- Main Content — single column -->
 <main class="main-content">
 
+    <!-- Jira Source Attribution -->
+    {{JIRA_ATTRIBUTION_HTML}}
+
     <!-- Executive Summary (tabbed context panel) -->
     {{EXEC_SUMMARY_HTML}}
 
@@ -573,7 +599,13 @@ tr.dim-na{opacity:0.6;font-style:italic}
 
     <!-- Acceptance Criteria — primary content, always visible -->
     <h2 id="ac-results" data-tour="ac-table">Acceptance Criteria</h2>
-    <p class="small muted" style="margin:-0.5rem 0 1rem">Source: <a href="{{JIRA_URL}}" target="_blank">{{PROTOTYPE_ID}}</a> — {{AC_JIRA_COUNT}} criteria extracted verbatim from ticket</p>
+    <div class="ac-sort-bar" style="display:flex;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap;align-items:center">
+      <span class="small muted" style="margin-right:0.25rem">Sort:</span>
+      <button class="ac-sort-btn active" onclick="sortAcTable('default')" data-sort="default" style="font-size:0.75rem;padding:0.2rem 0.6rem;border:1px solid var(--border);border-radius:0.25rem;background:var(--bg-secondary);cursor:pointer">Default</button>
+      <button class="ac-sort-btn" onclick="sortAcTable('flagged')" data-sort="flagged" style="font-size:0.75rem;padding:0.2rem 0.6rem;border:1px solid var(--border);border-radius:0.25rem;background:var(--bg);cursor:pointer;color:var(--status-warning)">Flagged first</button>
+      <button class="ac-sort-btn" onclick="sortAcTable('fail')" data-sort="fail" style="font-size:0.75rem;padding:0.2rem 0.6rem;border:1px solid var(--border);border-radius:0.25rem;background:var(--bg);cursor:pointer;color:var(--status-danger)">Fail first</button>
+      <button class="ac-sort-btn" onclick="sortAcTable('pass')" data-sort="pass" style="font-size:0.75rem;padding:0.2rem 0.6rem;border:1px solid var(--border);border-radius:0.25rem;background:var(--bg);cursor:pointer;color:var(--status-success)">Pass first</button>
+    </div>
     <table class="tbl" id="ac-table-jira">
       <thead>
         <tr><th style="width:3.5rem">ID</th><th>Acceptance Criterion</th><th style="width:5.5rem">Verdict</th><th>Evidence</th></tr>
@@ -599,10 +631,6 @@ tr.dim-na{opacity:0.6;font-style:italic}
       </details>
     </div>
 
-    <!-- Flagged for Human Review -->
-    <h2 id="flagged" data-tour="flagged">Flagged for Human Review</h2>
-    {{FLAGGED_HTML}}
-
     <!-- Conclusion -->
     <h2 id="conclusion">Conclusion</h2>
     <div class="card">
@@ -616,20 +644,20 @@ tr.dim-na{opacity:0.6;font-style:italic}
       <div class="appendix-label">Appendix — Detailed Evidence</div>
 
       <div class="appendix-tabs" data-tour="appendix-tabs">
-        <button class="appendix-tab active" onclick="switchAppendixTab('personas')" style="{{JOURNEYS_TAB_DISPLAY}}">
-          <svg class="appendix-tab-icon" viewBox="0 0 640 512"><path d="M144 0a80 80 0 1 1 0 160A80 80 0 1 1 144 0zM512 0a80 80 0 1 1 0 160A80 80 0 1 1 512 0zM0 298.7C0 239.8 47.8 192 106.7 192h42.7c15.9 0 31 3.5 44.6 9.7c-1.3 7.2-1.9 14.7-1.9 22.3c0 38.2 16.8 72.5 43.3 96H21.3C9.6 320 0 310.4 0 298.7zM405.3 320H234.7c-11.8 0-21.3-9.6-21.3-21.3 0-58.9 47.8-106.7 106.7-106.7H320h42.7c58.9 0 106.7 47.8 106.7 106.7 0 11.8-9.6 21.3-21.3 21.3zm0 0h26.3c26.5 0 52-6.4 75.4-18.8A96 96 0 0 1 640 298.7c0 11.8-9.6 21.3-21.3 21.3H469.3zM320 256a96 96 0 1 0 0-192 96 96 0 1 0 0 192zM533.3 192h42.7c58.9 0 106.7 47.8 106.7 106.7 0 11.8-9.6 21.3-21.3 21.3H618.7zM432 128a80 80 0 1 0-160 0 80 80 0 1 0 160 0z"/></svg>
+        <button class="appendix-tab active" onclick="switchAppendixTab('personas')">
+          <svg class="appendix-tab-icon" viewBox="0 0 448 512"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"/></svg>
           <span class="appendix-tab-label">Personas</span>
         </button>
-        <button class="appendix-tab" onclick="switchAppendixTab('scores')" style="{{USABILITY_TAB_DISPLAY}}">
-          <svg class="appendix-tab-icon" viewBox="0 0 512 512"><path d="M32 32c17.7 0 32 14.3 32 32V400c0 8.8 7.2 16 16 16H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H80c-44.2 0-80-35.8-80-80V64C0 46.3 14.3 32 32 32zm96 128c0-17.7 14.3-32 32-32l192 0c17.7 0 32 14.3 32 32s-14.3 32-32 32H160c-17.7 0-32-14.3-32-32zm32 64H288c17.7 0 32 14.3 32 32s-14.3 32-32 32H160c-17.7 0-32-14.3-32-32s14.3-32 32-32zm0 96h64c17.7 0 32 14.3 32 32s-14.3 32-32 32H160c-17.7 0-32-14.3-32-32s14.3-32 32-32z"/></svg>
-          <span class="appendix-tab-label">Scores</span>
+        <button class="appendix-tab" onclick="switchAppendixTab('scores')">
+          <svg class="appendix-tab-icon" viewBox="0 0 512 512"><path d="M32 32c17.7 0 32 14.3 32 32V400c0 8.8 7.2 16 16 16H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H80c-44.2 0-80-35.8-80-80V64C0 46.3 14.3 32 32 32zM160 224c-17.7 0-32 14.3-32 32v64c0 17.7 14.3 32 32 32s32-14.3 32-32V256c0-17.7-14.3-32-32-32zm128-64v160c0 17.7 14.3 32 32 32s32-14.3 32-32V160c0-17.7-14.3-32-32-32s-32 14.3-32 32zm-64 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V224c0-17.7-14.3-32-32-32s-32 14.3-32 32zm192-96v192c0 17.7 14.3 32 32 32s32-14.3 32-32V128c0-17.7-14.3-32-32-32s-32 14.3-32 32z"/></svg>
+          <span class="appendix-tab-label">Usability</span>
         </button>
         <button class="appendix-tab" onclick="switchAppendixTab('compliance')">
-          <svg class="appendix-tab-icon" viewBox="0 0 512 512"><path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM369 209c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-111 111-47-47c-9.4-9.4-24.6-9.4-33.9 0s-9.4 24.6 0 33.9l64 64c9.4 9.4 24.6 9.4 33.9 0L369 209z"/></svg>
-          <span class="appendix-tab-label">Compliance</span>
+          <svg class="appendix-tab-icon" viewBox="0 0 512 512"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z"/></svg>
+          <span class="appendix-tab-label">PF Compliance</span>
         </button>
-        <button class="appendix-tab" onclick="switchAppendixTab('changes')" style="{{CHANGES_TAB_DISPLAY}}">
-          <svg class="appendix-tab-icon" viewBox="0 0 512 512"><path d="M352 320c88.4 0 160-71.6 160-160c0-15.3-2.2-30.1-6.2-44.2c-3.1-10.8-16.4-13.2-24.3-5.3l-76.8 76.8c-3 3-7.1 4.7-11.3 4.7H336c-8.8 0-16-7.2-16-16V118.6c0-4.2 1.7-8.3 4.7-11.3l76.8-76.8c7.9-7.9 5.4-21.2-5.3-24.3C382.1 2.2 367.3 0 352 0C263.6 0 192 71.6 192 160c0 19.1 3.4 37.5 9.5 54.5L19.9 396.1C7.2 408.8 0 426.1 0 444.1C0 481.6 30.4 512 67.9 512c18 0 35.3-7.2 48-19.9l181.6-181.6c17 6.2 35.4 9.5 54.5 9.5zM80 456a24 24 0 1 1 0-48 24 24 0 1 1 0 48z"/></svg>
+        <button class="appendix-tab" onclick="switchAppendixTab('changes')">
+          <svg class="appendix-tab-icon" viewBox="0 0 576 512"><path d="M0 80C0 53.5 21.5 32 48 32h96c26.5 0 48 21.5 48 48V96H384V80c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H432c-26.5 0-48-21.5-48-48V160H192v16c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V80zm0 256c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48V352H384V336c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H432c-26.5 0-48-21.5-48-48V416H192v16c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V336z"/></svg>
           <span class="appendix-tab-label">Changes</span>
         </button>
       </div>
@@ -638,7 +666,11 @@ tr.dim-na{opacity:0.6;font-style:italic}
       <div class="appendix-content active" id="appendix-personas" data-tour="tab-personas">
         <h2>Persona Walkthroughs</h2>
         <p class="small muted" style="margin:-0.5rem 0 1rem">Each persona navigated the prototype independently at their own competence level. Click "View evidence" on any AC row above to see per-persona screenshots and think-aloud narration.</p>
-        <div class="card card-compact" style="margin-bottom:1rem" data-tour="personas">
+        <div class="card" style="margin-bottom:1.25rem;border-left:3px solid var(--link);padding:0.75rem 1rem" data-tour="personas">
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+            <svg width="14" height="14" viewBox="0 0 448 512" fill="var(--link)" style="flex-shrink:0"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"/></svg>
+            <span style="font-weight:700;font-size:0.8125rem">Persona Selection</span>
+          </div>
           {{PERSONA_SELECTION_HTML}}
         </div>
         {{PERSONA_WALKTHROUGHS_HTML}}
@@ -651,9 +683,9 @@ tr.dim-na{opacity:0.6;font-style:italic}
         {{PATIENCE_TRACKING}}
       </div>
 
-      <!-- Tab: Compliance -->
+      <!-- Tab: PF Compliance -->
       <div class="appendix-content" id="appendix-compliance" data-tour="tab-compliance">
-        <h2>Design Compliance</h2>
+        <h2>PF Compliance</h2>
         <p class="small muted" style="margin:-0.5rem 0 1rem">PatternFly design pattern compliance. Powered by <a href="https://gitlab.cee.redhat.com/bmorley/consistency-checker" target="_blank">consistency-checker</a>.</p>
         {{COMPLIANCE_NARRATIVE}}
         {{CONSISTENCY_HTML}}
@@ -671,13 +703,6 @@ tr.dim-na{opacity:0.6;font-style:italic}
 
 <!-- Footer -->
 <div class="report-footer" style="text-align:left;padding:2rem 2.5rem">
-  <details style="margin:0 0 1rem">
-    <summary style="font-size:0.8rem;cursor:pointer">How This Evaluation Was Conducted</summary>
-    <div style="margin-top:0.5rem;font-size:0.75rem;line-height:1.6;color:var(--text)">
-      {{METHODOLOGY_HTML}}
-    </div>
-  </details>
-
   <div style="border-top:1px solid var(--border);padding-top:0.75rem;font-size:0.65rem;color:var(--text-secondary);display:flex;flex-wrap:wrap;gap:1rem;align-items:center">
     <span>Built with:</span>
     <a href="https://github.com/andybraren/prototype-creator" target="_blank">prototype-creator</a>
@@ -692,6 +717,13 @@ tr.dim-na{opacity:0.6;font-style:italic}
   <div class="rv-header">
     <h3 class="rv-title">Review Items</h3>
     <button class="rv-close" onclick="closeReviewPanel()">&times;</button>
+  </div>
+  <div class="rv-info-callout">Your overrides will be applied on the next evaluation run. The Conclusions section updates after re-iteration.</div>
+  <div class="rv-bulk-bar" id="rv-bulk-bar">
+    <span class="bulk-count" id="rv-bulk-count">0 selected</span>
+    <button class="bulk-pass" onclick="bulkVerdict('PASS')">&#10003; Pass selected</button>
+    <button class="bulk-fail" onclick="bulkVerdict('FAIL')">&#10007; Fail selected</button>
+    <button onclick="deselectAll()">Deselect</button>
   </div>
   <div class="rv-queue" id="rv-queue"></div>
   <div class="rv-detail" id="rv-detail"></div>
@@ -873,6 +905,37 @@ function switchExecTab(tab) {
 
 
 
+function sortAcTable(mode) {
+  var table = document.getElementById('ac-table-jira');
+  if (!table) return;
+  var tbody = table.querySelector('tbody');
+  if (!tbody) return;
+  var rows = Array.from(tbody.querySelectorAll('tr'));
+  var priority = { flagged: ['FLAGGED','FAIL','PASS'], fail: ['FAIL','FLAGGED','PASS'], pass: ['PASS','FLAGGED','FAIL'], default: null };
+  var order = priority[mode];
+  if (order) {
+    rows.sort(function(a, b) {
+      var va = (a.querySelector('td:nth-child(3)') || {}).textContent || '';
+      var vb = (b.querySelector('td:nth-child(3)') || {}).textContent || '';
+      va = va.trim().toUpperCase(); vb = vb.trim().toUpperCase();
+      var ia = order.indexOf(va); var ib = order.indexOf(vb);
+      if (ia === -1) ia = 99; if (ib === -1) ib = 99;
+      return ia - ib;
+    });
+  } else {
+    rows.sort(function(a, b) {
+      var idA = (a.querySelector('td:first-child') || {}).textContent || '';
+      var idB = (b.querySelector('td:first-child') || {}).textContent || '';
+      return idA.localeCompare(idB, undefined, { numeric: true });
+    });
+  }
+  rows.forEach(function(r) { tbody.appendChild(r); });
+  document.querySelectorAll('.ac-sort-btn').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-sort') === mode);
+    b.style.background = b.getAttribute('data-sort') === mode ? 'var(--bg-secondary)' : 'var(--bg)';
+  });
+}
+
 function overrideVerdict(acId, verdict) {
   document.querySelectorAll('[data-override-ac="' + acId + '"] button').forEach(function(b) { b.className = ''; });
   var cls = verdict === 'PASS' ? 'override-active-pass' : 'override-active-fail';
@@ -882,7 +945,7 @@ function overrideVerdict(acId, verdict) {
 }
 
 // Review Panel State
-var rvState = { items: [], currentIdx: 0, reviews: {} };
+var rvState = { items: [], currentIdx: 0, reviews: {}, selected: {} };
 
 function findAcScreenshot(acId) {
   if (!evidenceViewerData || !evidenceViewerData.ac_to_steps) return '';
@@ -927,19 +990,68 @@ function renderReviewQueue() {
   var queue = document.getElementById('rv-queue');
   var html = '';
   rvState.items.forEach(function(item, i) {
-    var isReviewed = rvState.reviews[item.id] && rvState.reviews[item.id].reviewed;
+    var review = rvState.reviews[item.id] || {};
+    var isReviewed = review.reviewed;
     var isActive = i === rvState.currentIdx;
+    var isSelected = rvState.selected[item.id];
     var classes = 'rv-queue-item';
     if (isActive) classes += ' active';
     if (isReviewed) classes += ' reviewed';
 
-    html += '<div class="' + classes + '" onclick="selectReviewItem(' + i + ')">';
-    html += '<span class="rv-queue-check' + (isReviewed ? ' done' : '') + '">' + (isReviewed ? '&#10003;' : '') + '</span>';
-    html += '<span class="rv-queue-label">' + escHtml(item.id + ': ' + item.text.substring(0, 40)) + '</span>';
+    html += '<div class="' + classes + '">';
+    html += '<input type="checkbox" class="rv-select-checkbox" ' + (isSelected ? 'checked' : '') + ' onclick="event.stopPropagation();toggleSelectItem(\'' + item.id + '\')">';
+
+    if (review.override === 'PASS') {
+      html += '<span class="rv-queue-status pass">&#10003;</span>';
+    } else if (review.override === 'FAIL') {
+      html += '<span class="rv-queue-status fail">&#10007;</span>';
+    } else {
+      html += '<span class="rv-queue-status neutral"></span>';
+    }
+
+    html += '<span class="rv-queue-label" onclick="selectReviewItem(' + i + ')">' + escHtml(item.id + ': ' + item.text.substring(0, 40)) + '</span>';
     html += '<span class="rv-queue-verdict ' + item.verdict.toLowerCase() + '">' + item.verdict + '</span>';
     html += '</div>';
   });
   queue.innerHTML = html;
+  renderBulkBar();
+}
+
+function renderBulkBar() {
+  var selectedCount = Object.keys(rvState.selected).filter(function(k) { return rvState.selected[k]; }).length;
+  var bar = document.getElementById('rv-bulk-bar');
+  var countEl = document.getElementById('rv-bulk-count');
+  if (selectedCount > 0) {
+    bar.classList.add('visible');
+    countEl.textContent = selectedCount + ' selected';
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function toggleSelectItem(id) {
+  rvState.selected[id] = !rvState.selected[id];
+  renderReviewQueue();
+}
+
+function deselectAll() {
+  rvState.selected = {};
+  renderReviewQueue();
+}
+
+function bulkVerdict(verdict) {
+  Object.keys(rvState.selected).forEach(function(id) {
+    if (rvState.selected[id]) {
+      if (!rvState.reviews[id]) rvState.reviews[id] = {};
+      rvState.reviews[id].override = verdict;
+      rvState.reviews[id].reviewed = true;
+    }
+  });
+  rvState.selected = {};
+  saveReviewToStorage();
+  renderReviewQueue();
+  renderReviewDetail();
+  renderReviewActions();
 }
 
 function selectReviewItem(idx) {
@@ -998,6 +1110,10 @@ function renderReviewDetail() {
   html += '<div class="rv-detail-section">';
   html += '<div class="rv-detail-label">Notes</div>';
   html += '<textarea class="rv-textarea" id="rv-notes" placeholder="Add your notes here..." onchange="saveReviewNotes(\'' + item.id + '\')">' + escHtml(review.notes || '') + '</textarea>';
+  html += '<div style="display:flex;align-items:center;margin-top:0.5rem">';
+  html += '<button class="rv-save-btn" onclick="saveAndNext(\'' + item.id + '\')">Save &amp; Next &#8594;</button>';
+  html += '<span class="rv-saved-toast" id="rv-saved-toast">&#10003; Saved</span>';
+  html += '</div>';
   html += '</div>';
 
   detail.innerHTML = html;
@@ -1007,12 +1123,15 @@ function renderReviewActions() {
   var actions = document.getElementById('rv-actions');
   var reviewedCount = Object.keys(rvState.reviews).filter(function(k) { return rvState.reviews[k].reviewed; }).length;
   var total = rvState.items.length;
+  var pct = total > 0 ? Math.round((reviewedCount / total) * 100) : 0;
 
   var html = '';
-  html += '<div class="rv-actions-progress">' + reviewedCount + ' of ' + total + ' items reviewed</div>';
-  html += '<button class="rv-action-btn primary" onclick="downloadReviewCsv()">Download Updated CSV</button>';
-  html += '<button class="rv-action-btn secondary" onclick="requestReiteration()">Request Re-iteration</button>';
-  html += '<div class="rv-action-status">CSV includes your notes + verdict overrides</div>';
+  html += '<div class="rv-actions-progress">' + reviewedCount + ' of ' + total + ' items reviewed';
+  html += '<div class="rv-progress-bar"><div class="rv-progress-fill" style="width:' + pct + '%"></div></div>';
+  html += '</div>';
+  html += '<button class="rv-action-btn primary" onclick="saveAllAndReiterate()"' + (reviewedCount === 0 ? ' disabled' : '') + '>Save All &amp; Re-iterate</button>';
+  html += '<div class="rv-action-links"><a onclick="downloadReviewCsv()">Download CSV</a><a onclick="clearReviews()">Clear Reviews</a></div>';
+  html += '<div id="rv-reiterate-result"></div>';
   actions.innerHTML = html;
 }
 
@@ -1030,9 +1149,40 @@ function saveReviewNotes(acId) {
   var textarea = document.getElementById('rv-notes');
   if (!rvState.reviews[acId]) rvState.reviews[acId] = {};
   rvState.reviews[acId].notes = textarea.value;
+  saveReviewToStorage();
+  renderReviewActions();
+}
+
+function saveAndNext(acId) {
+  var textarea = document.getElementById('rv-notes');
+  if (!rvState.reviews[acId]) rvState.reviews[acId] = {};
+  if (textarea) rvState.reviews[acId].notes = textarea.value;
   rvState.reviews[acId].reviewed = true;
   saveReviewToStorage();
+
+  var toast = document.getElementById('rv-saved-toast');
+  if (toast) { toast.classList.add('show'); setTimeout(function() { toast.classList.remove('show'); }, 1500); }
+
+  var nextIdx = -1;
+  for (var i = 0; i < rvState.items.length; i++) {
+    var idx = (rvState.currentIdx + 1 + i) % rvState.items.length;
+    var r = rvState.reviews[rvState.items[idx].id];
+    if (!r || !r.reviewed) { nextIdx = idx; break; }
+  }
+  if (nextIdx >= 0) {
+    setTimeout(function() { rvState.currentIdx = nextIdx; renderReviewQueue(); renderReviewDetail(); renderReviewActions(); }, 400);
+  } else {
+    renderReviewQueue();
+    renderReviewActions();
+  }
+}
+
+function clearReviews() {
+  if (!confirm('Clear all review verdicts and notes?')) return;
+  rvState.reviews = {};
+  localStorage.removeItem(reviewStorageKey);
   renderReviewQueue();
+  renderReviewDetail();
   renderReviewActions();
 }
 
@@ -1067,7 +1217,7 @@ function downloadReviewCsv() {
   URL.revokeObjectURL(url);
 }
 
-function requestReiteration() {
+function buildReiterationPrompt() {
   var prompt = 'Re-run evaluation with the following reviewer feedback:\n\n';
   prompt += '## Reviewed Items\n\n';
   rvState.items.forEach(function(item) {
@@ -1085,9 +1235,16 @@ function requestReiteration() {
   prompt += '## Instructions\n\n';
   prompt += 'Please run eval-iterate with --max-iterations=1 incorporating the reviewer feedback above. ';
   prompt += 'For items overridden to PASS, do not re-test. For items with notes, apply the feedback before re-evaluation.\n';
+  return prompt;
+}
+
+function saveAllAndReiterate() {
+  saveReviewToStorage();
+  var prompt = buildReiterationPrompt();
+  var resultEl = document.getElementById('rv-reiterate-result');
 
   navigator.clipboard.writeText(prompt).then(function() {
-    alert('Re-iteration prompt copied to clipboard. Paste into a new eval-iterate session.');
+    showReiterateSuccess(resultEl, prompt);
   }).catch(function() {
     var ta = document.createElement('textarea');
     ta.value = prompt;
@@ -1095,9 +1252,21 @@ function requestReiteration() {
     ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
-    alert('Re-iteration prompt copied to clipboard.');
+    showReiterateSuccess(resultEl, prompt);
   });
 }
+
+function showReiterateSuccess(el, prompt) {
+  var html = '<div class="rv-reiterate-success">';
+  html += '&#10003; Feedback saved &amp; prompt copied to clipboard.';
+  html += '<br><span style="font-size:0.65rem;opacity:0.8">Paste into your agent to trigger re-iteration. In a future version, this will connect directly.</span>';
+  html += '<details><summary>View prompt</summary><pre>' + escHtml(prompt) + '</pre>';
+  html += '<a onclick="navigator.clipboard.writeText(document.querySelector(\'.rv-reiterate-success pre\').textContent)" style="font-size:0.65rem;color:var(--link);cursor:pointer">Copy again</a>';
+  html += '</details></div>';
+  el.innerHTML = html;
+}
+
+function requestReiteration() { saveAllAndReiterate(); }
 
 function scrollToSection(id) {
   var el = document.getElementById(id);
@@ -1443,8 +1612,8 @@ function renderStepDetail() {
   // Patience meter with state label
   var patienceVal = step.patience != null ? step.patience : null;
   if (patienceVal != null) {
-    var pClass = patienceVal > 69 ? 'success' : patienceVal > 39 ? 'warning' : 'danger';
-    var pState = patienceVal > 69 ? 'Engaged' : patienceVal > 39 ? 'Losing focus' : 'Frustrated';
+    var pClass = patienceVal > 60 ? 'success' : patienceVal > 30 ? 'warning' : 'danger';
+    var pState = patienceVal > 60 ? 'Engaged' : patienceVal > 30 ? 'Losing focus' : 'Frustrated';
     ctx += '<div class="ev-patience">';
     ctx += '<span class="ev-patience-label">' + patienceVal + '%</span>';
     ctx += '<span class="ev-patience-bar"><span class="ev-patience-fill" style="width:' + patienceVal + '%;background:var(--status-' + pClass + ')"></span></span>';

@@ -1,0 +1,8 @@
+{
+  "source": "pf-css-token-check",
+  "degraded": false,
+  "checked_at": "2026-08-01T10:00:00.000Z",
+  "source_mode": { "ran": true, "violations": [] },
+  "visual_mode": { "ran": true, "screenshots_checked": 2, "findings": [] },
+  "summary": { "total_guidelines_checked": 8, "violations": 0, "warnings": 0, "passes": 8 }
+}

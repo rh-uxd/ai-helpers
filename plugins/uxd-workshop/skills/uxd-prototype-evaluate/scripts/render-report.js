@@ -68,6 +68,15 @@ function normalizeUsabilityDimensions(ud) {
     'accessibility_inclusion': 'Accessibility & Inclusion',
   };
 
+  if (!ud.dimensions && ud.scores && typeof ud.scores === 'object') {
+    ud.dimensions = Object.entries(ud.scores).map(([id, val]) => ({
+      id: dimIdAliases[id] || id,
+      name: dimNames[dimIdAliases[id] || id] || id,
+      composite_score: typeof val === 'object' ? (val.composite_score ?? val.score) : val,
+      evidence: typeof val === 'object' ? val.evidence : '',
+    }));
+  }
+
   if (ud.dimensions) {
     for (const dim of ud.dimensions) {
       if (dim.id && dimIdAliases[dim.id]) dim.id = dimIdAliases[dim.id];
@@ -76,10 +85,26 @@ function normalizeUsabilityDimensions(ud) {
       if (dim.scores && !dim.persona_scores) dim.persona_scores = dim.scores;
     }
   }
+  if (ud.persona_overlays && ud.persona_overlays.length > 0 && typeof ud.persona_overlays[0] === 'string') {
+    ud.persona_overlays = ud.persona_overlays.map((id, i) => ({
+      persona: id, persona_id: id, task_index: i + 1,
+      patience_start: 100, patience_end: 100, abandoned: false,
+      confusion_events: [], cli_escapes: 0
+    }));
+  }
   if (ud.persona_overlays) {
     for (const overlay of ud.persona_overlays) {
       if (overlay.persona_id && !overlay.persona) overlay.persona = overlay.persona_id;
       if (overlay.persona && !overlay.persona_id) overlay.persona_id = overlay.persona;
+      if (typeof overlay.confusion_events === 'number') {
+        const overlayTrace = overlay.trace || [];
+        overlay.confusion_events = Array.from({ length: overlay.confusion_events }, (_, i) => {
+          const src = overlayTrace[i];
+          return { step: i + 1, trigger: src?.what_im_thinking || src?.narration || 'Confusion event' };
+        });
+      } else if (!Array.isArray(overlay.confusion_events)) {
+        overlay.confusion_events = [];
+      }
     }
   }
   if (ud.think_aloud && ud.think_aloud.traces) {
@@ -141,16 +166,21 @@ function normalizePersonaResults(raw) {
     const taskIndex = entry.task_index ?? entry.task_idx ?? 1;
     const abandoned = entry.abandoned ?? (entry.outcome === 'abandoned') ?? false;
 
+    const rawTrace = entry.trace || [];
+
     let confusionEvents = entry.confusion_events;
     if (typeof confusionEvents === 'number') {
-      confusionEvents = Array.from({ length: confusionEvents }, (_, i) => ({ step: i + 1 }));
+      confusionEvents = Array.from({ length: confusionEvents }, (_, i) => {
+        const src = rawTrace[i];
+        return { step: i + 1, trigger: src?.what_im_thinking || src?.narration || 'Confusion event' };
+      });
     } else if (!Array.isArray(confusionEvents)) {
       confusionEvents = [];
     }
 
-    const trace = (entry.trace || []).map(step => ({
+    const trace = rawTrace.map(step => ({
       step: step.step,
-      what_i_see: step.what_i_see || step.description || '',
+      what_i_see: step.what_i_see || step.description || step.narration || '',
       what_im_thinking: step.what_im_thinking || step.thought || '',
       action: step.action || '',
       target: step.target || '',
@@ -285,21 +315,77 @@ function readJsonOr(filePath, fallback) {
   try { return JSON.parse(raw); } catch { return fallback; }
 }
 
-let _knownMRsCache;
-function readKnownMRs() {
-  if (_knownMRsCache) return _knownMRsCache;
+let _overlayCache;
+function readProductOverlay() {
+  if (_overlayCache) return _overlayCache;
   const overlayPath = path.join(__dirname, '..', 'config', 'product-overlay.yaml');
   const raw = readFileOr(overlayPath, '');
-  const mrs = {};
-  const match = raw.match(/known_mrs:\n((?:\s+\S+.*\n)*)/);
-  if (match) {
-    for (const line of match[1].split('\n')) {
-      const m = line.match(/\s+(\S+):\s*(\d+)/);
-      if (m) mrs[m[1]] = parseInt(m[2], 10);
+  const overlay = { jira: { instances: [] }, git: {}, known_mrs: {} };
+
+  const jiraBlock = raw.match(/jira:\n((?:\s{2,}.+\n)*)/);
+  if (jiraBlock) {
+    const instanceBlocks = jiraBlock[1].matchAll(/-\s*prefix:\s*"?(.+?)"?\s*\n\s+url:\s*"?(.+?)"?\s*\n/g);
+    for (const ib of instanceBlocks) {
+      overlay.jira.instances.push({ prefix: ib[1].trim(), url: ib[2].trim() });
     }
   }
-  _knownMRsCache = mrs;
-  return mrs;
+
+  const gitBlock = raw.match(/git:\n((?:\s{2,}.+\n)*)/);
+  if (gitBlock) {
+    for (const line of gitBlock[1].split('\n')) {
+      const m = line.match(/\s+(\w+):\s*"?(.+?)"?\s*$/);
+      if (m && m[2]) overlay.git[m[1]] = m[2];
+    }
+  }
+
+  const mrsMatch = raw.match(/known_mrs:\n((?:\s+\S+.*\n)*)/);
+  if (mrsMatch) {
+    for (const line of mrsMatch[1].split('\n')) {
+      const m = line.match(/\s+(\S+):\s*(\d+)/);
+      if (m) overlay.known_mrs[m[1]] = parseInt(m[2], 10);
+    }
+  }
+
+  _overlayCache = overlay;
+  return overlay;
+}
+
+function readKnownMRs() {
+  return readProductOverlay().known_mrs;
+}
+
+function readEvalStateYaml() {
+  const raw = readFileOr(path.join(absArtifacts, 'eval-state.yaml'), '');
+  const o = {};
+  raw.split('\n').forEach(l => { const m = l.match(/^(\w+):\s*(.+)/); if (m) o[m[1]] = m[2].trim(); });
+  return o;
+}
+
+function overlayJiraUrlForKey(key) {
+  if (!key) return '';
+  const overlay = readProductOverlay();
+  for (const inst of overlay.jira.instances) {
+    if (key.startsWith(inst.prefix)) {
+      const base = inst.url.endsWith('/') ? inst.url : inst.url + '/';
+      return `${base}${key}`;
+    }
+  }
+  return `https://issues.redhat.com/browse/${key}`;
+}
+
+function overlayGitBaseUrl() {
+  const overlay = readProductOverlay();
+  return overlay.git.remote_url || '';
+}
+
+function overlayPagesBaseUrl() {
+  const overlay = readProductOverlay();
+  return overlay.git.pages_base_url || '';
+}
+
+function overlayMrBranchPattern() {
+  const overlay = readProductOverlay();
+  return overlay.git.mr_branch_pattern || 'mr-{number}';
 }
 
 function escapeHtml(str) {
@@ -328,7 +414,7 @@ function badgeHtml(verdict, acId) {
 }
 
 function extractPrototypeId() {
-  return path.basename(absArtifacts);
+  return resolveKeyFromArtifactsDir(absArtifacts);
 }
 
 function extractExpectedBehavior(criterionText) {
@@ -409,7 +495,7 @@ function parseCsv(raw) {
       continue;
     }
     if (!headers) {
-      headers = parseCSVLine(trimmed);
+      headers = parseCSVLine(trimmed).map(h => h.trim().toLowerCase().replace(/\s+/g, '_'));
       continue;
     }
     const vals = parseCSVLine(trimmed);
@@ -434,7 +520,7 @@ function parseCsvSection(raw, sectionName) {
       continue;
     }
     if (!inSection || !trimmed) continue;
-    if (!headers) { headers = parseCSVLine(trimmed); continue; }
+    if (!headers) { headers = parseCSVLine(trimmed).map(h => h.trim().toLowerCase().replace(/\s+/g, '_')); continue; }
     const vals = parseCSVLine(trimmed);
     const obj = {};
     headers.forEach((h, idx) => { obj[h] = vals[idx] || ''; });
@@ -604,7 +690,12 @@ function loadScreenshots(screenshotsDir) {
   const fileToHash = {};
   const hashToFirstFile = {};
   if (!fs.existsSync(screenshotsDir)) return { map, fileToHash, hashToFirstFile };
-  const files = fs.readdirSync(screenshotsDir).filter(f => f.endsWith('.png')).sort();
+  const files = fs.readdirSync(screenshotsDir).filter(f => f.endsWith('.png')).sort((a, b) => {
+    const stepA = parseInt((a.match(/step-(\d+)/) || [])[1] || '0', 10);
+    const stepB = parseInt((b.match(/step-(\d+)/) || [])[1] || '0', 10);
+    if (stepA !== stepB) return stepA - stepB;
+    return a.localeCompare(b);
+  });
 
   const journeyLogPath = path.join(path.dirname(screenshotsDir), 'journey-log.json');
   let journeyLogMtime = 0;
@@ -674,7 +765,7 @@ function buildDeltaHtml() {
 
   const protoId = extractPrototypeId();
   const mrNum = delta.mr_number || readKnownMRs()[protoId];
-  const mrDiffUrl = mrNum ? `https://gitlab.cee.redhat.com/uxd/prototypes/rhoai/-/merge_requests/${mrNum}/diffs` : '';
+  const mrDiffUrl = mrNum ? `${overlayGitBaseUrl() || 'https://gitlab.cee.redhat.com/uxd/prototypes/rhoai'}/-/merge_requests/${mrNum}/diffs` : '';
 
   let html = `<p class="small"><strong>${delta.stats?.files_changed || delta.total_files_changed || 0} files changed</strong> against <code>${escapeHtml(delta.base_branch || '?')}</code>`;
   if (mrNum) html += ` · <a href="${mrDiffUrl}" target="_blank">View full diff on GitLab (MR !${mrNum})</a>`;
@@ -754,7 +845,7 @@ function buildPersonaSelectionHtml() {
   const personaNameMap = buildPersonaNameMap(normalizePersonaResults(rawPersonaResults), journeyLog);
   const ud = journeyLog ? normalizeUsabilityDimensions(journeyLog.usability_dimensions) : null;
   if (!ud || !ud.personas_evaluated || !ud.personas_evaluated.length) {
-    return '<p class="muted small">No persona data available.</p>';
+    return `<p class="small" style="color:var(--text-secondary);margin:0">No persona selection data. Ensure the eval writes <code>persona_selection</code> to journey-log.json (see SKILL.md Step 3b.1).</p>`;
   }
 
   const selection = ud.persona_selection || (journeyLog && journeyLog.persona_selection);
@@ -830,7 +921,11 @@ function buildPersonaWalkthroughsHtml() {
   const personaNameMap = buildPersonaNameMap(normalizePersonaResults(rawPersonaResults), journeyLog);
 
   if (!ud || !ud.personas_evaluated || !ud.personas_evaluated.length) {
-    return '<p class="muted small">No persona walkthrough data. Phase B did not produce per-persona screenshots.</p>';
+    return `<div style="text-align:center;padding:2rem 1rem;color:var(--text-secondary)">` +
+      `<svg viewBox="0 0 448 512" width="36" height="36" fill="var(--text-secondary)" style="opacity:0.4;margin-bottom:0.75rem"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"/></svg><br>` +
+      `<strong style="font-size:0.875rem;color:var(--text)">No persona walkthrough data</strong><br>` +
+      `<span style="font-size:0.8125rem">Run the eval with Phase B (persona journeys) enabled to generate per-persona screenshots and think-aloud narration.</span>` +
+      `</div>`;
   }
 
   const contextDir = path.join(require('./resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
@@ -870,20 +965,39 @@ function buildPersonaWalkthroughsHtml() {
 
     const assistedCount = (overlay.confusion_events || []).filter(e => e.trigger && e.trigger.includes('assisted')).length;
 
+    // One-line finding summary from trace/confusion data
+    let findingSummary = '';
+    if (trace.narration_summary) {
+      findingSummary = trace.narration_summary.length > 100 ? trace.narration_summary.slice(0, 100).replace(/\s+\S*$/, '') + '...' : trace.narration_summary;
+    } else if (confusionCount > 0) {
+      const firstEvent = (overlay.confusion_events || [])[0];
+      findingSummary = firstEvent && firstEvent.trigger ? firstEvent.trigger : 'navigation difficulty';
+    }
+
     html += `<div class="card" style="cursor:pointer;transition:box-shadow 0.15s,border-color 0.15s" onclick="openEvidenceViewer()" onmouseover="this.style.borderColor='var(--link)'" onmouseout="this.style.borderColor=''">`;
-    html += `<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem">`;
+
+    // Header row with badge in top-right
+    html += `<div style="display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.5rem">`;
     html += `<div style="width:2.5rem;height:2.5rem;border-radius:50%;background:${avatar.color};display:flex;align-items:center;justify-content:center;flex-shrink:0">${avatar.svg}</div>`;
-    html += `<div><h4 style="margin:0;font-size:0.9375rem">${escapeHtml(name)}</h4>`;
+    html += `<div style="flex:1;min-width:0"><h4 style="margin:0;font-size:0.9375rem">${escapeHtml(name)}</h4>`;
     html += `<span class="small muted">${escapeHtml(level)} · Patience: ${escapeHtml(patience)} · Exploration: ${escapeHtml(exploration)}</span></div>`;
+    html += `<span class="badge ${outcomeBadge}" style="flex-shrink:0">${escapeHtml(outcome)}</span>`;
     html += `</div>`;
 
-    // Domain knowledge tags (compact)
+    // Finding summary
+    if (findingSummary) {
+      const summaryColor = outcome === 'completed' ? 'var(--text-secondary)' : 'var(--status-warning)';
+      html += `<p class="small" style="margin:0 0 0.5rem;color:${summaryColor};font-style:italic">${escapeHtml(findingSummary)}</p>`;
+    }
+
+    // Domain knowledge tags (compact, capped at 3)
     const knowledgeSection = raw.match(/domain_knowledge:\n((?:\s+\w+:.+\n?)+)/);
     if (knowledgeSection) {
       const entries = knowledgeSection[1].match(/^\s+(\w+):\s*(\w+)/gm);
       if (entries && entries.length) {
+        const visibleCount = 3;
         html += `<div style="display:flex;flex-wrap:wrap;gap:0.25rem;margin-bottom:0.5rem">`;
-        for (const entry of entries.slice(0, 6)) {
+        for (const entry of entries.slice(0, visibleCount)) {
           const [, domain, lvl] = entry.trim().match(/(\w+):\s*(\w+)/) || [];
           if (!domain) continue;
           let tagStyle = 'background:var(--bg-secondary);color:var(--text-secondary)';
@@ -891,36 +1005,23 @@ function buildPersonaWalkthroughsHtml() {
           else if (lvl === 'none' || lvl === 'minimal') tagStyle = 'background:rgba(201,25,11,0.06);color:var(--danger-text)';
           html += `<span style="font-size:0.65rem;padding:0.1rem 0.4rem;border-radius:3px;${tagStyle}">${escapeHtml(domain)}: ${escapeHtml(lvl)}</span>`;
         }
+        if (entries.length > visibleCount) {
+          html += `<span style="font-size:0.65rem;padding:0.1rem 0.4rem;border-radius:3px;background:var(--bg-secondary);color:var(--text-secondary)">+${entries.length - visibleCount} more</span>`;
+        }
         html += `</div>`;
       }
     }
 
-    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem">`;
-    html += `<div class="small"><strong>${taskCount}</strong> task${taskCount > 1 ? 's' : ''}, <strong>${stepCount}</strong> steps</div>`;
-
-    // Patience with explanation
     const patienceColor = patienceEnd > 60 ? 'var(--status-success)' : patienceEnd > 30 ? 'var(--status-warning)' : 'var(--status-danger)';
+
+    html += `<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">`;
+    html += `<div class="small"><strong>${taskCount}</strong> task${taskCount > 1 ? 's' : ''}, <strong>${stepCount}</strong> steps</div>`;
     html += `<div class="small"><strong style="color:${patienceColor}">${patienceEnd}%</strong> patience</div>`;
     html += `<div class="small"><strong>${confusionCount}</strong> confusion events</div>`;
     html += `<div class="small"><strong>${assistedCount}</strong> assisted nav</div>`;
     html += `</div>`;
 
-    // Explain low patience
-    if (patienceEnd < 50) {
-      const confEvents = overlay.confusion_events || [];
-      let reason = '';
-      if (confEvents.length > 0) {
-        reason = confEvents[0].trigger || 'navigation difficulty';
-      } else if (trace.narration_summary) {
-        reason = trace.narration_summary.slice(0, 80);
-      }
-      if (reason) {
-        html += `<p class="small" style="margin:0 0 0.5rem;color:${patienceColor};font-style:italic">Struggled with: ${escapeHtml(reason)}</p>`;
-      }
-    }
-
-    html += `<div style="display:flex;justify-content:space-between;align-items:center">`;
-    html += `<span class="badge ${outcomeBadge}">${escapeHtml(outcome)}</span>`;
+    html += `<div style="display:flex;justify-content:flex-end;align-items:center">`;
     html += `<span class="small" style="color:var(--link);font-weight:400">View Walkthrough →</span>`;
     html += `</div>`;
     html += `</div>`;
@@ -928,6 +1029,16 @@ function buildPersonaWalkthroughsHtml() {
 
   html += `</div>`;
   return html;
+}
+
+function parseTaskIndex(taskId) {
+  if (!taskId) return 1;
+  const match = taskId.match(/(\d+)/);
+  return match ? parseInt(match[1], 10) : 1;
+}
+
+function screenshotSrc(filename) {
+  return `screenshots/${filename.replace(/\+/g, '%2B')}`;
 }
 
 function loadPersonaData(absArtifacts, screenshotsDir) {
@@ -956,9 +1067,17 @@ function loadPersonaData(absArtifacts, screenshotsDir) {
   const tasksDefined = extractState ? (extractState.tasks_to_be_done || []) : [];
   const screenshotsByPersona = {};
   if (ud.personas_evaluated && fs.existsSync(screenshotsDir)) {
-    const allFiles = fs.readdirSync(screenshotsDir).filter(f => f.endsWith('.png')).sort();
+    const allFiles = fs.readdirSync(screenshotsDir).filter(f => f.endsWith('.png')).sort((a, b) => {
+      const stepA = parseInt((a.match(/step-(\d+)/) || [])[1] || '0', 10);
+      const stepB = parseInt((b.match(/step-(\d+)/) || [])[1] || '0', 10);
+      if (stepA !== stepB) return stepA - stepB;
+      return a.localeCompare(b);
+    });
     for (const pid of ud.personas_evaluated) {
-      screenshotsByPersona[pid] = allFiles.filter(f => f.startsWith(`persona-${pid}-`));
+      const pidNorm = pid.replace(/\+/g, '-');
+      screenshotsByPersona[pid] = allFiles.filter(f =>
+        f.startsWith(`persona-${pid}-`) || f.startsWith(`persona-${pidNorm}-`)
+      );
     }
   }
   return { personaResults, ud, tasksDefined, screenshotsByPersona, journeyLog, personaNameMap };
@@ -989,13 +1108,17 @@ function buildPersonaWalkthroughData() {
     // Build tasks array
     const tasks = [];
 
-    const minTaskIdx = personaEntries.reduce((m, e) => Math.min(m, e.task_index != null ? e.task_index : 1), Infinity);
+    const minTaskIdx = personaEntries.reduce((m, e) => {
+      const idx = e.task_index != null ? e.task_index : parseTaskIndex(e.task_id);
+      return Math.min(m, idx);
+    }, Infinity);
     const isZeroBased = minTaskIdx === 0;
 
     if (personaEntries.length > 0) {
       // Use structured persona-results.json data (preferred path)
       for (const entry of personaEntries) {
-        const taskIdx = isZeroBased ? ((entry.task_index || 0) + 1) : (entry.task_index || 1);
+        const rawIdx = entry.task_index != null ? entry.task_index : parseTaskIndex(entry.task_id);
+        const taskIdx = isZeroBased ? (rawIdx + 1) : rawIdx;
         let screenshots = allPersonaScreenshots
           .filter(f => f.match(new RegExp(`task-${taskIdx}-step`)))
           .map(f => ({ file: f, step: parseInt((f.match(/step-(\d+)/) || [])[1] || '0', 10) }));
@@ -1031,7 +1154,7 @@ function buildPersonaWalkthroughData() {
             let ssRef = '';
             const isScreenshotStep = si === screenshotStepIdx || (screenshotStepIdx === -1 && si === entry.trace.length - 1);
             if (isScreenshotStep && screenshots.length > 0) {
-              ssRef = `screenshots/${screenshots[screenshots.length - 1].file}`;
+              ssRef = screenshotSrc(screenshots[screenshots.length - 1].file);
             }
             steps.push({
               step: traceStep.step || si + 1,
@@ -1094,7 +1217,7 @@ function buildPersonaWalkthroughData() {
               tryAction: '',
               confidence: '',
               patience: '100',
-              screenshot: `screenshots/${ss.file}`,
+              screenshot: screenshotSrc(ss.file),
               confusion: []
             });
           }
@@ -1202,12 +1325,16 @@ function buildEvidenceViewerData() {
       const displayName = resolvePersonaName(personaNameMap, pid);
       const tasks = [];
 
-      const evMinTaskIdx = personaEntries.reduce((m, e) => Math.min(m, e.task_index != null ? e.task_index : 1), Infinity);
+      const evMinTaskIdx = personaEntries.reduce((m, e) => {
+        const idx = e.task_index != null ? e.task_index : parseTaskIndex(e.task_id);
+        return Math.min(m, idx);
+      }, Infinity);
       const evIsZeroBased = evMinTaskIdx === 0;
 
       if (personaEntries.length > 0) {
         for (const entry of personaEntries) {
-          const taskIdx = evIsZeroBased ? ((entry.task_index || 0) + 1) : (entry.task_index || 1);
+          const rawIdx = entry.task_index != null ? entry.task_index : parseTaskIndex(entry.task_id);
+          const taskIdx = evIsZeroBased ? (rawIdx + 1) : rawIdx;
           let ssFiles = allPersonaScreenshots
             .filter(f => f.match(new RegExp(`task-${taskIdx}-step`)))
             .map(f => ({ file: f, step: parseInt((f.match(/step-(\d+)/) || [])[1] || '0', 10) }));
@@ -1225,21 +1352,23 @@ function buildEvidenceViewerData() {
           const traceSteps = entry.trace || [];
           const steps = [];
 
-          // Find which trace step has action=screenshot to attach the image there
-          const screenshotStepIdx = traceSteps.findIndex(t => t.action === 'screenshot');
+          ssFiles.sort((a, b) => a.step - b.step);
 
           for (let si = 0; si < traceSteps.length; si++) {
             const t = traceSteps[si];
             const stepNum = t.step || si + 1;
             let ssRef = '';
 
-            // Attach screenshot to the screenshot-action step, or to the last step
-            const isScreenshotStep = si === screenshotStepIdx || (screenshotStepIdx === -1 && si === traceSteps.length - 1);
-            if (isScreenshotStep && ssFiles.length > 0) {
-              ssRef = `screenshots/${ssFiles[ssFiles.length - 1].file}`;
+            if (t.screenshot) {
+              const traceFile = path.basename(t.screenshot);
+              ssRef = screenshotSrc(traceFile);
             } else {
               const ssEntry = ssFiles.find(s => s.step === stepNum);
-              if (ssEntry) ssRef = `screenshots/${ssEntry.file}`;
+              if (ssEntry) {
+                ssRef = screenshotSrc(ssEntry.file);
+              } else if (si === traceSteps.length - 1 && ssFiles.length > 0) {
+                ssRef = screenshotSrc(ssFiles[ssFiles.length - 1].file);
+              }
             }
 
             const stepConfusion = confusionEvents.filter(e => e.step === stepNum);
@@ -1251,7 +1380,7 @@ function buildEvidenceViewerData() {
 
             steps.push({
               step: stepNum,
-              what_i_see: t.what_i_see || t.description || '',
+              what_i_see: t.what_i_see || t.description || t.narration || '',
               what_im_thinking: t.what_im_thinking || t.thought || '',
               action: rawAction,
               actionVerb,
@@ -1297,7 +1426,7 @@ function buildEvidenceViewerData() {
                 action: '',
                 confidence: 'medium',
                 patience: 100,
-                screenshot: `screenshots/${ss.file}`,
+                screenshot: screenshotSrc(ss.file),
                 evidence_for_acs: [],
                 confusion_event: stepConfusion.length > 0 ? stepConfusion[0] : null
               });
@@ -1324,7 +1453,7 @@ function buildEvidenceViewerData() {
               action: '',
               confidence: 'medium',
               patience: 100,
-              screenshot: `screenshots/${ss.file}`,
+              screenshot: screenshotSrc(ss.file),
               evidence_for_acs: [],
               confusion_event: stepConfusion.length > 0 ? stepConfusion[0] : null
             });
@@ -1408,7 +1537,7 @@ function parseThinkAloudSteps(thinkaloudRaw, screenshots, screenshotsDir, confus
   for (const p of parsed) {
     const stepNum = parseInt(p.num, 10);
     const ssEntry = screenshots.find(s => s.step === stepNum);
-    const ssRef = ssEntry ? `screenshots/${ssEntry.file}` : '';
+    const ssRef = ssEntry ? screenshotSrc(ssEntry.file) : '';
     const stepConfusion = confusionEvents.filter(e => e.step === stepNum);
 
     steps.push({
@@ -1432,7 +1561,7 @@ function buildCodeDeltasHtml() {
 
   const protoId = extractPrototypeId();
   const mrNum = delta.mr_number || readKnownMRs()[protoId];
-  const baseUrl = 'https://gitlab.cee.redhat.com/uxd/prototypes/rhoai/-/merge_requests';
+  const baseUrl = `${overlayGitBaseUrl() || 'https://gitlab.cee.redhat.com/uxd/prototypes/rhoai'}/-/merge_requests`;
 
   const workspaceDir = delta.workspace || path.join(absArtifacts, 'workspace');
   const canReadDiff = fs.existsSync(workspaceDir);
@@ -2028,7 +2157,7 @@ function buildSmartComplianceTab(reason) {
   html += `<div class="card card-flat" style="margin:0 0 1.5rem">`;
   html += `<p style="font-weight:700;margin:0 0 0.25rem;color:var(--status-warning)">Automated Compliance Check Not Available</p>`;
   html += `<p class="small" style="margin:0">${escapeHtml(reason || 'consistency-checker not bootstrapped')}</p>`;
-  html += `<p class="small muted" style="margin:0.5rem 0 0">To enable automated checks: set <code>CONSISTENCY_CHECKER_REPO</code> to a git URL containing <code>guidelines/</code> and <code>scripts/</code>, then run <code>bootstrap-consistency-checker.sh</code>.</p>`;
+  html += `<p class="small muted" style="margin:0.5rem 0 0">Ensure VPN is connected and SSH keys are configured for <code>gitlab.cee.redhat.com</code>, then re-run <code>bootstrap-consistency-checker.sh</code>.</p>`;
   html += `</div>`;
 
   const componentMap = readJsonOr(path.join(absArtifacts, 'component-map.json'), null);
@@ -2085,52 +2214,70 @@ function buildChangesTabHtml() {
   const iters = iterLog && iterLog.iterations ? iterLog.iterations.length : 0;
   const exitReason = evalState.exit_reason || '';
   const isNoFix = exitReason === 'no_fix' || exitReason === 'no-fix';
+  const userPassedNoFix = evalState.no_fix === true || evalState.no_fix === 'true';
 
   let html = '';
 
   if (isNoFix && !applied) {
     html += `<h2>Changes</h2>`;
-    html += `<p class="small muted" style="margin:-0.5rem 0 1rem">This was a <strong>no-fix evaluation</strong> — the evaluator assessed the prototype as-is without applying changes.</p>`;
+
+    const csvRawChg = readFileOr(path.join(absArtifacts, 'evaluation-report.csv'), '');
+    const failCountChg = (csvRawChg.match(/,FAIL,/gi) || []).length;
+    const passCountChg = (csvRawChg.match(/,PASS,/gi) || []).length;
+
+    // Lead with result
+    html += `<p style="margin:0 0 0.75rem;font-size:0.9375rem;font-weight:700">No changes applied. ${passCountChg} criteria passed, ${failCountChg} failed.</p>`;
 
     html += `<div class="card" style="margin-bottom:1.5rem">`;
     html += `<div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">`;
     html += `<svg width="20" height="20" viewBox="0 0 512 512" fill="var(--link)"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></svg>`;
     html += `<span style="font-weight:700;font-size:0.9375rem">Assessment-Only Mode</span>`;
     html += `</div>`;
-    html += `<p class="small" style="margin:0">The evaluation ran with <code>--no-fix</code>: acceptance criteria were checked and usability walkthroughs were conducted, but no code modifications were made. `;
-    html += `This mode is useful for baselining a prototype before iterative fixes, or for evaluating work-in-progress without altering the codebase.</p>`;
+    if (userPassedNoFix) {
+      html += `<p class="small" style="margin:0">Ran with <code>--no-fix</code>: ACs checked and usability walkthroughs conducted, no code modified.</p>`;
+    } else {
+      html += `<p class="small" style="margin:0">Failing criteria stem from features not yet implemented — automated fixes not applicable.</p>`;
+    }
     html += `</div>`;
 
     if (Array.isArray(suggestions) && suggestions.length > 0) {
+      const visibleSuggestions = suggestions.slice(0, 3);
+      const extraSuggestions = suggestions.slice(3);
+
       html += `<h3 style="font-size:0.9375rem;margin:1.5rem 0 0.5rem">Suggested Fixes</h3>`;
-      html += `<p class="small muted" style="margin:0 0 0.75rem">The evaluator identified ${suggestions.length} potential improvement${suggestions.length !== 1 ? 's' : ''} that could be applied in a fix run:</p>`;
-      for (const s of suggestions) {
+      html += `<p class="small muted" style="margin:0 0 0.75rem">${suggestions.length} potential improvement${suggestions.length !== 1 ? 's' : ''} for a fix run:</p>`;
+      for (const s of visibleSuggestions) {
         const acId = s.ac_id || s.criterion_id || '';
         const desc = s.description || s.suggestion || s.fix || '';
-        const sev = s.severity || s.priority || 'medium';
-        const sevColor = sev === 'critical' || sev === 'high' ? 'var(--status-danger)' : sev === 'medium' ? 'var(--status-warning)' : 'var(--text-secondary)';
         html += `<div class="card card-compact" style="margin:0.4rem 0">`;
         if (acId) html += `<span class="badge badge-fail" style="margin-bottom:0.25rem;display:inline-block">${escapeHtml(acId)}</span> `;
         html += `<span class="small">${escapeHtml(desc)}</span>`;
         html += `</div>`;
       }
+      if (extraSuggestions.length > 0) {
+        html += `<details style="margin:0.5rem 0"><summary style="font-size:0.8125rem;cursor:pointer;color:var(--link)">Show ${extraSuggestions.length} more</summary>`;
+        for (const s of extraSuggestions) {
+          const acId = s.ac_id || s.criterion_id || '';
+          const desc = s.description || s.suggestion || s.fix || '';
+          html += `<div class="card card-compact" style="margin:0.4rem 0">`;
+          if (acId) html += `<span class="badge badge-fail" style="margin-bottom:0.25rem;display:inline-block">${escapeHtml(acId)}</span> `;
+          html += `<span class="small">${escapeHtml(desc)}</span>`;
+          html += `</div>`;
+        }
+        html += `</details>`;
+      }
     }
 
-    const csvRaw = readFileOr(path.join(absArtifacts, 'evaluation-report.csv'), '');
-    const failCount = (csvRaw.match(/,FAIL,/gi) || []).length;
-    const passCount = (csvRaw.match(/,PASS,/gi) || []).length;
-    if (failCount > 0) {
-      html += `<div class="card card-compact" style="margin:1.5rem 0;background:rgba(201,25,11,0.04)">`;
-      html += `<p class="small" style="margin:0"><strong>${failCount} criteria failed</strong> and ${passCount} passed. `;
-      html += `Re-run without <code>--no-fix</code> to let the evaluator attempt automated fixes for the failing criteria.</p>`;
-      html += `</div>`;
+    if (failCountChg > 0 && userPassedNoFix) {
+      html += `<p class="small muted" style="margin:1rem 0 0">Re-run without <code>--no-fix</code> to attempt automated fixes.</p>`;
     }
 
     return html;
   }
 
+  // Fix loop ran — lead with result
   html += `<h2>Changes</h2>`;
-  html += `<p class="small muted" style="margin:-0.5rem 0 1rem">What the evaluator changed during the fix loop.</p>`;
+  html += `<p style="margin:0 0 0.75rem;font-size:0.9375rem;font-weight:700">${applied} fix${applied !== 1 ? 'es' : ''} applied across ${iters} iteration${iters !== 1 ? 's' : ''}.</p>`;
   html += buildFixHistoryNarrative();
   html += `<div id="findings-fixed" style="margin-bottom:1.5rem">`;
   html += buildFixesAppliedHtml();
@@ -2146,11 +2293,22 @@ function buildConsistencyHtml() {
     return buildSmartComplianceTab(report.reason);
   }
 
-  const summary = report.summary || {};
+  if (!report.source_mode?.ran && !report.visual_mode?.ran) {
+    return buildSmartComplianceTab(
+      report.source_mode?.reason || 'No files in scope — consistency checks did not run'
+    );
+  }
+
   const srcMode = report.source_mode;
+  const summary = report.summary || (srcMode && srcMode.summary) || {};
+  if (!summary.total_guidelines_checked && summary.violations != null) {
+    summary.total_guidelines_checked = (summary.violations || 0) + (summary.warnings || 0) + (summary.passes || 0);
+  }
   const violations = (srcMode && Array.isArray(srcMode.violations) && srcMode.violations.length > 0)
     ? srcMode.violations
-    : (Array.isArray(report.findings) ? report.findings : []);
+    : (srcMode && Array.isArray(srcMode.findings))
+      ? srcMode.findings.filter(f => f.severity === 'error' || f.severity === 'violation')
+      : (Array.isArray(report.findings) ? report.findings : []);
   let html = '';
 
   // Summary stats
@@ -2175,9 +2333,19 @@ function buildConsistencyHtml() {
     byGuideline[k].files.add(v.file);
   }
 
-  const quickFixes = Object.values(byGuideline)
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 5);
+  const allQuickFixes = Object.values(byGuideline)
+    .sort((a, b) => b.count - a.count);
+  const quickFixes = allQuickFixes.slice(0, 3);
+  const extraQuickFixes = allQuickFixes.slice(3);
+
+  // Actionable one-liner
+  if (quickFixes.length > 0) {
+    const topFix = quickFixes[0];
+    const topFiles = [...topFix.files];
+    const topArea = topFiles[0] ? topFiles[0].replace('src/app/', '').replace('src/', '').replace(/\/[^/]+$/, '') : '';
+    const coveragePct = violations.length > 0 ? Math.round((topFix.count / violations.length) * 100) : 0;
+    html += `<p class="small" style="margin:0 0 0.75rem"><strong>Fix ${quickFixes.length} top violations${topArea ? ' in ' + escapeHtml(topArea) : ''}</strong> to resolve ${coveragePct}% of issues.</p>`;
+  }
 
   html += `<h3>Quick Fixes</h3>`;
   html += `<p class="small muted" style="margin:-0.25rem 0 0.5rem">Ranked by number of violations eliminated</p>`;
@@ -2199,6 +2367,27 @@ function buildConsistencyHtml() {
     }
     html += `<p class="consistency-guideline">${qf.files.size} file${qf.files.size > 1 ? 's' : ''}: ${[...qf.files].slice(0, 3).map(f => '<code>' + escapeHtml(f.replace('src/app/', '').replace('src/', '')) + '</code>').join(', ')}${qf.files.size > 3 ? ' +' + (qf.files.size - 3) + ' more' : ''}</p>`;
     html += `</div>`;
+  }
+
+  if (extraQuickFixes.length > 0) {
+    html += `<details style="margin:0.5rem 0"><summary style="font-size:0.8125rem;cursor:pointer;color:var(--link)">Show ${extraQuickFixes.length} more</summary>`;
+    for (const qf of extraQuickFixes) {
+      const sevTag = qf.severity === 'error'
+        ? '<span class="delta-tag delta-tag-critical">error</span>'
+        : '<span class="delta-tag delta-tag-high">warning</span>';
+      html += `<div class="consistency-finding consistency-finding-${qf.severity === 'error' ? 'error' : 'warning'}" style="margin-top:0.5rem">`;
+      html += `<div class="consistency-finding-head">`;
+      html += `<strong style="font-size:0.8125rem">${escapeHtml(qf.guideline_title)}</strong>`;
+      html += `<span class="delta-tags">${sevTag}<span class="delta-tag delta-tag-mod">${qf.count} hits</span></span>`;
+      html += `</div>`;
+      if (qf.suggestion) {
+        html += `<p class="consistency-suggestion">${escapeHtml(qf.suggestion)}`;
+        if (qf.pf_doc_url) html += ` <a href="${escapeHtml(qf.pf_doc_url)}" target="_blank" style="font-size:0.7rem;margin-left:0.3rem">PatternFly docs &rarr;</a>`;
+        html += `</p>`;
+      }
+      html += `</div>`;
+    }
+    html += `</details>`;
   }
 
   // ---- By Page/Component ----
@@ -2301,6 +2490,280 @@ function buildComplianceNarrative() {
 }
 
 // ---------------------------------------------------------------------------
+// Render structured RFE content (markdown with headings, bullets, bold labels)
+// ---------------------------------------------------------------------------
+
+function renderStructuredEnhancements(md) {
+  const lines = md.split('\n');
+  let html = '<div style="font-size:0.8125rem;line-height:1.7">';
+  let inList = false;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      if (inList) { html += '</ul>'; inList = false; }
+      continue;
+    }
+
+    // Headings: ### or ** on its own line
+    const h3 = trimmed.match(/^#{1,3}\s+(.+)/);
+    const boldHeading = trimmed.match(/^\*\*([^*]+)\*\*\s*$/);
+    if (h3 || boldHeading) {
+      if (inList) { html += '</ul>'; inList = false; }
+      const text = h3 ? h3[1] : boldHeading[1];
+      html += `<h4 style="font-size:0.875rem;font-weight:700;margin:1rem 0 0.35rem 0;color:var(--text)">${formatEnhancementInline(escapeHtml(text))}</h4>`;
+      continue;
+    }
+
+    // Bullet items: - or * prefix
+    const bullet = trimmed.match(/^[-*]\s+(.*)/);
+    if (bullet) {
+      if (!inList) { html += '<ul style="margin:0;padding-left:1.5rem;list-style:disc">'; inList = true; }
+      html += `<li style="margin-bottom:0.2rem">${formatEnhancementInline(escapeHtml(bullet[1]))}</li>`;
+      continue;
+    }
+
+    // Plain paragraph
+    if (inList) { html += '</ul>'; inList = false; }
+    html += `<p style="margin:0.25rem 0;color:var(--text-secondary)">${formatEnhancementInline(escapeHtml(trimmed))}</p>`;
+  }
+
+  if (inList) html += '</ul>';
+  html += '</div>';
+  return html;
+}
+
+function formatEnhancementInline(text) {
+  return text
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/🟢/g, '<span style="color:#3e8635">&#9679;</span>')
+    .replace(/🟡/g, '<span style="color:#f0ab00">&#9679;</span>')
+    .replace(/🔵/g, '<span style="color:#0066cc">&#9679;</span>')
+    .replace(/🟠/g, '<span style="color:#ec7a08">&#9679;</span>')
+    .replace(/🟣/g, '<span style="color:#a18fff">&#9679;</span>')
+    .replace(/⚫/g, '<span style="color:#6a6e73">&#9679;</span>');
+}
+
+// ---------------------------------------------------------------------------
+// Format a UI enhancement paragraph into a scannable card (fallback for dense text)
+// ---------------------------------------------------------------------------
+
+function formatEnhancementCard(text, num) {
+  const headerMatch = text.match(/^_([^_]+):?_\s*(.*)/s);
+
+  let headline = '';
+  let body = text;
+  if (headerMatch) {
+    headline = headerMatch[1].trim().replace(/:$/, '');
+    body = headerMatch[2].trim();
+  }
+
+  // Split dense text on clause boundaries.
+  let rawClauses = body
+    .split(/(?:,\s+with\s+a?\s*|;\s+)/i)
+    .map(c => c.replace(/^(?:a\s+|an\s+)/i, '').trim())
+    .filter(Boolean);
+
+  // Further split clauses that contain "for X deployments" into the core + supported scope
+  const clauses = [];
+  for (const c of rawClauses) {
+    const forSplit = c.match(/^(.+?)\s+for\s+(.+?\b(?:deployments?|workloads?|services?|components?|resources?))\s*(.*)/i);
+    if (forSplit) {
+      clauses.push(forSplit[1].trim());
+      const scope = forSplit[2].trim() + (forSplit[3] ? ' ' + forSplit[3].trim() : '');
+      clauses.push('Applies to ' + scope);
+    } else {
+      clauses.push(c);
+    }
+  }
+  for (let i = 0; i < clauses.length; i++) {
+    clauses[i] = clauses[i].charAt(0).toUpperCase() + clauses[i].slice(1);
+  }
+
+  // If splitting produced useful pieces, extract a headline from the first clause
+  // and render the rest as labeled bullet points.
+  if (!headline && clauses.length > 0) {
+    // Derive a headline: take the subject/verb portion before the first detail clause
+    const firstSentence = clauses[0];
+    // Try to find a natural break — look for a main component name
+    const componentMatch = firstSentence.match(/^(.+?(?:column|page|panel|view|dialog|modal|table|tab|section|card|button|form|toolbar|sidebar|header|footer|tooltip|dropdown|menu))\b(.*)/i);
+    if (componentMatch) {
+      headline = componentMatch[1].trim();
+      const rest = componentMatch[2].replace(/^\s*(?:displays?|provides?|shows?|includes?)\s*/i, '').trim();
+      if (rest) clauses[0] = rest.charAt(0).toUpperCase() + rest.slice(1);
+      else clauses.shift();
+    } else {
+      // Fall back: first ~60 chars as headline
+      const words = firstSentence.split(/\s+/);
+      let headWords = [];
+      let len = 0;
+      for (const w of words) {
+        if (len + w.length > 60 && headWords.length >= 3) break;
+        headWords.push(w);
+        len += w.length + 1;
+      }
+      headline = headWords.join(' ').replace(/[,.]$/, '');
+      const remaining = firstSentence.slice(headline.length).replace(/^[,.\s]+/, '').trim();
+      if (remaining) clauses[0] = remaining.charAt(0).toUpperCase() + remaining.slice(1);
+      else clauses.shift();
+    }
+  }
+
+  function formatClause(clause) {
+    // Pattern: "Noun phrase (list)" — e.g. "Kueue-specific scheduling states (queued, admitted...)"
+    const parenMatch = clause.match(/^(.+?)\s*\(([^)]+)\)\s*(.*)/);
+    if (parenMatch) {
+      let label = parenMatch[1].trim().replace(/^(displays?|shows?|includes?|provides?|applies?\s+to)\s+/i, '');
+      label = label.charAt(0).toUpperCase() + label.slice(1);
+      const items = parenMatch[2];
+      const after = parenMatch[3] ? ' ' + parenMatch[3].replace(/^\.\s*/, '') : '';
+      return { label, detail: items + after };
+    }
+
+    // Pattern: "Applies to X" — use "Supported deployments" as label
+    const appliesToMatch = clause.match(/^Applies\s+to\s+(.+)/i);
+    if (appliesToMatch) {
+      return {
+        label: 'Supported deployments',
+        detail: appliesToMatch[1].charAt(0).toUpperCase() + appliesToMatch[1].slice(1)
+      };
+    }
+
+    // Pattern: "Verb noun-phrase detail" — strip leading verb to get the label
+    const verbStart = clause.match(/^(displays?|shows?|includes?|provides?|supports?)\s+(.+)/i);
+    if (verbStart) {
+      const rest = verbStart[2];
+      const prepSplit = rest.match(/^(.+?\b(?:tooltip|states?|column|panel|info|view|section|badge|icon|indicator|mode))\b\s+(.*)/i);
+      if (prepSplit) {
+        return {
+          label: prepSplit[1].charAt(0).toUpperCase() + prepSplit[1].slice(1),
+          detail: prepSplit[2].charAt(0).toUpperCase() + prepSplit[2].slice(1)
+        };
+      }
+    }
+
+    // Try splitting on colon if present
+    const colonSplit = clause.match(/^([^:]+):\s*(.+)/);
+    if (colonSplit) {
+      return {
+        label: colonSplit[1].trim(),
+        detail: colonSplit[2].trim()
+      };
+    }
+
+    // Pattern: "Noun-phrase verb rest" — e.g. "Resource info tooltip showing..."
+    const nounVerbSplit = clause.match(/^(.+?\b(?:tooltip|states?|column|panel|info|view|section|badge|icon|indicator|mode|tracking|display))\s+(showing|displaying|comparing|tracking|indicating|containing|listing|rendering)\s+(.*)/i);
+    if (nounVerbSplit) {
+      return {
+        label: nounVerbSplit[1].charAt(0).toUpperCase() + nounVerbSplit[1].slice(1),
+        detail: (nounVerbSplit[2] + ' ' + nounVerbSplit[3]).charAt(0).toUpperCase() + (nounVerbSplit[2] + ' ' + nounVerbSplit[3]).slice(1)
+      };
+    }
+
+    // No label derivable — use the whole thing
+    return { label: '', detail: clause };
+  }
+
+  let html = `<div style="border:1px solid var(--border);border-radius:0.5rem;padding:0.75rem 1rem">`;
+
+  // Headline
+  html += `<div style="display:flex;align-items:baseline;gap:0.5rem;margin-bottom:0.5rem">`;
+  html += `<span style="font-family:var(--font-mono);font-size:0.7rem;color:var(--text-secondary);min-width:1.25rem">${num}.</span>`;
+  html += `<strong style="font-size:0.875rem">${formatInlineCode(escapeHtml(headline))}</strong>`;
+  html += `</div>`;
+
+  if (clauses.length > 0) {
+    html += `<ul style="margin:0;padding-left:2rem;list-style:disc;font-size:0.8125rem;line-height:1.7;color:var(--text-secondary)">`;
+    for (const clause of clauses) {
+      const { label, detail } = formatClause(clause);
+      const fmtDetail = formatInlineCode(escapeHtml(detail));
+      if (label) {
+        html += `<li><strong style="color:var(--text)">${escapeHtml(label)}:</strong> ${fmtDetail}</li>`;
+      } else {
+        html += `<li>${fmtDetail}</li>`;
+      }
+    }
+    html += `</ul>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+function formatInlineCode(text) {
+  return text
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\b(InferenceService|LLMInferenceService|GPU|CPU)\b/g, '<code>$1</code>');
+}
+
+// ---------------------------------------------------------------------------
+// Jira Source Attribution Card
+// ---------------------------------------------------------------------------
+
+function buildJiraAttributionCard() {
+  const extractState = readJsonOr(path.join(absArtifacts, 'extract-state.json'), null);
+  const outcomeContext = readJsonOr(path.join(absArtifacts, 'outcome-context.json'), null);
+  const evalState = readEvalStateYaml();
+  const protoId = extractPrototypeId();
+
+  if (!extractState) return '';
+
+  const key = extractState.key || protoId;
+  const title = extractState.ticket_summary || extractState.title || extractState.story_title || '';
+  const rfeKey = extractState.rfe_key || '';
+  const acCount = Array.isArray(extractState.ac_list) ? extractState.ac_list.length : 0;
+  const extractTime = evalState.extract_core_end || evalState.extract_core_start || '';
+
+  let dateStr = '';
+  if (extractTime) {
+    try {
+      dateStr = new Date(extractTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch { /* ignore */ }
+  }
+
+  let html = `<div class="card" style="margin-bottom:1.25rem;border-left:3px solid var(--link);padding:0.75rem 1rem">`;
+  html += `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">`;
+  html += `<svg width="16" height="16" viewBox="0 0 512 512" fill="var(--link)" style="flex-shrink:0"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></svg>`;
+  html += `<span style="font-weight:700;font-size:0.8125rem">Context extracted from Jira</span>`;
+  html += `</div>`;
+
+  html += `<div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.75rem;font-size:0.8125rem;line-height:1.6">`;
+
+  html += `<span class="muted">Story</span>`;
+  html += `<span><a href="${escapeHtml(overlayJiraUrlForKey(key))}" target="_blank">${escapeHtml(key)}</a>`;
+  if (title) html += ` — ${escapeHtml(title)}`;
+  html += `</span>`;
+
+  if (outcomeContext && (outcomeContext.key || outcomeContext.outcome_key)) {
+    const oKey = outcomeContext.key || outcomeContext.outcome_key;
+    const oTitle = outcomeContext.title || outcomeContext.summary || '';
+    html += `<span class="muted">Outcome</span>`;
+    html += `<span><a href="${escapeHtml(overlayJiraUrlForKey(oKey))}" target="_blank">${escapeHtml(oKey)}</a>`;
+    if (oTitle) html += ` — ${escapeHtml(oTitle)}`;
+    html += `</span>`;
+  }
+
+  if (rfeKey) {
+    html += `<span class="muted">RFE</span>`;
+    html += `<span><a href="${escapeHtml(overlayJiraUrlForKey(rfeKey))}" target="_blank">${escapeHtml(rfeKey)}</a></span>`;
+  }
+
+  html += `</div>`;
+
+  const parts = [];
+  if (acCount > 0) parts.push(`${acCount} acceptance criteria extracted`);
+  if (dateStr) parts.push(`Evaluated ${dateStr}`);
+  if (parts.length) {
+    html += `<p class="small muted" style="margin:0.5rem 0 0">${parts.join(' · ')}</p>`;
+  }
+
+  html += `</div>`;
+  return html;
+}
+
+// ---------------------------------------------------------------------------
 // Tabbed Executive Summary (replaces old narrative summary)
 // ---------------------------------------------------------------------------
 
@@ -2339,8 +2802,9 @@ function buildTabbedExecSummary() {
   // === Build tab content panels ===
   const featureCtx = extractState && extractState.feature_context;
 
-  // Tab 1: Overview (always shown)
+  // Tab 1: Overview — feature context only (no verdict/iteration/outcome)
   let overviewContent = '';
+
   if (featureCtx) {
     if (featureCtx.problem_statement) {
       let probText = featureCtx.problem_statement;
@@ -2349,11 +2813,10 @@ function buildTabbedExecSummary() {
         const intro = numberedMatch[1].trim();
         const listPart = probText.slice(numberedMatch.index + numberedMatch[1].length).trim();
         const items = listPart.split(/\n?\d+\.\s+/).filter(Boolean);
-        let probHtml = `<div class="exec-detail exec-problem"><strong>Problem:</strong> ${renderInlineMarkdown(escapeHtml(intro))}`;
-        probHtml += `<ul style="margin:0.4rem 0 0 1rem;padding:0;line-height:1.5;font-size:0.8125rem">`;
-        for (const item of items) probHtml += `<li style="margin-bottom:0.2rem">${renderInlineMarkdown(escapeHtml(item.trim()))}</li>`;
-        probHtml += `</ul></div>`;
-        overviewContent += probHtml;
+        overviewContent += `<div class="exec-detail exec-problem"><strong>Problem:</strong> ${renderInlineMarkdown(escapeHtml(intro))}`;
+        overviewContent += `<ul style="margin:0.4rem 0 0 1rem;padding:0;line-height:1.5;font-size:0.8125rem">`;
+        for (const item of items) overviewContent += `<li style="margin-bottom:0.2rem">${renderInlineMarkdown(escapeHtml(item.trim()))}</li>`;
+        overviewContent += `</ul></div>`;
       } else {
         overviewContent += `<div class="exec-detail exec-problem"><strong>Problem:</strong> ${renderInlineMarkdown(escapeHtml(probText))}</div>`;
       }
@@ -2371,52 +2834,38 @@ function buildTabbedExecSummary() {
       }
     }
   } else if (outcomeContext && outcomeContext.problem_statement) {
-    overviewContent += `<div class="exec-detail exec-problem">${escapeHtml(outcomeContext.problem_statement)}</div>`;
-  }
-  if (iterationLog) {
-    const iters = (iterationLog.iterations || []).length;
-    const exitReason = iterationLog.exit_reason || 'pending';
-    overviewContent += `<ul class="exec-meta-list" style="margin:0.75rem 0 0 1rem;padding:0;list-style:disc;font-size:0.8125rem;color:var(--text-secondary);line-height:1.7;border-top:1px solid var(--border);padding-top:0.5rem">`;
-    overviewContent += `<li><strong>${iters}</strong> iteration${iters !== 1 ? 's' : ''}</li>`;
-    overviewContent += `<li>Exit: <strong>${escapeHtml(exitReason.replace(/_/g, ' '))}</strong></li>`;
-    if (mrDelta) {
-      const fixesApplied = iterationLog && (iterationLog.total_criteria_fixed || 0) > 0;
-      const fileLabel = fixesApplied ? 'files changed' : 'files in branch';
-      overviewContent += `<li><strong>${mrDelta.total_files_changed || 0}</strong> ${fileLabel}</li>`;
-    }
-    overviewContent += `</ul>`;
+    overviewContent += `<div class="exec-detail exec-problem"><strong>Problem:</strong> ${renderInlineMarkdown(escapeHtml(outcomeContext.problem_statement))}</div>`;
   }
 
-  // Tab 2: User Stories (hidden if empty)
+  // Tab 2: User Stories (hidden if empty) — numbered with coverage status
   let storiesContent = '';
   const hasStories = featureCtx && Array.isArray(featureCtx.user_stories) && featureCtx.user_stories.length > 0;
   if (hasStories) {
-    storiesContent += `<ul style="margin:0.25rem 0 0 1rem;padding:0;line-height:1.6;font-size:0.875rem">`;
+    storiesContent += `<ol style="margin:0.25rem 0 0 1.25rem;padding:0;line-height:1.6;font-size:0.875rem">`;
     for (const story of featureCtx.user_stories) {
       storiesContent += `<li style="margin-bottom:0.4rem">${escapeHtml(story)}</li>`;
     }
-    storiesContent += `</ul>`;
+    storiesContent += `</ol>`;
   }
 
-  // Tab 3: UI Enhancements (hidden if empty)
+  // Tab 3: UI Enhancements — only when the ticket has a dedicated UI/design section
   let enhancementsContent = '';
-  const hasEnhancements = featureCtx && featureCtx.ui_enhancements;
+  const rawEnhancements = featureCtx && featureCtx.ui_enhancements;
+  const hasEnhancements = rawEnhancements && !/^##?\s*(In scope|Scope|Requirements)\b/i.test(rawEnhancements.trim());
   if (hasEnhancements) {
-    const raw = featureCtx.ui_enhancements;
-    const paragraphs = raw.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+    const raw = rawEnhancements;
+    const isStructured = /\n\s*[-*]\s+\*\*/.test(raw) || /\n#+\s+/.test(raw) || /\n\*\*[^*]+\*\*\s*\n/.test(raw);
 
-    enhancementsContent += `<ul style="margin:0.25rem 0 0 1rem;padding:0;line-height:1.7;font-size:0.8125rem;color:var(--text-secondary)">`;
-    for (const para of paragraphs) {
-      const headerMatch = para.match(/^_([^_]+):?_\s*(.*)/s);
-      if (headerMatch) {
-        const heading = headerMatch[1].trim().replace(/:$/, '');
-        const body = headerMatch[2].trim();
-        enhancementsContent += `<li style="margin-bottom:0.35rem"><strong style="color:var(--text)">${escapeHtml(heading)}:</strong> ${renderInlineMarkdown(escapeHtml(body))}</li>`;
-      } else {
-        enhancementsContent += `<li style="margin-bottom:0.35rem">${renderInlineMarkdown(escapeHtml(para))}</li>`;
+    if (isStructured) {
+      enhancementsContent = renderStructuredEnhancements(raw);
+    } else {
+      const paragraphs = raw.split(/\n\n+/).map(p => p.trim()).filter(Boolean);
+      enhancementsContent += `<div style="display:flex;flex-direction:column;gap:0.75rem">`;
+      for (let i = 0; i < paragraphs.length; i++) {
+        enhancementsContent += formatEnhancementCard(paragraphs[i], i + 1);
       }
+      enhancementsContent += `</div>`;
     }
-    enhancementsContent += `</ul>`;
   }
 
   // === Assemble tabbed panel ===
@@ -2429,7 +2878,11 @@ function buildTabbedExecSummary() {
   html += `<div class="exec-tabs">`;
   html += `<button class="exec-tab active" onclick="switchExecTab('overview')">Overview</button>`;
   if (hasStories) html += `<button class="exec-tab" onclick="switchExecTab('stories')">User Stories <span class="muted" style="font-size:0.7rem">(${featureCtx.user_stories.length})</span></button>`;
-  if (hasEnhancements) html += `<button class="exec-tab" onclick="switchExecTab('enhancements')">UI Enhancements</button>`;
+  if (hasEnhancements) {
+    const headingMatch = rawEnhancements.trim().match(/^#{1,3}\s+(.+)/);
+    const tabLabel = headingMatch ? headingMatch[1].replace(/\s*\(.*\)$/, '') : 'UI Enhancements';
+    html += `<button class="exec-tab" onclick="switchExecTab('enhancements')">${escapeHtml(tabLabel)}</button>`;
+  }
   html += `</div>`;
 
   html += `<div class="exec-tab-content active" id="exec-overview">${overviewContent}</div>`;
@@ -2462,12 +2915,44 @@ function buildTokens(opts = {}) {
   const { map: screenshots, fileToHash: ssFileToHash, hashToFirstFile: ssHashToFirstFile } = loadScreenshots(screenshotsDir);
 
   // Normalize usability_dimensions fields (handle common LLM output variants)
-  const ud = journeyLog ? normalizeUsabilityDimensions(journeyLog.usability_dimensions) : null;
+  let ud = journeyLog ? normalizeUsabilityDimensions(journeyLog.usability_dimensions) : null;
   const rawPersonaResults = readJsonOr(path.join(absArtifacts, 'persona-results.json'), null);
   const personaNameMap = buildPersonaNameMap(
     normalizePersonaResults(rawPersonaResults),
     journeyLog
   );
+
+  // Fallback: if persona-results.json exists but usability_dimensions is missing,
+  // synthesize basic dimension data so the usability tab renders
+  if (!ud && rawPersonaResults && (Array.isArray(rawPersonaResults) ? rawPersonaResults.length : rawPersonaResults.personas?.length)) {
+    const pr = normalizePersonaResults(rawPersonaResults);
+    const personasEvaluated = [...new Set(pr.map(r => r.persona).filter(Boolean))];
+    const DIMS = {
+      'workflow_continuity': 'Workflow Continuity & Integrity',
+      'cross_persona_handoffs': 'Cross-Persona Context & Handoffs',
+      'scalability_progressive_complexity': 'Scalability & Progressive Complexity',
+      'system_status_trust': 'System Status, Observability & Trust',
+      'technical_abstraction': 'Technical Abstraction & Signal-to-Noise',
+      'mental_model_fidelity': 'Mental Model Fidelity',
+      'accessibility_inclusion': 'Accessibility & Inclusion'
+    };
+    const dimensions = Object.entries(DIMS).map(([id, name]) => ({
+      id, name, composite_score: 'N/A', note: 'Dimension scores not yet consolidated — run validate-phase-b-output.js or re-run Phase B Step 8', scores: {}
+    }));
+    const personaOverlays = pr.map(entry => ({
+      persona: entry.persona, persona_name: entry.persona_name || null,
+      task_index: entry.task_index || 1,
+      patience_start: 100, patience_end: entry.patience_end || 100,
+      abandoned: entry.abandoned || false,
+      confusion_events: entry.confusion_events || [], cli_escapes: 0
+    }));
+    ud = normalizeUsabilityDimensions({
+      overall_score: 0, max_score: 21,
+      personas_evaluated: personasEvaluated,
+      dimensions, persona_overlays: personaOverlays
+    });
+    console.warn('  ⚠ usability_dimensions missing from journey-log.json but persona-results.json exists — rendering partial usability data');
+  }
 
   const csvRows = parseCsv(csvRaw);
 
@@ -2550,7 +3035,7 @@ function buildTokens(opts = {}) {
   const gapsSummary = [failPart, flagPart].filter(Boolean).join(' · ');
   const journeySummary = `${journeyPass}/${journeyTotal} completed`;
 
-  const jiraUrl = `https://issues.redhat.com/browse/${protoId}`;
+  const jiraUrl = overlayJiraUrlForKey(protoId);
   const prototypeUrl = journeyLog ? journeyLog.prototype_url || '#' : '#';
 
   // ---- AC Table Rows (split by source) ----
@@ -2609,9 +3094,7 @@ function buildTokens(opts = {}) {
   // ---- Breadcrumb ----
   // Resolve Jira instance URL based on project key prefix
   function jiraUrlForKey(key) {
-    if (!key) return '';
-    if (key.startsWith('RHOAIUX-')) return `https://redhat.atlassian.net/browse/${key}`;
-    return `https://issues.redhat.com/browse/${key}`;
+    return overlayJiraUrlForKey(key);
   }
 
   // Render a breadcrumb link — validated links become anchors, unvalidated become plain text with tooltip
@@ -2949,7 +3432,7 @@ function buildTokens(opts = {}) {
           if (dupOrigin) {
             block += `<div style="display:flex;align-items:center;gap:0.4rem;margin-bottom:0.25rem"><span class="badge" style="background:rgba(217,119,6,0.1);color:#d97706;font-size:0.6rem">Same view as ${escapeHtml(dupOrigin.journey)} Step ${dupOrigin.step}</span></div>`;
           }
-          block += `<div class="screenshot" data-idx="${idx}" onclick="openImageLightbox(this.querySelector('img').src)" style="cursor:pointer"><img loading="lazy" src="screenshots/${ssFilename}" alt="Step ${step.step}"></div>`;
+          block += `<div class="screenshot" data-idx="${idx}" onclick="openImageLightbox(this.querySelector('img').src)" style="cursor:pointer"><img loading="lazy" src="${screenshotSrc(ssFilename)}" alt="Step ${step.step}"></div>`;
 
           if (mergedNarrations) {
             block += `<div class="narration">${escapeHtml(mergedNarrations)}</div>`;
@@ -3059,7 +3542,7 @@ function buildTokens(opts = {}) {
           const idx = registerScreenshot(ssFile, step.narration || '', exploCtx, screenshots, ssState);
           if (idx >= 0) {
             block += `<div class="screenshot-card">`;
-            block += `<div class="screenshot" data-idx="${idx}" onclick="openImageLightbox(this.querySelector('img').src)" style="cursor:pointer"><img loading="lazy" src="screenshots/${ssFile}" alt="Explore step ${step.step}"></div>`;
+            block += `<div class="screenshot" data-idx="${idx}" onclick="openImageLightbox(this.querySelector('img').src)" style="cursor:pointer"><img loading="lazy" src="${screenshotSrc(ssFile)}" alt="Explore step ${step.step}"></div>`;
             if (step.narration) block += `<div class="narration">${escapeHtml(step.narration)}</div>`;
             if (step.persona_reaction) {
               block += `<div class="screenshot-persona"><strong>${pName}:</strong> <em>${escapeHtml(step.persona_reaction)}</em></div>`;
@@ -3112,7 +3595,16 @@ function buildTokens(opts = {}) {
     const overallPct = maxScore > 0 ? Math.round((totalScore / maxScore) * 100) : 0;
     const overallColor = overallPct >= 70 ? 'var(--status-success)' : overallPct >= 40 ? 'var(--status-warning)' : 'var(--status-danger)';
 
-    let cards = '';
+    // One-line weakest/strongest summary
+    const sortedDims = [...scored].sort((a, b) => numScore(a.composite_score) - numScore(b.composite_score));
+    const weakest = sortedDims[0];
+    const strongest = sortedDims[sortedDims.length - 1];
+    let dimSummary = '';
+    if (weakest && strongest && sortedDims.length >= 2) {
+      dimSummary = `<p class="small" style="margin:0 0 0.75rem"><strong style="color:var(--status-danger)">Weakest:</strong> ${escapeHtml(weakest.name)} (${numScore(weakest.composite_score)}/3). <strong style="color:var(--status-success)">Strongest:</strong> ${escapeHtml(strongest.name)} (${numScore(strongest.composite_score)}/3).</p>`;
+    }
+
+    let cards = dimSummary;
     cards += `<div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.25rem;padding:0.75rem 1rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:0.5rem">`;
     cards += `<div style="font-family:var(--font-heading);font-size:1.75rem;font-weight:700;color:${overallColor};line-height:1">${totalScore}/${maxScore}</div>`;
     cards += `<div style="flex:1;max-width:12rem"><div style="height:6px;background:var(--border);border-radius:3px;overflow:hidden"><div style="width:${overallPct}%;height:100%;background:${overallColor};border-radius:3px"></div></div></div>`;
@@ -3244,8 +3736,28 @@ function buildTokens(opts = {}) {
         sparklines += `</div>`;
       }
 
-      patienceTracking = `<div style="margin-top:1.5rem"><h3 style="margin-bottom:0.5rem">Patience Tracking</h3>${heatmap}${sparklines}</div>`;
+      // Patience summary line
+      const abandonedCount = overlays.filter(o => o.abandoned || o.would_complete === false).length;
+      const avgPatience = overlays.length
+        ? Math.round(overlays.reduce((s, o) => s + (o.patience_end || 100), 0) / overlays.length)
+        : 100;
+      let patienceSummary = `<p class="small" style="margin:0 0 0.75rem">`;
+      patienceSummary += `Average patience: <strong style="color:${hmColor(avgPatience)}">${avgPatience}%</strong>`;
+      if (abandonedCount > 0) patienceSummary += ` · <strong style="color:var(--status-danger)">${abandonedCount}</strong> persona${abandonedCount > 1 ? 's' : ''} abandoned`;
+      if (worstTasks.length > 0) patienceSummary += ` · ${worstTasks.length} task${worstTasks.length > 1 ? 's' : ''} below 70%`;
+      patienceSummary += `</p>`;
+
+      patienceTracking = `<div style="margin-top:1.5rem"><h3 style="margin-bottom:0.5rem">Patience Tracking</h3>${patienceSummary}${heatmap}${sparklines}</div>`;
     }
+  } else {
+    usabilityTable = `<div style="text-align:center;padding:2rem 1rem;color:var(--text-secondary)">` +
+      `<svg viewBox="0 0 512 512" width="36" height="36" fill="var(--text-secondary)" style="opacity:0.4;margin-bottom:0.75rem"><path d="M32 32c17.7 0 32 14.3 32 32V400c0 8.8 7.2 16 16 16H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H80c-44.2 0-80-35.8-80-80V64C0 46.3 14.3 32 32 32zM160 224c-17.7 0-32 14.3-32 32v64c0 17.7 14.3 32 32 32s32-14.3 32-32V256c0-17.7-14.3-32-32-32zm128-64v160c0 17.7 14.3 32 32 32s32-14.3 32-32V160c0-17.7-14.3-32-32-32s-32 14.3-32 32zm-64 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V224c0-17.7-14.3-32-32-32s-32 14.3-32 32z"/></svg><br>` +
+      `<strong style="font-size:0.875rem;color:var(--text)">No usability scores yet</strong><br>` +
+      `<span style="font-size:0.8125rem">Phase B (persona walkthroughs) did not produce dimension scores. To fix:</span><br>` +
+      `<span style="font-size:0.8125rem">1. Ensure <code>.context/usability-testing/</code> is cloned (requires VPN)</span><br>` +
+      `<span style="font-size:0.8125rem">2. Re-run the eval (not in <code>review</code> mode) — Phase B runs automatically</span><br>` +
+      `<span style="font-size:0.8125rem">3. If persona-results.json exists, run: <code>node scripts/validate-phase-b-output.js</code></span>` +
+      `</div>`;
   }
 
   // ---- Think-Aloud Narratives ----
@@ -3264,7 +3776,7 @@ function buildTokens(opts = {}) {
       const taTaskLabel = taTaskDef ? ` — Task ${taTaskIdx}: ${escapeHtml(taTaskDef.task)}` : (taTaskIdx ? ` — Task ${taTaskIdx}` : '');
 
       thinkAloudNarratives += `<details><summary>${pName}${taTaskLabel} — ${outcome}</summary>`;
-      thinkAloudNarratives += `<p class="small muted">Patience: ${patience}% · Confusion: ${trace.confusion_events || 0} · CLI escapes: ${trace.cli_escapes || 0}</p>`;
+      thinkAloudNarratives += `<p class="small muted">Patience: ${patience}% · Confusion: ${Array.isArray(trace.confusion_events) ? trace.confusion_events.length : trace.confusion_events || 0} · CLI escapes: ${trace.cli_escapes || 0}</p>`;
 
       if (trace.response_strategies) {
         const rs = trace.response_strategies;
@@ -3305,43 +3817,6 @@ function buildTokens(opts = {}) {
       thinkAloudNarratives += `</details>`;
     }
   }
-
-  // ---- Flagged HTML ----
-  const flaggedRows = csvRows.filter(r => (r.verdict || '').toUpperCase() === 'FLAGGED');
-  let flaggedHtml = '';
-  if (flaggedRows.length) {
-    let rows = '';
-    let hasEmptyContext = false;
-    for (const r of flaggedRows) {
-      const rationale = r.rationale || '';
-      const humanAction = r.human_action || '';
-      if (!rationale && !humanAction) hasEmptyContext = true;
-      const rationaleDisplay = rationale || '<span class="muted" style="font-style:italic">Review this criterion against the prototype directly</span>';
-      const actionDisplay = humanAction || '<span class="muted" style="font-style:italic">Verify manually</span>';
-      const expectedBehavior = extractExpectedBehavior(r.criterion_text || '');
-      const shortText = expectedBehavior.length > 80
-        ? escapeHtml(expectedBehavior.slice(0, 80)) + '&hellip;'
-        : escapeHtml(expectedBehavior);
-      rows += `<tr><td><strong>${escapeHtml(r.criterion_id)}</strong></td><td class="small">${shortText}</td><td>${escapeHtml(r.tier)}</td><td class="small">${rationaleDisplay}</td><td class="small">${actionDisplay}</td></tr>`;
-      if ((r.criterion_text || '').length > 80) {
-        rows += `<tr><td colspan="5" style="padding:0.25rem 1rem 0.75rem;background:var(--bg-secondary);border-top:none"><details><summary style="font-size:0.75rem;color:var(--link);cursor:pointer;font-weight:400">Full criterion</summary><p style="font-size:0.8125rem;line-height:1.6;color:var(--text);margin:0.5rem 0 0;white-space:pre-wrap">${escapeHtml(r.criterion_text)}</p></details></td></tr>`;
-      }
-    }
-    let contextNote = '';
-    if (hasEmptyContext) {
-      contextNote = '<p style="font-size:0.75rem;color:var(--text-secondary);margin:0.75rem 0 0;font-style:italic">Flagged items could not be fully evaluated by the automated pipeline — they require human expertise to verify (e.g., comparing against an external reference, validating business logic, or confirming visual consistency with another system).</p>';
-    }
-    flaggedHtml = `<table class="tbl"><thead><tr><th>ID</th><th>Criterion</th><th>Tier</th><th>Why Flagged</th><th>Action Needed</th></tr></thead><tbody>${rows}</tbody></table>${contextNote}`;
-  } else {
-    flaggedHtml = '<p style="color:var(--status-success);font-size:0.875rem">&#10003; No items flagged for human review. All criteria were evaluable by the automated pipeline.</p>';
-  }
-
-  // ---- Methodology ----
-  const methodologyFallback = `
-    <p>Acceptance criteria are extracted from the Jira ticket and verified against the live prototype using Playwright (headless Chromium, 1920x900). Each AC gets a <strong>PASS</strong>, <strong>FAIL</strong>, or <strong>FLAGGED</strong> verdict with screenshot evidence. If criteria fail, the pipeline applies fixes and re-evaluates.</p>
-    <p style="margin-top:0.5rem">Usability is scored by simulated personas who navigate the prototype independently, producing think-aloud traces and 7-dimension scores (0-3 each). Patience tracks frustration per task — confusion drains it, successful interactions recover it.</p>
-  `;
-  const methodologyHtml = methodologyFallback;
 
   // ---- Conclusion (generated from results) ----
   const personasEvaluated = ud ? (ud.personas_evaluated || []) : [];
@@ -3508,22 +3983,24 @@ function buildTokens(opts = {}) {
 
   // Build link URLs
   const rfeKey = (extractState && extractState.rfe_key) || '';
-  const rfeUrl = rfeKey ? `https://issues.redhat.com/browse/${rfeKey}` : jiraUrl;
+  const rfeUrl = rfeKey ? overlayJiraUrlForKey(rfeKey) : jiraUrl;
 
   // Prototype URL — use the URL that was actually tested (local or hosted)
+  const evalStateYaml = readEvalStateYaml();
   const protoRepoUrl = (journeyLog && journeyLog.prototype_url)
     ? journeyLog.prototype_url
     : (extractState && extractState.breadcrumb && extractState.breadcrumb.prototype && extractState.breadcrumb.prototype.url)
       ? extractState.breadcrumb.prototype.url
-      : 'http://localhost:8080';
+      : evalStateYaml.prototype_url || '';
 
-  const gitlabBase = 'https://gitlab.cee.redhat.com/uxd/prototypes/rhoai';
+  const gitlabBase = overlayGitBaseUrl() || 'https://gitlab.cee.redhat.com/uxd/prototypes/rhoai';
+  const pagesBase = overlayPagesBaseUrl();
   const mrNumber = readKnownMRs()[protoId];
   const mrUrl = mrNumber
     ? `${gitlabBase}/-/merge_requests/${mrNumber}`
-    : `${gitlabBase}/-/merge_requests`;
-  const protoDeployUrl = mrNumber
-    ? `https://rhoai-5171de.pages.redhat.com/mr-${mrNumber}/`
+    : gitlabBase ? `${gitlabBase}/-/merge_requests` : '';
+  const protoDeployUrl = mrNumber && pagesBase
+    ? `${pagesBase.replace(/\/$/, '')}/${overlayMrBranchPattern().replace('{number}', mrNumber)}/`
     : prototypeUrl;
 
   const isTitleUseful = (v) => v && v !== 'eval' && v !== protoId && v.length > 3;
@@ -3546,10 +4023,8 @@ function buildTokens(opts = {}) {
     '{{AC_TABLE_ROWS_INFERRED}}': acTableRowsInferred,
     '{{AC_JIRA_COUNT}}': String(acJiraCount),
     '{{INFERRED_CHECKS_DISPLAY}}': inferredRows.length ? '' : 'display:none',
-    '{{METHODOLOGY_HTML}}': methodologyHtml,
     '{{USABILITY_TABLE}}': usabilityTable,
     '{{PATIENCE_TRACKING}}': patienceTracking,
-    '{{FLAGGED_HTML}}': flaggedHtml,
     '{{CONCLUSION_HTML}}': conclusionHtml,
     '{{CSV_DATA}}': csvDataEscaped,
     '{{FLAGGED_DATA}}': buildFlaggedDataArray(csvRows, journeyLog, screenshots),
@@ -3560,14 +4035,17 @@ function buildTokens(opts = {}) {
     '{{FIXES_APPLIED_HTML}}': buildFixesAppliedHtml(),
     '{{CONSISTENCY_HTML}}': buildConsistencyHtml(),
     '{{CHANGES_TAB_HTML}}': buildChangesTabHtml(),
-    '{{JOURNEYS_TAB_DISPLAY}}': (journeyLog && (journeyLog.journeys || []).length > 0) ? '' : 'display:none',
-    '{{USABILITY_TAB_DISPLAY}}': (ud && ud.dimensions && ud.dimensions.length > 0) ? '' : 'display:none',
-    '{{CHANGES_TAB_DISPLAY}}': '',
     '{{FIX_HISTORY_NARRATIVE}}': buildFixHistoryNarrative(),
     '{{COMPLIANCE_NARRATIVE}}': buildComplianceNarrative(),
-    '{{OUTCOME_DISPLAY}}': outcomeContext ? '' : 'display:none',
-    '{{OUTCOME_LINK_URL}}': outcomeContext ? jiraUrlForKey(outcomeContext.key || outcomeContext.outcome_key) : '',
-    '{{EXEC_SUMMARY_HTML}}': buildTabbedExecSummary()
+    '{{OUTCOME_DISPLAY}}': (outcomeContext || (extractState && extractState.breadcrumb && extractState.breadcrumb.outcome)) ? '' : 'display:none',
+    '{{OUTCOME_LINK_URL}}': outcomeContext
+      ? jiraUrlForKey(outcomeContext.key || outcomeContext.outcome_key)
+      : (extractState && extractState.breadcrumb && extractState.breadcrumb.outcome && extractState.breadcrumb.outcome.key)
+        ? jiraUrlForKey(extractState.breadcrumb.outcome.key)
+        : '',
+    '{{OUTCOME_LABEL}}': 'Outcome',
+    '{{EXEC_SUMMARY_HTML}}': buildTabbedExecSummary(),
+    '{{JIRA_ATTRIBUTION_HTML}}': buildJiraAttributionCard()
   };
 }
 

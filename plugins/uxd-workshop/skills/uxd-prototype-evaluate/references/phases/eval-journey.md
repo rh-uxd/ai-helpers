@@ -8,10 +8,9 @@ Executes Playwright walkthroughs for each journey defined by eval-extract. Opera
 |-------|-------------|----------|
 | `.artifacts/<KEY>/eval/extract-state.json` | Journey definitions, persona selection, AC list | Yes |
 | `.artifacts/<KEY>/eval/evaluation-report.csv` | Tier-classified ACs from eval-classify (Section 1 with tiers, no verdicts) | Yes |
-| `.artifacts/<KEY>/eval/navigation-hints.json` | Selectors, routes, nav hierarchy from eval-hint | No |
+| `.artifacts/<KEY>/eval/navigation-hints.json` | Routes and nav hierarchy from eval-hint | No |
 | `.artifacts/<KEY>/eval/mr-delta.json` | Changed files (for nav gap detection, URL fallback hints) | No |
 | Prototype URL | Live URL to test against (e.g., `http://localhost:4200`) | Yes |
-| `--mode` | `informed` (x-ray mode, the only mode for this skill) | No |
 | `--rerun-only` | Comma-separated AC IDs — only run journeys testing these ACs | No |
 | `--capture-only` | Re-capture screenshots without changing verdicts | No |
 | `--all-journeys` | Run all journeys (not just rerun set) | No |
@@ -29,21 +28,18 @@ Executes Playwright walkthroughs for each journey defined by eval-extract. Opera
 
 ## Procedure
 
-### Mode Selection
-
-**`--mode=informed` (Phase A — X-Ray AC Validation):**
+### X-Ray AC Validation (Phase A)
 
 The x-ray evaluator has full workspace access and uses it for speed. The goal is to verify acceptance criteria as fast as possible, not to test discoverability.
 
 - Read workspace source files directly for selectors, routes, and page structure
 - Use `page.goto` freely for navigation (speed over realism)
 - Use CSS selectors from source code to locate elements
-- No brute-force expansion, no discovery-first pretense
 - No persona simulation, no exploration phase
 - Screenshots are evidence of PASS/FAIL only
 - Produces: verdicts, refinement-suggestions, screenshots
 
-Navigation strategy for x-ray mode:
+Navigation strategy:
 ```javascript
 async function navigateInformed(page, route, selector) {
   await page.goto(`${baseUrl}${route}`);
@@ -51,67 +47,21 @@ async function navigateInformed(page, route, selector) {
   if (selector) {
     await page.waitForSelector(selector, { timeout: 5000 }).catch(() => null);
   }
-  // ALWAYS wait for page content to render before screenshots
   await page.waitForTimeout(1000);
 }
 ```
 
-**X-RAY MODE VERDICT RULE — Visual truth overrides source analysis:**
+**Visual truth overrides source analysis** — see [`references/verdict-policy.md`](../verdict-policy.md) for the full rule. Source code analysis can NEVER upgrade a visual FAIL to PASS.
 
-Even in x-ray mode, the Playwright visual result is the SOURCE OF TRUTH for verdict assignment.
-- If Playwright shows empty table / broken UI / feature not visible → **FAIL** (regardless of what source code says)
-- Source code analysis can UPGRADE a FLAGGED to PASS (e.g., Tier 3 backend verification where UI portion is confirmed working)
-- Source code analysis can NEVER upgrade a visual FAIL to PASS
-- If all screenshots show the same empty/broken state, the feature is NOT working — source code existence doesn't matter
-
-The x-ray evaluator has code access for NAVIGATION speed, not for verdict override. The verdict still comes from what the user would see.
-
-When `--mode=informed`, skip Steps 3 and 3b below (hint fallback logic is unnecessary — read source directly). Go straight to Step 4 with x-ray navigation.
+Hint fallback logic (Steps 3/3b) is unnecessary in x-ray mode — read source directly. Go straight to Step 4 with x-ray navigation.
 
 ---
 
 ### Step 1: Setup Playwright
 
-```bash
-EVAL_SKILL_ROOT="${CLAUDE_SKILL_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." 2>/dev/null && pwd)}"
-# Stay on / return to UXD_PROJECT_ROOT after install — do not leave cwd in the skill dir
-# (relative .artifacts writes would land inside the skill).
-PROJECT_ROOT="${UXD_PROJECT_ROOT:-$(pwd)}"
-if ! npx playwright --version >/dev/null 2>&1; then
-  cd "$EVAL_SKILL_ROOT"
-  npm install
-  npx playwright install chromium firefox
-  cd "$PROJECT_ROOT"
-else
-  echo "Playwright already installed, skipping setup"
-fi
-mkdir -p "${ARTIFACTS_DIR}/scripts" "${ARTIFACTS_DIR}/screenshots"
-```
+Playwright is installed during prerequisite setup (see SKILL.md). Ensure `${ARTIFACTS_DIR}/scripts` and `${ARTIFACTS_DIR}/screenshots` directories exist.
 
-**Browser selection:** Use Chromium (headless). Firefox caused blank screenshots in 3/4
-pipeline runs due to PatternFly CSS rendering failures in headless mode.
-
-```javascript
-import { chromium } from 'playwright';
-const browser = await chromium.launch({ headless: true });
-// MANDATORY: 1920x900 viewport. Default 800x600 truncates table columns.
-// 1440 is insufficient for tables with 10+ columns.
-const context = await browser.newContext({ viewport: { width: 1920, height: 900 } });
-const page = await context.newPage();
-```
-
-**Blank screenshot detection:** After each screenshot, check the file size. Images under
-10 KB are likely blank (rendering not yet complete). When detected:
-1. Wait 2 seconds and retry once (the page may still be loading)
-2. If still blank after retry, log a warning and continue — base the verdict on DOM state
-   (selectors, getBoundingClientRect), not screenshot appearance
-
-**Hidden row detection:** PatternFly's `Tr` component treats any explicit `isExpanded` value
-(including `false`) as its own visibility control, rendering rows with `hidden=""`. Before
-reporting AC failures for missing table data, check whether rows exist in the DOM but have
-zero bounding rect (`getBoundingClientRect().height === 0`). If so, report ONE root cause
-("N rows exist but are hidden by isExpanded={false}") instead of separate per-AC failures —
-this is a single prototype bug, not N independent issues.
+**Read and follow [`references/playwright-rules.md`](../playwright-rules.md)** for browser selection, viewport, project seeding, screenshot timing, blank detection, hidden row detection, and locator strategy. Those rules apply to all generated scripts in this phase.
 
 ### Step 2: Prepare screenshots directory and capture baseline
 
@@ -149,7 +99,18 @@ await context.close();
 
 **Before generating any Playwright script**, read the target component files from `mr-delta.json` and write a structured JSON file that the script generator MUST reference.
 
-Read workspace source files (`modified_files` and `new_files` from `mr-delta.json`) and extract:
+**Source resolution:** Use the workspace if provided. Otherwise read `source_dir` from `eval-state.yaml` (set by `pipeline-setup.sh` when an MR clone is available in hybrid mode). If `source_available=true` in eval-state, source files are readable even for remote prototypes.
+
+```bash
+# Resolve source directory (same as eval-hint Step 0)
+if [ -n "${WORKSPACE}" ] && [ -d "${WORKSPACE}" ]; then
+  SOURCE="${WORKSPACE}"
+elif [ -f "${ARTIFACTS_DIR}/eval-state.yaml" ]; then
+  SOURCE=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py get ${ARTIFACTS_DIR}/eval-state.yaml source_dir)
+fi
+```
+
+Read source files (`modified_files` and `new_files` from `mr-delta.json`) and extract:
 
 - **target_page**: The route where the feature lives
 - **table_columns**: Actual `<Th>` labels or column config array values in order
@@ -219,9 +180,7 @@ The generated Playwright script navigates using ONLY visible UI elements first. 
 **What each hint type provides as fallback:**
 
 - **`nav_sections`:** ONLY used after brute-force expansion fails. If the script tried all visible nav buttons and still can't find the target, THEN use the hint to expand the specific parent. Log: `"navigate-assisted: hint revealed target in 'Gen AI studio' section"`
-- **`selectors`:** Used to VERIFY elements after navigation succeeds (confirmation, not discovery). If the generic selector finds nothing, try the hint selector as a fallback check.
 - **`routes`:** Used as diagnostic `page.goto` ONLY after click-first fails completely. Distinguishes "orphaned page" from "doesn't exist." NEVER marks a step PASS.
-- **`page_structure`:** Used to set expectations for what should be on the page — helps write better narrations, not navigate.
 
 **If `navigation-hints.json` does not exist**, the script works with brute-force only (slower but honest).
 
@@ -326,21 +285,9 @@ When `assisted: true`, the step is logged with `navigate-assisted` and usability
 - No parent section AND `page.goto` fails → **FAIL** (page doesn't exist)
 - Target link visible without expansion → **PASS** (ideal nav)
 
-#### Verdict Assignment — FAIL vs FLAGGED
+#### Verdict Assignment
 
-**FAIL means the feature is missing or broken.** Use FAIL when:
-- The UI element, page, or flow described by the AC does not exist
-- A form/button/control is supposed to be there but isn't
-- Navigation is genuinely broken (orphaned page with no discoverable path)
-- A flow starts but crashes/errors mid-way
-
-**FLAGGED means the evaluator cannot make a confident judgment.** Use FLAGGED ONLY when:
-- The AC requires comparing against an external reference that's unavailable (Tier 2)
-- The AC requires backend/runtime verification (Tier 3)
-- The AC is subjective and requires human judgment (Tier 4)
-- Ambiguity in what the AC means makes automated judgment unreliable
-
-**NEVER FLAG what should be FAIL.** If the Playwright walkthrough shows a feature is missing or a flow doesn't work, that's FAIL — don't hide it behind FLAGGED. A collapsed sidebar that can be expanded is PASS. A link that doesn't exist at all is FAIL. Neither is FLAGGED.
+**Read [`references/verdict-policy.md`](../verdict-policy.md)** for FAIL vs FLAGGED rules, the consolidated verdict table, T3 split verdict rule, default-state AC handling, and visual truth override.
 
 #### Journey Completeness Rule (MANDATORY)
 
@@ -430,188 +377,19 @@ node "${ARTIFACTS_DIR}/scripts/journey-test.mjs"
 # equivalent: node .artifacts/<KEY>/eval/scripts/journey-test.mjs  (from UXD_PROJECT_ROOT only)
 ```
 
-### Step 6: Screenshot capture rules
+### Step 6: Screenshot capture
 
-Capture at key moments only:
-- New view reached (after navigation settles)
-- Form/modal opened (initial empty state)
-- Form filled (completed, before submission)
-- Input submitted (before=sub-step `a`, after=sub-step `b`)
-- Step failure (what user sees when broken)
-- Verify steps (AFTER scrolling target into view)
+**Read and follow [`references/playwright-rules.md`](../playwright-rules.md)** — it covers screenshot timing, wait selectors, blank detection, duplicate detection, cross-journey uniqueness, final-step capture, and per-step naming conventions.
 
-**Naming:** `screenshots/journey-{N}-step-{M}.png`, exploration: `explore-{persona}-step-{N}.png`
-
-**Scroll before verify:** Always scroll target element into viewport before screenshot.
-
-**Deduplicate:** If same URL and same failure, reuse previous screenshot path with `"screenshot_reused": true`.
-
-**Narrations for designers:** Describe what a reviewer SEES, not DOM internals.
-
-**CRITICAL: Wait for CONTENT (not just containers) before capture.** The generated script MUST include these patterns:
-
-```javascript
-async function screenshotAfterRender(page, path, waitForSelector) {
-  // Wait for the specific CONTENT this step is verifying — not just the container
-  if (waitForSelector) {
-    await page.waitForSelector(waitForSelector, { timeout: 8000 }).catch(() => null);
-  }
-  // Minimum settle time for SPA re-renders and data population
-  await page.waitForTimeout(1500);
-  await page.screenshot({ path, fullPage: false });
-}
-```
-
-**Wait selector rules:**
-- For tables: wait for `tbody tr` or a specific cell, NOT the table container (`#my-table` alone may render empty)
-- For lists: wait for a list item (`ul li`, `.pf-v6-c-list__item`)
-- For forms: wait for an input or label that renders after data loads
-- For page navigation: wait for the primary content heading or data element
-
-WRONG: `waitForSelector: '#model-deployments-table'` (table shell exists immediately, rows load later)
-RIGHT: `waitForSelector: '#model-deployments-table tbody tr'` (waits for actual row data)
-RIGHT: `waitForSelector: '[id^="kueue-status-"]'` (waits for specific feature elements)
-
-If the table remains empty after 8s timeout, that IS the screenshot — it shows the feature isn't rendering, which may be a legitimate FAIL.
-
-**CRITICAL: Detect duplicate screenshots.** The generated script MUST check for identical captures:
-
-```javascript
-import { createHash } from 'crypto';
-
-const screenshotHashes = [];
-
-async function captureAndValidate(page, filepath, waitFor) {
-  await screenshotAfterRender(page, filepath, waitFor);
-  const buffer = readFileSync(filepath);
-  const hash = createHash('md5').update(buffer).digest('hex');
-  
-  if (screenshotHashes.length > 0 && screenshotHashes[screenshotHashes.length - 1] === hash) {
-    console.warn(`WARNING: Screenshot ${filepath} is identical to previous — page may not have rendered new content`);
-  }
-  screenshotHashes.push(hash);
-  return hash;
-}
-```
-
-If ALL screenshots in a journey share the same hash, the journey verdict MUST be FAIL with rationale: "All screenshots identical — page content did not render between steps. Feature may not be functional."
-
-If MORE THAN HALF of the screenshots in a journey share the same hash, the journey verdict MUST be FLAGGED with rationale: "Most screenshots identical — navigation did not meaningfully advance. Evidence quality is insufficient for confident PASS."
-
-**Cross-journey uniqueness (x-ray mode):**
-
-Even in x-ray mode where all journeys may visit the same route, each journey MUST produce at least one UNIQUE screenshot demonstrating the specific AC it tests. If two journeys both navigate to the same page, they must differ in at least one of:
-- Scroll position (one shows top of table, other shows expanded row details)
-- Filter/selection state (one shows all items, other shows filtered subset)
-- Interaction state (one shows hover tooltip, other shows expanded accordion)
-- Element focus (one screenshots a specific row, other screenshots the header)
-
-Do NOT reuse screenshots across journeys with `screenshot_reused: true` unless the step is genuinely verifying the exact same visual element that a prior journey already captured. Convenience reuse (same page, different AC) produces misleading evidence.
-
-**MANDATORY FINAL-STEP CAPTURE:**
-
-Every journey function MUST end with a screenshot capture as the final line before returning. This captures the post-action state (the result of the last assertion). The generated script pattern:
-
-```javascript
-async function runJourney1(page) {
-  // ... navigation and assertions ...
-  // MANDATORY: final screenshot showing post-action state
-  await captureAndValidate(page, 'screenshots/journey-1-step-N.png', null);
-}
-```
-
-**Per-step screenshot uniqueness enforcement:**
-- Each step `M` in journey `N` MUST write to `screenshots/journey-N-step-M.png` (matching its own indices).
-- If a step's `screenshot` field in journey-log.json references a DIFFERENT step's file (e.g., step 4 points to `journey-1-step-3.png`), AND `"screenshot_reused": true` is NOT set on that step, the journey is INVALID and must be re-run with a corrected script.
-- After running `journey-test.mjs`, validate: count screenshot files per journey matches step count. If mismatch, regenerate and re-run before writing journey-log.json.
+Phase A naming convention: `screenshots/journey-{N}-step-{M}.png`, exploration: `explore-{persona}-step-{N}.png`.
 
 ### Step 7: Assign verdicts (EVERY AC must get exactly one verdict)
 
-After all journeys complete, assign verdicts for EVERY AC in the CSV.
+After all journeys complete, assign verdicts for EVERY AC in the CSV. **Read [`references/verdict-policy.md`](../verdict-policy.md)** for the full verdict determination flow, tier rules, default-state AC handling, and cross-check requirements.
 
 **CRITICAL: The CSV is the source of truth for the report.** The report renders verdicts from the CSV, not the journey-log. If the CSV says FAIL but journey-log says PASS, the report shows FAIL.
 
-**Verdict determination flow (do NOT write to CSV until all judgment is complete):**
-
-1. Run Playwright script → collect raw results (element found/not found, visible/invisible)
-2. Apply ALL verdict rules to the raw results:
-   - Visual Truth Rule (screenshots show it working → PASS)
-   - Default-state ACs (visible state matches AC description → PASS)
-   - Source analysis (component-map confirms feature exists → informs verdict)
-   - Error/RBAC detection (no errors on page → PASS for graceful degradation ACs)
-3. Produce a FINAL verdict per AC — this is the verdict AFTER judgment, not the raw Playwright result
-4. Write the FINAL verdict to BOTH:
-   - `evaluation-report.csv` Section 1 (verdicts, rationale, evidence columns)
-   - `journey-log.json` journey verdict fields
-5. **Both files MUST have identical verdicts for every AC.** If you write PASS to journey-log, you MUST also write PASS to the CSV.
-
-**NEVER write raw Playwright results to the CSV.** The CSV gets the final judged verdict only. If Playwright selectors timed out but screenshots show the feature working, the verdict is PASS (Visual Truth Rule) — and PASS goes to both files.
-
 **T3 criteria (backend-only):** These are pre-assigned verdict=PASS at classify time with a note. Do not generate journey steps for T3 ACs — they have no UI surface to test.
-
-**Journey verdict is determined by AC-critical steps only:**
-
-A journey can have steps that directly verify the AC requirement AND extra steps (navigation niceties, project switching, exploration). The verdict is based ONLY on steps that test the actual criterion:
-
-- If all AC-critical steps passed → journey **PASS** (even if a non-critical step like a project dropdown failed)
-- If a non-AC step failed (navigation nicety, exploration) → journey **PASS with note** (the failure is logged but doesn't drag down the verdict)
-- Only **FAIL** the journey if a step that directly tests the AC requirement failed
-
-**AC verdict precedence:**
-
-1. If the journey's AC-critical steps ALL passed → **PASS**
-2. If any AC-critical step FAILED → **FAIL** (with rationale citing the failed step)
-3. If NO journey tested this AC (coverage gap) → **FAIL** with rationale "No journey tested this criterion"
-
-**Tier 3 split verdict rule (prototypes are NOT backends):**
-
-These are PROTOTYPES — they demonstrate UI flows, not backend logic. Under the updated tier system, most ACs that mention backend concepts are classified as **T1** (because their observable effect is a UI change). True T3 ACs are backend-only with zero UI surface and are pre-assigned PASS at classify time.
-
-If an AC was classified T1 despite mentioning backend concepts, evaluate it by its UI manifestation:
-- If the UI demonstrates the feature (button exists, status renders, validation message shows): verdict = **PASS**
-- If the UI portion is missing or broken: verdict = **FAIL**
-- The backend portion is noted but irrelevant to the verdict — the prototype's job is to demonstrate UX
-
-**NEVER FLAGGED for prototype limitations that have a UI demonstration.** These are PASS with notes:
-- "updates within 5 seconds without page refresh" → PASS (UI re-renders from state; WebSocket is backend)
-- "covers both InferenceService and LLMInferenceService" → PASS (UI handles the data model; mock data proves it)
-- "validates inputs" → PASS if the form shows validation UI (backend enforcement is engineering)
-- Real-time behavior, RBAC checks, API integrations → all PASS if the UI demonstrates the flow
-
-Do NOT flag or fail ACs solely because their backend portion cannot be verified. The prototype's job is to demonstrate the UX, not implement the backend. Note backend requirements in the `human_action` column for engineering follow-up.
-
-**Consolidated Verdict Policy (resolves all tier/mode conflicts):**
-
-| Situation | Verdict | Rationale |
-|---|---|---|
-| UI feature exists and works visually (T1) | PASS | Screenshot proves it |
-| UI feature missing or broken (T1) | FAIL | Screenshot shows absence |
-| Needs external reference, ref unavailable (T2) | FLAGGED | Can't compare without ref |
-| Backend-only requirement, no UI surface (T3) | PASS (pre-assigned) | Prototype demonstrates UX; backend is engineering |
-| Subjective quality judgment (T4) | FLAGGED | Human call |
-| Source code confirms feature but screenshot shows nothing | FAIL | Visual truth wins |
-| Hardware API (mic, camera, etc.) | PASS (noted) | Code exists; hardware demo not possible in headless |
-| AC describes absent/disabled state AND current UI matches | PASS | Current visible state satisfies the AC |
-| No errors/403s on page when AC tests graceful degradation | PASS | Absence of errors IS the expected behavior |
-
-**Default-state ACs:** If an AC describes what should happen when a feature is absent or disabled (e.g., "no Kueue indicators when disabled", "normal status with no Kueue indicators", "no error indicators"), and the current prototype state matches that description, the verdict is **PASS** — not FLAGGED. The AC is satisfied by the current visible state. Only FLAG if the AC requires demonstrating a STATE TRANSITION (enabled → disabled) that the prototype can't toggle.
-
-**Example:** AC-3 says "InferenceService with no associated Workload CR displays normal KServe-derived status with no Kueue indicators." If the table has rows showing "Unmanaged" with standard status and no Kueue columns for that row, that IS the AC being satisfied — PASS, not FLAGGED.
-
-**Verdict rules:**
-- Simulated/placeholder responses in prototypes = PASS (UI flow works)
-- URL-fallback-reachable page = FAIL (page exists but is orphaned)
-- Feature exists in source but unreachable via UI = FAIL
-- DOM elements exist but are NOT visually rendered = FAIL (ghost elements)
-
-**Every row in `evaluation-report.csv` Section 1 MUST have a non-empty `verdict` column after this step.** Verify by checking for empty verdict fields. If any AC has an empty verdict, the step is not done — assign a verdict before proceeding.
-
-**BLOCKING CROSS-CHECK — Journey vs CSV Consistency:**
-
-Before writing the CSV, verify that journey-log.json and CSV verdicts are consistent:
-- If `journey-log.json` records a journey verdict as FAIL for an AC, the CSV verdict for that AC MUST also be FAIL (or FLAGGED).
-- If you want to PASS an AC whose journey failed, you MUST have visual evidence (a screenshot showing the feature works). Source-code-only justification is NEVER sufficient for T1 criteria.
-- If identical screenshots exist across all steps of a journey (same visual state), that journey cannot provide PASS evidence — the feature was not demonstrated visually.
 
 Update `evaluation-report.csv` Section 1 with verdicts, rationale, evidence, fix_action, fix_file.
 
@@ -621,9 +399,9 @@ Update `evaluation-report.csv` Section 1 with verdicts, rationale, evidence, fix
 node ${CLAUDE_SKILL_DIR}/scripts/validate-verdicts.js .artifacts/<KEY>/eval/
 ```
 
-If this script exits with code 1 (violations found), you MUST fix the CSV before proceeding to Step 7. For each violation:
-- If the journey FAIL was legitimate (feature not demonstrated visually), change CSV verdict to FAIL or FLAGGED.
-- If the journey FAIL was a locator/timing issue but the feature IS visible in screenshots, keep CSV as PASS and update the journey-log.json entry to reflect the corrected verdict with rationale.
+If this script exits with code 1 (violations found), fix the CSV before proceeding. For each violation:
+- If the journey FAIL was legitimate (feature not demonstrated visually), change CSV verdict to FAIL or FLAGGED
+- If the journey FAIL was a locator/timing issue but the feature IS visible in screenshots, keep CSV as PASS and update the journey-log.json entry to reflect the corrected verdict with rationale
 
 ### Step 8: Write journey-log.json
 
@@ -721,83 +499,5 @@ For each FAIL verdict, write an entry to `.artifacts/<KEY>/eval/refinement-sugge
 ## Rules
 
 - NEVER use `page.goto` as a silent fallback that marks a step PASS
-- Every navigation must happen via visible UI elements (click-first)
 - If ALL journeys fail at step 1 (entry point unreachable), report "prototype unreachable" and exit
-- Use `domcontentloaded` + explicit waits for SPAs (not `networkidle`)
-- Modals/drawers are valid parts of a flow — continue the journey within them
-- Post-action waits before screenshots (500ms minimum after state changes)
-- Scroll chat containers to bottom before chat screenshots
-
-### CRITICAL: Verify VISUAL presence, not just DOM presence
-
-**NEVER use `locator.count() > 0` alone as proof that a feature works.** Elements can exist in the DOM but be visually invisible (zero height, overflow hidden, collapsed parent, CSS display issues). The screenshot is what the USER sees — if the screenshot shows an empty table but DOM has rows, that is a FAIL.
-
-For every verify step, the generated script MUST check BOTH:
-
-```javascript
-const elements = page.locator('tbody tr');
-const domCount = await elements.count();
-const firstVisible = domCount > 0 && await elements.first().isVisible().catch(() => false);
-
-// ONLY pass if elements are both present AND visible
-const result = (domCount > 0 && firstVisible) ? 'success' : 'fail';
-const narration = !firstVisible && domCount > 0
-  ? `Found ${domCount} elements in DOM but they are NOT visually rendered — possible CSS/rendering issue`
-  : firstVisible
-    ? `Found ${domCount} visible elements`
-    : 'No elements found';
-```
-
-This prevents the "ghost elements" problem where Playwright reports success but the screenshot shows an empty page. The verdict must match what the screenshot shows — if a human looking at the screenshot would say "I don't see it," the verdict is FAIL regardless of DOM state.
-
-### NEVER use page.evaluate() or .textContent() as proof of visibility
-
-`page.evaluate(() => document.querySelector(...).textContent)` reads text from INVISIBLE elements. PatternFly's `<Tr isExpanded={false}>` renders rows with zero height — they have text content in the DOM but are invisible to users.
-
-**Banned patterns:**
-```javascript
-// BAD — reads invisible DOM text
-const text = await page.evaluate(() => document.querySelector('td').textContent);
-if (text) result = 'success'; // WRONG — element may be invisible
-
-// BAD — counts elements without visibility check
-const count = await page.locator('tr').count();
-if (count > 0) result = 'success'; // WRONG — rows may have zero height
-```
-
-**Required pattern:**
-```javascript
-// GOOD — Playwright's isVisible() checks computed CSS
-const row = page.locator('tbody tr').first();
-const visible = await row.isVisible().catch(() => false);
-if (visible) {
-  const text = await row.textContent(); // Safe — element IS visible
-  result = 'success';
-}
-```
-
-The generated script MUST use Playwright's `.isVisible()` before treating any element as present. If the script uses `page.evaluate()` for verification, it MUST also confirm visibility with Playwright's API.
-
-### Locator Strategy Hierarchy
-
-When selecting elements for interaction or verification, prefer strategies higher in this list. Use lower strategies ONLY when those above are unavailable in the page:
-
-1. **data-testid attribute:** `page.locator('[data-testid="deploy-agent-btn"]')`
-2. **Role + accessible name:** `page.getByRole('button', { name: 'Deploy agent' })`
-3. **Row-scoped selector:** `page.locator('tr').filter({ hasText: 'my-agent' }).locator('button')`
-4. **Text content:** `page.getByText('Deploy agent', { exact: true })`
-5. **CSS class (PF-prefixed):** `page.locator('.pf-v6-c-button.pf-m-primary')`
-6. **Element ID (LAST RESORT):** `page.locator('#deploy-btn')`
-
-**Table/list-specific rule:** When verifying content in a table or list, ALWAYS scope to the target row first. NEVER use bare ID selectors for elements that appear in repeated rows.
-
-```javascript
-// WRONG — ID may repeat across rows or match wrong row
-const status = page.locator('#agent-status');
-
-// RIGHT — scope to the specific row first
-const row = page.locator('tr').filter({ hasText: 'my-agent-name' });
-const status = row.locator('[data-label="Status"]');
-```
-
-**Locator retry on timeout:** If a locator times out (30s), try the next strategy in the hierarchy before failing the step. Log the fallback as `"locator_fallback": true` in the journey step metadata.
+- See [`references/playwright-rules.md`](../playwright-rules.md) for visual presence verification, banned patterns, and locator strategy hierarchy

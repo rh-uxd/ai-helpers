@@ -1,0 +1,38 @@
+{
+  "depth": "deep",
+  "prototype_url": "http://localhost:9204/deployments",
+  "evaluated_at": "2026-08-01T10:00:00.000Z",
+  "persona_selection": {
+    "method": "target-audience",
+    "personas": ["alex-junior", "alex-senior"]
+  },
+  "journeys": [
+    {
+      "id": "journey-1",
+      "title": "View scheduling status",
+      "verdict": "PASS",
+      "verdict_detail": "All states visible",
+      "ac_ids": ["AC-1"],
+      "steps": [
+        {
+          "step": 1,
+          "action": "Navigate to deployments",
+          "result": "success",
+          "screenshot": "screenshots/journey-1-step-1.png",
+          "narration": "Table loads correctly"
+        }
+      ]
+    }
+  ],
+  "usability_dimensions": [
+    { "id": "workflow-continuity", "name": "Workflow Continuity & Integrity", "composite_score": 2.5 },
+    { "id": "system-status", "name": "System Status Visibility", "composite_score": 3.0 }
+  ],
+  "overall_score": 5.5,
+  "max_score": 6,
+  "personas_evaluated": ["alex-junior", "alex-senior"],
+  "persona_overlays": [
+    { "persona": "alex-junior", "task_index": 0, "dimension_id": "workflow-continuity", "score": 2, "rationale": "Clear flow" },
+    { "persona": "alex-senior", "task_index": 0, "dimension_id": "workflow-continuity", "score": 3, "rationale": "Smooth" }
+  ]
+}

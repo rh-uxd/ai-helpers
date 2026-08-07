@@ -1,0 +1,11 @@
+{
+  "key": "TEST-REPORT",
+  "title": "Test Feature for Report Rendering",
+  "ac_list": [
+    { "id": "AC-1", "text": "Status column displays scheduling states", "source": "jira" },
+    { "id": "AC-2", "text": "No indicators when disabled", "source": "jira" }
+  ],
+  "feature_context": {
+    "background": "Test feature for validating report rendering"
+  }
+}

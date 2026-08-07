@@ -77,6 +77,7 @@ function computePatience(trace, patienceLevel) {
     else if (event === 'dead_end') patience += rates.dead_end;
     else if (event === 'success' && patience < 100) patience += recovery;
     patience = Math.max(0, Math.min(100, patience));
+    step.patience = patience;
   }
   return patience;
 }

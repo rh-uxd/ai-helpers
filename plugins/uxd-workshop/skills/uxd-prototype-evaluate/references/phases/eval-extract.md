@@ -1,6 +1,6 @@
 # eval-extract
 
-Phase 1 of the eval pipeline. Gathers all context needed for evaluation from Jira, the RFE, the workspace, and decision history. Writes structured JSON artifacts that downstream skills read.
+Gathers all context needed for evaluation from Jira, the RFE, the workspace, and decision history. Writes structured JSON artifacts that downstream skills read.
 
 ## Phased Execution
 
@@ -56,17 +56,26 @@ if .artifacts/<KEY>/eval/extract-state.json exists AND --force-extract NOT set:
   ticket = mcp__atlassian__getJiraIssue(issueIdOrKey: "<KEY>", fields: ["description"])
   current_hash = MD5(ticket.description)
   
-  if ac_content_hash == current_hash:
-    echo "Using cached extract (ACs unchanged). Pass --force-extract to re-fetch."
+  # Also hash the MR diff stats if workspace provided (prototype code may have changed)
+  if --workspace exists:
+    diff_hash = MD5(git diff origin/${BASE_BRANCH}...HEAD --stat in workspace)
+  else:
+    diff_hash = ""
+  
+  combined_hash = MD5(current_hash + diff_hash)
+  stored_hash = ac_content_hash from extract-state.json
+  
+  if stored_hash == combined_hash:
+    echo "Using cached extract (ACs + code unchanged). Pass --force-extract to re-fetch."
     EXIT EARLY — skip Steps 1–9, reuse existing artifacts
   else:
-    echo "Ticket description changed since last extract — re-extracting."
+    echo "Ticket or prototype changed since last extract — re-extracting."
     Proceed with full extraction
 else:
   Proceed with full extraction (no cache or forced)
 ```
 
-The cache stays valid as long as the ticket's acceptance criteria haven't changed, even if the ticket was updated (status change, comments added, etc.). This prevents unnecessary re-extraction when eval-iterate adds comments to the ticket.
+The cache stays valid as long as the ticket's acceptance criteria AND prototype code haven't changed. This prevents unnecessary re-extraction when eval-iterate adds comments to the ticket, but correctly invalidates when prototype code changes without a Jira update.
 
 ### Step 1: Fetch Jira Story
 
@@ -78,11 +87,7 @@ mcp__atlassian__getJiraIssue(
 )
 ```
 
-Fallback if MCP unavailable:
-
-```bash
-python3 scripts/fetch_rfe.py <KEY> --fields summary,description,acceptance_criteria,issuelinks --markdown
-```
+Atlassian MCP is **required**. The pipeline will fail at preflight if not configured. There is no offline fallback — Jira data is needed for AC extraction.
 
 **Cache raw ticket fields for enrichment phase:** Save `parent` and `issuelinks` from the Jira response into `extract-state.json` as `raw_parent` and `raw_issuelinks`. The enrichment phase (Steps 6-7) needs these to discover the Outcome ticket without re-fetching from Jira.
 
@@ -117,7 +122,7 @@ Scan the STRAT and RFE descriptions (whichever is available) for these sections.
 - **Background** — Why this feature exists, what problem it solves
 - **Problem Statement** — The user pain point being addressed
 - **User Stories** — "As a [role], I want to [goal]" blocks
-- **UI Enhancements / Proposed Solution** — What the prototype should demonstrate (new columns, status indicators, tooltips, panels, etc.)
+- **UI Enhancements / Proposed Solution** — What the prototype should demonstrate (new columns, status indicators, tooltips, panels, etc.). **ONLY extract this when the ticket has a section explicitly titled** "UI Enhancements", "Proposed Solution", "UI Changes", "Design Changes", or "Visual Design". Do NOT extract generic "In scope", "Requirements", or "Scope" sections here — those are already covered by the ACs themselves. **Preserve full structure**: if the section contains headings, sub-sections, and bulleted lists with bold labels, capture the entire block verbatim including markdown formatting (headings, bullets, bold, inline code). Do NOT flatten structured content into a single sentence. Set to `null` if no qualifying section exists.
 
 Store these in `extract-state.json` as `feature_context`:
 ```json
@@ -126,7 +131,7 @@ Store these in `extract-state.json` as `feature_context`:
     "background": "<verbatim or null>",
     "problem_statement": "<verbatim or null>",
     "user_stories": ["<verbatim story 1>", "<verbatim story 2>"],
-    "ui_enhancements": "<verbatim or null>",
+    "ui_enhancements": "<verbatim markdown or null — preserve headings, bullets, bold labels>",
     "source_ticket": "<key of ticket these were extracted from>"
   }
 }
@@ -276,9 +281,11 @@ Write to `.artifacts/<KEY>/eval/outcome-context.json`.
 
 ```bash
 cd <workspace-path>
-BASE=$(git merge-base HEAD origin/3.5 2>/dev/null || git merge-base HEAD origin/main 2>/dev/null || echo "")
-git diff $BASE...HEAD --name-only > /tmp/changed-files.txt
-git diff $BASE...HEAD --stat > /tmp/diff-stats.txt
+# Base branch from product overlay (config/product-overlay.yaml → git.base_branch), default: main
+BASE_BRANCH=$(grep 'base_branch:' "${CLAUDE_SKILL_DIR}/config/product-overlay.yaml" 2>/dev/null | awk '{print $2}' | tr -d '"' || echo "main")
+BASE=$(git merge-base HEAD "origin/${BASE_BRANCH:-main}" 2>/dev/null || git merge-base HEAD origin/main 2>/dev/null || echo "")
+git diff $BASE...HEAD --name-only > /tmp/eval-${KEY}-changed-files.txt
+git diff $BASE...HEAD --stat > /tmp/eval-${KEY}-diff-stats.txt
 ```
 
 Categorize changes: new pages/components, modified components, route/nav changes, feature flag changes, style changes, test changes.
@@ -289,7 +296,7 @@ Write to `.artifacts/<KEY>/eval/mr-delta.json`.
 
 ### Step 8b: Select Personas
 
-**Persona selection (deterministic):** Read `config/persona-mapping.json` (relative to the eval skill root). Extract `target_audience_text` from the ticket description or user stories. Match against `mappings[].audience_keywords` (case-insensitive substring match). Select the first matching entry's `personas[]`. Always pick one junior + one senior when the mapping provides both. Validate every selected ID exists in `valid_ids` — if an ID is not in the list, log a warning and skip it (prevents silent file-read failures downstream in eval-usability). If no keywords match, default to `["alex-junior", "alex-senior"]` with reasoning `"no audience keywords matched, defaulting to developer personas"`.
+**Persona selection (deterministic):** Use the plugin persona catalog at `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` (fallback: `${CLAUDE_SKILL_DIR}/../../knowledge/personas/catalog.yaml`). Extract `target_audience_text` from the ticket description or user stories. Match against each persona's `id`, `role`, and `aliases` (case-insensitive substring match). Select the first matching entry. Always pick one junior + one senior when the catalog provides both via overlays. Validate every selected ID exists in the catalog — if an ID is not found, log a warning and skip it (prevents silent file-read failures downstream in eval-usability). If no match, use `defaults.pair` from the catalog with reasoning `"no audience keywords matched, using catalog defaults"`. See `eval-usability-personas.md` for the full persona resolution procedure.
 
 ### Step 9: Write extract-state.json
 
@@ -321,7 +328,7 @@ Assemble all extracted data into the handoff artifact:
     { "id": "journey-1", "title": "...", "persona": "...", "source": "...", "ac_ids": ["AC-1"], "expected_path": [] }
   ],
   "breadcrumb": { "outcome": null, "rfe": null, "strat": {}, "prototype": null, "mr": null },
-  "persona_selection": { "selected": ["<from config/persona-mapping.json>"], "target_audience_text": "<from ticket>", "target_audience_source": "<ticket key>", "reasoning": "<which keywords matched>" },
+  "persona_selection": { "selected": ["<from persona catalog>"], "target_audience_text": "<from ticket>", "target_audience_source": "<ticket key>", "reasoning": "<which keywords/aliases matched>" },
   "rfe_key": "<key or null>",
   "decision_context": { "has_decisions": false, "deliberate_descopes": [] },
   "raw_parent": "<parent field from Jira response, cached for enrichment phase>",

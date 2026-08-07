@@ -1,6 +1,6 @@
 # eval-classify
 
-Phase 2a of the eval pipeline. Classifies each acceptance criterion into a tier that determines *how* to evaluate it, and initializes the evaluation CSV with headers and tier assignments.
+Classifies each acceptance criterion into a tier that determines *how* to evaluate it, and initializes the evaluation CSV with headers and tier assignments.
 
 ## Inputs
 
@@ -14,6 +14,7 @@ Phase 2a of the eval pipeline. Classifies each acceptance criterion into a tier 
 | File | Description |
 |------|-------------|
 | `.artifacts/<KEY>/eval/evaluation-report.csv` | Section 1 initialized with headers + tier assignments (no verdicts yet) |
+| `.artifacts/<KEY>/eval/tier-overrides.json` | T3 misclassification guard overrides (from `classify-ac-tier.js`) |
 
 ## Tier Definitions
 

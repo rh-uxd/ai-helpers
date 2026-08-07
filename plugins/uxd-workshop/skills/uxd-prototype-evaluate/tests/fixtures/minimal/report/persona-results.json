@@ -1,0 +1,25 @@
+[
+  {
+    "persona": "alex-junior",
+    "task_index": 1,
+    "task": "Check scheduling status",
+    "outcome": "completed",
+    "would_complete": true,
+    "abandoned": false,
+    "confusion_events": 0,
+    "patience_start": 100,
+    "patience_end": 100,
+    "trace": [
+      {
+        "step": 1,
+        "what_i_see": "Deployments table",
+        "what_im_thinking": "I can see the scheduling columns",
+        "action": "Read table data",
+        "confidence": "high",
+        "patience": 100,
+        "evidence_for_acs": ["AC-1"],
+        "screenshots": ["screenshots/persona-alex-junior-task-1-step-1.png"]
+      }
+    ]
+  }
+]

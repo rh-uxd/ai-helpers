@@ -1,6 +1,6 @@
 # eval-report
 
-Phase 4 of the eval pipeline. Renders the final HTML report from JSON/CSV artifacts produced by earlier phases.
+Renders the final HTML report from JSON/CSV artifacts produced by earlier phases.
 
 ## Inputs
 
@@ -65,6 +65,7 @@ This script:
 - Embeds screenshots as base64 into the HTML (reads from `screenshots/` directory, matches paths in journey-log steps)
 - Applies the template from `templates/evaluation-report.html`
 - Writes the output to `.artifacts/<KEY>/eval/evaluation-report.html`
+- Also writes `evaluation-summary.json` alongside the HTML report — an agent-readable summary with AC verdicts, usability scores, counts, and iteration state.
 
 ### Step 3: Log the run
 

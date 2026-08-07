@@ -1,16 +1,25 @@
 ---
 name: uxd-prototype-evaluate
 description: >-
-  Evaluate a running prototype against Jira acceptance criteria with Playwright
-  (x-ray AC validation + optional fix loop), then run persona-based usability
-  walkthroughs and produce an HTML evidence report. Use when validating a
-  prototype against a ticket, running usability walkthroughs, or generating an
-  evaluation evidence report.
+  Evaluate a running prototype against a Jira ticket's acceptance criteria,
+  automatically fix what fails, then run persona-based usability walkthroughs.
+  Produces an HTML evidence report with screenshots, scores, and findings.
+  Use when you want to validate a prototype, check usability, or generate
+  evidence for an MR review.
 ---
 
 # Evaluate Prototype
 
 Two-phase eval pipeline. Phase A (x-ray) validates acceptance criteria with full code access, optionally fixing until ACs pass. Phase B (discovery) runs per-persona Playwright walkthroughs to score usability. Produces a self-contained HTML report with screenshots, think-aloud traces, and AC verdicts.
+
+## Workflow
+
+```
+/uxd-prototype-create  →  /uxd-prototype-evaluate  →  /uxd-prototype-publish
+   Build prototype          Validate ACs + usability      Push to MR / Pages
+```
+
+Each skill reads the previous skill's artifacts from `.artifacts/<KEY>/`. You can re-run evaluate after making changes.
 
 Phase procedures live in `${CLAUDE_SKILL_DIR}/references/phases/` — read and follow each file when the orchestrator says to execute that phase. Do not skip phases unless a flag explicitly disables them.
 
@@ -30,22 +39,12 @@ All **eval** runtime outputs live under the **consumer project** at `.artifacts/
 .artifacts/eval/                  # cross-key eval namespace (run-log, pain-leaderboard)
 ```
 
-**At the start of every run, pin absolute paths once and reuse them:**
+**Path pinning** is handled by `scripts/pipeline-setup.sh` and `references/orchestration.md`. The canonical setup runs once at pipeline start and produces these environment variables:
 
-```bash
-# Consumer project = directory where the user invoked the skill (usually git toplevel).
-# Never use ${CLAUDE_SKILL_DIR} or a nested clone under .artifacts/<KEY>/code as PROJECT_ROOT.
-export UXD_PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-# If git toplevel is inside the skill install or under .artifacts/*/code, use the
-# invocation cwd instead (or: node -e "console.log(require('${CLAUDE_SKILL_DIR}/scripts/resolve-root').resolveProjectRoot())")
-
-export KEY_DIR="${UXD_PROJECT_ROOT}/.artifacts/<KEY>"
-export ARTIFACTS_DIR="${KEY_DIR}/eval"
-mkdir -p "${ARTIFACTS_DIR}/scripts" "${ARTIFACTS_DIR}/screenshots"
-
-# Persist for the rest of the run (survives context compression)
-python3 "${CLAUDE_SKILL_DIR}/scripts/eval_state.py" init "${ARTIFACTS_DIR}/eval-state.yaml" \
-  artifacts_dir="${ARTIFACTS_DIR}" project_root="${UXD_PROJECT_ROOT}" key=<KEY> ...
+```
+UXD_PROJECT_ROOT  — consumer project root (never the skill install, never a nested clone)
+KEY_DIR           — ${UXD_PROJECT_ROOT}/.artifacts/<KEY>
+ARTIFACTS_DIR     — ${KEY_DIR}/eval (all per-key eval outputs)
 ```
 
 **Rules:**
@@ -58,6 +57,15 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/eval_state.py" init "${ARTIFACTS_DIR}/eval-
 6. Create-owned siblings (`decisions/`, `prototype-bar.json`, …) stay at `${KEY_DIR}`. Sync Prototype Bar with `--artifacts ${KEY_DIR}`, not `${ARTIFACTS_DIR}`.
 7. Node helpers resolve paths via `scripts/resolve-root.js` (honors `UXD_PROJECT_ROOT`). Prefer passing absolute `${ARTIFACTS_DIR}` into those scripts.
 
+BAD: `cd .artifacts/<KEY>/code && echo "result" > eval/report.csv` — relative write after `cd` lands in the wrong directory.
+
+**`--fresh` rebuttals:**
+
+| Excuse | Why it's wrong |
+|---|---|
+| "I'll just `rm -rf .artifacts`" | Deletes cross-key run-log and leaderboard. Other evals lose history. |
+| "I'll delete the key root" | Wipes create-owned artifacts (decisions, prototype-bar). Publish breaks. |
+
 In phase docs, `.artifacts/<KEY>/eval/…` means `${UXD_PROJECT_ROOT}/.artifacts/<KEY>/eval/…` — always resolve against the pinned project root. Create inputs at `.artifacts/<KEY>/…` (no `eval/`) stay at the key root.
 
 ## Prerequisites
@@ -65,31 +73,36 @@ In phase docs, `.artifacts/<KEY>/eval/…` means `${UXD_PROJECT_ROOT}/.artifacts
 Install Playwright deps from the skill directory, then return to the project root:
 
 ```bash
-# Remember project root BEFORE leaving it
-export UXD_PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# Remember project root BEFORE leaving it.
+# resolve-root.js handles non-git dirs, nested clones, and skill-install exclusion.
+export UXD_PROJECT_ROOT="$(node -e "console.log(require('${CLAUDE_SKILL_DIR}/scripts/resolve-root').resolveProjectRoot())" 2>/dev/null || git rev-parse --show-toplevel 2>/dev/null || pwd)"
 
 cd "${CLAUDE_SKILL_DIR}"
 npm install
 npx playwright install chromium
 cd "${UXD_PROJECT_ROOT}"
-
-# Optional — personas + PatternFly consistency guidelines (VPN may be required)
-# Bootstrap into the consumer project .context/, not the skill install
-bash "${CLAUDE_SKILL_DIR}/scripts/bootstrap-usability-testing.sh"
-bash "${CLAUDE_SKILL_DIR}/scripts/bootstrap-consistency-checker.sh"
 ```
 
-**Personas:** Phase B must use the plugin catalog at `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` (role IDs, display names, audience map) and overlays at `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml` (experience, accessibility, regulation, team size). Optional deep behavioral YAML still comes from `.context/usability-testing/` when bootstrapped.
+Context repos (`.context/consistency-checker/` and `.context/usability-testing/`) are **bootstrapped automatically** on first pipeline run via `pipeline-setup.sh`. VPN access to `gitlab.cee.redhat.com` is required for full fidelity; the pipeline degrades gracefully if unreachable.
 
-**Consistency:** `.context/consistency-checker/` when bootstrapped.
+**Personas:** Phase B must use the plugin catalog at `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` (role IDs, display names, audience map) and overlays at `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml` (experience, accessibility, regulation, team size). Deep behavioral YAML comes from `.context/usability-testing/` (cloned automatically by the bootstrap script).
+
+**Consistency:** `.context/consistency-checker/` (cloned automatically by the bootstrap script).
 
 Edit `${CLAUDE_SKILL_DIR}/config/product-overlay.yaml` for product-specific Jira/repo settings.
+
+**Claude Code permissions (first run only):** The eval pipeline shells out to ~20 bundled Node/bash scripts and Playwright. Without auto-approve, Claude Code will prompt for each one. Ask the user:
+
+> This eval pipeline runs many scripts (Playwright, validators, report rendering). Would you like me to add auto-approve permissions to your project's `.claude/settings.local.json` so you won't be prompted for each script?
+
+If yes, read the permissions list from the README's "Claude Code permissions" section and write them to `.claude/settings.local.json` (creating the file if needed). This is a one-time setup per project clone. If the user declines, proceed — each script will prompt individually.
 
 ## Usage
 
 ```
 /uxd-prototype-evaluate PROJ-298 http://localhost:3000 --workspace=/path/to/prototype
 /uxd-prototype-evaluate PROJ-298 http://localhost:4200 --max-iterations=2
+/uxd-prototype-evaluate PROJ-298 https://pages.example.com/mr-42/ https://gitlab.example.com/group/repo/-/merge_requests/42
 /uxd-prototype-evaluate review PROJ-298
 ```
 
@@ -98,15 +111,46 @@ Edit `${CLAUDE_SKILL_DIR}/config/product-overlay.yaml` for product-specific Jira
 | Input | Example | Required | Default |
 |-------|---------|----------|---------|
 | Jira story key | `PROJ-298` | Yes | — |
-| Prototype URL | `http://localhost:3000` | Yes | — |
+| Prototype URL | `http://localhost:3000` or `https://pages.example.com/mr-42/` | Conditional | — |
+| MR URL | `https://gitlab.example.com/group/repo/-/merge_requests/42` | No | — |
 | `--workspace` | Path to prototype repo | No | — |
 | `--max-iterations` | Number | No | 3 |
-| `--depth` | `deep` | No | `deep` |
-| `--usability` | `deep` | No | `deep` |
 | `--no-iterate` | flag | No | Off |
 | `--no-fix` | flag | No | Off |
 | `--reset` | flag | No | Off (evaluate current state; when set, hard-resets workspace to origin branch HEAD before eval) |
 | `--fresh` | flag | No | Off (when set, deletes `.artifacts/<KEY>/eval/` only — never the key root, never `.artifacts/eval/`) |
+| `--no-report` | flag | No | Off (skips HTML report; prints compact summary in chat instead — run `/uxd-prototype-evaluate review <KEY>` later to generate the full report from cached artifacts) |
+
+**Prototype URL resolution:** The pipeline handles three source types automatically:
+
+| Source type | Example | Behavior |
+|-------------|---------|----------|
+| Remote (GitLab Pages MR) | `https://rhoai-5171de.pages.redhat.com/mr-174/` | Probed with curl; used directly if reachable (2xx/3xx) |
+| Local SPA (React/Angular) | `http://localhost:3000` or auto-started | If URL unreachable + workspace has `dist/index.html` with SPA indicators, starts `sirv --single` |
+| Local static | `http://localhost:3000` or auto-started | If URL unreachable + workspace has `dist/index.html` without SPA indicators, starts `sirv` |
+
+<!-- Future: HTML prototype from uxd-prototype-create
+| Standalone HTML | (auto-detected) | Single HTML file from prototype-create; served with sirv from workspace root |
+When prototype-create integration is finalized, add detection for .html at workspace root without dist/. -->
+
+**Requirement:** Either a reachable URL OR `--workspace` pointing to a repo with a built `dist/` directory. If neither is available, the pipeline fails with a clear error at setup.
+
+**Remote-only advisory (BLOCKING):** When the user provides only a hosted prototype URL with no `--workspace` and no MR URL, PAUSE and warn before proceeding:
+
+> No source code path or MR link provided. Without source access:
+> - No fix loop (can't patch code)
+> - No source-mode consistency checks
+> - No component-map for data-testid selectors
+> - Heuristic click-through navigation only
+>
+> Provide `--workspace` or an MR URL for the full evaluation.
+> Proceed with remote-only? [y/N]
+
+Only proceed after user confirms. This prevents silent degradation.
+
+The resolved URL is written to `eval-state.yaml` as `prototype_url` and exported as `PROTOTYPE_URL` for Playwright scripts. It may differ from the user-provided URL when local fallback activates.
+
+**Hybrid source mode:** When an MR URL is provided alongside a remote prototype URL, `pipeline-setup.sh` clones the MR source into `.artifacts/<KEY>/code/` and sets `source_available=true` in `eval-state.yaml`. This gives the pipeline read-only access to router configs, component files, and `data-testid` attributes for informed navigation — even though Playwright navigates via the remote URL. The clone is not built or served; it provides route discovery and component-map data that would otherwise be unavailable for remote prototypes.
 
 ## Pipeline Flow (Two-Phase)
 
@@ -195,13 +239,30 @@ After rendering the report, sync the Prototype Bar with `--artifacts ${KEY_DIR}`
 
 ## Error Handling
 
-- **Prototype URL unreachable:** Wait 10s, retry once. If still down, stop with error.
+- **Prototype URL unreachable:** Falls back to local serving from workspace `dist/`. If no workspace or no `dist/`, fails with clear error at setup. See `scripts/resolve-prototype-url.sh`.
 - **eval-fix produces no changes:** Stop Phase A — more iterations won't help. Proceed to Phase B.
 - **Dev server crashes after fix:** Stop Phase A, note which files may have caused it. Proceed to Phase B.
-- **Missing .context/ directories:** Phase A runs without consistency. Phase B skipped if usability-testing missing.
+- **Missing .context/ directories (VPN down):** Phase A runs in degraded mode (pf-css-token-check fallback). Phase B still runs using the bundled plugin persona catalog; deep behavioral YAML unavailable until VPN reconnects.
 
 ## Review Mode
 
 When the user asks to review prior results (`/uxd-prototype-evaluate review <KEY>` or conversational "show me the eval for …"):
 
 Read `${CLAUDE_SKILL_DIR}/references/phases/eval-review.md` and follow that procedure. Do not re-run Playwright unless the user asks to re-run.
+
+## What's Next
+
+After evaluation completes, the report is at `.artifacts/<KEY>/eval/evaluation-report.html`.
+
+| Result | Next step |
+|--------|-----------|
+| All ACs pass, usability acceptable | `/uxd-prototype-publish` — push to MR or Pages |
+| Minor issues (FLAGGED items) | Review the report, decide per-item, then publish |
+| Major failures or low usability | `/uxd-prototype-create` with eval findings as context |
+| Re-run after changes | `/uxd-prototype-evaluate <KEY> <URL>` again |
+
+The agent will present a summary with these options after each run. You can also say:
+- **"Fix [issue]"** — apply a specific fix
+- **"Tell me more about [finding]"** — get details on a finding
+- **"Re-run eval"** — re-evaluate after changes
+- **"Looks good"** — mark the eval as accepted

@@ -11,13 +11,20 @@ runner:
   type: claude-code
 
 models:
-  skill: claude-sonnet-4-6
-  judge: claude-sonnet-4-6
+  skill: claude-sonnet-5
+  judge: claude-sonnet-5
 
 permissions:
   allow: []
   deny:
     - "mcp__*"
+
+mlflow:
+  experiment: uxd-prototype-publish
+  tracking_uri: https://mlflow-ux-eval.apps.rosa.uxdpoc7.9hji.p3.openshiftapps.com
+  tags:
+    team: uxd
+    pipeline: prototype-evaluator
 
 dataset:
   path: cases

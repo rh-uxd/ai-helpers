@@ -1,17 +1,26 @@
 # eval-consistency
 
-Runs PatternFly design consistency checks against the prototype using vendored guidelines from `.context/consistency-checker/` (bootstrapped via CONSISTENCY_CHECKER_REPO).
+Runs PatternFly design consistency checks against the prototype using vendored guidelines from `.context/consistency-checker/` (cloned automatically by `bootstrap-consistency-checker.sh`).
 
-**Skip this entire skill if `.context/consistency-checker/` does not exist.** Write `{"skipped": true, "reason": "consistency-checker not bootstrapped"}` to `consistency-report.json` and exit.
+**Before skipping — verify the checker is truly unavailable:**
+
+1. Resolve the project root: `PROJECT_ROOT="${UXD_PROJECT_ROOT:-$(node -e "console.log(require('${CLAUDE_SKILL_DIR}/scripts/resolve-root').resolveProjectRoot())" 2>/dev/null || git rev-parse --show-toplevel 2>/dev/null || pwd)}"`
+2. Check: `ls ${PROJECT_ROOT}/.context/consistency-checker/guidelines/*.md 2>/dev/null | wc -l`
+3. If count > 0: the checker IS bootstrapped. Proceed to Step 1. Do NOT write a skip report.
+4. If count == 0: run `bash "${CLAUDE_SKILL_DIR}/scripts/bootstrap-consistency-checker.sh"`, then re-check.
+5. Only write `{"skipped": true, "reason": "consistency-checker not bootstrapped"}` if the re-check STILL finds zero guideline `.md` files.
+
+"VPN unreachable" is NOT a valid skip reason when guideline files already exist on disk from a prior clone.
 
 ### Degraded Mode (no consistency-checker, workspace available)
 
-If `.context/consistency-checker/` is missing BUT `--workspace` is provided, run a lightweight fallback before writing the skipped report:
+If `.context/consistency-checker/` is missing after the bootstrap retry BUT `--workspace` is provided, run a lightweight fallback before writing the skipped report:
 
-1. Invoke the `pf-css-token-check` skill against the workspace MR delta files (new + modified CSS/SCSS/TSX files only).
-2. Capture its output as `consistency-report.json` with `"source": "pf-css-token-check-fallback"` and `"degraded": true`.
-3. This provides basic PatternFly token compliance (hardcoded colors, spacing, typography) without the full guideline set.
-4. Do NOT run visual mode in degraded mode — only source-level token checks.
+1. Check if the `pf-css-token-check` skill is available (skill invocation does not return "unknown skill"). If unavailable, skip to step 5. **Note:** `pf-css-token-check` is part of the `pf-design-audit` plugin (`plugins/patternfly/pf-design-audit/`), which must be installed separately.
+2. Invoke `pf-css-token-check` against the workspace MR delta files (new + modified CSS/SCSS/TSX files only).
+3. Capture its output as `consistency-report.json` with `"source": "pf-css-token-check-fallback"` and `"degraded": true`.
+4. This provides basic PatternFly token compliance (hardcoded colors, spacing, typography) without the full guideline set. Do NOT run visual mode in degraded mode — only source-level token checks.
+5. If `pf-css-token-check` is not available, write `{"skipped": true, "reason": "consistency-checker not bootstrapped, pf-css-token-check plugin unavailable"}` to `consistency-report.json` and exit.
 
 This ensures that eval-fix still receives actionable suggestions for the most common violations (hardcoded hex values, missing design tokens) even when the full checker is unavailable.
 
@@ -155,7 +164,7 @@ The script captures screenshot + DOM with bounding boxes. Feed this structured d
 
 **Fallback:** If visual_analyze.py is not available, analyze the raw journey screenshots directly.
 
-1. Collect unique screenshots from `journey-log.json` (both `journeys[].steps[].screenshot` and `exploration[].steps[].screenshot`). Also include Phase B persona screenshots if available (`screenshots/persona-*.png`).
+1. Collect unique screenshots from `journey-log.json` (`journeys[].steps[].screenshot`). Also include Phase B persona screenshots if available (`screenshots/persona-*.png`).
 2. For each screenshot, check against applicable visual guidelines (from matched categories in Step 1a).
 3. Each finding records: `screenshot`, `journey`, `step`, `guideline_id`, `guideline_title`, `category`, `severity`, `verdict` (`VIOLATION`), `description`, `suggestion`.
 4. **Deduplicate:** If the same violation appears on multiple screenshots, collapse to one finding with a `seen_on` array.

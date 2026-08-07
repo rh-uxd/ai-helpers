@@ -269,7 +269,9 @@ if (Array.isArray(personaResults) && personaResults.length > 0) {
       const screenshotRefs = [];
       for (const [, pd] of Object.entries(evidenceData)) {
         for (const task of (pd.tasks || [])) {
-          if (task.screenshot) screenshotRefs.push(task.screenshot);
+          for (const step of (task.steps || [])) {
+            if (step.screenshot) screenshotRefs.push(step.screenshot);
+          }
         }
       }
       if (screenshotRefs.length >= 2) {
@@ -278,8 +280,8 @@ if (Array.isArray(personaResults) && personaResults.length > 0) {
           'Evidence Screenshots Not All Identical',
           unique.size > 1 || screenshotRefs.length <= 1,
           unique.size > 1
-            ? `${unique.size} unique screenshots across ${screenshotRefs.length} tasks`
-            : `BUG: all ${screenshotRefs.length} tasks use same screenshot "${screenshotRefs[0]}"`
+            ? `${unique.size} unique screenshots across ${screenshotRefs.length} steps`
+            : `BUG: all ${screenshotRefs.length} steps use same screenshot "${screenshotRefs[0]}"`
         );
       }
     } catch (e) {

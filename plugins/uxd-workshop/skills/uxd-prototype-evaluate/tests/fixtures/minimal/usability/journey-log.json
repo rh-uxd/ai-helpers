@@ -1,0 +1,46 @@
+{
+  "depth": "deep",
+  "prototype_url": "http://localhost:9204/deployments",
+  "evaluated_at": "2026-08-01T10:00:00.000Z",
+  "persona_selection": {
+    "method": "target-audience",
+    "personas": ["alex-junior", "alex-senior"]
+  },
+  "journeys": [],
+  "usability_dimensions": [
+    {
+      "id": "workflow-continuity",
+      "name": "Workflow Continuity & Integrity",
+      "composite_score": 2.5
+    },
+    {
+      "id": "system-status",
+      "name": "System Status Visibility",
+      "composite_score": 3.0
+    },
+    {
+      "id": "scalability",
+      "name": "Scalability & Progressive Complexity",
+      "composite_score": 2.0
+    }
+  ],
+  "overall_score": 7.5,
+  "max_score": 9,
+  "personas_evaluated": ["alex-junior", "alex-senior"],
+  "persona_overlays": [
+    {
+      "persona": "alex-junior",
+      "task_index": 0,
+      "dimension_id": "workflow-continuity",
+      "score": 2,
+      "rationale": "Minor confusion about scheduling terminology"
+    },
+    {
+      "persona": "alex-senior",
+      "task_index": 0,
+      "dimension_id": "workflow-continuity",
+      "score": 3,
+      "rationale": "Completed smoothly"
+    }
+  ]
+}

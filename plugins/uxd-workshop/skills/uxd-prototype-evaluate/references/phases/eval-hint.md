@@ -7,8 +7,11 @@ Pre-journey intelligence gathering. Reads the workspace source files listed in `
 | Input | Description | Required |
 |-------|-------------|----------|
 | `.artifacts/<KEY>/eval/mr-delta.json` | Changed files list from eval-extract | Yes |
-| `--workspace` | Path to prototype source code | Yes |
+| `--workspace` | Path to prototype source code | Conditional |
 | `.artifacts/<KEY>/eval/extract-state.json` | Journey definitions (to match routes to journeys) | Yes |
+| `eval-state.yaml > source_dir` | Fallback source path (hybrid mode clone) | No |
+
+**Source resolution:** Use `--workspace` if provided. Otherwise read `source_dir` from `eval-state.yaml`. At least one must point to a directory containing source code. When `source_available=true` in eval-state.yaml but no `--workspace` was passed, the source comes from a read-only MR clone (hybrid mode — remote prototype with source access for route/component discovery).
 
 ## Outputs
 
@@ -35,6 +38,24 @@ Pre-journey intelligence gathering. Reads the workspace source files listed in `
 
 ## Procedure
 
+### Step 0: Resolve source directory
+
+```bash
+# Prefer explicit workspace; fall back to source_dir from eval-state (hybrid clone)
+if [ -n "${WORKSPACE}" ] && [ -d "${WORKSPACE}" ]; then
+  SOURCE="${WORKSPACE}"
+elif [ -f "${ARTIFACTS_DIR}/eval-state.yaml" ]; then
+  SOURCE=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py get ${ARTIFACTS_DIR}/eval-state.yaml source_dir)
+fi
+
+if [ -z "${SOURCE}" ] || [ ! -d "${SOURCE}" ]; then
+  echo "ERROR: No source directory available (no workspace, no source_dir in eval-state)"
+  exit 1
+fi
+```
+
+All `cd <source>` commands below use this resolved path.
+
 ### Step 1: Read MR delta and identify target files
 
 Read `.artifacts/<KEY>/eval/mr-delta.json`. Collect all files from `new_files` and `modified_files`.
@@ -45,7 +66,7 @@ Also identify related files not in the delta that provide navigation context:
 - Feature flag files: `FeatureFlags*`, `*flags*`
 
 ```bash
-cd <workspace>
+cd <source>
 # Find route definitions
 grep -rl "Route\|path:" src/app/ --include="*.tsx" --include="*.ts" | head -10
 # Find nav configuration
@@ -57,7 +78,7 @@ grep -rl "nav\|sidebar\|Nav\|Sidebar" src/app/ --include="*.tsx" --include="*.ts
 Read route files and extract path definitions:
 
 ```bash
-cd <workspace>
+cd <source>
 grep -n "path:" src/app/AppRoutes.tsx 2>/dev/null || grep -rn "path:" src/app/ --include="*Route*" | head -30
 ```
 
@@ -72,7 +93,7 @@ For each route, record:
 Read the sidebar/nav configuration to determine which sections contain which links:
 
 ```bash
-cd <workspace>
+cd <source>
 # Read the nav layout file
 cat src/app/AppLayout/AppLayout.tsx | grep -A 2 "NavItem\|nav__link\|expandable" | head -50
 ```
@@ -84,7 +105,7 @@ Build the nav section map: which parent button expands to reveal which child lin
 ```json
 {
   "extracted_at": "<ISO timestamp>",
-  "workspace": "<workspace path>",
+  "source_dir": "<resolved source path>",
   "routes": [
     {
       "path": "/gen-ai-studio/playground",
@@ -108,7 +129,7 @@ Build the nav section map: which parent button expands to reveal which child lin
 
 ## Rules
 
-- Read ONLY files in the workspace. Do not fetch external URLs.
+- Read ONLY files in the resolved source directory. Do not fetch external URLs.
 - If a file in mr-delta.json doesn't exist (deleted), skip it.
 - The nav_sections map must reflect the ACTUAL sidebar hierarchy, not assumptions.
 - Use `config/product-overlay.yaml > navigation` for file paths (sidebar_file, routes_file) instead of hardcoding paths.

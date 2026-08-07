@@ -1,6 +1,6 @@
 # eval-fix
 
-Phase 5a of the eval pipeline. Applies fixes to the prototype based on evaluation findings. Does NOT re-evaluate — that is eval-iterate's job after fixes are applied.
+Applies fixes to the prototype based on evaluation findings. Does NOT re-evaluate — that is eval-iterate's job after fixes are applied.
 
 ## Inputs
 

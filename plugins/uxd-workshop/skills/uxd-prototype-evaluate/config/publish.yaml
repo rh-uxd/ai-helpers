@@ -1,11 +1,14 @@
 # Report hosting configuration
 # Used by scripts/publish-report.sh
+#
+# FIRST-RUN SETUP: Replace placeholder values below with your team's GitLab Pages repo.
+# The eval pipeline works without publishing — this config is only needed for /uxd-prototype-publish.
 
-# Eval reports repo (GitLab Pages)
-gitlab_pages_repo: "git@gitlab.cee.redhat.com:ejaquez/scout-evals.git"
+# Eval reports repo (GitLab Pages) — set to your team's repo
+gitlab_pages_repo: "${EVAL_PAGES_REPO:-}"
 
 # Base URL for GitLab Pages. Reports are served at <base>/evals/<KEY>/
-pages_base_url: "https://ejaquez-scout-evals-7ebc0e.pages.redhat.com"
+pages_base_url: "${EVAL_PAGES_URL:-}"
 
 # Default branch of the pages repo
 pages_branch: "main"
@@ -19,8 +22,8 @@ jira_base_url: "https://issues.redhat.com/browse"
 # Publish mode: "pages" (GitLab Pages) or "branch" (raw file on reports branch)
 default_mode: "pages"
 
-# Git identity for commits to the pages repo (optional)
-git_user_name: "Evan Jaquez"
+# Git identity for commits to the pages repo (reads from git config if unset)
+git_user_name: ""
 git_user_email: ""
 
 # For branch mode: which remote and branch to push reports to

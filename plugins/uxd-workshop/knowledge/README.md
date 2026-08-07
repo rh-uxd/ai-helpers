@@ -32,5 +32,5 @@ ${CLAUDE_SKILL_DIR}/../../knowledge/...
 ## What does not belong here
 
 - Product-specific Jira keys, repo URLs, or MR maps → skill `config/product-overlay.yaml`
-- Deep behavioral scoring rubrics / full usability YAML dumps → optional `.context/` bootstrap (or future knowledge expansions)
+- Deep behavioral scoring rubrics / full usability YAML → `.context/` (auto-bootstrapped from GitLab)
 - Task procedures → `skills/`

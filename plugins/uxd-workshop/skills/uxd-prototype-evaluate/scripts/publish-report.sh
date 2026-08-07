@@ -142,11 +142,9 @@ publish_pages() {
   # ponytail: only final report published — no iter snapshots or originals
 
   # Regenerate the data.json for the React dashboard
-  if [[ -f "$WORK_DIR/pages-repo/scripts/generate-data.cjs" ]]; then
-    node "$WORK_DIR/pages-repo/scripts/generate-data.cjs" "$REPORTS_PATH"
-  else
-    node "$(dirname "$0")/generate-dashboard.js" "$REPORTS_PATH"
-  fi
+  # Always use local generate-dashboard.js — remote generate-data.cjs has a
+  # variable shadowing bug (html module vs html string variable on line 89).
+  node "$(dirname "$0")/generate-dashboard.js" "$REPORTS_PATH"
 
   # Copy leaderboard if it exists (sibling to index.html for navigation)
   local LEADERBOARD="${EVAL_GLOBAL_DIR:+$EVAL_GLOBAL_DIR/pain-leaderboard.html}"

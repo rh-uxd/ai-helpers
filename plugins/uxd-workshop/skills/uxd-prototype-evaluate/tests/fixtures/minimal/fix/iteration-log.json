@@ -1,0 +1,43 @@
+{
+  "key": "TEST-FIX",
+  "max_iterations": 3,
+  "iterations": [
+    {
+      "iteration": 1,
+      "phase": "a",
+      "timestamp": "2026-08-01T10:00:00.000Z",
+      "pass_count": 2,
+      "fail_count": 3,
+      "flagged_count": 1,
+      "total_criteria": 6,
+      "details": {
+        "AC-1": { "verdict": "FAIL", "tier": "1" },
+        "AC-3": { "verdict": "PASS", "tier": "1" },
+        "AC-4": { "verdict": "FLAGGED", "tier": "1" },
+        "AC-6": { "verdict": "FAIL", "tier": "1" },
+        "AC-7": { "verdict": "PASS", "tier": "1" },
+        "AC-8": { "verdict": "FAIL", "tier": "1" }
+      }
+    },
+    {
+      "iteration": 2,
+      "phase": "a",
+      "timestamp": "2026-08-01T10:05:00.000Z",
+      "pass_count": 2,
+      "fail_count": 3,
+      "flagged_count": 1,
+      "total_criteria": 6,
+      "details": {
+        "AC-1": { "verdict": "FAIL", "tier": "1" },
+        "AC-3": { "verdict": "PASS", "tier": "1" },
+        "AC-4": { "verdict": "FLAGGED", "tier": "1" },
+        "AC-6": { "verdict": "PASS", "tier": "1" },
+        "AC-7": { "verdict": "PASS", "tier": "1" },
+        "AC-8": { "verdict": "FAIL", "tier": "1" }
+      }
+    }
+  ],
+  "exit_reason": "regression",
+  "total_criteria_fixed": 1,
+  "total_regressions": 1
+}

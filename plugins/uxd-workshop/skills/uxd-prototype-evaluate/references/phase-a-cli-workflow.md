@@ -1,5 +1,7 @@
 # Phase A CLI — Designer Iteration Loop
 
+> **[DRAFT — not implemented]** This document describes `--phase-a-only`, `--phase-b-only`, and `/eval-check` commands that are NOT yet wired into SKILL.md. Do NOT execute these commands — they will fail. This file is retained for future reference when CLI shorthand is implemented.
+
 A lightweight "inner loop" mode where designers run just the x-ray AC validation cycle without discovery persona walkthroughs. Gives designers fast, actionable feedback they can verify and fix themselves before optionally sending for full usability testing.
 
 ## Workflow Diagram

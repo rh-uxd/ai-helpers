@@ -11,9 +11,10 @@
 const { readFileSync, existsSync, readdirSync } = require('fs');
 const { join, resolve } = require('path');
 
-const artifactsDir = process.argv[2];
+const jsonMode = process.argv.includes('--json');
+const artifactsDir = process.argv.filter(a => a !== '--json')[2];
 if (!artifactsDir) {
-  console.error('Usage: node validate-artifact-schemas.js .artifacts/<KEY>/');
+  console.error('Usage: node validate-artifact-schemas.js .artifacts/<KEY>/ [--json]');
   process.exit(1);
 }
 
@@ -27,10 +28,14 @@ function readJson(filename) {
 
 const results = [];
 
+function log(...args) { if (!jsonMode) console.log(...args); }
+
 function check(name, pass, msg) {
   results.push({ name, pass, msg });
-  const prefix = pass ? 'PASS' : 'FAIL';
-  console.log(`  [${prefix}] ${name}: ${msg}`);
+  if (!jsonMode) {
+    const prefix = pass ? 'PASS' : 'FAIL';
+    console.log(`  [${prefix}] ${name}: ${msg}`);
+  }
 }
 
 // ─── journey-log.json ──────────────────────────────────────────────
@@ -38,7 +43,7 @@ function check(name, pass, msg) {
 const journeyLog = readJson('journey-log.json');
 
 if (journeyLog) {
-  console.log('\njourney-log.json:');
+  log('\njourney-log.json:');
 
   check('depth present', !!journeyLog.depth, journeyLog.depth ? `depth = ${journeyLog.depth}` : 'MISSING — add "depth": "deep"');
   check('prototype_url present', !!journeyLog.prototype_url, journeyLog.prototype_url ? 'exists' : 'MISSING');
@@ -105,7 +110,7 @@ if (journeyLog) {
       Array.isArray(ud.persona_overlays) ? `${ud.persona_overlays.length} overlays` : 'MISSING or not an array');
 
     const overlays = ud.persona_overlays || [];
-    const missingTaskIndex = overlays.filter(o => !('task_index' in o));
+    const missingTaskIndex = overlays.filter(o => typeof o === 'object' && o !== null && !('task_index' in o));
     if (overlays.length > 0) {
       check('persona_overlays have task_index', missingTaskIndex.length === 0,
         missingTaskIndex.length === 0
@@ -127,7 +132,7 @@ if (journeyLog) {
     }
   }
 } else {
-  console.log('journey-log.json: not found (skipping)');
+  log('journey-log.json: not found (skipping)');
 }
 
 // ─── persona-results.json ──────────────────────────────────────────
@@ -135,20 +140,20 @@ if (journeyLog) {
 const personaResults = readJson('persona-results.json');
 
 if (personaResults) {
-  console.log('\npersona-results.json:');
+  log('\npersona-results.json:');
 
   check('is array', Array.isArray(personaResults),
-    Array.isArray(personaResults) ? `${personaResults.length} entries` : 'not an array — wrap as [{ persona_id, task_index, trace, ... }]');
+    Array.isArray(personaResults) ? `${personaResults.length} entries` : 'not an array — wrap as [{ persona, task_index, trace, ... }]');
 
   if (Array.isArray(personaResults) && personaResults.length > 0) {
     const pr0 = personaResults[0];
-    const reqKeys = ['persona_id', 'persona_name', 'task_index', 'task', 'trace', 'patience_end', 'abandoned'];
+    const reqKeys = ['persona', 'persona_name', 'task_index', 'task', 'trace', 'patience_end', 'abandoned'];
     const missing = reqKeys.filter(k => !(k in pr0));
     check('persona result schema', missing.length === 0,
       missing.length === 0 ? 'all required keys present' : `MISSING: ${missing.join(', ')}`);
 
-    if ('persona' in pr0 && !('persona_id' in pr0)) {
-      check('uses persona_id (not persona)', false, 'has "persona" but not "persona_id"');
+    if ('persona_id' in pr0 && !('persona' in pr0)) {
+      check('uses persona (not persona_id)', false, 'has "persona_id" but not "persona" — rename to "persona"');
     }
 
     const emptyTraces = personaResults.filter(pr => !Array.isArray(pr.trace) || pr.trace.length === 0);
@@ -169,7 +174,7 @@ if (personaResults) {
     }
   }
 } else {
-  console.log('persona-results.json: not found (skipping)');
+  log('persona-results.json: not found (skipping)');
 }
 
 // ─── fix-log.json ──────────────────────────────────────────────────
@@ -177,7 +182,7 @@ if (personaResults) {
 const fixLog = readJson('fix-log.json');
 
 if (fixLog) {
-  console.log('\nfix-log.json:');
+  log('\nfix-log.json:');
 
   check('fix-log is array', Array.isArray(fixLog),
     Array.isArray(fixLog) ? `${fixLog.length} entries` : 'not an array — should be flat array of entries');
@@ -196,7 +201,7 @@ if (fixLog) {
 const iterLog = readJson('iteration-log.json');
 
 if (iterLog) {
-  console.log('\niteration-log.json:');
+  log('\niteration-log.json:');
 
   check('exit_reason not pending', iterLog.exit_reason && iterLog.exit_reason !== 'pending',
     iterLog.exit_reason ? `exit_reason = ${iterLog.exit_reason}` : 'exit_reason is pending or missing');
@@ -227,13 +232,15 @@ if (iterLog) {
 const consistencyReport = readJson('consistency-report.json');
 
 if (consistencyReport) {
-  console.log('\nconsistency-report.json:');
+  log('\nconsistency-report.json:');
   if (!consistencyReport.skipped) {
     check('source_mode present', consistencyReport.source_mode != null, consistencyReport.source_mode ? 'exists' : 'MISSING');
     check('visual_mode present', consistencyReport.visual_mode != null, consistencyReport.visual_mode ? 'exists' : 'MISSING');
     check('summary present', consistencyReport.summary != null, consistencyReport.summary ? 'exists' : 'MISSING');
   } else {
-    check('skipped (ok)', true, 'consistency was skipped');
+    check('consistency was skipped', false,
+      `Consistency checks were skipped: ${consistencyReport.reason || 'unknown reason'}. ` +
+      'Verify .context/consistency-checker/ is bootstrapped.');
   }
 }
 
@@ -242,13 +249,13 @@ if (consistencyReport) {
 const extractState = readJson('extract-state.json');
 
 if (extractState) {
-  console.log('\nextract-state.json:');
+  log('\nextract-state.json:');
   check('key present', !!extractState.key, extractState.key || 'MISSING');
   check('title present', !!extractState.title, extractState.title ? 'exists' : 'MISSING');
   check('ac_list non-empty', Array.isArray(extractState.ac_list) && extractState.ac_list.length > 0,
     Array.isArray(extractState.ac_list) ? `${extractState.ac_list.length} ACs` : 'MISSING or empty');
   if (!extractState.feature_context) {
-    console.log('  [WARN] feature_context missing (non-fatal)');
+    log('  [WARN] feature_context missing (non-fatal)');
   }
 }
 
@@ -257,7 +264,7 @@ if (extractState) {
 const componentMap = readJson('component-map.json');
 
 if (componentMap) {
-  console.log('\ncomponent-map.json:');
+  log('\ncomponent-map.json:');
   check('target_page present', !!componentMap.target_page, componentMap.target_page || 'MISSING');
   check('table_columns present', !!componentMap.table_columns, componentMap.table_columns ? 'exists' : 'MISSING');
   check('ac_column_mapping present', !!componentMap.ac_column_mapping, componentMap.ac_column_mapping ? 'exists' : 'MISSING');
@@ -268,7 +275,7 @@ if (componentMap) {
 const navHints = readJson('navigation-hints.json');
 
 if (navHints) {
-  console.log('\nnavigation-hints.json:');
+  log('\nnavigation-hints.json:');
   check('routes present', !!(navHints.routes && (Array.isArray(navHints.routes) || typeof navHints.routes === 'object')),
     navHints.routes ? 'exists' : 'MISSING');
   check('nav_sections present', !!(navHints.nav_sections && (Array.isArray(navHints.nav_sections) || typeof navHints.nav_sections === 'object')),
@@ -279,12 +286,12 @@ if (navHints) {
 
 const ssDir = join(abs, 'screenshots');
 if (existsSync(ssDir)) {
-  console.log('\nscreenshots/:');
+  log('\nscreenshots/:');
   const files = readdirSync(ssDir).filter(f => f.endsWith('.png'));
   check('screenshots exist', files.length > 0, files.length > 0 ? `${files.length} .png files` : 'directory is empty');
   const journeyShots = files.filter(f => f.startsWith('journey-'));
   const personaShots = files.filter(f => f.startsWith('persona-'));
-  console.log(`  ${journeyShots.length} journey + ${personaShots.length} persona screenshots`);
+  log(`  ${journeyShots.length} journey + ${personaShots.length} persona screenshots`);
 }
 
 // ─── Summary ───────────────────────────────────────────────────────
@@ -292,13 +299,24 @@ if (existsSync(ssDir)) {
 const passCount = results.filter(r => r.pass).length;
 const failCount = results.filter(r => !r.pass).length;
 
-console.log(`\n${'─'.repeat(50)}`);
-console.log(`Schema validation: ${passCount} passed, ${failCount} failed`);
+if (jsonMode) {
+  const output = {
+    results: results.map(r => ({ scorer: r.name, pass: r.pass, detail: r.msg })),
+    pass_count: passCount,
+    fail_count: failCount,
+    all_pass: failCount === 0,
+  };
+  console.log(JSON.stringify(output, null, 2));
+} else {
+  console.log(`\n${'─'.repeat(50)}`);
+  console.log(`Schema validation: ${passCount} passed, ${failCount} failed`);
 
-if (failCount > 0) {
-  console.log('\nFailing checks:');
-  for (const r of results.filter(r => !r.pass)) {
-    console.log(`  - ${r.name}: ${r.msg}`);
+  if (failCount > 0) {
+    console.log('\nFailing checks:');
+    for (const r of results.filter(r => !r.pass)) {
+      console.log(`  - ${r.name}: ${r.msg}`);
+    }
   }
-  process.exit(1);
 }
+
+if (failCount > 0) process.exit(1);

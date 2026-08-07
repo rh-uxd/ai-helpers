@@ -6,6 +6,7 @@ Read and follow this file when running the full evaluate pipeline. Phase procedu
 
 Each phase delegates to `--model` when launched via Task tool. These defaults
 are derived from MLflow comparison runs (2026-07-22, 24 traces).
+See `references/mlflow-conventions.md` for experiment naming and tagging standards.
 
 | Phase | Default model | Rationale |
 |-------|--------------|-----------|
@@ -21,22 +22,63 @@ When `--model` is set, ALL phases use that model (useful for comparison runs).
 
 **Artifact paths:** Pin `UXD_PROJECT_ROOT`, `KEY_DIR`, and absolute `ARTIFACTS_DIR` first (see SKILL.md "Artifact location"). All eval writes use `${ARTIFACTS_DIR}` (absolute = `.artifacts/<KEY>/eval`). Never write under `${CLAUDE_SKILL_DIR}`. After any `cd` (skill install or `.artifacts/<KEY>/code` clone), keep using the absolute `ARTIFACTS_DIR`.
 
+**Source access (hybrid mode):** When a remote prototype has an MR link, `pipeline-setup.sh` clones the source into `.artifacts/<KEY>/code/` and sets `source_available=true` + `source_dir` in eval-state.yaml. This gives Phase A and Phase B access to router configs and component files without building or serving the clone locally. The remote URL is still used for Playwright navigation.
+
 ```
 iteration = 0
 max_iterations = parse --max-iterations (default: 3)
 no_fix = parse --no-fix (default: false)
 no_report = parse --no-report (default: false)
-auto_run = parse --auto-run (default: false)
 
-# ── Pin artifact root (CRITICAL — do this before any writes or --fresh) ──
-export UXD_PROJECT_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-# If git toplevel is the skill install or a nested .artifacts/<KEY>/code clone,
-# resolve via: node -e "console.log(require('${CLAUDE_SKILL_DIR}/scripts/resolve-root').resolveProjectRoot())"
+# ── Preflight check (fail-fast before any work) ───────────────────────
+bash ${CLAUDE_SKILL_DIR}/scripts/preflight-check.sh
+# Exits non-zero if required prerequisites are missing.
+
+# ── Pipeline setup (path pinning, eval-state init, workspace capture) ──
+bash ${CLAUDE_SKILL_DIR}/scripts/pipeline-setup.sh <KEY> <URL> <workspace> $max_iterations "" <MR_URL>
+# Sets UXD_PROJECT_ROOT, KEY_DIR, ARTIFACTS_DIR, inits eval-state.yaml
+# Also resolves the prototype URL (probes remote, falls back to local sirv with SPA detection).
+# Writes resolved URL to eval-state.yaml as `prototype_url`.
+# When MR_URL is provided and prototype is remote: clones source into .artifacts/<KEY>/code/
+# and sets source_available=true, source_dir in eval-state.yaml (hybrid mode).
+export UXD_PROJECT_ROOT="$(node -e "console.log(require('${CLAUDE_SKILL_DIR}/scripts/resolve-root').resolveProjectRoot())" 2>/dev/null || git rev-parse --show-toplevel 2>/dev/null || pwd)"
 KEY_DIR="${UXD_PROJECT_ROOT}/.artifacts/<KEY>"
 ARTIFACTS_DIR="${KEY_DIR}/eval"
-mkdir -p "${ARTIFACTS_DIR}/scripts" "${ARTIFACTS_DIR}/screenshots"
 
-# ── Fresh flag handling ────────────────────────────────────────────
+# ── Read source access state (hybrid mode) ───────────────────────────
+SOURCE_AVAILABLE=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py get ${ARTIFACTS_DIR}/eval-state.yaml source_available)
+SOURCE_DIR=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py get ${ARTIFACTS_DIR}/eval-state.yaml source_dir)
+
+# ── Remote-only advisory (BLOCKING) ──────────────────────────────────
+# If no source access at all (no workspace, no MR clone), warn the user
+# and wait for confirmation before proceeding with degraded evaluation.
+if SOURCE_AVAILABLE == "false":
+  if no MR_URL was provided:
+    WARN the user:
+      "No source code path or MR link provided. Without source access:
+       - No fix loop (can't patch code)
+       - No source-mode consistency checks
+       - No component-map for data-testid selectors
+       - Heuristic click-through navigation only
+       Provide --workspace or an MR URL for the full evaluation.
+       Proceed with remote-only? [y/N]"
+    WAIT for user confirmation before continuing.
+
+# ── Read resolved prototype URL from eval-state ──────────────────────
+# pipeline-setup.sh called resolve-prototype-url.sh which:
+#   1. Probes the user-provided URL (curl --max-time 10)
+#   2. If reachable: uses it directly (prototype_source_type=remote)
+#   3. If unreachable + workspace has dist/: serves locally with sirv
+#      - SPA detected (React/Angular): sirv --single (routes fall back to index.html)
+#      - Static site: sirv without --single
+#   4. Writes server PID to ${ARTIFACTS_DIR}/server.pid for cleanup
+#
+# PROTOTYPE_URL may differ from the user-provided URL when fallback activates.
+# Generated Playwright scripts use this resolved URL (via process.env.PROTOTYPE_URL).
+PROTOTYPE_URL=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py get ${ARTIFACTS_DIR}/eval-state.yaml prototype_url)
+export PROTOTYPE_URL
+
+# ── Fresh flag handling (not covered by pipeline-setup.sh) ─────────
 # --fresh deletes ONLY this KEY's eval/ dir (absolute path).
 # Never: rm -rf .artifacts/<KEY>/  (wipes create artifacts)
 # Never: rm -rf .artifacts/eval/   (wipes cross-key run log / leaderboard)
@@ -45,19 +87,15 @@ if --fresh:
   mkdir -p "${ARTIFACTS_DIR}/scripts" "${ARTIFACTS_DIR}/screenshots"
   echo "Cleared ${ARTIFACTS_DIR} (--fresh)"
 
-# ── Staleness detection (content-based) ────────────────────────────
-# eval-extract Step 0 handles cache validation using a content hash of the
-# ticket description. The orchestrator no longer compares timestamps, which
-# avoids false invalidation when eval-iterate itself adds comments to the ticket.
-# If --fresh is set, artifacts are already cleared above. Otherwise, let
-# eval-extract's own cache check (content hash) decide whether to re-fetch.
-
-# Initialize persistent state (survives context compression)
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py init ${ARTIFACTS_DIR}/eval-state.yaml \
-  iteration=0 max_iterations=$max_iterations exit_reason=pending \
-  phase=a ac_pass=false key=<KEY> url=<URL> workspace=<workspace> \
-  artifacts_dir=${ARTIFACTS_DIR} project_root=${UXD_PROJECT_ROOT} \
-  pipeline_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
+# ── Auto-clear iteration-specific artifacts on non-fresh re-runs ──────
+if ! --fresh:
+  rm -f "${ARTIFACTS_DIR}/component-map.json" \
+       "${ARTIFACTS_DIR}/fix-log.json" \
+       "${ARTIFACTS_DIR}/refinement-suggestions.json" \
+       "${ARTIFACTS_DIR}/tier-overrides.json" \
+       "${ARTIFACTS_DIR}/navigation-hints.json" \
+       "${ARTIFACTS_DIR}/iteration-log.json"
+  echo "Cleared iteration-specific artifacts for clean re-run"
 
 # ═══════════════════════════════════════════════════════════════════
 # PHASE A: X-Ray AC Validation Loop
@@ -126,6 +164,15 @@ Read ${CLAUDE_SKILL_DIR}/references/phases/eval-extract.md and execute it with -
 python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
   extract_core_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp) \
   consistency_source_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
+
+# ── Pre-flight: verify consistency guidelines exist ────────────────
+GUIDELINE_COUNT=$(ls "${UXD_PROJECT_ROOT}/.context/consistency-checker/guidelines/"*.md 2>/dev/null | wc -l)
+if [ "$GUIDELINE_COUNT" -eq 0 ]; then
+  echo "WARNING: No consistency guidelines found. Attempting re-bootstrap..."
+  bash "${CLAUDE_SKILL_DIR}/scripts/bootstrap-consistency-checker.sh"
+  GUIDELINE_COUNT=$(ls "${UXD_PROJECT_ROOT}/.context/consistency-checker/guidelines/"*.md 2>/dev/null | wc -l)
+fi
+echo "Consistency guidelines available: ${GUIDELINE_COUNT} files"
 
 Read ${CLAUDE_SKILL_DIR}/references/phases/eval-consistency.md and execute it with --mode=source
 # Runs ONCE (source-mode only). Produces: consistency-report.json, appends to refinement-suggestions.json
@@ -295,22 +342,6 @@ if iteration > 1:
     sleep 5
 
 # ═══════════════════════════════════════════════════════════════════
-# POST-JOURNEY: Visual Consistency Check (deferred from setup)
-# Now that screenshots exist, run visual-mode consistency checks.
-# ═══════════════════════════════════════════════════════════════════
-
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
-  consistency_visual_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
-
-Read ${CLAUDE_SKILL_DIR}/references/phases/eval-consistency.md and execute it with --mode=visual
-# Uses journey screenshots + DOM for visual guideline checks.
-# Appends visual findings to consistency-report.json and refinement-suggestions.json.
-# These findings are informational for the report — they do NOT re-trigger the fix loop.
-
-python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
-  consistency_visual_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
-
-# ═══════════════════════════════════════════════════════════════════
 # PRE-PHASE-B: Deferred Context (PARALLEL)
 # Three independent skills run in parallel — none depends on
 # another's output. All three feed Phase B or the report.
@@ -332,10 +363,11 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-stat
 #   Uses cached raw_parent and raw_issuelinks from extract-state.json (saved during core phase).
 #   ERROR HANDLING: If Outcome not found, falls back to deriving tasks from journey titles.
 #
-# TASK 3: eval-hint (if workspace provided)
+# TASK 3: eval-hint (if workspace provided OR source_available=true)
 #   Produces: navigation-hints.json (nav_sections + routes only).
 #   Consumed by eval-usability as fallback for stuck-persona navigation.
-#   Runs post-fix so hints reflect final workspace state.
+#   Runs post-fix so hints reflect final workspace/source state.
+#   In hybrid mode (remote + MR clone), reads routes from the clone in source_dir.
 #   ERROR HANDLING: If fails, eval-usability runs without hints (discovery only, no fallback).
 
 # Wait for all three to complete before proceeding to Phase B.
@@ -358,6 +390,10 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-stat
 # The prototype URL must be navigated by each persona independently.
 # Phase B is NOT inference-only scoring — it MUST produce new screenshots.
 # Do NOT skip the Playwright walkthroughs and score from Phase A evidence alone.
+#
+# Excuse: "Phase A already proved features work"
+# Rebuttal: Phase A proves features EXIST. Phase B proves users can FIND them.
+#           A passing AC with 0% discoverability is a shipped feature nobody uses.
 
 # When --no-report is set, pass --screenshots=key-only to eval-usability.
 # This captures 1 screenshot per persona-task (final state) instead of per-step,
@@ -389,7 +425,8 @@ if any entry has trace == [] (empty array):
 
 # ── Verify Step 8 completion (usability_dimensions in journey-log) ──
 # persona-results.json existing WITHOUT usability_dimensions in journey-log
-# means Step 8 was skipped. This breaks the report, MLflow scorers, and leaderboard.
+# means Step 8 was skipped. This breaks the report, MLflow scorers
+# (see references/mlflow-conventions.md), and leaderboard.
 Read ${ARTIFACTS_DIR}/journey-log.json
 if "usability_dimensions" not in journey-log.json AND ${ARTIFACTS_DIR}/persona-results.json exists:
   echo "Step 8 missing — consolidating persona results into journey-log.json"
@@ -407,64 +444,13 @@ node ${CLAUDE_SKILL_DIR}/scripts/validate-phase-b-output.js ${ARTIFACTS_DIR}/
 node ${CLAUDE_SKILL_DIR}/scripts/append-iteration-log.js ${ARTIFACTS_DIR}/ <iteration> b
 
 # ── Propagate exit_reason to iteration-log.json ────────────────────
-# The iteration-log.json root-level exit_reason is the canonical field
-# that downstream consumers read (MLflow scorers, leaderboard, report).
-# Without this, the report shows "exit_reason: pending" after clean exit.
-python3 -c "
-import json
-from pathlib import Path
-ad = Path('${ARTIFACTS_DIR}/')
-exit_reason = 'unknown'
-es = ad / 'eval-state.yaml'
-if es.exists():
-    for line in es.read_text().splitlines():
-        if line.strip().startswith('exit_reason:'):
-            exit_reason = line.split(':', 1)[1].strip()
-il = ad / 'iteration-log.json'
-if il.exists():
-    log = json.loads(il.read_text())
-    log['exit_reason'] = exit_reason
-    il.write_text(json.dumps(log, indent=2))
-    print(f'iteration-log.json exit_reason set to: {exit_reason}')
-"
+python3 ${CLAUDE_SKILL_DIR}/scripts/propagate-exit-reason.py ${ARTIFACTS_DIR}/
 
 # ═══════════════════════════════════════════════════════════════════
 # ARTIFACT READINESS GATE (prevents race condition with report)
 # ═══════════════════════════════════════════════════════════════════
-# render-report.js reads journey-log.json, persona-results.json, and
-# consistency-report.json at startup. If any background task is still
-# writing these files, the report renders with empty/partial data.
 
-python3 << 'PYEOF'
-import json, time, os
-ad = '${ARTIFACTS_DIR}/'
-required = {
-    'persona-results.json': lambda d: isinstance(d, list) and len(d) > 0,
-    'journey-log.json': lambda d: 'usability_dimensions' in d,
-    'consistency-report.json': lambda d: d is not None,
-}
-for attempt in range(6):
-    missing = []
-    for f, check in required.items():
-        fp = os.path.join(ad, f)
-        if not os.path.exists(fp):
-            missing.append(f'{f} (not found)')
-            continue
-        try:
-            data = json.loads(open(fp).read())
-            if not check(data):
-                missing.append(f'{f} (incomplete)')
-        except:
-            missing.append(f'{f} (unreadable)')
-    if not missing:
-        print('All artifacts ready for report generation')
-        break
-    if attempt < 5:
-        print(f'Waiting for artifacts: {", ".join(missing)}')
-        time.sleep(5)
-    else:
-        print(f'WARNING: Proceeding with incomplete artifacts: {", ".join(missing)}')
-PYEOF
+python3 ${CLAUDE_SKILL_DIR}/scripts/artifact-readiness-gate.py ${ARTIFACTS_DIR}/
 
 # ═══════════════════════════════════════════════════════════════════
 # SCHEMA VALIDATION (catches drift before report renders broken output)
@@ -492,11 +478,27 @@ else:
     --note="Phase A: <exit_reason> (<iteration> iterations). Phase B: <usability status>"
 
 # ═══════════════════════════════════════════════════════════════════
+# MLFLOW LOGGING (opt-in)
+# ═══════════════════════════════════════════════════════════════════
+# Read and follow references/mlflow-logging.md for the full procedure.
+# Skipped automatically when no tracking URI is configured.
+
+# ═══════════════════════════════════════════════════════════════════
 # NOTIFY (open report + present summary)
 # ═══════════════════════════════════════════════════════════════════
 
 python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
   pipeline_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
+
+# ── Server cleanup (kill local sirv if we started one) ────────────────
+if [ -f "${ARTIFACTS_DIR}/server.pid" ]; then
+  SERVER_PID=$(cat "${ARTIFACTS_DIR}/server.pid")
+  if [ -n "${SERVER_PID}" ] && kill -0 "${SERVER_PID}" 2>/dev/null; then
+    kill "${SERVER_PID}" 2>/dev/null || true
+    echo "Stopped local prototype server (PID ${SERVER_PID})"
+  fi
+  rm -f "${ARTIFACTS_DIR}/server.pid"
+fi
 
 # Open the report for the designer
 open ${ARTIFACTS_DIR}/evaluation-report.html
@@ -524,6 +526,13 @@ Present:
   • "Tell me more about [finding]"
   • "Re-run eval"
   • "Looks good"
+
+  📄 Report: `${ARTIFACTS_DIR}/evaluation-report.html`
+
+  **Next steps:**
+  • Ready to submit? → `/uxd-prototype-publish`
+  • Need major changes? → `/uxd-prototype-create` with this eval as input
+  • Re-run after changes? → `/uxd-prototype-evaluate <KEY> <URL>`
 
 # Rebuild leaderboard with latest data
 node ${CLAUDE_SKILL_DIR}/scripts/build-leaderboard.js
@@ -632,45 +641,20 @@ Report: ${ARTIFACTS_DIR}/evaluation-report.html
 ────────────────────────────────────────
 ```
 
-## Future: Phase B Feedback Loop (NOT YET IMPLEMENTED)
+<!-- DRAFT — not implemented. Do not execute.
 
-Phase B currently produces usability findings that go into the report but do not trigger fixes. This section documents the planned architecture for a feedback loop.
+## Future: Phase B Feedback Loop
 
-### Design
+Phase B currently produces usability findings that go into the report but do not trigger fixes.
+This section documents the planned architecture for a feedback loop where severe usability
+findings (overall_score < 14/21 or any dimension = 0) would feed back into eval-fix for
+one additional Phase A crank. See the git history for full design details.
 
-After Phase B completes, check whether usability findings are severe enough to warrant another Phase A iteration:
-
-```
-Phase B complete → Score check:
-  - overall_score >= 14/21 AND no dimension = 0 → REPORT (no feedback)
-  - overall_score < 14/21 OR any dimension = 0 → Feed usability suggestions to eval-fix → one more Phase A crank → REPORT
-```
-
-### Trigger Conditions
-
-The feedback loop fires when ANY of:
-- `overall_score` < 14/21 (below "functional" threshold)
-- Any single dimension scores 0 (broken)
-- 3+ confusion events across ALL personas combined
-
-### What Gets Fed Back
-
-Only `refinement-suggestions.json` entries of `type: "usability"` with `confidence: "high"` or `"medium"`. Low-confidence usability suggestions remain report-only (human judgment required).
-
-### Constraints
-
-- Max 1 feedback loop (prevents infinite cycling between Phase A and Phase B)
-- The feedback Phase A crank does NOT re-run Phase B afterward (would create recursion)
-- `--no-outer-loop` flag skips this entirely (for when designers just want the report)
-- Feedback fixes are logged separately in fix-log.json as `"source": "phase_b_feedback"`
-
-### What This Enables
-
-Phase B persona walkthroughs currently identify issues like "junior user couldn't find the scheduling column because it requires scrolling right." With the feedback loop, this finding would generate a suggestion like "Add horizontal scroll indicator or move scheduling status column left" that eval-fix can apply, then Phase A re-verifies the fix works.
+-->
 
 ## Error Handling
 
 - **Prototype URL unreachable:** Wait 10s, retry once. If still down, stop with error.
 - **eval-fix produces no changes:** Stop Phase A — more iterations won't help. Proceed to Phase B.
 - **Dev server crashes after fix:** Stop Phase A, note which files may have caused it. Proceed to Phase B.
-- **Missing .context/ directories:** Phase A runs without consistency. Phase B runs using the plugin persona catalog (`${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml`), which is always bundled with the plugin. Phase B is only skipped if BOTH the plugin catalog AND `.context/usability-testing/` are missing. Always select at least 2 personas.
+- **Missing .context/ directories (VPN unreachable at bootstrap):** Phase A runs in degraded mode (pf-css-token-check fallback if available). Phase B runs using the bundled plugin persona catalog with reduced behavioral fidelity. Re-run bootstrap scripts when VPN reconnects.
