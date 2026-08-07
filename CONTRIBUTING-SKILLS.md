@@ -287,6 +287,14 @@ In addition to the skill-creator guidance, skills in this repo must follow these
   ```
 - Use `$CLAUDE_SKILL_DIR` to reference scripts relative to the skill directory — it resolves to the directory containing SKILL.md regardless of where the repo is cloned
 
+### MCP dependencies
+
+Treat MCP servers as **enhancements, not requirements** unless the skill's entire purpose is MCP orchestration (e.g., `pf-figma-design-mode`).
+
+- **Use "if available" fallback language.** If MCP enriches your skill but isn't essential, say so: *"If `@patternfly/patternfly-mcp` is available, use it for current props and examples."* See `pf-component-check` for the pattern.
+- **Don't claim MCP as required when it isn't.** If your skill works fine without MCP, don't put "Requires MCP" in the description.
+- **Separate decisions from execution.** Even MCP-driven skills make decisions (component selection, layout structure) before calling MCP tools. Your skill's judgment should be testable without MCP connected.
+
 ### Evals
 
 Evals are **expected** for consumer-facing skills. A skill graduating from a workshop to a consumer plugin should have an eval that proves its value.

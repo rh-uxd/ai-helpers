@@ -1,0 +1,139 @@
+name: pf-figma-design-mode-eval
+description: Evaluate pf-figma-design-mode's PatternFly-approved source enforcement, pattern-first selection, and page creation behavior
+
+# A/B delta: Without the skill, baseline Claude suggests generic Figma operations
+# without enforcing PatternFly-approved component libraries. The skill uniquely
+# contributes: strict approved-sources enforcement (only 2 specific PF6 Figma files),
+# pattern-first selection (🧰 patterns over individual components), new-frame page
+# creation behavior, and the figma-use prerequisite requirement.
+#
+# Testing boundary: This eval validates the skill's decision-making layer —
+# approved source enforcement, pattern-first selection, prerequisite awareness,
+# and page creation behavior. MCP execution (use_figma calls) is the transport
+# layer and requires live Figma MCP, which eval sandboxes correctly deny.
+
+skill: pf-design-guide:pf-figma-design-mode
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-design-guide
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request for Figma design work
+    - annotations.yaml: expect_pf_sources (true/false), scenario type
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces guidance for creating or editing Figma designs using
+      PatternFly-approved component libraries. Judges check for approved source
+      references, pattern-first selection, and page creation behavior.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: approved_sources_reference
+    description: References PatternFly 6 approved Figma component files
+    if: "annotations.get('expect_pf_sources') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf6_components = re.search(r'PatternFly\s*6.{0,80}Components', text, re.IGNORECASE)
+      pf6_patterns = re.search(r'PatternFly\s*6.{0,80}Patterns', text, re.IGNORECASE)
+      approved_ref = re.search(r'approved.{0,30}source', text, re.IGNORECASE)
+      figma_file_ref = re.search(r'(?:VMEX|MSr6)', text)
+      if not pf6_components and not figma_file_ref and not approved_ref:
+          return False, "Missing reference to PatternFly 6 approved Figma component sources"
+      return True, f"References PF6 approved sources: Components={'yes' if pf6_components else 'no'}, Patterns={'yes' if pf6_patterns else 'no'}, FileKeys={'yes' if figma_file_ref else 'no'}"
+
+  - name: pattern_first_selection
+    description: Prefers pattern components (🧰) over assembling from smaller components
+    if: "annotations.get('expect_pf_sources') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pattern_ref = re.search(r'(?:pattern|🧰)', text)
+      compose_warning = re.search(r'(?:prefer|prioritize|use).{0,40}pattern', text, re.IGNORECASE)
+      if not pattern_ref and not compose_warning:
+          return False, "Missing pattern-first selection guidance — should prefer 🧰 patterns over individual components"
+      return True, "References pattern-first component selection"
+
+  - name: figma_use_prerequisite
+    description: Mentions the figma-use prerequisite skill requirement
+    if: "annotations.get('expect_pf_sources') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      figma_use = re.search(r'figma-use', text, re.IGNORECASE)
+      figma_gen = re.search(r'figma-generate-design', text, re.IGNORECASE)
+      prerequisite = re.search(r'prerequisite|before.{0,30}use_figma|load.{0,30}first|required.{0,30}skill', text, re.IGNORECASE)
+      if not figma_use and not figma_gen:
+          return False, "Missing figma-use or figma-generate-design prerequisite skill reference"
+      return True, f"References figma-use prerequisite (explicit prerequisite mention={'yes' if prerequisite else 'no'})"
+
+  - name: new_frame_creation
+    description: Creates new top-level frame for new page requests instead of mutating existing content
+    if: "annotations.get('scenario') == 'create_page'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      new_frame = re.search(r'(?:new|create|add).{0,30}(?:frame|top-level)', text, re.IGNORECASE)
+      no_mutate = re.search(r'(?:not|don.t|never).{0,30}(?:replace|clear|mutate|overwrite).{0,30}existing', text, re.IGNORECASE)
+      if not new_frame:
+          return False, "Missing new top-level frame creation for new page request"
+      return True, f"Creates new frame for page (no-mutate guidance={'yes' if no_mutate else 'no'})"
+
+  - name: gate_non_pf_design
+    description: Non-PF design request should not enforce PatternFly-approved sources
+    if: "annotations.get('expect_pf_sources') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf_sources = re.search(r'PatternFly\s*6.{0,80}(?:Components|Patterns)', text, re.IGNORECASE)
+      approved = re.search(r'approved-sources', text)
+      if pf_sources or approved:
+          return False, "Suggested PatternFly-approved sources for a non-PF design request"
+      return True, "Did not enforce PF-approved sources for non-PF design request"
+
+thresholds:
+  approved_sources_reference:
+    min_pass_rate: 0.67
+  pattern_first_selection:
+    min_pass_rate: 0.67
+  figma_use_prerequisite:
+    min_pass_rate: 0.67
+  new_frame_creation:
+    min_pass_rate: 1.0
+  gate_non_pf_design:
+    min_pass_rate: 1.0

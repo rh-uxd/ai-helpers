@@ -1,0 +1,147 @@
+name: pf-icon-finder-eval
+description: Evaluate pf-icon-finder's PatternFly icon identification — correct import paths, Icon wrapper for status, and component-managed icon detection
+
+# A/B delta: Without the skill, baseline Claude may suggest plausible but incorrect
+# @patternfly/react-icons import paths, miss the Icon wrapper pattern for status icons,
+# and not know which icons are component-managed (no import needed). The skill uniquely
+# contributes: exact PF icon names from its reference, @patternfly/react-icons import
+# format, Icon wrapper with status prop, and explicit-import vs component-managed
+# categorization.
+
+skill: pf-design-audit:pf-icon-finder
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-design-audit
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request describing icons to identify
+    - annotations.yaml: expect_pf_icons (true/false), scenario type, specific icon expectations
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces icon identification with PatternFly import statements,
+      Icon wrapper patterns for status icons, and component-managed icon guidance.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: correct_import_source
+    description: Uses @patternfly/react-icons as the import source
+    if: "annotations.get('expect_pf_icons') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf_import = re.search(r"@patternfly/react-icons", text)
+      if not pf_import:
+          return False, "Missing @patternfly/react-icons import source"
+      generic_import = re.findall(r'(?:import|from)\s+[\'"](?:react-icons|@mui/icons|@heroicons|lucide-react)', text)
+      if generic_import:
+          return False, f"Suggested non-PF icon library: {generic_import}"
+      return True, "Correctly uses @patternfly/react-icons as import source"
+
+  - name: status_icon_wrapper
+    description: Uses the Icon component wrapper with status prop for status icons
+    if: "annotations.get('scenario') == 'status'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      icon_wrapper = re.search(r'<Icon\s+[^>]*status\s*=', text)
+      if not icon_wrapper:
+          icon_wrapper = re.search(r'Icon[^.]{0,60}status\s*=\s*["\'](?:success|danger|warning|info)', text)
+      if not icon_wrapper:
+          return False, "Missing Icon wrapper with status prop for status icons"
+      pf_core_import = re.search(r'@patternfly/react-core', text)
+      if not pf_core_import:
+          return False, "Uses Icon wrapper but missing @patternfly/react-core import"
+      return True, "Correctly wraps status icons with Icon component and status prop"
+
+  - name: correct_icon_names
+    description: Uses actual PatternFly icon component names (PascalCase with Icon suffix)
+    if: "annotations.get('expect_pf_icons') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf_icons = re.findall(r'\b[A-Z][a-zA-Z]+Icon\b', text)
+      if len(pf_icons) < 2:
+          return False, f"Found only {len(pf_icons)} PF icon names — expected multiple icon identifications"
+      return True, f"Identified {len(pf_icons)} PF icon components: {', '.join(list(set(pf_icons))[:5])}"
+
+  - name: component_managed_detection
+    description: Identifies icons that are managed by PF components (no explicit import needed)
+    if: "annotations.get('scenario') == 'component_managed'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      managed_signals = re.compile(
+          r'(component.{0,30}manage|no.{0,20}import.{0,20}needed|handled.{0,20}by|built.{0,10}in|automatic)',
+          re.IGNORECASE
+      )
+      component_refs = re.compile(
+          r'(Checkbox|TreeView|Table|SearchInput|Dropdown|Select|Pagination)',
+          re.IGNORECASE
+      )
+      has_managed = managed_signals.search(text)
+      has_components = component_refs.search(text)
+      if not has_managed and not has_components:
+          return False, "Did not identify any component-managed icons"
+      if has_managed and has_components:
+          return True, "Correctly identifies component-managed icons with PF component references"
+      if has_components:
+          return True, "References PF components that manage their own icons"
+      return False, "Mentions managed icons but doesn't reference specific PF components"
+
+  - name: gate_non_pf
+    description: Non-PF icon request should not get @patternfly/react-icons guidance
+    if: "annotations.get('expect_pf_icons') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf_import = re.search(r'@patternfly/react-icons', text)
+      if pf_import:
+          return False, "Suggested @patternfly/react-icons for a non-PF project"
+      return True, "Did not suggest PF icons for non-PF project"
+
+thresholds:
+  correct_import_source:
+    min_pass_rate: 1.0
+  status_icon_wrapper:
+    min_pass_rate: 1.0
+  correct_icon_names:
+    min_pass_rate: 0.67
+  component_managed_detection:
+    min_pass_rate: 0.67
+  gate_non_pf:
+    min_pass_rate: 1.0
