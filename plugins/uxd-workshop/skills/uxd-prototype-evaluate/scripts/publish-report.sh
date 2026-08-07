@@ -113,6 +113,11 @@ publish_pages() {
   [[ -f "$ARTIFACTS_DIR/evaluation-report.csv" ]] && cp "$ARTIFACTS_DIR/evaluation-report.csv" "$REPORTS_PATH/$PROTO_KEY/"
   [[ -f "$ARTIFACTS_DIR/journey-log.json" ]] && cp "$ARTIFACTS_DIR/journey-log.json" "$REPORTS_PATH/$PROTO_KEY/"
 
+  # Copy screenshots directory (fallback for any relative paths not inlined as base64)
+  if [[ -d "$ARTIFACTS_DIR/screenshots" ]]; then
+    cp -r "$ARTIFACTS_DIR/screenshots" "$REPORTS_PATH/$PROTO_KEY/screenshots"
+  fi
+
   # Write metadata.json with MR/repo info if available from extract state
   local EXTRACT_STATE="$ARTIFACTS_DIR/extract-state.json"
   if [[ -f "$EXTRACT_STATE" ]]; then
