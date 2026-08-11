@@ -19,6 +19,12 @@ Also handles iterative refinement: after `uxd-prototype-evaluate` (Playwright AC
 
 Supports **pipeline mode** (create → evaluate → optional refine → publish). See [references/pipeline-mode.md](references/pipeline-mode.md).
 
+### Workspace vs. Target (important)
+
+The **workspace** (`--workspace`) is always the codebase the prototype is built on top of. All cloning, analysis, code generation, verification, and commits happen in the workspace clone. The prototype must compile and run within the workspace's tech stack.
+
+The **target** (`--target`) is only the push destination — where the branch and merge request land. When `--target` is a git URL different from `--workspace`, the workspace clone gets an `upstream` remote pointed at the target for the push. Do **not** clone, analyze, or generate code against the target repo's codebase. The target repo receives the workspace's code via the MR branch.
+
 ---
 
 ## Conversational Onboarding
@@ -36,10 +42,12 @@ Before doing any work, walk through these questions with the user. Ask them one 
 ### Question 2: Building on an existing codebase?
 
 > Should I integrate this into an existing codebase, or create a standalone HTML prototype?
-> - **Existing codebase** — give me a local path or git URL. I'll match the existing conventions.
+> - **Existing codebase** — give me a local path or git URL. I'll clone it and build the prototype inside that codebase, matching its conventions.
 > - **Standalone** — I'll generate self-contained HTML using PatternFly CDN. No build tools needed.
 
 Default to standalone if the user isn't sure.
+
+If the user provides a separate push target (e.g., "push to repo X"), that only affects where the MR lands — the workspace URL above is still the codebase the prototype is built in.
 
 ### Question 3: How should design decisions be handled?
 
@@ -81,9 +89,9 @@ Prototype Plan:
 
 | Flag | Values | Default | Description |
 |------|--------|---------|-------------|
-| `--workspace` | local path, git URL, or `standalone` | `standalone` | Where to build (often a fork) |
+| `--workspace` | local path, git URL, or `standalone` | `standalone` | The codebase to build the prototype in — all code generation, analysis, and verification happen here (often a fork) |
 | `--workspace-branch` | branch name | auto-detected from URL / default branch | Branch to clone from `--workspace` |
-| `--target` | `repo`, `github`, `gitlab`, `vercel`, `none`, or a git URL | `none` (pipeline) | Where to publish; a git URL means open an MR/PR **against** that repo (implies `repo`) |
+| `--target` | `repo`, `github`, `gitlab`, `vercel`, `none`, or a git URL | `none` (pipeline) | Push destination only — where to publish the MR/PR; a git URL opens an MR **against** that repo (implies `repo`). Never used as the build codebase. |
 | `--target-branch` | branch name | `--workspace-branch` (legacy fallback) | MR/PR base branch on `--target` |
 | `--decisions` | `skip`, `auto`, `human` | `skip` | Whether / how to run the decision kit |
 | `--depth` | `under`, `normal`, `over` | `normal` | Decision count when `--decisions` is `auto` or `human`: under 2–3, normal 4–7, over 8–12 |
@@ -171,7 +179,7 @@ All create/publish artifacts share the **consumer project** tree at `.artifacts/
 
 **Standalone mode:** Create `.artifacts/{ID}/prototype/`. Skip to Step 6.
 
-**Workspace mode:** Clone the target codebase into `.artifacts/{ID}/code/` (keeps source separate from decision pages, reports, and other artifacts). Use the resolve script (needs elevated permissions for git clone — `required_permissions: ["all"]` in Cursor):
+**Workspace mode:** Clone the **workspace** codebase into `.artifacts/{ID}/code/` (keeps source separate from decision pages, reports, and other artifacts). This is the codebase the prototype is built on top of — all analysis, code generation, and verification happen here. If a separate `--target` was provided, it only affects where the branch is pushed later; do not clone or use the target's codebase. Use the resolve script (needs elevated permissions for git clone — `required_permissions: ["all"]` in Cursor):
 
 ```bash
 python3 "${CLAUDE_SKILL_DIR}/scripts/resolve_workspace.py" "<path-or-url>" \
@@ -223,8 +231,10 @@ Store all decision artifacts in `.artifacts/{ID}/decisions/` (decision pages, `i
 
 ### Workspace Mode
 
+Generate all code in the workspace clone (`.artifacts/{ID}/code/`). Even when `--target` points to a different repo, the workspace clone is the only codebase used for generation. The target repo's code is never cloned or referenced.
+
 1. Plan file changes based on codebase analysis and design decisions
-2. Generate components following the project's conventions (imports, TypeScript, CSS approach)
+2. Generate components following the **workspace** project's conventions (imports, TypeScript, CSS approach)
 3. Register routes and update navigation
 4. Implement each design decision from Step 7
 5. Wire mock data **and on-load end-state** per scenario in `.artifacts/{ID}/scenarios.json` — pages read `window.UxdScenario.get()` or `useUxdScenario` and seed the intended UI immediately (see [references/scenario-mocks.md](references/scenario-mocks.md)); active scenario is `?scenario=<id>`. Selecting a scenario must not require further clicks to reveal its state.
