@@ -30,6 +30,11 @@
       "description": "Design audit — validate designs against PatternFly standards"
     },
     {
+      "name": "pf-a11y",
+      "source": "./plugins/patternfly/pf-a11y",
+      "description": "Accessibility auditing — WCAG 2.2 compliance, ARIA validation, PF-specific a11y patterns"
+    },
+    {
       "name": "pf-migration",
       "source": "./plugins/patternfly/pf-migration",
       "description": "PF version migration — breaking change detection, upgrade planning"

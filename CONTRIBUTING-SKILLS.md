@@ -75,6 +75,7 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 <tr><th>Plugin</th><th>What it does</th><th>Example skills</th></tr>
 <tr><td nowrap><b>patternfly</b></td><td>Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs</td><td></td></tr>
 <tr><td nowrap><b>uxd-workshop</b></td><td>UXD team tools and skill incubator — prototyping, research, design review, team workflows</td><td>`uxd-evaluate-design-heuristics`, `uxd-figma-read`, `uxd-prototype-create`</td></tr>
+<tr><td nowrap><b>pf-a11y</b></td><td>Accessibility auditing, reporting, and documentation</td><td>`pf-a11y-audit`</td></tr>
 <tr><td nowrap><b>pf-code-review</b></td><td>Code review and quality — adversarial review, security patterns</td><td>`pf-review`, `pf-security-scan`</td></tr>
 <tr><td nowrap><b>pf-design-audit</b></td><td>Design audit — validate existing code and designs against PatternFly standards</td><td>`pf-ai-audit`, `pf-color-scan`, `pf-css-token-check`</td></tr>
 <tr><td nowrap><b>pf-design-guide</b></td><td>Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation</td><td>`pf-figma-design-mode`</td></tr>
@@ -97,6 +98,7 @@ Plugin names must tell a user exactly what the plugin helps them do. A user brow
 **Good names** describe the capability:
 - `patternfly` — Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
 - `uxd-workshop` — UXD team tools and skill incubator — prototyping, research, design review, team workflows
+- `pf-a11y` — Accessibility auditing, reporting, and documentation
 - `pf-code-review` — Code review and quality — adversarial review, security patterns
 - `pf-design-audit` — Design audit — validate existing code and designs against PatternFly standards
 - `pf-design-guide` — Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation

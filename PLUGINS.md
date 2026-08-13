@@ -6,6 +6,7 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 
 - [patternfly](#patternfly) — Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
 - [uxd-workshop](#uxd-workshop) — UXD team tools and skill incubator — prototyping, research, design review, team workflows
+- [pf-a11y](#pf-a11y) — Accessibility auditing, reporting, and documentation
 - [pf-code-review](#pf-code-review) — Code review and quality — adversarial review, security patterns
 - [pf-design-audit](#pf-design-audit) — Design audit — validate existing code and designs against PatternFly standards
 - [pf-design-guide](#pf-design-guide) — Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation
@@ -45,6 +46,18 @@ UXD team tools and skill incubator — prototyping, research, design review, tea
 <table>
 <tr><th>Agent</th><th>Description</th></tr>
 <tr><td nowrap><code>uxd-assist</code></td><td>UXD skill routing — maps task context to the right UXD sub-skills for research, design review, and prototyping.</td></tr>
+</table>
+
+
+<br>
+
+### pf-a11y
+
+Accessibility auditing, reporting, and documentation
+
+<table>
+<tr><th>Skill</th><th>Description</th></tr>
+<tr><td nowrap><code>pf-a11y-audit</code></td><td>Audit PatternFly components and pages against WCAG 2.2 and ARIA best practices.</td></tr>
 </table>
 
 

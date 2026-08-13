@@ -4,4 +4,8 @@
 
 Accessibility auditing, reporting, and documentation.
 
-No skills or agents yet.
+## What's Included
+
+### Skills
+
+- **PF Accessibility Audit** (`/pf-a11y:pf-a11y-audit`) — Audit PatternFly components and pages against WCAG 2.2 and ARIA best practices.
