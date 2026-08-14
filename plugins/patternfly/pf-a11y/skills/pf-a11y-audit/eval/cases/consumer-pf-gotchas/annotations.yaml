@@ -1,0 +1,8 @@
+expect_violations: true
+audience: consumer
+violation_types:
+  - duplicate-default-labels
+  - missing-live-region
+  - icon-only-buttons
+  - duplicate-nav-landmarks
+  - missing-table-label
