@@ -1,0 +1,1 @@
+prompt: "I'm building a PatternFly React page that has a data table with sortable columns, a search input in the toolbar, checkboxes for row selection, and a dropdown for bulk actions. Do I need to import icons for the sort arrows, search magnifying glass, checkbox marks, and dropdown carets, or does PatternFly handle those automatically?"

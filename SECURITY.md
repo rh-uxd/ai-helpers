@@ -25,13 +25,26 @@ This repository distributes AI coding plugins (skills and agents) as Markdown an
 
 ## What Is NOT a Security Issue
 
-- Skills that reference internal URLs requiring authentication (access is controlled at the endpoint)
 - Public Red Hat URLs (`ux.redhat.com`, `brand.redhat.com`, `patternfly.org`)
 - Plugin manifest metadata (author names, descriptions)
+
+**Note:** Internal URLs (`.corp.`, `pages.redhat.com`, etc.) are blocked by CI — not because they're a vulnerability, but because they indicate content that belongs in the [internal repo](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers) instead of this public one.
 
 ## How Contributions Are Reviewed
 
 See [GOVERNANCE.md](GOVERNANCE.md) for the review layers that every contribution passes through before it can affect a user's system.
+
+## Automated Security Scanning
+
+Every PR is scanned by multiple automated tools at two enforcement levels:
+
+**Blocking** (fails the PR):
+- **Internal URL & secret scan** — grep-based detection of internal Red Hat URLs and token prefixes
+
+**Advisory** (findings reported, does not block merge):
+- **CodeRabbit** — AI-powered review for hardcoded secrets and unsafe code patterns (PR comments)
+- **Skillsaw** — content linter that catches embedded secrets in skill definitions (annotations)
+- **[AI Guardian](https://github.com/RedHatProductSecurity/ai-guardian)** — security scanner for credential exfiltration, prompt injection, and code vulnerabilities (SARIF)
 
 ## Supported Versions
 

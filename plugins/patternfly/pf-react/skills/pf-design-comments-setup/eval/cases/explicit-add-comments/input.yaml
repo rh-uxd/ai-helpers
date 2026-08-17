@@ -1,0 +1,1 @@
+prompt: "Add design comments to my PatternFly React app so designers can leave feedback directly on the UI. I want GitHub Issues sync and Jira linking. My project uses the PatternFly React Seed template with webpack. Walk me through the full setup including environment variables."

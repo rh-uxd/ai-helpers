@@ -1,0 +1,3 @@
+expect_design_comments: true
+scenario: vite_boundary
+tests_env_config: false

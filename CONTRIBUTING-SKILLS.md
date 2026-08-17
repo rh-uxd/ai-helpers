@@ -2,13 +2,9 @@
 
 ## Before you start: which repo?
 
-If your skill accesses any of these, it belongs in the [internal repo](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers) (VPN required):
-
-- Employee data (names, managers, reporting lines)
-- Internal APIs or MCP endpoints
-- Internal spreadsheets, Slack workspaces, or GitLab projects
-
-Everything else belongs here. If you're not sure, start here — PR review will catch it.
+> **Does your skill touch internal data or VPN-only systems?**
+> Yes → [internal repo on GitLab](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers)
+> No or not sure → **this repo.** PR review will catch anything that should move.
 
 ## Step 1: Create your skill locally
 
@@ -75,6 +71,7 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 <tr><th>Plugin</th><th>What it does</th><th>Example skills</th></tr>
 <tr><td nowrap><b>patternfly</b></td><td>Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs</td><td></td></tr>
 <tr><td nowrap><b>uxd-workshop</b></td><td>UXD team tools and skill incubator — prototyping, research, design review, team workflows</td><td>`uxd-evaluate-design-heuristics`, `uxd-figma-read`, `uxd-prototype-create`</td></tr>
+<tr><td nowrap><b>pf-a11y</b></td><td>Accessibility auditing, reporting, and documentation</td><td>`pf-a11y-audit`</td></tr>
 <tr><td nowrap><b>pf-code-review</b></td><td>Code review and quality — adversarial review, security patterns</td><td>`pf-review`, `pf-security-scan`</td></tr>
 <tr><td nowrap><b>pf-design-audit</b></td><td>Design audit — validate existing code and designs against PatternFly standards</td><td>`pf-ai-audit`, `pf-color-scan`, `pf-css-token-check`</td></tr>
 <tr><td nowrap><b>pf-design-guide</b></td><td>Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation</td><td>`pf-figma-design-mode`</td></tr>
@@ -96,7 +93,7 @@ Plugin names must tell a user exactly what the plugin helps them do. A user brow
 <!-- BEGIN GOOD NAMES -->
 **Good names** describe the capability:
 - `patternfly` — Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
-- `uxd-workshop` — UXD team tools and skill incubator — prototyping, research, design review, team workflows
+- `pf-a11y` — Accessibility auditing, reporting, and documentation
 - `pf-code-review` — Code review and quality — adversarial review, security patterns
 - `pf-design-audit` — Design audit — validate existing code and designs against PatternFly standards
 - `pf-design-guide` — Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation
@@ -150,7 +147,7 @@ All skills use a domain prefix — `pf-` for PatternFly, `uxd-` for UXD — rega
 
 ### Verb suffixes
 
-End your skill name with one of these four verbs. This is a closed set — every skill must use one of them.
+End your skill name with one of these four verbs, unless the name is already a recognizable process.
 
 | Suffix | Meaning | Examples |
 |--------|---------|----------|
@@ -161,14 +158,15 @@ End your skill name with one of these four verbs. This is a closed set — every
 
 **Decision tree:**
 
-1. Does your skill produce something new? → `-gen`
-2. Does your skill check existing work with judgment? → `-review`
-3. Does your skill validate against fixed rules? → `-audit`
-4. Does your skill transform code between versions? → `-migrate`
+1. Is the skill name already a recognizable process (e.g., discovery, synthesis, handoff, triage)? → suffix optional
+2. Does your skill produce something new? → `-gen`
+3. Does your skill check existing work with judgment? → `-review`
+4. Does your skill validate against fixed rules? → `-audit`
+5. Does your skill transform code between versions? → `-migrate`
 
-If none of these fit, open a PR proposing a new verb. Justify why the four core verbs don't apply — the bar is high.
+If none of these fit, open a PR proposing a new verb. Justify why the four core verbs don't apply — the bar is high. When in doubt, add the suffix — clarity over brevity.
 
-**Note:** Some existing skills use older suffixes (`-check`, `-scan`, `-setup`, `-read`) that predate this convention. These map to the core verbs: `-check` and `-scan` → `-audit`, `-setup` and `-create` → `-gen`, `-read` → `-review`. New skills must use the core verbs.
+**Note:** Some existing skills use older suffixes (`-check`, `-scan`, `-setup`, `-read`) that predate this convention. These map to the core verbs: `-check` and `-scan` → `-audit`, `-setup` and `-create` → `-gen`, `-read` → `-review`.
 
 ## Writing descriptions
 
@@ -287,6 +285,27 @@ In addition to the skill-creator guidance, skills in this repo must follow these
   ```
 - Use `$CLAUDE_SKILL_DIR` to reference scripts relative to the skill directory — it resolves to the directory containing SKILL.md regardless of where the repo is cloned
 
+### MCP dependencies
+
+Treat MCP servers as **enhancements, not requirements** unless the skill's entire purpose is MCP orchestration (e.g., `pf-figma-design-mode`).
+
+- **Use "if available" fallback language.** If MCP enriches your skill but isn't essential, say so: *"If `@patternfly/patternfly-mcp` is available, use it for current props and examples."* See `pf-component-check` for the pattern.
+- **Don't claim MCP as required when it isn't.** If your skill works fine without MCP, don't put "Requires MCP" in the description.
+- **Separate decisions from execution.** Even MCP-driven skills make decisions (component selection, layout structure) before calling MCP tools. Your skill's judgment should be testable without MCP connected.
+
+### Skill maturity
+
+Skills use a `version` field in frontmatter to signal maturity:
+
+| Version | Meaning |
+|---------|---------|
+| `0.x.0` | Draft — functional but not yet reviewed or validated. |
+| `1.0.0` | Evals passing and team has approved the version bump via PR. |
+
+Version signals maturity within whatever plugin the skill lives in — it does not determine who the skill is for. Which plugin a skill belongs to determines that (e.g., workshop plugins are team tools and incubating skills, consumer plugins are for anyone). A skill can reach `1.0.0` in a workshop plugin and stay there, or graduate to a consumer plugin.
+
+A `1.0.0` bump requires evals regardless of which plugin the skill lives in. Bump when the skill materially changes, not on every edit.
+
 ### Evals
 
 Evals are **expected** for consumer-facing skills. A skill graduating from a workshop to a consumer plugin should have an eval that proves its value.
@@ -317,6 +336,22 @@ Existing violations are baselined. You'll only see issues introduced by your cha
 
 *Inspired by [RedHatProductSecurity/prodsec-skills](https://github.com/RedHatProductSecurity/prodsec-skills).*
 
+### AI Guardian
+
+[AI Guardian](https://github.com/RedHatProductSecurity/ai-guardian) scans bundled scripts and skill files for security issues that content linters miss: credential exfiltration patterns, code vulnerabilities (via bandit/semgrep), and prompt injection attacks.
+
+**You don't need to install anything.** AI Guardian runs in CI on every PR that touches `plugins/`. If you want to run it locally:
+
+```bash
+make security
+```
+
+This uses `uvx` (zero-install) to run AI Guardian against the plugins directory. You need [uv](https://docs.astral.sh/uv/getting-started/installation/) installed.
+
+AI Guardian findings are **blocking** — address them before merge.
+
+*A cross-team collaboration with [Red Hat Product Security](https://github.com/RedHatProductSecurity).*
+
 ### Security rules
 
 Skills are instructions that an AI tool follows on behalf of a user. Contributors must not include instructions that:
@@ -327,7 +362,7 @@ Skills are instructions that an AI tool follows on behalf of a user. Contributor
 - Use `eval`, `exec`, or `curl | bash` patterns in bundled scripts
 - Access files outside the target project without stating why
 
-Bundled scripts (`.sh`, `.js`, `.py`, `.ts`) are reviewed for these patterns automatically by CodeRabbit. See [GOVERNANCE.md](GOVERNANCE.md) for the full review process.
+Bundled scripts (`.sh`, `.js`, `.py`, `.ts`) are reviewed for these patterns automatically by CodeRabbit and [AI Guardian](#ai-guardian). See [GOVERNANCE.md](GOVERNANCE.md) for the full review process.
 
 ## Skill ideas to get you started
 

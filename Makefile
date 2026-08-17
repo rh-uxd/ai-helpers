@@ -1,4 +1,4 @@
-.PHONY: validate lint scaffold help
+.PHONY: validate lint security scaffold help
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
@@ -22,6 +22,14 @@ lint: ## Run skillsaw content linter (zero-install via uvx)
 	}
 	@echo "Running skillsaw..."
 	@uvx skillsaw lint .
+
+security: ## Run AI Guardian security scan (zero-install via uvx)
+	@command -v uvx >/dev/null 2>&1 || { \
+		echo "Error: uvx not found. Install uv: https://docs.astral.sh/uv/getting-started/installation/"; \
+		exit 1; \
+	}
+	@echo "Running AI Guardian..."
+	@uvx ai-guardian scan plugins/ --exclude '**/eval/cases/**'
 
 docs: ## Regenerate PLUGINS.md, README plugin table, and CONTRIBUTING-SKILLS.md
 	@bash scripts/generate-plugins-md.sh

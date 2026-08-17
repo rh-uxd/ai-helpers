@@ -1,0 +1,142 @@
+name: pf-a11y-audit-eval
+description: Evaluate pf-a11y-audit's detection of WCAG violations and PF-specific accessibility pitfalls
+
+skill: pf-a11y:pf-a11y-audit
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: expect_violations (true/false), audience (consumer/pf-developer), and violation_types
+    - A .tsx fixture file the prompt references
+    - Optionally a package.json to signal PF developer context
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces a text report with [ERROR|WARN|INFO] findings
+      grouped by file and severity, plus an Accessibility Audit Summary.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: flags_consumer_gotchas
+    description: Detects PF-specific accessibility gotchas from references/pf-gotchas.md
+    if: "annotations.get('expect_violations') == True and 'duplicate-default-labels' in annotations.get('violation_types', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      checks = {
+          "duplicate-labels": r'(?i)(duplicate|multiple|same).{0,40}(aria-label|accessible name|label)',
+          "live-region": r'(?i)(AlertGroup|alert.group).{0,60}(isLiveRegion|live.region|aria-live)',
+          "icon-buttons": r'(?i)(icon.only|icon.button|TrashIcon|EditIcon).{0,60}(aria-label|accessible name|label)',
+          "nav-landmarks": r'(?i)(Nav|<nav|navigation).{0,60}(unique|distinct|duplicate|multiple).{0,40}(aria-label|label|landmark)',
+          "table-label": r'(?i)(Table|<table).{0,60}(missing|no|without).{0,40}(aria-label|accessible name|caption|label)',
+      }
+      found = {k for k, p in checks.items() if re.search(p, text)}
+      if len(found) < 3:
+          missing = set(checks.keys()) - found
+          return False, f"Only flagged {len(found)}/5 PF gotchas. Missed: {', '.join(sorted(missing))}"
+      return True, f"Flagged {len(found)}/5 PF-specific consumer gotchas: {', '.join(sorted(found))}"
+
+  - name: flags_aria_wiring
+    description: Detects missing ARIA attribute wiring in PF component source
+    if: "annotations.get('expect_violations') == True and 'missing-aria-expanded' in annotations.get('violation_types', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      patterns = [
+          r'(?i)aria-expanded.{0,60}(missing|not set|not wired|absent|should)',
+          r'(?i)(toggle|expandable|collaps).{0,60}aria-expanded',
+      ]
+      found = any(re.search(p, text) for p in patterns)
+      if not found:
+          return False, "Did not flag missing aria-expanded on expandable toggle button"
+      return True, "Correctly flagged missing aria-expanded wiring in component source"
+
+  - name: flags_form_pf_advice
+    description: Detects form violations with PF-specific fix recommendations
+    if: "annotations.get('expect_violations') == True and 'missing-form-label' in annotations.get('violation_types', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      detection = re.search(r'(?i)FormGroup.{0,60}(missing|without|no).{0,30}label', text)
+      pf_fix = re.search(r'(?i)(fieldId|isRequired|HelperText.{0,40}variant)', text)
+      if not detection:
+          return False, "Did not flag FormGroup without label"
+      if not pf_fix:
+          return False, "Flagged FormGroup but did not recommend PF-specific fix (fieldId, isRequired, or HelperText variant)"
+      return True, "Correctly flagged form issues with PF-specific fix recommendations"
+
+  - name: no_false_positives
+    description: Does not flag valid accessibility patterns as violations
+    if: "annotations.get('expect_violations') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      false_positive_patterns = [
+          (r'(?i)(ERROR|violation|incorrect|invalid|wrong).{0,60}alt=""', "decorative image alt=\"\""),
+          (r'(?i)(ERROR|violation).{0,60}role="presentation"', "role=\"presentation\""),
+          (r'(?i)(ERROR|violation).{0,60}(Select|MenuToggle).{0,40}aria-expanded', "PF-managed aria-expanded"),
+      ]
+      for pattern, desc in false_positive_patterns:
+          if re.search(pattern, text):
+              return False, f"False positive — flagged valid pattern as violation: {desc}"
+      return True, "No false positives on valid accessibility patterns"
+
+  - name: has_output_format
+    description: Output uses the structured severity format
+    if: "annotations.get('expect_violations') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_severity = re.search(r'\[(ERROR|WARN|INFO)\]', text)
+      has_summary = re.search(r'(?i)(audit summary|scanned|errors.*warnings)', text)
+      if not has_severity:
+          return False, "Output missing [ERROR|WARN|INFO] severity markers"
+      if not has_summary:
+          return False, "Output missing audit summary section"
+      return True, "Output uses structured severity format with summary"
+
+thresholds:
+  flags_consumer_gotchas:
+    min_pass_rate: 1.0
+  flags_aria_wiring:
+    min_pass_rate: 0.67
+  flags_form_pf_advice:
+    min_pass_rate: 0.67
+  no_false_positives:
+    min_pass_rate: 1.0
+  has_output_format:
+    min_pass_rate: 0.67

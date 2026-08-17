@@ -1,0 +1,209 @@
+name: pf-design-comments-setup-eval
+description: Evaluate pf-design-comments-setup's integration of @patternfly/design-comments — package, CLI, provider wiring, env config, and uninstall
+
+# A/B delta: Without the skill, baseline Claude does not know @patternfly/design-comments
+# exists. It suggests building custom commenting systems or using generic libraries.
+# The skill uniquely contributes: correct package name, `npx design-comments init` CLI,
+# CommentProvider/GitHubAuthProvider wiring, CommentPanel/CommentOverlay components,
+# webpack proxy middleware requirement, .env/.env.server separation, and the
+# remove-before-uninstall sequence.
+
+skill: pf-react:pf-design-comments-setup
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-react
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: expect_design_comments (true/false), scenario type
+    Some cases include fixture files (package.json) the prompt references.
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces conversation guidance for integrating @patternfly/design-comments.
+      Judges check conversation text and file artifacts for correct package references,
+      CLI commands, provider components, and env configuration patterns.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: correct_package
+    description: References @patternfly/design-comments, not a generic commenting library
+    if: "annotations.get('expect_design_comments') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf_pkg = re.search(r'@patternfly/design-comments', text)
+      if not pf_pkg:
+          return False, "Missing @patternfly/design-comments package reference"
+      generic = re.findall(r'(?:npm install|yarn add)\s+(?:react-comments|disqus|commento|utterances)', text, re.IGNORECASE)
+      if generic:
+          return False, f"Suggested generic commenting library instead of PF package: {generic}"
+      return True, "Correctly references @patternfly/design-comments package"
+
+  - name: uses_init_cli
+    description: Mentions npx design-comments init for automated integration
+    if: "annotations.get('scenario') == 'install'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      init_cmd = re.search(r'npx\s+design-comments\s+init', text)
+      if not init_cmd:
+          return False, "Missing 'npx design-comments init' CLI command"
+      return True, "Correctly recommends npx design-comments init"
+
+  - name: correct_providers
+    description: References CommentProvider (required) for app wiring
+    if: "annotations.get('scenario') == 'install'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      comment_provider = re.search(r'CommentProvider', text)
+      if not comment_provider:
+          return False, "Missing CommentProvider — required for design-comments integration"
+      github_auth = re.search(r'GitHubAuthProvider', text)
+      return True, f"References CommentProvider (required), GitHubAuthProvider={'yes' if github_auth else 'no'}"
+
+  - name: correct_components
+    description: References CommentPanel and/or CommentOverlay for layout integration
+    if: "annotations.get('scenario') == 'install'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      panel = re.search(r'CommentPanel', text)
+      overlay = re.search(r'CommentOverlay', text)
+      if not panel and not overlay:
+          return False, "Missing CommentPanel or CommentOverlay component references"
+      return True, f"References layout components: CommentPanel={'yes' if panel else 'no'}, CommentOverlay={'yes' if overlay else 'no'}"
+
+  - name: webpack_middleware
+    description: Mentions webpack proxy middleware requirement for OAuth/Jira/AI integrations
+    if: "annotations.get('scenario') == 'install'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      webpack_ref = re.search(r'webpack[^.]*(?:dev|proxy|middleware)', text, re.IGNORECASE)
+      if not webpack_ref:
+          webpack_ref = re.search(r'webpack\.dev\.js', text)
+      if not webpack_ref:
+          return False, "Missing webpack proxy middleware reference — required for OAuth/Jira/AI integrations"
+      return True, "Mentions webpack proxy middleware requirement"
+
+  - name: env_separation
+    description: Distinguishes .env (client-safe) from .env.server (secrets)
+    if: "annotations.get('tests_env_config') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      env_file = re.search(r'\.env\b', text)
+      env_server = re.search(r'\.env\.server', text)
+      if not env_server:
+          return False, "Missing .env.server reference — secrets should not go in .env"
+      if not env_file:
+          return False, "Missing .env reference for client-safe values"
+      return True, "Correctly separates .env (client) and .env.server (secrets)"
+
+  - name: correct_uninstall_order
+    description: Runs npx design-comments remove BEFORE npm uninstall
+    if: "annotations.get('scenario') == 'uninstall'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      remove_cmd = re.search(r'npx\s+design-comments\s+remove', text)
+      if not remove_cmd:
+          return False, "Missing 'npx design-comments remove' — must run remove before uninstall"
+      # Find command-context occurrences (backticks or code blocks)
+      cmd_blocks = re.findall(r'(?:`[^`]*`|```[^`]*```)', text, re.DOTALL)
+      cmd_text = "\n".join(cmd_blocks) if cmd_blocks else text
+      remove_pos = cmd_text.find('design-comments remove')
+      uninstall_pos = cmd_text.find('npm uninstall')
+      if uninstall_pos == -1:
+          uninstall_pos = cmd_text.find('yarn remove')
+      if uninstall_pos != -1 and remove_pos > uninstall_pos:
+          return False, "Wrong order: npm uninstall appears before npx design-comments remove in commands"
+      return True, "Correctly runs remove before uninstall"
+
+  - name: vite_warning
+    description: Warns about Vite incompatibility with design-comments init
+    if: "annotations.get('scenario') == 'vite_boundary'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      warn = re.search(r'(?:vite|Vite)[^.]{0,120}(?:fail|warn|manual|not supported|incompatible|may not work|won.t work|issue)', text, re.IGNORECASE)
+      if not warn:
+          warn = re.search(r'(?:fail|warn|manual|not supported|incompatible)[^.]{0,120}(?:vite|Vite)', text, re.IGNORECASE)
+      if not warn:
+          return False, "Missing warning about Vite incompatibility with npx design-comments init"
+      return True, "Correctly warns about Vite/non-webpack incompatibility"
+
+  - name: gate_non_react
+    description: Non-React project should not get @patternfly/design-comments integration
+    if: "annotations.get('expect_design_comments') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf_pkg = re.search(r'@patternfly/design-comments', text)
+      if pf_pkg:
+          return False, "Suggested @patternfly/design-comments for a non-React project"
+      return True, "Did not suggest PF design-comments for non-React project"
+
+thresholds:
+  correct_package:
+    min_pass_rate: 1.0
+  uses_init_cli:
+    min_pass_rate: 0.67
+  correct_providers:
+    min_pass_rate: 0.67
+  correct_components:
+    min_pass_rate: 0.67
+  webpack_middleware:
+    min_pass_rate: 0.67
+  env_separation:
+    min_pass_rate: 1.0
+  correct_uninstall_order:
+    min_pass_rate: 1.0
+  vite_warning:
+    min_pass_rate: 1.0
+  gate_non_react:
+    min_pass_rate: 1.0

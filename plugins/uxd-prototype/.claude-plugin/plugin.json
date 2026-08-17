@@ -1,0 +1,7 @@
+{
+  "name": "uxd-prototype",
+  "description": "UX prototyping pipeline — create, evaluate, and publish prototypes",
+  "author": { "name": "UXD Team" },
+  "repository": "https://github.com/rh-uxd/ai-helpers",
+  "license": "Apache-2.0"
+}

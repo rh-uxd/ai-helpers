@@ -1,6 +1,7 @@
 {
   "name": "uxd-workshop",
   "description": "UXD team tools and skill incubator — prototyping, research, design review, team workflows",
+  "category": "workshop",
   "author": {
     "name": "UXD Team"
   },

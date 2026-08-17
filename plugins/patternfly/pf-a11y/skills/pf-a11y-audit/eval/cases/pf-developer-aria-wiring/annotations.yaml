@@ -1,0 +1,4 @@
+expect_violations: true
+audience: pf-developer
+violation_types:
+  - missing-aria-expanded

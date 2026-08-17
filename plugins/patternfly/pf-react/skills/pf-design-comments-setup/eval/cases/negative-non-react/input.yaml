@@ -1,0 +1,1 @@
+prompt: "Add a commenting system to my Python Flask API so users can leave feedback on API responses. I want threaded comments with GitHub Issues sync."

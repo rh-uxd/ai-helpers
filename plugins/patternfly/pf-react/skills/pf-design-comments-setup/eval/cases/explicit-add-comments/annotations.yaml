@@ -1,0 +1,3 @@
+expect_design_comments: true
+scenario: install
+tests_env_config: true

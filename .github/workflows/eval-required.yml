@@ -1,0 +1,94 @@
+name: Eval Required
+
+on:
+  pull_request:
+    paths:
+      - "plugins/**/skills/**"
+
+jobs:
+  check-eval-coverage:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Check eval coverage for changed skills
+        run: |
+          CHANGED=$(git diff --name-only origin/main...HEAD)
+
+          declare -A CHECKED
+          MISSING=()
+          PASS=()
+          SKIP=()
+
+          while IFS= read -r file; do
+            [[ -z "$file" ]] && continue
+
+            skill=""
+            plugin=""
+
+            if [[ "$file" =~ ^plugins/patternfly/([^/]+)/skills/([^/]+)/ ]]; then
+              plugin="${BASH_REMATCH[1]}"
+              skill="${BASH_REMATCH[2]}"
+            elif [[ "$file" =~ ^plugins/([^/]+)/skills/([^/]+)/ ]]; then
+              plugin="${BASH_REMATCH[1]}"
+              skill="${BASH_REMATCH[2]}"
+            fi
+
+            [[ -z "$skill" ]] && continue
+            [[ -n "${CHECKED[$skill]:-}" ]] && continue
+            CHECKED["$skill"]=1
+
+            # Workshop plugins (*-workshop) are incubation spaces where evals
+            # are optional. This matches the convention in detect-changed-skills.sh.
+            if [[ "$plugin" == *-workshop ]]; then
+              SKIP+=("$skill ($plugin)")
+              continue
+            fi
+
+            # Check for colocated eval
+            if find plugins -path "*/${skill}/eval/eval.yaml" -print -quit | grep -q .; then
+              PASS+=("$skill")
+            else
+              MISSING+=("$skill ($plugin)")
+            fi
+          done <<< "$CHANGED"
+
+          echo "## Eval Coverage Check" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+
+          for s in "${PASS[@]+"${PASS[@]}"}"; do
+            echo "✅ $s — has eval"
+            echo "- ✅ \`$s\` — has eval" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+          for s in "${SKIP[@]+"${SKIP[@]}"}"; do
+            echo "⏭️  $s — workshop, eval optional"
+            echo "- ⏭️ \`$s\` — workshop plugin, eval optional" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+          for s in "${MISSING[@]+"${MISSING[@]}"}"; do
+            echo "❌ $s — MISSING eval"
+            echo "- ❌ \`$s\` — **missing eval**" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+          if [[ ${#MISSING[@]} -gt 0 ]]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "### What to do" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "Consumer-facing skills require a colocated eval at \`skills/<name>/eval/eval.yaml\`." >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "An eval proves the skill adds value beyond what a base model knows without the skill loaded." >> "$GITHUB_STEP_SUMMARY"
+            echo "See [CONTRIBUTING-SKILLS.md](https://github.com/rh-uxd/ai-helpers/blob/main/CONTRIBUTING-SKILLS.md#requirements-for-this-repo) for requirements" >> "$GITHUB_STEP_SUMMARY"
+            echo "and [pf-a11y-audit/eval](https://github.com/rh-uxd/ai-helpers/tree/main/plugins/patternfly/pf-a11y/skills/pf-a11y-audit/eval) for a working example." >> "$GITHUB_STEP_SUMMARY"
+            echo ""
+            echo "::error::Missing evals for non-workshop skills: ${MISSING[*]}. See the step summary for guidance."
+            exit 1
+          fi
+
+          echo ""
+          echo "All changed non-workshop skills have evals."

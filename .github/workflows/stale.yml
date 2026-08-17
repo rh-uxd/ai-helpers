@@ -4,6 +4,7 @@ on:
     - cron: '0 12 * * *'
 jobs:
   stale:
+    if: github.repository == 'rh-uxd/ai-helpers'
     runs-on: ubuntu-latest
     permissions:
       issues: write
