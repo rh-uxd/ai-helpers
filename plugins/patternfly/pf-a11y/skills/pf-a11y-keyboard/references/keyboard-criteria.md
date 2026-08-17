@@ -51,7 +51,7 @@ Tab and Shift+Tab move focus sequentially through all interactive and truncated 
 
 ### Expected behavior
 
-- Every interactive element (`button`, `a[href]`, `input`, `select`, `textarea`, custom controls with `tabindex="0"`) receives focus via Tab.
+- Every interactive element (`button`, `a[href]`, `input`, `select`, `textarea`, custom controls with `tabindex="0"`) receives focus either via Tab or arrow keys (for composite widgets such as menus).
 - Truncated text elements with tooltips or expandable behavior are focusable.
 - Focus order follows a logical reading order (generally left-to-right, top-to-bottom for LTR layouts).
 - No focus traps occur in non-modal contexts — Tab always moves forward.
@@ -244,7 +244,7 @@ Modal and modal-like components (Modal, full-screen overlays, blocking dialogs) 
 - Tab from the last focusable element wraps to the first focusable element inside the modal.
 - Shift+Tab from the first focusable element wraps to the last focusable element inside the modal.
 - Focus never leaves the modal while it is open.
-- Background content is inert via `aria-hidden="true"` on content behind the modal, the `inert` attribute, or an equivalent mechanism.
+- Background content is inert via `aria-hidden="true"` on content behind the modal, the `inert` attribute, or an equivalent mechanism. If only `aria-hidden` is present, there must be a mechanism to prevent keyboard-only navigation from reaching that content as it will only be hidden from assistive technologies such as screen readers.
 - Escape closes the modal and returns focus to the trigger (per Criterion 6).
 
 ### Common violations
