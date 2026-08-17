@@ -15,9 +15,9 @@ models:
   judge: claude-sonnet-4-6
 
 permissions:
-  allow: []
-  deny:
-    - "mcp__*"
+  allow:
+    - "mcp__playwright__*"
+  deny: []
 
 dataset:
   path: cases

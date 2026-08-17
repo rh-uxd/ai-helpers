@@ -43,8 +43,6 @@ const DrawerModal: React.FC = () => {
             <Button variant="tertiary" onClick={() => setIsPopoverOpen(true)}>
               Show Details
             </Button>
-            {/* MenuToggle + Menu appended to body with no focus management — Criterion 7 violation */}
-            {/* Menu renders in a separate DOM location; no onOpenChange or keyboard handling bridges focus */}
             <Popper
               trigger={
                 <MenuToggle
@@ -71,7 +69,6 @@ const DrawerModal: React.FC = () => {
           </CardBody>
         </Card>
 
-        {/* Drawer opens without moving focus — Criterion 6 violation */}
         {isDrawerOpen && (
           <div
             className="custom-drawer"
@@ -89,13 +86,10 @@ const DrawerModal: React.FC = () => {
             <h2>Drawer Content</h2>
             <p>This drawer does not receive focus on open.</p>
             <input type="text" placeholder="Search..." />
-            {/* Close does not return focus to trigger — Criterion 6 violation */}
             <button onClick={() => setIsDrawerOpen(false)}>Close</button>
           </div>
         )}
 
-        {/* Custom modal overlay without focus trap — Criterion 8 violation */}
-        {/* Background remains interactive — Criterion 8 violation */}
         {isOverlayOpen && (
           <div
             className="custom-overlay"
@@ -122,12 +116,10 @@ const DrawerModal: React.FC = () => {
               <p>Are you sure you want to proceed?</p>
               <button onClick={() => setIsOverlayOpen(false)}>Confirm</button>
               <button onClick={() => setIsOverlayOpen(false)}>Cancel</button>
-              {/* No Escape key handler — Criterion 8 violation */}
             </div>
           </div>
         )}
 
-        {/* Popover does not return focus on close — Criterion 6 violation */}
         {isPopoverOpen && (
           <div
             className="custom-popover"

@@ -32,8 +32,6 @@ const FilterPanel: React.FC = () => {
         <Card>
           <CardTitle>Filter Panel</CardTitle>
           <CardBody>
-            {/* Custom dropdown — no arrow key navigation (Criterion 5 violation) */}
-            {/* No Escape handler to close menu (Criterion 5 violation) */}
             <div style={{ position: 'relative', display: 'inline-block' }}>
               <button onClick={() => setIsMenuOpen(!isMenuOpen)}>
                 {selectedFilter || 'Select filter'}
@@ -75,8 +73,6 @@ const FilterPanel: React.FC = () => {
         <Card>
           <CardTitle>Event Log</CardTitle>
           <CardBody>
-            {/* Scrollable container — no tabindex, not keyboard-focusable (Criterion 3 violation) */}
-            {/* No accessible label on scrollable region (Criterion 3 violation) */}
             <div style={{ maxHeight: '200px', overflow: 'auto' }}>
               <p>Event #1: System health check completed</p>
               <p>Event #2: Deployment finished successfully</p>

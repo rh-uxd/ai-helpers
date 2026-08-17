@@ -12,7 +12,6 @@ const CustomToolbar: React.FC = () => {
 
   return (
     <Page>
-      {/* No SkipToContent — Criterion 1 violation */}
       <PageSection>
         <Toolbar>
           <ToolbarContent>
