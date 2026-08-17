@@ -1,0 +1,7 @@
+expect_violations: true
+audience: consumer
+violation_types:
+  - broken-menu-navigation
+  - missing-menu-escape
+  - inaccessible-scrollable-container
+  - missing-scrollable-label

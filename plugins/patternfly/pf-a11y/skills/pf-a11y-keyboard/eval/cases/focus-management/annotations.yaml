@@ -1,0 +1,8 @@
+expect_violations: true
+audience: consumer
+violation_types:
+  - missing-focus-trap
+  - missing-focus-on-open
+  - missing-focus-return
+  - missing-escape-handler
+  - missing-focus-bridging

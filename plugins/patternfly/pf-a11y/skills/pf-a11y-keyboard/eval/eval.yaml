@@ -1,0 +1,187 @@
+name: pf-a11y-keyboard-eval
+description: Evaluate pf-a11y-keyboard's detection of keyboard accessibility violations in PatternFly applications
+
+skill: pf-a11y:pf-a11y-keyboard
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a user request to test keyboard accessibility
+    - annotations.yaml: expect_violations (true/false) and violation_types referencing keyboard criteria
+    - A .tsx fixture file the prompt references
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces a report with a summary table (criteria tested / pass / fail / N/A),
+      a findings table, and violation details with severity (Critical / Major / Minor).
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: flags_navigation_violations
+    description: Detects skip navigation absence and sequential tab order issues
+    if: "annotations.get('expect_violations') == True and 'missing-skip-navigation' in annotations.get('violation_types', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      checks = {
+          "skip-nav": r'(?i)(skip.{0,20}(nav|content|link)|SkipToContent).{0,60}(missing|no|absent|not.{0,10}(found|present|exist))',
+          "tab-order": r'(?i)(tab.{0,10}(order|index|sequence)|tabindex|focus.order).{0,60}(broken|incorrect|wrong|positive|out.of.order)',
+      }
+      found = {k for k, p in checks.items() if re.search(p, text)}
+      if len(found) < 1:
+          missing = set(checks.keys()) - found
+          return False, f"Only flagged {len(found)}/2 navigation issues. Missed: {', '.join(sorted(missing))}"
+      return True, f"Flagged {len(found)}/2 navigation issues: {', '.join(sorted(found))}"
+
+  - name: flags_activation_violations
+    description: Detects keyboard activation issues on non-native interactive elements
+    if: "annotations.get('expect_violations') == True and 'wrong-activation-method' in annotations.get('violation_types', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      patterns = [
+          r'(?i)(div|span).{0,40}(role=.{0,20}(button|checkbox)).{0,60}(onClick|click).{0,60}(keyboard|key.?down|key.?press|Enter|Space)',
+          r'(?i)(onClick|click).{0,60}(not|without|missing|no).{0,40}(keyboard|key.?down|key.?press|key.?board.handler)',
+          r'(?i)(non-native|custom|div|span).{0,40}(interactive|clickable|button).{0,60}(keyboard|key|activat)',
+          r'(?i)<a>.{0,20}(without|no|missing).{0,30}href',
+      ]
+      found = any(re.search(p, text) for p in patterns)
+      if not found:
+          return False, "Did not flag activation issues on non-native interactive elements"
+      return True, "Correctly flagged keyboard activation violations on non-native elements"
+
+  - name: flags_focus_management
+    description: Detects focus management violations for modals, drawers, and popovers
+    if: "annotations.get('expect_violations') == True and 'missing-focus-trap' in annotations.get('violation_types', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      checks = {
+          "focus-trap": r'(?i)(focus.{0,20}trap|trap.{0,20}focus|modal.{0,40}focus.{0,20}(escap|leak|not.{0,10}trap))',
+          "focus-on-open": r'(?i)(focus.{0,40}(not|does.not|missing).{0,30}(move|shift|placed)|open.{0,40}(without|no|missing).{0,20}focus)',
+          "focus-return": r'(?i)(focus.{0,40}(not|does.not|missing).{0,30}return|close.{0,40}focus.{0,40}(lost|body|not.{0,10}return))',
+      }
+      found = {k for k, p in checks.items() if re.search(p, text)}
+      if len(found) < 2:
+          missing = set(checks.keys()) - found
+          return False, f"Only flagged {len(found)}/3 focus management issues. Missed: {', '.join(sorted(missing))}"
+      return True, f"Flagged {len(found)}/3 focus management issues: {', '.join(sorted(found))}"
+
+  - name: flags_focus_bridging
+    description: Detects missing focus bridging for portaled/separated DOM contexts
+    if: "annotations.get('expect_violations') == True and 'missing-focus-bridging' in annotations.get('violation_types', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      patterns = [
+          r'(?i)(Popper|Menu|menu).{0,60}(appended|portal|body|separate).{0,40}(DOM|location|document)',
+          r'(?i)(separated|different|outside).{0,30}(DOM|location|subtree).{0,60}(focus|keyboard|tab)',
+          r'(?i)(MenuToggle|toggle|trigger).{0,60}(focus.{0,30}(not|missing|does.not)|no.{0,20}focus.management)',
+          r'(?i)(focus.{0,20}bridg|bridg.{0,20}focus)',
+          r'(?i)(tab.{0,20}through.{0,30}(entire|whole|rest of).{0,20}page)',
+          r'(?i)(onOpenChange|focus.management).{0,40}(missing|absent|not)',
+      ]
+      found = any(re.search(p, text) for p in patterns)
+      if not found:
+          return False, "Did not flag missing focus bridging for Menu appended to body"
+      return True, "Correctly flagged focus bridging violation for separated DOM context"
+
+  - name: flags_menu_and_scrollable
+    description: Detects broken menu keyboard navigation and inaccessible scrollable containers
+    if: "annotations.get('expect_violations') == True and 'broken-menu-navigation' in annotations.get('violation_types', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      checks = {
+          "menu-keys": r'(?i)(menu|dropdown).{0,60}(arrow.key|keyboard.nav|Up|Down).{0,40}(missing|not|broken|no|without)',
+          "menu-escape": r'(?i)(menu|dropdown).{0,60}(Escape|Esc).{0,40}(not|missing|no|does.not)',
+          "scrollable": r'(?i)(scroll|overflow).{0,60}(tabindex|focusable|keyboard|not.{0,10}(reach|focus|access))',
+      }
+      found = {k for k, p in checks.items() if re.search(p, text)}
+      if len(found) < 2:
+          missing = set(checks.keys()) - found
+          return False, f"Only flagged {len(found)}/3 menu/scrollable issues. Missed: {', '.join(sorted(missing))}"
+      return True, f"Flagged {len(found)}/3 menu/scrollable issues: {', '.join(sorted(found))}"
+
+  - name: no_false_positives
+    description: Does not flag valid keyboard accessibility patterns as violations
+    if: "annotations.get('expect_violations') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      false_positive_patterns = [
+          (r'(?i)(violation|fail|error|issue).{0,60}SkipToContent.{0,40}(missing|absent)', "SkipToContent present but flagged as missing"),
+          (r'(?i)(violation|fail|error|issue).{0,60}(PatternFly|PF).{0,20}Modal.{0,40}(focus.trap|trap)', "PF Modal focus trap flagged as broken"),
+          (r'(?i)(violation|fail|error|issue).{0,60}(Dropdown|MenuToggle).{0,40}(arrow|keyboard|Escape)', "PF Dropdown/MenuToggle flagged as missing keyboard support"),
+      ]
+      for pattern, desc in false_positive_patterns:
+          if re.search(pattern, text):
+              return False, f"False positive — flagged valid pattern as violation: {desc}"
+      return True, "No false positives on valid keyboard accessibility patterns"
+
+  - name: has_output_format
+    description: Output uses the expected summary and findings table format
+    if: "annotations.get('expect_violations') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_summary = re.search(r'(?i)(criteria tested|Pass|Fail|N/A).{0,20}\|', text)
+      has_severity = re.search(r'(?i)(Critical|Major|Minor)', text)
+      if not has_summary:
+          return False, "Output missing summary table with criteria tested / Pass / Fail / N/A"
+      if not has_severity:
+          return False, "Output missing severity levels (Critical / Major / Minor)"
+      return True, "Output uses structured format with summary table and severity levels"
+
+thresholds:
+  flags_navigation_violations:
+    min_pass_rate: 0.67
+  flags_activation_violations:
+    min_pass_rate: 0.67
+  flags_focus_management:
+    min_pass_rate: 0.67
+  flags_focus_bridging:
+    min_pass_rate: 0.67
+  flags_menu_and_scrollable:
+    min_pass_rate: 0.67
+  no_false_positives:
+    min_pass_rate: 1.0
+  has_output_format:
+    min_pass_rate: 0.67

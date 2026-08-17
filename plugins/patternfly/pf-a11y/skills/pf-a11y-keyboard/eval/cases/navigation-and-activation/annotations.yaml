@@ -1,0 +1,7 @@
+expect_violations: true
+audience: consumer
+violation_types:
+  - missing-skip-navigation
+  - broken-tab-order
+  - wrong-activation-method
+  - missing-tabindex
