@@ -1,8 +1,8 @@
 ---
 name: pf-prerelease-audit-openshift-console
 description: Audit PatternFly prerelease compatibility against OpenShift Console — baseline comparison, Yarn resolutions, build/tsc/lint/unit test validation, and compatibility report. Use when testing a PF RC or prerelease build against OpenShift Console (openshift/console).
-allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
 argument-hint: "[optional: space-separated list of @patternfly/pkg@version pairs, or omit to enter versions interactively]"
+disable-model-invocation: true
 ---
 
 # PatternFly Prerelease Audit — OpenShift Console
@@ -34,7 +34,7 @@ Identify which packages are **already in `frontend/package.json`** vs new (not y
 ### 1.1 Confirm state / create the RC branch
 
 ```bash
-git checkout master && git pull origin master
+git checkout main && git pull origin main
 git status --short
 ```
 
@@ -55,19 +55,22 @@ Check the printed `EXIT:` code — this is `yarn install`'s real exit status, no
 
 ### 1.3 Record resolved versions
 
-`yarn.lock` lives at the **repo root**, not inside `frontend/`. Run this from the repo root (don't assume the previous command's `cd frontend` carried over):
+`frontend/` is its own Yarn workspace root, so `yarn.lock` lives inside `frontend/`, not at the repo root. Don't assume the previous command's `cd frontend` carried over to this Bash call — make it explicit:
 
 ```bash
-grep -E '^"@patternfly' yarn.lock | sort
+cd frontend && grep -E '^"@patternfly' yarn.lock | sort
 ```
 
-### 1.4 Run baseline checks (all in parallel)
+### 1.4 Run baseline checks
 
-These four checks are independent. Each command is self-contained (explicit `cd frontend`) and prints its own real exit code via `PIPESTATUS`, since `tee` would otherwise mask a failing `yarn` command with tee's own exit code (0). Run them as parallel Bash tool calls:
+`yarn test --ci` includes `tree-shaking.spec.ts` and `sdk-dist-imports.spec.ts`, which skip themselves when `public/dist/` doesn't exist. Run the build **first and alone**, then run tsc/lint/test in parallel — never run the build and test suite at the same time, or the skip becomes a race condition instead of a reliable signal.
 
 ```bash
 cd frontend && yarn dev-once 2>&1 | tee /tmp/baseline-build.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
+
+Confirm the build's `EXIT:` code before continuing. Each command below is self-contained (explicit `cd frontend`) and prints its own real exit code via `PIPESTATUS`, since `tee` would otherwise mask a failing `yarn` command with tee's own exit code (0). Run these three as parallel Bash tool calls:
+
 ```bash
 cd frontend && yarn tsc --noEmit 2>&1 | tee /tmp/baseline-tsc.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
@@ -78,7 +81,7 @@ cd frontend && yarn lint 2>&1 | tee /tmp/baseline-lint.log; echo "EXIT:${PIPESTA
 cd frontend && yarn test --ci 2>&1 | tee /tmp/baseline-unit.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
 
-Record the printed `EXIT:` code for each (0 = passed) and summary lines from each log. Capture `Test Suites: N passed` and `Tests: N passed` lines from the unit log.
+Record the printed `EXIT:` code for each (0 = passed) and summary lines from each log. Capture `Test Suites: N passed` and `Tests: N passed` lines from the unit log. If `tree-shaking.spec.ts`/`sdk-dist-imports.spec.ts` still show as skipped after building first, treat it as a real failure to investigate, not a timing artifact.
 
 ---
 
@@ -130,13 +133,16 @@ Check the printed `EXIT:` code first — `tee` always exits 0, so this is the on
 | `Please update check-patternfly-modules.ts to handle: @patternfly/foo` | New transitive dep in scope | Add to `PKGS_TO_CHECK` array |
 | `has no 6.x resolutions` | Added to `PKGS_TO_CHECK` but package not installed | Remove from `PKGS_TO_CHECK` |
 
-### 2.5 Run prerelease checks (all in parallel)
+### 2.5 Run prerelease checks
 
-These four checks are independent. Each command is self-contained and prints its own real exit code via `PIPESTATUS`. Run them as parallel Bash tool calls:
+As in Phase 1.4, run the build first and alone — `tree-shaking.spec.ts`/`sdk-dist-imports.spec.ts` skip when `public/dist/` is absent, so building and testing in parallel turns that skip into a race condition.
 
 ```bash
 cd frontend && yarn dev-once 2>&1 | tee /tmp/prerelease-build.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
+
+Confirm the build's `EXIT:` code, then run these three as parallel Bash tool calls (each self-contained, each prints its own real exit code via `PIPESTATUS`):
+
 ```bash
 cd frontend && yarn tsc --noEmit 2>&1 | tee /tmp/prerelease-tsc.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
@@ -158,7 +164,6 @@ Compare each log pair. Report only findings **new in prerelease** (not in baseli
 **Known non-issues (ignore if present in both runs):**
 - `React.jsx: type is invalid` warnings from `@patternfly/react-topology` `TopologyControlBar` — pre-existing in stable, not a regression
 - `[mobx-react-lite] importing batchingForReactDom is no longer needed` — pre-existing
-- 1 skipped unit test in `__tests__/tree-shaking.spec.ts` — skips when `dist/` absent; timing artifact when build and tests run in parallel. Not a regression.
 
 Categorize new findings as:
 - **TypeScript API break** — type removed, prop renamed, generic changed
@@ -174,7 +179,7 @@ Categorize new findings as:
 
 Generate a markdown report at `pf-prerelease-report-YYYY-MM-DD.md` in the repo root containing:
 
-1. **Versions tested** table (baseline vs prerelease, all 18 packages)
+1. **Versions tested** table (baseline vs prerelease) covering only the packages actually declared in `frontend/package.json` and bumped — mark any packages from the prerelease manifest that were skipped as "not consumed by console," not as tested
 2. **Summary table** — Install / Build / TSC / Lint / Unit tests × Baseline / Prerelease / Result
 3. **Installation workaround** section — document the `resolutions` approach and note which packages had dual-resolution conflicts
 4. **Findings** — one section per category (TypeScript, CSS, runtime). If all clean, say so explicitly.
@@ -209,7 +214,7 @@ Affected packages vary per release — check the install error output to identif
 If a new PF package appears in yarn.lock as a transitive dep and is not in `PKGS_TO_CHECK`, the postinstall script throws. Add it to the array. If it has 0 resolutions (not actually installed), remove it from the array.
 
 ### tree-shaking.spec.ts skips when dist/ is absent
-`__tests__/tree-shaking.spec.ts` and `__tests__/sdk-dist-imports.spec.ts` skip dynamically if `public/dist/` doesn't exist. Running build and tests in parallel may cause this skip. It is pre-existing, not a PF regression.
+`__tests__/tree-shaking.spec.ts` and `__tests__/sdk-dist-imports.spec.ts` skip dynamically if `public/dist/` doesn't exist. This skill runs the build before the test suite specifically to avoid this — if you still see the skip after building first, treat it as a real failure to investigate, not something to wave off as a timing artifact.
 
 ### semver.coerce() strips prerelease tags
 The validation script calls `semver.coerce(resolvedVersions[0])` before `satisfies()`, which strips prerelease identifiers. `6.6.0-prerelease.9` → `6.6.0` → satisfies `6.x`. No additional patching of the script's semver logic is needed.
@@ -221,8 +226,9 @@ Some packages appear on PF's prerelease manifest but are not in console's `packa
 
 ## Cleanup After Testing
 
-The following changes are **test scaffolding only** and should NOT be committed to master:
-- `package.json` — revert version bumps and remove `resolutions` overrides
-- `scripts/check-patternfly-modules.ts` — revert any `PKGS_TO_CHECK` additions (unless the packages are genuinely being added to the codebase)
+The following changes are **test scaffolding only** and should NOT be committed to the default branch:
+- `frontend/package.json` — revert version bumps and remove `resolutions` overrides
+- `frontend/yarn.lock` — revert (`yarn install` rewrites it whenever `resolutions`/dependencies change; leaving prerelease entries in place can break a later immutable install or contaminate the branch)
+- `frontend/scripts/check-patternfly-modules.ts` — revert any `PKGS_TO_CHECK` additions (unless the packages are genuinely being added to the codebase)
 
 The report file (`pf-prerelease-report-YYYY-MM-DD.md`) can be committed or shared directly.

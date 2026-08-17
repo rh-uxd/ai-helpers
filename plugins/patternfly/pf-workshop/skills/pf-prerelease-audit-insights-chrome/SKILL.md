@@ -1,15 +1,15 @@
 ---
 name: pf-prerelease-audit-insights-chrome
 description: Audit PatternFly prerelease compatibility against insights-chrome — branch setup, npm overrides, build/lint/test validation, and compatibility report. Use when testing a PF RC or prerelease build against insights-chrome (RedHatInsights/insights-chrome).
-allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
 argument-hint: "[optional: prerelease version to use for all 7 PF packages, or omit to enter versions interactively]"
+disable-model-invocation: true
 ---
 
 # PatternFly Prerelease Audit — insights-chrome
 
 Validates a PatternFly prerelease version in the insights-chrome repository. Based on a real validation session and covers every step including known pitfalls.
 
-📄 Full runbook (Red Hat employees only): https://docs.google.com/document/d/1tVDH_BAZ6ygtuCCG69WGobCM_lXs9dkop3HjNH8EKVE/edit
+📄 A more detailed internal runbook exists for Red Hat employees — check your organization's internal documentation for "insights-chrome PF prerelease runbook" if you need more depth than this skill provides.
 
 ---
 
@@ -32,14 +32,16 @@ Ask the user for target prerelease versions if not already provided. The 7 direc
 - `@patternfly/react-tokens`
 - `@patternfly/quickstarts`
 
-Use `AskUserQuestion` to collect versions if not provided upfront.
+Ask the user to confirm or provide versions if not supplied upfront.
 
 ---
 
 ## Phase 1: Branch
 
+Confirm the repo's default branch first (`git remote show origin | grep 'HEAD branch'` or check GitHub) — insights-chrome has historically used `master`, but verify rather than assume:
+
 ```bash
-git checkout main && git pull origin main
+git checkout master && git pull origin master   # substitute the actual default branch if different
 git checkout -b chore/pf-X-Y-rc-testing
 # e.g. chore/pf-6-5-rc-testing
 ```
@@ -176,7 +178,7 @@ npm run test:ct -- --spec cypress/component/NotEntitledModal/NotEntitledModal.cy
 
 ## Phase 7: Visual Testing (Red Hat employees only)
 
-Visual testing against the Red Hat staging environment requires Red Hat VPN access and internal staging credentials. See the full runbook linked at the top of this skill for setup instructions.
+Visual testing against the Red Hat staging environment requires Red Hat VPN access and internal staging credentials. See your organization's internal runbook (referenced at the top of this skill) for setup instructions.
 
 If you don't have VPN access, skip this phase and note the gap in your compatibility report.
 

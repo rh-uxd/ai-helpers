@@ -1,8 +1,8 @@
 ---
 name: pf-prerelease-audit-odh-dashboard
 description: Audit PatternFly prerelease compatibility against odh-dashboard — npm overrides, webpack CSS hoisting fixes, full validation suite, and compatibility report. Use when testing a PF RC or prerelease build against odh-dashboard (opendatahub-io/odh-dashboard).
-allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
 argument-hint: "[JSON map of @patternfly/PACKAGE: VERSION pairs, or omit to paste the version map interactively]"
+disable-model-invocation: true
 ---
 
 # PatternFly Prerelease Audit — ODH Dashboard (RHOAI)
@@ -24,7 +24,7 @@ If no arguments provided, ask the user to paste the version map from the PF rele
 
 ## Overview
 
-This happens quarterly before each PF minor release. The goal is to catch breaking changes early by running the dashboard against PF prerelease builds. The process touches only `frontend/package.json` and root `package.json` — sub-packages are NOT updated (they inherit via overrides).
+This happens quarterly before each PF minor release. The goal is to catch breaking changes early by running the dashboard against PF prerelease builds. Version bumps are scoped to `frontend/package.json` and root `package.json` — sub-packages are NOT updated (they inherit via overrides). Two additional files may need edits if hoisting issues surface: `frontend/config/webpack.dev.js` (Phase 4, CSS include path workaround) and `packages/observability/package.json` (Phase 4.3, only if `@perses-dev` transitive deps break). These are conditional workarounds, not part of the standard version-bump scope.
 
 ---
 
@@ -32,15 +32,14 @@ This happens quarterly before each PF minor release. The goal is to catch breaki
 
 The dashboard dev server proxies API requests to a live OpenShift cluster. You must be logged in via `oc login` before starting the dev server, or all `/api/*` routes will return `ECONNREFUSED`.
 
-Ask the user to log in to an available OpenShift cluster:
+Ask the user to log in to an available OpenShift cluster using **interactive** login — do not pass username, password, or token as command-line arguments, since they'd be exposed in shell history and process listings:
 
 ```bash
-oc login <YOUR_CLUSTER_API_URL> --username <username> --password <password>
-# Or use a token:
-oc login <YOUR_CLUSTER_API_URL> --token <token>
+oc login <YOUR_CLUSTER_API_URL>
+# oc will prompt securely for credentials, or use --web for browser-based SSO login
 ```
 
-Check your team's shared OpenShift cluster access channel for available cluster credentials.
+Check your team's shared OpenShift cluster access channel to find which cluster to target — but enter credentials only at the interactive prompt, never on the command line.
 
 Verify login succeeded:
 ```bash
@@ -132,7 +131,7 @@ If it requires a version newer than what's in `frontend/package.json`, bump `mon
 
 ## Phase 3: Clean install
 
-**CRITICAL:** Must do a clean install when overrides change. Incremental `npm install` will NOT correctly resolve the new dependency tree.
+**CRITICAL:** Must do a clean install when overrides change. Incremental `npm install` will NOT resolve the new dependency tree — it leaves stale nested copies in place instead of re-evaluating hoisting from scratch.
 
 ```bash
 rm -rf node_modules frontend/node_modules packages/*/node_modules package-lock.json
@@ -283,7 +282,7 @@ If `start:dev:ext` is running, open `http://localhost:4010`. Check:
 - Dashboard loads without blank screen
 - Navigation works
 - No obvious layout breaks
-- PatternFly components render correctly (buttons, tables, modals)
+- PatternFly components render with expected spacing, colors, and no visual regressions (buttons, tables, modals)
 
 ---
 
@@ -340,12 +339,16 @@ If found under `frontend/node_modules/` → hoisting problem, not PF problem. Ap
 **Step 2: Compare distribution format** (only if not a hoisting issue)
 ```bash
 rm -rf /tmp/pf-diff && mkdir /tmp/pf-diff && cd /tmp/pf-diff
-npm pack @patternfly/PACKAGE@STABLE_VERSION
-npm pack @patternfly/PACKAGE@PRERELEASE_VERSION
 mkdir stable pre
-tar xzf *STABLE*.tgz -C stable
-tar xzf *PRE*.tgz -C pre
-DIFF_OUTPUT=$(diff -r stable/package/dist/esm/ pre/package/dist/esm/)
+
+# `npm pack` prints the real tarball filename it created (e.g.
+# patternfly-react-core-6.5.0.tgz) — it never contains literal "STABLE"/"PRE".
+# Capture that filename directly instead of globbing for it.
+STABLE_TGZ=$(npm pack @patternfly/PACKAGE@STABLE_VERSION | tail -1)
+PRE_TGZ=$(npm pack @patternfly/PACKAGE@PRERELEASE_VERSION | tail -1)
+tar xzf "$STABLE_TGZ" -C stable
+tar xzf "$PRE_TGZ" -C pre
+DIFF_OUTPUT=$(diff -ruN stable/package/dist/esm/ pre/package/dist/esm/)
 DIFF_EXIT=$?
 ```
 `rm -rf` before `mkdir` makes this safe to re-run in the same session. `diff` exits 1 when files differ and 0 when identical — capture that exit code directly rather than piping through `head` (which would always report exit 0 and hide the real result).
