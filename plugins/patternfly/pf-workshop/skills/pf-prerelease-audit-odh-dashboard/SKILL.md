@@ -2,6 +2,7 @@
 name: pf-prerelease-audit-odh-dashboard
 description: Audit PatternFly prerelease compatibility against odh-dashboard — npm overrides, webpack CSS hoisting fixes, full validation suite, and compatibility report. Use when testing a PF RC or prerelease build against odh-dashboard (opendatahub-io/odh-dashboard).
 allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
+argument-hint: "[JSON map of @patternfly/PACKAGE: VERSION pairs, or omit to paste the version map interactively]"
 ---
 
 # PatternFly Prerelease Audit — ODH Dashboard (RHOAI)
@@ -141,14 +142,25 @@ npm install
 ### 3.1 Verify install integrity
 
 ```bash
-# Verify PF packages are installed (should show 15+ packages)
-ls node_modules/@patternfly/ | wc -l
+PF_COUNT=$(ls node_modules/@patternfly/ 2>/dev/null | wc -l)
+echo "PF packages installed: $PF_COUNT"
+if [ "$PF_COUNT" -lt 15 ]; then
+  echo "INTEGRITY FAILURE — expected 15+, found $PF_COUNT. Likely a partial/ENOTEMPTY install — see 3.2."
+fi
 
-# Check for duplicate/nested PF copies (the hoisting trap)
-find . -path "*/node_modules/@patternfly/react-core" -maxdepth 5 | grep -v ".cache"
+# Check for duplicate/nested PF copies (the hoisting trap).
+# NOTE: evaluate the captured text, not the exit code — `grep -v` exits 1 (looks
+# like "failure") on the CLEAN/good case where nothing survives the filter.
+NESTED=$(find . -path "*/node_modules/@patternfly/react-core" -maxdepth 5 | grep -v ".cache")
+if [ -n "$NESTED" ]; then
+  echo "HOISTING TRAP DETECTED — nested PF copies found, see Phase 4:"
+  echo "$NESTED"
+else
+  echo "Hoisting check passed — no nested PF copies found."
+fi
 ```
 
-If you see PF packages under `frontend/node_modules/@patternfly/`, that's the npm hoisting trap — see Phase 4.
+If the hoisting trap is detected (nested copies under `frontend/node_modules/@patternfly/`), go to Phase 4.
 
 ### 3.2 Handle npm ENOTEMPTY errors
 
@@ -165,8 +177,16 @@ npm install
 ### 4.1 Check for nested PF copies
 
 ```bash
-find . -path "*/node_modules/@patternfly/*" -maxdepth 5 -type d | \
-  grep -v "^./node_modules/" | grep -v ".cache" | sort
+# Evaluate the captured text, not the exit code — chained `grep -v` filters exit
+# 1 (looks like "failure") on the clean case where nothing survives the filter.
+NESTED=$(find . -path "*/node_modules/@patternfly/*" -maxdepth 5 -type d | \
+  grep -v "^./node_modules/" | grep -v ".cache" | sort)
+if [ -n "$NESTED" ]; then
+  echo "Nested PF copies found — dev webpack CSS rule won't find them:"
+  echo "$NESTED"
+else
+  echo "No nested PF copies found."
+fi
 ```
 
 If any packages appear under `frontend/node_modules/@patternfly/`, the dev webpack CSS rule won't find them.
@@ -200,13 +220,28 @@ Run each step. Record results for the report.
 
 ### 5.1 Dev server build (MUST PASS)
 
+`npm run start:dev:ext` starts a long-running dev server that never exits on its own — running it as a normal foreground command will hang or hit the tool's timeout. Run it in the background, capture the compile output to a log, and poll the log instead of waiting on the command:
+
 ```bash
-npm run start:dev:ext
+npm run start:dev:ext > /tmp/dev-server.log 2>&1 &
+DEV_SERVER_PID=$!
+echo "Dev server started, PID $DEV_SERVER_PID"
 ```
 
-Wait for webpack to compile. Must show 0 errors. Warnings are acceptable. If CSS parse errors appear, go back to Phase 4.
+Then poll (re-run every ~10s until you see a compile result or ~2 minutes elapse):
 
-Stop the dev server after confirming 0 errors (or leave running for visual smoke test).
+```bash
+grep -E "compiled successfully|compiled with|ERROR in|Failed to compile" /tmp/dev-server.log | tail -5
+```
+
+- **"compiled successfully" / "compiled with N warnings"** → PASS. Warnings are acceptable.
+- **"Failed to compile" / "ERROR in ..."** → FAIL. If the errors are CSS parse errors, go back to Phase 4 — they're likely a hoisting artifact, not a real PF break.
+
+If you don't need the visual smoke test (5.7), stop the server once you have a result:
+```bash
+kill $DEV_SERVER_PID 2>/dev/null
+```
+Otherwise leave it running and proceed to the rest of Phase 5 — come back to kill it after 5.7.
 
 ### 5.2 Type checking
 
@@ -304,15 +339,29 @@ If found under `frontend/node_modules/` → hoisting problem, not PF problem. Ap
 
 **Step 2: Compare distribution format** (only if not a hoisting issue)
 ```bash
-cd /tmp && mkdir pf-diff && cd pf-diff
+rm -rf /tmp/pf-diff && mkdir /tmp/pf-diff && cd /tmp/pf-diff
 npm pack @patternfly/PACKAGE@STABLE_VERSION
 npm pack @patternfly/PACKAGE@PRERELEASE_VERSION
-mkdir stable pre && tar xzf *STABLE*.tgz -C stable && tar xzf *PRE*.tgz -C pre
-diff stable/package/dist/esm/ pre/package/dist/esm/ | head -20
+mkdir stable pre
+tar xzf *STABLE*.tgz -C stable
+tar xzf *PRE*.tgz -C pre
+DIFF_OUTPUT=$(diff -r stable/package/dist/esm/ pre/package/dist/esm/)
+DIFF_EXIT=$?
 ```
-If `.mjs`/`.js` files are identical → not a PF change, it's a hoisting issue.
+`rm -rf` before `mkdir` makes this safe to re-run in the same session. `diff` exits 1 when files differ and 0 when identical — capture that exit code directly rather than piping through `head` (which would always report exit 0 and hide the real result).
 
 **Step 3: Only report if distribution actually changed**
+
+```bash
+if [ "$DIFF_EXIT" -eq 0 ]; then
+  echo "DISTRIBUTION IDENTICAL — this is a hoisting problem, not a PF change."
+elif [ "$DIFF_EXIT" -eq 1 ]; then
+  echo "DISTRIBUTION CHANGED — this may be a real PF change worth reporting:"
+  echo "$DIFF_OUTPUT" | head -20
+else
+  echo "DIFF FAILED (exit $DIFF_EXIT) — check both packages extracted correctly."
+fi
+```
 
 If the distribution files differ between stable and prerelease (new CSS imports, changed module format), THEN it's a PF change worth reporting.
 

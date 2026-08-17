@@ -3,7 +3,6 @@ name: pf-prerelease-audit-openshift-console
 description: Audit PatternFly prerelease compatibility against OpenShift Console — baseline comparison, Yarn resolutions, build/tsc/lint/unit test validation, and compatibility report. Use when testing a PF RC or prerelease build against OpenShift Console (openshift/console).
 allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
 argument-hint: "[optional: space-separated list of @patternfly/pkg@version pairs, or omit to enter versions interactively]"
-last-updated: 2026-06-29
 ---
 
 # PatternFly Prerelease Audit — OpenShift Console
@@ -14,9 +13,9 @@ Designed to be run quarterly for each PF release candidate cycle.
 
 ## Prerequisites
 
-- Clean working branch off `master` (e.g., `chore/pf-6-6-rc-testing`)
 - Node 22+, Yarn 4+
 - npm registry access for PF prerelease packages
+- A dedicated RC testing branch (e.g., `chore/pf-6-6-rc-testing`) — Phase 1.1 creates one if you don't already have it
 
 ---
 
@@ -32,44 +31,54 @@ Identify which packages are **already in `frontend/package.json`** vs new (not y
 
 ## Phase 1: Baseline
 
-### 1.1 Confirm state
+### 1.1 Confirm state / create the RC branch
+
 ```bash
-git branch --show-current
-git log --oneline -3
+git checkout master && git pull origin master
+git status --short
 ```
 
-Confirm branch is off master and working tree is clean (or note any local changes).
+If the working tree isn't clean, stop and ask the user how to proceed. Otherwise create the dedicated testing branch:
+
+```bash
+git checkout -b chore/pf-X-Y-rc-testing
+```
+
+If you're already on a dedicated RC branch, skip branch creation and just confirm `git status --short` is clean.
 
 ### 1.2 Install (baseline)
 ```bash
-cd frontend && yarn install 2>&1 | tee /tmp/baseline-install.log
+cd frontend && yarn install 2>&1 | tee /tmp/baseline-install.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
 
-The postinstall script `scripts/check-patternfly-modules.ts` runs automatically. Confirm it prints "No issues detected". Record the existing peer dependency warnings (they are pre-existing and appear in both runs).
+Check the printed `EXIT:` code — this is `yarn install`'s real exit status, not `tee`'s. Also confirm the postinstall script `scripts/check-patternfly-modules.ts` printed "No issues detected" in the log. Record the existing peer dependency warnings (they are pre-existing and appear in both runs).
 
 ### 1.3 Record resolved versions
+
+`yarn.lock` lives at the **repo root**, not inside `frontend/`. Run this from the repo root (don't assume the previous command's `cd frontend` carried over):
+
 ```bash
-grep -E "^\"@patternfly" yarn.lock | sort
+grep -E '^"@patternfly' yarn.lock | sort
 ```
 
 ### 1.4 Run baseline checks (all in parallel)
 
-These four checks are independent. Run them as parallel Bash tool calls:
+These four checks are independent. Each command is self-contained (explicit `cd frontend`) and prints its own real exit code via `PIPESTATUS`, since `tee` would otherwise mask a failing `yarn` command with tee's own exit code (0). Run them as parallel Bash tool calls:
 
 ```bash
-yarn dev-once 2>&1 | tee /tmp/baseline-build.log
+cd frontend && yarn dev-once 2>&1 | tee /tmp/baseline-build.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
 ```bash
-yarn tsc --noEmit 2>&1 | tee /tmp/baseline-tsc.log
+cd frontend && yarn tsc --noEmit 2>&1 | tee /tmp/baseline-tsc.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
 ```bash
-yarn lint 2>&1 | tee /tmp/baseline-lint.log
+cd frontend && yarn lint 2>&1 | tee /tmp/baseline-lint.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
 ```bash
-yarn test --ci 2>&1 | tee /tmp/baseline-unit.log
+cd frontend && yarn test --ci 2>&1 | tee /tmp/baseline-unit.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
 
-Record exit codes and summary lines from each log. Capture `Test Suites: N passed` and `Tests: N passed` lines from unit log.
+Record the printed `EXIT:` code for each (0 = passed) and summary lines from each log. Capture `Test Suites: N passed` and `Tests: N passed` lines from the unit log.
 
 ---
 
@@ -102,14 +111,16 @@ Add all bumped PF packages to the `resolutions` field (which already exists in t
 
 ### 2.3 Update `frontend/scripts/check-patternfly-modules.ts`
 
-If any new `@patternfly/*` packages appear as transitive dependencies (visible in the `yarn install` error output as "Please update check-patternfly-modules.ts to handle this PatternFly package: ..."), add them to the `PKGS_TO_CHECK` array with `semver: '6.x'` (or `'8.x'` for react-charts).
+If any new `@patternfly/*` packages appear as transitive dependencies (visible in the `yarn install` error output as "Please update check-patternfly-modules.ts to handle this PatternFly package: ..."), add them to the `PKGS_TO_CHECK` array. Set `semver` to match the major version currently resolved for that package in `yarn.lock` — don't assume `'6.x'` for every package; some PF packages (e.g. `react-charts`) track their own major version line independently of the rest of PatternFly.
 
 The script uses `semver.coerce()` before checking ranges, so prerelease strings like `6.6.0-prerelease.9` coerce to `6.6.0` and satisfy `6.x` without further patching.
 
 ### 2.4 Install (prerelease)
 ```bash
-yarn install 2>&1 | tee /tmp/prerelease-install.log
+cd frontend && yarn install 2>&1 | tee /tmp/prerelease-install.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
+
+Check the printed `EXIT:` code first — `tee` always exits 0, so this is the only reliable signal that `yarn install` itself succeeded. If non-zero, consult the troubleshooting table below before proceeding.
 
 **Troubleshooting install failures:**
 
@@ -121,20 +132,22 @@ yarn install 2>&1 | tee /tmp/prerelease-install.log
 
 ### 2.5 Run prerelease checks (all in parallel)
 
-These four checks are independent. Run them as parallel Bash tool calls:
+These four checks are independent. Each command is self-contained and prints its own real exit code via `PIPESTATUS`. Run them as parallel Bash tool calls:
 
 ```bash
-yarn dev-once 2>&1 | tee /tmp/prerelease-build.log
+cd frontend && yarn dev-once 2>&1 | tee /tmp/prerelease-build.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
 ```bash
-yarn tsc --noEmit 2>&1 | tee /tmp/prerelease-tsc.log
+cd frontend && yarn tsc --noEmit 2>&1 | tee /tmp/prerelease-tsc.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
 ```bash
-yarn lint 2>&1 | tee /tmp/prerelease-lint.log
+cd frontend && yarn lint 2>&1 | tee /tmp/prerelease-lint.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
 ```bash
-yarn test --ci 2>&1 | tee /tmp/prerelease-unit.log
+cd frontend && yarn test --ci 2>&1 | tee /tmp/prerelease-unit.log; echo "EXIT:${PIPESTATUS[0]}"
 ```
+
+Record the printed `EXIT:` code for each (0 = passed).
 
 ---
 

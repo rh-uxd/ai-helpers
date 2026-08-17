@@ -2,6 +2,7 @@
 name: pf-prerelease-audit-insights-chrome
 description: Audit PatternFly prerelease compatibility against insights-chrome — branch setup, npm overrides, build/lint/test validation, and compatibility report. Use when testing a PF RC or prerelease build against insights-chrome (RedHatInsights/insights-chrome).
 allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
+argument-hint: "[optional: prerelease version to use for all 7 PF packages, or omit to enter versions interactively]"
 ---
 
 # PatternFly Prerelease Audit — insights-chrome
@@ -38,6 +39,7 @@ Use `AskUserQuestion` to collect versions if not provided upfront.
 ## Phase 1: Branch
 
 ```bash
+git checkout main && git pull origin main
 git checkout -b chore/pf-X-Y-rc-testing
 # e.g. chore/pf-6-5-rc-testing
 ```
@@ -70,6 +72,26 @@ npm install
 ```
 
 If this errors with `ERESOLVE`, add the conflicting package to the overrides block.
+
+**Verify the install actually succeeded** before moving on — `npm install` can complete with a broken dependency tree (ENOTEMPTY race conditions, silent hoisting failures) without a nonzero exit code:
+
+```bash
+PF_COUNT=$(ls node_modules/@patternfly/ 2>/dev/null | wc -l)
+echo "PF packages installed: $PF_COUNT"
+if [ "$PF_COUNT" -lt 7 ]; then
+  echo "INTEGRITY FAILURE — expected 7+, found $PF_COUNT. Reinstalling clean."
+  rm -rf node_modules package-lock.json
+  npm install
+fi
+
+NESTED=$(find . -path "*/node_modules/@patternfly/react-core" -maxdepth 5 | grep -v ".cache")
+if [ -n "$NESTED" ]; then
+  echo "HOISTING TRAP — nested PF copies found: $NESTED"
+  echo "This may cause CSS/webpack errors later that look like PF breaking changes but aren't."
+else
+  echo "Install verified — no nested PF copies."
+fi
+```
 
 ---
 
@@ -109,8 +131,6 @@ npm run build
 npm test
 ```
 
-67 suites, ~534 tests, 33 snapshot assertions.
-
 **Snapshot failures are expected** when PF updates icons or component DOM. Two safe-to-accept patterns:
 - Icon SVG paths changed (new viewBox, new `d` attribute) — PF refreshed icon artwork
 - OUIA IDs changed from `OUIA-Generated-Button-plain-2` to `:r3:` format — React `useId()` now used internally
@@ -119,6 +139,7 @@ Review the diff output, then if changes look intentional:
 ```bash
 npm run test:update
 ```
+If `test:update` isn't defined in this repo's `package.json`, use Jest's built-in flag instead: `npm test -- -u`.
 
 ---
 
@@ -128,7 +149,7 @@ npm run test:update
 npm run test:ct
 ```
 
-23 specs, ~45 seconds. On first run ever, Cypress downloads its binary (~5 min).
+On first run ever, Cypress downloads its binary (~5 min).
 
 ### Reading visual regression failures
 
@@ -172,7 +193,7 @@ If you don't have VPN access, skip this phase and note the gap in your compatibi
 
 ## Phase 8: Generate Report
 
-Generate an HTML compatibility report with embedded diff images for sharing with the PF team and product owners. The report template is in the repo at `pf-prerelease-report.html` from the PF 6.5.0 validation session on branch `chore/pf-6-5-rc-testing`.
+Generate a new HTML compatibility report at `pf-prerelease-report.html` with embedded diff images for sharing with the PF team and product owners.
 
 The report should include:
 - Version table (before → after)
@@ -190,15 +211,16 @@ git add package.json package-lock.json
 git add src/            # code fixes only
 git add cypress/snapshots/    # updated image baselines
 git add src/**/__snapshots__/ # updated Jest snapshots
-git add pf-prerelease-report.html  # report (stays on RC branch, not merged to master)
+git add pf-prerelease-report.html  # compatibility report
 
 git commit -m "chore(deps): bump PatternFly to X.Y.Z-prerelease for RC validation"
 
 # First push — -u sets upstream tracking so future pushes just need `git push`
-git push -u origin chore/pf-X-Y-rc-testing
+BRANCH=$(git branch --show-current)
+git push -u origin "$BRANCH"
 ```
 
-Open a PR to `master`. Link the HTML report or paste the summary in the PR description.
+Open a PR to `master` **for visibility and CI signal only — do not merge it**. This PR exists so the PF team and reviewers can see the diff and CI results; the prerelease version bump itself is test scaffolding, not a change intended to ship. Link the HTML report or paste the summary in the PR description, and note in the PR body that it's for RC validation and should be closed (not merged) once findings are captured.
 
 ---
 
