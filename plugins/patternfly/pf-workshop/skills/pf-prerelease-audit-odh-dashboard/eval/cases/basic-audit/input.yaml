@@ -1,7 +1,0 @@
-prompt: |
-  Audit odh-dashboard for PatternFly prerelease compatibility using this version map:
-  "@patternfly/react-core": "6.7.0-prerelease.9"
-  "@patternfly/react-icons": "6.7.0-prerelease.9"
-  "@patternfly/chatbot": "6.8.0-prerelease.4"
-  This is a monorepo with frontend/package.json and a root package.json.
-fixture: package.json
