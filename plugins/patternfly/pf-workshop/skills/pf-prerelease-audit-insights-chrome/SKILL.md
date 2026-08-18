@@ -38,10 +38,12 @@ Ask the user to confirm or provide versions if not supplied upfront.
 
 ## Phase 1: Branch
 
-Confirm the repo's default branch first (`git remote show origin | grep 'HEAD branch'` or check GitHub) — insights-chrome has historically used `master`, but verify rather than assume:
+Confirm the repo's default branch first — insights-chrome has historically used `master`, but verify rather than assume, and use the result for every subsequent checkout/pull/PR-target command in this skill:
 
 ```bash
-git checkout master && git pull origin master   # substitute the actual default branch if different
+DEFAULT_BRANCH=$(git remote show origin | awk '/HEAD branch/ {print $NF}')
+echo "Default branch: $DEFAULT_BRANCH"
+git checkout "$DEFAULT_BRANCH" && git pull origin "$DEFAULT_BRANCH"
 git checkout -b chore/pf-X-Y-rc-testing
 # e.g. chore/pf-6-5-rc-testing
 ```
@@ -86,12 +88,19 @@ if [ "$PF_COUNT" -lt 7 ]; then
   npm install
 fi
 
-NESTED=$(find . -path "*/node_modules/@patternfly/react-core" -maxdepth 5 | grep -v ".cache")
+NESTED=$(
+  for package in patternfly react-core react-icons react-table react-charts react-tokens; do
+    find . -type d -path "*/node_modules/@patternfly/$package" \
+      ! -path "./node_modules/@patternfly/$package" \
+      ! -path "*/.cache/*"
+  done
+)
 if [ -n "$NESTED" ]; then
   echo "HOISTING TRAP — nested PF copies found: $NESTED"
   echo "This may cause CSS/webpack errors later that look like PF breaking changes but aren't."
+  exit 1
 else
-  echo "Install verified — no nested PF copies."
+  echo "Install verified — no nested PF copies of any overridden package."
 fi
 ```
 
@@ -222,7 +231,7 @@ BRANCH=$(git branch --show-current)
 git push -u origin "$BRANCH"
 ```
 
-Open a PR to `master` **for visibility and CI signal only — do not merge it**. This PR exists so the PF team and reviewers can see the diff and CI results; the prerelease version bump itself is test scaffolding, not a change intended to ship. Link the HTML report or paste the summary in the PR description, and note in the PR body that it's for RC validation and should be closed (not merged) once findings are captured.
+Open a PR to `$DEFAULT_BRANCH` (the branch verified in Phase 1 — do not hardcode `master`) **for visibility and CI signal only — do not merge it**. This PR exists so the PF team and reviewers can see the diff and CI results; the prerelease version bump itself is test scaffolding, not a change intended to ship. Link the HTML report or paste the summary in the PR description, and note in the PR body that it's for RC validation and should be closed (not merged) once findings are captured.
 
 ---
 

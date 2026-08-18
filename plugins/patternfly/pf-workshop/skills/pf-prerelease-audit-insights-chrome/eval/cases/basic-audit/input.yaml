@@ -1,0 +1,2 @@
+prompt: "Audit this repo for PatternFly prerelease compatibility. Test @patternfly/react-core@6.7.0-prerelease.4 and @patternfly/react-icons@6.7.0-prerelease.4 (and their sibling PF packages) against the current package.json in this directory."
+fixture: package.json

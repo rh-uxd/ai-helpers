@@ -1,0 +1,6 @@
+prompt: |
+  Audit OpenShift Console for PatternFly prerelease compatibility. Test
+  "@patternfly/react-core": "6.7.0-prerelease.9" and
+  "@patternfly/react-icons": "6.7.0-prerelease.9" against the current package.json,
+  which uses Yarn Berry workspaces.
+fixture: package.json

@@ -1,0 +1,15 @@
+{
+  "name": "console-frontend-fixture",
+  "private": true,
+  "packageManager": "yarn@4.5.0",
+  "dependencies": {
+    "@patternfly/react-core": "6.6.0",
+    "@patternfly/react-icons": "6.6.0",
+    "@patternfly/react-table": "6.6.0"
+  },
+  "resolutions": {
+    "@patternfly/react-core": "6.6.0",
+    "@patternfly/react-icons": "6.6.0",
+    "@patternfly/react-table": "6.6.0"
+  }
+}

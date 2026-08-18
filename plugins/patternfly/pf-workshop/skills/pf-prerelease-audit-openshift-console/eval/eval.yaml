@@ -1,0 +1,86 @@
+name: pf-prerelease-audit-openshift-console-eval
+description: Evaluate pf-prerelease-audit-openshift-console's Yarn resolutions strategy and baseline-vs-prerelease comparison discipline
+
+skill: pf-workshop:pf-prerelease-audit-openshift-console
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a version map and Yarn Berry context
+    - annotations.yaml: case_type for conditional judges
+    - package.json fixture the prompt references
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill plans or performs a PatternFly prerelease audit workflow against
+      a Yarn Berry monorepo. Judges check conversation text and any updated
+      artifacts.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: uses_yarn_resolutions_not_npm_overrides
+    description: Uses Yarn's resolutions field, not npm-style overrides, for a Yarn Berry project
+    if: "annotations.get('case_type') == 'basic'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      if re.search(r'"overrides"\s*:', text) and not re.search(r'resolutions', text, re.IGNORECASE):
+          return False, "Used npm-style overrides instead of Yarn resolutions"
+      if not re.search(r'resolutions', text, re.IGNORECASE):
+          return False, "Did not mention Yarn resolutions"
+      return True, "Uses Yarn resolutions for the prerelease version pins"
+
+  - name: establishes_baseline_before_prerelease
+    description: Runs a baseline comparison pass before bumping to prerelease versions
+    if: "annotations.get('case_type') == 'basic'"
+    check: |
+      import re
+      text = outputs.get("conversation", "").lower()
+      if not re.search(r'baseline', text):
+          return False, "Did not establish or reference a baseline run for comparison"
+      return True, "References a baseline comparison pass"
+
+  - name: mentions_check_patternfly_modules_script
+    description: Accounts for the check-patternfly-modules.ts postinstall validation script
+    if: "annotations.get('case_type') == 'basic'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      if re.search(r'check-patternfly-modules', text):
+          return True, "References the postinstall validation script"
+      return True, "Script not exercised in this run — not required unless install fails"
+
+thresholds:
+  uses_yarn_resolutions_not_npm_overrides:
+    min_pass_rate: 1.0
+  establishes_baseline_before_prerelease:
+    min_pass_rate: 0.8
+  mentions_check_patternfly_modules_script:
+    min_pass_rate: 0.3

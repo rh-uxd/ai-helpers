@@ -147,15 +147,19 @@ if [ "$PF_COUNT" -lt 15 ]; then
   echo "INTEGRITY FAILURE — expected 15+, found $PF_COUNT. Likely a partial/ENOTEMPTY install — see 3.2."
 fi
 
-# Check for duplicate/nested PF copies (the hoisting trap).
+# Check for duplicate/nested PF copies (the hoisting trap). Scan all @patternfly/*
+# packages, not just react-core — the bumped package set varies per run based on
+# the user-provided version map, and a nested copy of any one of them can cause
+# CSS/webpack errors that look like PF breaking changes but aren't.
 # NOTE: evaluate the captured text, not the exit code — `grep -v` exits 1 (looks
 # like "failure") on the CLEAN/good case where nothing survives the filter.
-NESTED=$(find . -path "*/node_modules/@patternfly/react-core" -maxdepth 5 | grep -v ".cache")
+NESTED=$(find . -path "*/node_modules/@patternfly/*" -maxdepth 5 -type d | \
+  grep -v "^./node_modules/" | grep -v ".cache")
 if [ -n "$NESTED" ]; then
   echo "HOISTING TRAP DETECTED — nested PF copies found, see Phase 4:"
   echo "$NESTED"
 else
-  echo "Hoisting check passed — no nested PF copies found."
+  echo "Hoisting check passed — no nested PF copies of any @patternfly/* package found."
 fi
 ```
 

@@ -1,0 +1,93 @@
+name: pf-prerelease-audit-insights-chrome-eval
+description: Evaluate pf-prerelease-audit-insights-chrome's version-bump strategy, branch verification, and hoisting diagnostics
+
+skill: pf-workshop:pf-prerelease-audit-insights-chrome
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: case_type for conditional judges
+    - package.json fixture the prompt references
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill plans or performs a PatternFly prerelease audit workflow.
+      Judges check conversation text and any updated package.json artifacts.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: uses_overrides_not_legacy_peer_deps
+    description: Uses npm overrides for surgical version pinning instead of --legacy-peer-deps
+    if: "annotations.get('case_type') == 'basic'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      if re.search(r'--legacy-peer-deps', text) and not re.search(r'overrides', text, re.IGNORECASE):
+          return False, "Used --legacy-peer-deps without overrides — masks unrelated peer dep problems"
+      if not re.search(r'"overrides"', text) and not re.search(r'\boverrides\b', text, re.IGNORECASE):
+          return False, "Did not mention or use an overrides block"
+      return True, "Uses overrides for surgical PF version pinning"
+
+  - name: verifies_default_branch
+    description: Confirms the repo's actual default branch instead of assuming master
+    if: "annotations.get('case_type') == 'basic'"
+    check: |
+      import re
+      text = outputs.get("conversation", "").lower()
+      hardcoded_master = re.search(r'git checkout master(?!.{0,40}(verify|confirm|check))', text)
+      verifies = re.search(r'(verify|confirm|check).{0,60}(default branch|head branch)', text)
+      if hardcoded_master and not verifies:
+          return False, "Hardcoded 'git checkout master' without verifying the actual default branch"
+      return True, "Verifies the default branch rather than assuming master"
+
+  - name: checks_all_overridden_packages_for_hoisting
+    description: Checks all overridden PF packages for nested copies, not just react-core
+    if: "annotations.get('case_type') == 'basic'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      single_package_check = re.search(
+          r'find.{0,80}@patternfly/react-core["\']?\s*(-maxdepth|\||\))', text
+      )
+      mentions_other_packages = re.search(
+          r'react-icons|react-table|react-charts|react-tokens', text
+      )
+      if single_package_check and not mentions_other_packages:
+          return False, "Hoisting check appears scoped to react-core only, missing sibling packages"
+      return True, "Hoisting check covers multiple overridden packages"
+
+thresholds:
+  uses_overrides_not_legacy_peer_deps:
+    min_pass_rate: 1.0
+  verifies_default_branch:
+    min_pass_rate: 1.0
+  checks_all_overridden_packages_for_hoisting:
+    min_pass_rate: 0.8
