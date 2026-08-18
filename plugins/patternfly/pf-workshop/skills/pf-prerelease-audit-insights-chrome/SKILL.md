@@ -1,5 +1,5 @@
 ---
-name: pf-prerelease-test-insights-chrome
+name: pf-prerelease-audit-insights-chrome
 description: "Test a PatternFly prerelease against insights-chrome (RedHatInsights/insights-chrome) — branch setup, npm overrides, build/lint/test validation, breaking change fixes, visual testing via dev server, and compatibility report. Produces a structured compatibility report for the PF team. Use when testing a PF prerelease or RC against insights-chrome."
 allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
 ---
