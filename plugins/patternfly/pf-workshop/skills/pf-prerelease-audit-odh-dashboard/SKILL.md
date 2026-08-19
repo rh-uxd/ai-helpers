@@ -21,6 +21,8 @@ odh-dashboard is a Module Federation monorepo: one host (`frontend/`) plus ~15 i
 
 **Dependabot already handles patch-level PF bumps** (it only ignores `minor`/`major` `@patternfly/*` updates now) — this skill exists for **minor/major prerelease validation**, not patch-level churn Dependabot's CI already covers.
 
+**Confirmed systemic, not package-specific:** several backend/library packages declare PF dependencies as bare `peerDependencies: "^N"` ranges (see Phase 2.2C). By standard semver rules, a bare `^N` range structurally excludes *any* prerelease version of that same package — this was directly reproduced across multiple, unrelated packages in the same run (`@patternfly/quickstarts`'s peer on `react-core`, `@odh-dashboard/gpuaas`'s peer on `react-charts`). Treat `npm install --legacy-peer-deps` as the default install command for this reason, not a reactive fallback for one bad ERESOLVE.
+
 ## Arguments
 
 `$ARGUMENTS` — Required. A JSON-style list of `"@patternfly/PACKAGE": "VERSION"` pairs provided by the user. Example:
@@ -120,6 +122,24 @@ This override block still exists in root `package.json` and `frontend/package.js
 
 Do NOT add any other top-level PF override — that mechanism was removed in favor of the explicit `shared-modules-meta.ts` sharing policy (see Architecture section). If `npm install` produces duplicate PF copies, that's a real finding to investigate (Phase 4), not something to route around with an override.
 
+**C. Explicit root-level dependencies (always required — do this before installing, not reactively)**
+
+Phase 3 installs with `--legacy-peer-deps`, which disables npm's automatic peer-dependency installation. 13+ backend/library packages (`feature-store`, `gpuaas`, `hardware-profiles`, `kserve`, `llmd-serving`, `mlflow-embedded`, `model-registry`, `model-serving`, `model-training`, `nim-serving`, `observability`, `plugin-core`, `ui-core`) declare PF packages only as `peerDependencies` and are consumed as **raw TypeScript source** compiled directly into the host's (and other packages') webpack builds — not through Module Federation. They rely entirely on npm auto-installing their peers to populate the workspace root's `node_modules`. With peer auto-install disabled, that population never happens, and these packages silently lose access to PF packages that aren't otherwise a root-level dependency — this surfaces as `TS2307: Cannot find module '@patternfly/react-table'`-style build failures that look like real breaks but aren't.
+
+**Add every bumped `@patternfly/*` package as an explicit root `package.json` dependency**, pinned to the same exact version used everywhere else — including ones the root itself has no direct need for:
+
+```bash
+python3 -c "
+import json
+d = json.load(open('package.json'))
+d.setdefault('dependencies', {}).update(VERSION_MAP)  # every bumped @patternfly/* package
+with open('package.json', 'w') as f:
+    f.write(json.dumps(d, indent=2) + '\n')
+"
+```
+
+Do this proactively in Phase 2, not reactively after a Phase 5 build failure — it costs nothing when unnecessary and saves an entire install/build cycle when it is.
+
 ### 2.3 Verify every bumped entry is an exact pin
 
 Prerelease semver strings (`6.6.0-prerelease.9`) are excluded from `^`/`~` ranges by design — a range only matches a prerelease if the range itself is pinned to the identical `[major.minor.patch]` with a prerelease tag. This matters twice over: it breaks plain npm install resolution (Phase 3), and it breaks Module Federation's `shared` config, which reads each package's dependency string **verbatim** into `requiredVersion` (see `BaseOdhFederationPlugin.apply()`) — a stray `^`/`~` silently turns an intended exact-match requirement into a range that structurally can't match any prerelease build at all.
@@ -164,9 +184,11 @@ If it requires a version newer than what's in `frontend/package.json`, bump `mon
 
 **CRITICAL:** Must do a clean install after bumping versions across ~25-30 files. Incremental `npm install` will NOT reliably resolve the new dependency tree.
 
+**Install with `--legacy-peer-deps` from the start — do not try a plain install first.** This isn't a reactive fallback for one package's bug: any PF package referenced elsewhere via a bare `peerDependencies: "^N"` range structurally excludes its own prerelease version, per standard semver rules. This has been directly confirmed to affect multiple, unrelated packages in the same run (`@patternfly/quickstarts`'s peer on `react-core`, `@odh-dashboard/gpuaas`'s peer on `react-charts`) — fixing one with a narrow override just unmasks the next. Chasing these individually with per-package overrides doesn't scale; `--legacy-peer-deps` (already used elsewhere in this repo's own CI — see `core-bff-build.yml`) is the correct default, not a last resort.
+
 ```bash
 rm -rf node_modules frontend/node_modules packages/*/node_modules package-lock.json
-npm install
+npm install --legacy-peer-deps
 ```
 
 ### 3.1 Verify install integrity
@@ -197,14 +219,41 @@ fi
 
 If nested copies of `react-core` or `react-styles` are detected, go to Phase 4 before proceeding — this is the failure mode with no fallback safety net.
 
-### 3.2 Check for third-party npm resolution conflicts
+### 3.2 Install every independent sub-project (always required, not conditional)
+
+**The root `npm install` does not reach most of the "-frontend" apps.** Only the host `frontend/` lives in the root npm workspace tree (`workspaces` in root `package.json` globs `packages/*`, one level deep — it does not reach `packages/*/frontend`). Confirmed directly: 10 of 11 "-frontend" apps (`distributions/core-bff/frontend`, `packages/agent-ops/frontend`, `packages/automl/frontend`, `packages/autorag/frontend`, `packages/data-registry/frontend`, `packages/eval-hub/frontend`, `packages/gen-ai/frontend`, `packages/maas/frontend`, `packages/mlflow/frontend`, `packages/model-registry/upstream/frontend`, `packages/notebooks/upstream/workspaces/frontend`) have their **own independent `package-lock.json` and `node_modules`**, completely untouched by the root install — their PF versions can be stuck on whatever was last installed there (observed as old as several minor versions behind), or missing `node_modules` entirely.
+
+Install each one independently, every run:
+
+```bash
+for pkg in distributions/core-bff/frontend packages/agent-ops/frontend packages/automl/frontend \
+           packages/autorag/frontend packages/data-registry/frontend packages/eval-hub/frontend \
+           packages/gen-ai/frontend packages/maas/frontend packages/mlflow/frontend \
+           packages/model-registry/upstream/frontend packages/notebooks/upstream/workspaces/frontend; do
+  echo "=== $pkg ==="
+  (cd "$pkg" && npm install --legacy-peer-deps 2>&1 | tail -10; echo "EXIT:${PIPESTATUS[0]}")
+done
+```
+
+Verify afterward that each one actually resolved to the bumped prerelease version, not just that install succeeded:
+
+```bash
+for pkg in <same list as above>; do
+  echo -n "$pkg react-core: "
+  node -p "require('./$pkg/node_modules/@patternfly/react-core/package.json').version" 2>&1
+done
+```
+
+This is a repo-structural fact, not something to check for and skip if absent — treat it as always required.
+
+### 3.3 Check for third-party npm resolution conflicts
 
 Removing the old top-level `overrides` block (Phase 2.2) fixed the Module Federation *sharing* problem, but it also removed the blanket workaround that used to force **any** npm dependency with a `^`/`~` range on a PF package onto the prerelease version regardless of what it asked for. The only remaining override (`@openshift/dynamic-plugin-sdk-utils`, Phase 2.2B) covers just that one third-party consumer — if some *other* dependency in the tree also ranges on a bumped PF package, npm has no override to fall back on anymore, and a prerelease version (excluded from `^`/`~` ranges by design) can't satisfy it.
 
 Check the install output and the resolved tree for this:
 
 ```bash
-npm install 2>&1 | grep -iE "ERESOLVE|could not resolve|conflicting" | grep -i patternfly
+npm install --legacy-peer-deps 2>&1 | grep -iE "ERESOLVE|could not resolve|conflicting" | grep -i patternfly
 ```
 
 If nothing is flagged there, it's still worth spot-checking the resolved tree directly for any bumped package, since npm can install a duplicate silently rather than erroring depending on the conflict:
@@ -215,12 +264,12 @@ npm ls @patternfly/react-core 2>&1 | head -20
 
 More than one distinct resolved version in this output (beyond an expected `deduped` pointer) means some other package is pinning a range the prerelease version can't satisfy. If you find one, that's an open question, not something to route around by reintroducing the old top-level override — note it in the report and flag whether the PF team needs to coordinate with that dependency's maintainer, or whether the dependency's range needs a documented exception here.
 
-### 3.3 Handle npm ENOTEMPTY errors
+### 3.4 Handle npm ENOTEMPTY errors
 
 npm can silently fail with ENOTEMPTY race conditions. If install output shows warnings or the package count is wrong, delete and reinstall:
 ```bash
 rm -rf node_modules package-lock.json
-npm install
+npm install --legacy-peer-deps
 ```
 
 ---
@@ -288,6 +337,21 @@ for f, label in [('/tmp/turbo-type-check.json','type-check'), ('/tmp/turbo-test-
 
 (Field names in turbo's `--dry=json` output can shift between versions — if `t['package']` doesn't exist, inspect the JSON structure directly and adjust.) Cross-reference the covered set against the 30-ish PF-bump file list from Phase 1.2 — any PF-consuming package NOT in the covered set needs the Phase 5.2/5.4 supplemental step below, not just the root command.
 
+**Also check for bridge scripts before assuming a package needs the full supplemental treatment.** A few "-frontend" apps' root-level `package.json` (e.g. `packages/eval-hub/package.json`, `packages/maas/package.json`) define `type-check`/`test-unit`/`lint` as literal bridges (`"type-check": "cd frontend && npm run test:type-check"`) — these ARE exercised by the root command despite the naming mismatch elsewhere, and re-running them via the Phase 5.2/5.4 loop is redundant, not wrong, but wastes time at scale. Check each "-frontend" package's own root `package.json` scripts directly:
+
+```bash
+for pkg in agent-ops automl autorag data-registry eval-hub gen-ai maas mlflow; do
+  echo "=== $pkg ==="
+  python3 -c "
+import json
+d = json.load(open('packages/$pkg/package.json'))
+print({k:v for k,v in d.get('scripts', {}).items() if k in ('type-check','test-unit','lint','test:cypress-ci')})
+"
+done
+```
+
+Build the Phase 5.2/5.4 supplemental package list from whichever apps do NOT have a bridge for that specific task — don't apply one blanket list to type-check, test-unit, lint, and cypress uniformly, since bridging is per-task, not per-package (e.g. `maas` bridges type-check and test-unit but not cypress).
+
 ### 5.1 Dev server build (MUST PASS for host; supplement for remotes)
 
 `npm run start:dev:ext` starts a long-running dev server that never exits on its own — running it as a normal foreground command will hang or hit the tool's timeout. Run it in the background, capture the compile output to a log, and poll the log instead of waiting on the command:
@@ -333,13 +397,13 @@ This validates each remote's bundle actually compiles with the prerelease versio
 npm run type-check
 ```
 
-**Per Phase 5.0, this skips every "-frontend" package.** Supplement:
+**Per Phase 5.0, this skips every "-frontend" package except the ones with a bridge script** (e.g. `eval-hub`, `maas` bridge `type-check` into their own `frontend/` — verify per-run, this list can change). Supplement the rest:
 
 ```bash
 for pkg in frontend packages/agent-ops/frontend packages/automl/frontend packages/autorag/frontend \
-           packages/data-registry/frontend packages/eval-hub/frontend packages/gen-ai/frontend \
-           packages/maas/frontend packages/mlflow/frontend packages/model-registry/upstream/frontend \
-           packages/notebooks/upstream/workspaces/frontend distributions/core-bff/frontend; do
+           packages/data-registry/frontend packages/gen-ai/frontend packages/mlflow/frontend \
+           packages/model-registry/upstream/frontend packages/notebooks/upstream/workspaces/frontend \
+           distributions/core-bff/frontend; do
   echo "=== $pkg ==="
   (cd "$pkg" && npm run test:type-check 2>&1 | tail -10; echo "EXIT:${PIPESTATUS[0]}")
 done
@@ -351,7 +415,7 @@ done
 npm run lint
 ```
 
-`lint` is the one script name that's actually consistent across every package (per Phase 5.0's coverage check) — no supplemental step needed here, except `packages/agent-ops/frontend` which has no `lint` script at all and is never linted by anything.
+`lint` is bridged by most "-frontend" packages' own root `package.json` (`automl`, `autorag`, `core-bff`, `eval-hub`, `gen-ai`, `maas`, `mlflow` all define `"lint": "cd frontend && npm run lint"`), so root's `lint` command covers them despite the naming pattern that breaks `type-check`/`test-unit`. `agent-ops` and `data-registry` have no root-level `lint` bridge at all and are never linted by anything — confirm this per-run via Phase 5.0's script check rather than assuming.
 
 ### 5.4 Unit tests
 
@@ -359,13 +423,13 @@ npm run lint
 npm run test-unit
 ```
 
-**Per Phase 5.0, this skips every "-frontend" package.** Supplement:
+**Per Phase 5.0, this skips every "-frontend" package except the ones with a bridge script** (e.g. `eval-hub`, `maas` bridge `test-unit` — verify per-run). Supplement the rest:
 
 ```bash
 for pkg in frontend packages/agent-ops/frontend packages/automl/frontend packages/autorag/frontend \
-           packages/data-registry/frontend packages/eval-hub/frontend packages/gen-ai/frontend \
-           packages/maas/frontend packages/mlflow/frontend packages/model-registry/upstream/frontend \
-           packages/notebooks/upstream/workspaces/frontend distributions/core-bff/frontend; do
+           packages/data-registry/frontend packages/gen-ai/frontend packages/mlflow/frontend \
+           packages/model-registry/upstream/frontend packages/notebooks/upstream/workspaces/frontend \
+           distributions/core-bff/frontend; do
   echo "=== $pkg ==="
   (cd "$pkg" && npm run test:unit 2>&1 | tail -10; echo "EXIT:${PIPESTATUS[0]}")
 done
@@ -429,8 +493,8 @@ odh-dashboard-specific notes for filling the schema:
 - `checks[]` — dev server build / type-check / lint / unit tests / cypress / visual smoke, each compared against the Phase 5.6 baseline (`git stash` + rerun on `main`) so pre-existing failures aren't mistaken for new regressions. **Report root-command and per-package-supplement results separately** (e.g. "type-check (root, 15 backend packages): pass" and "type-check (11 -frontend packages, supplemental): pass/fail per package") — collapsing them into one aggregate result hides exactly the coverage gap Phase 5.0 exists to catch. If any "-frontend" supplement was skipped for time, list it as `skip` with a reason, not silently omitted.
 - `versions[]` — pull from the version map in Phase 1, annotated with the number of files each package was bumped in (see Phase 1.2 discovery) and whether it's a no-fallback module (`react-core`/`react-styles`) requiring the Phase 2.4 alignment check.
 - `findings[]` — CSS parse failures that turn out to be npm hoisting/distribution-path artifacts (see "Diagnosing CSS parse failures" below) go under `build-tooling-artifact`, **not** `css-scss-break` — the whole point of that diagnosis procedure is to keep false positives out of the PF-facing findings. A genuine `react-core`/`react-styles` version misalignment across packages (Phase 2.4) is a real finding — category `runtime-failure` if it caused silent breakage, or a note under Recommendations if caught before install.
-- `installNotes[]` — always include the Phase 3.1 nested-copy check outcome, the Phase 2.4 alignment check outcome (all bumped packages, not just the no-fallback ones), the Phase 2.3 exact-pin check outcome, and the Phase 3.2 third-party resolution-conflict check outcome, even when all are clean — these are the checks this architecture depends on, and a silent clean pass is meaningful signal, not a non-event to omit.
-- `fixesApplied[]` — include any `distributions/*/frontend/config/stylePaths.js` changes and any `packages/observability/package.json` transitive dep additions, since these are real (if inert-on-main) source changes made to unblock the bump.
+- `installNotes[]` — always include the Phase 3.1 nested-copy check outcome, the Phase 2.4 alignment check outcome (all bumped packages, not just the no-fallback ones), the Phase 2.3 exact-pin check outcome, and the Phase 3.3 third-party resolution-conflict check outcome, even when all are clean — these are the checks this architecture depends on, and a silent clean pass is meaningful signal, not a non-event to omit.
+- `fixesApplied[]` — include the Phase 2.2C explicit root dependency additions, any third-party peer-dependency installs (Known Gotchas), any webpack CSS `include` array changes, and any `packages/observability/package.json` transitive dep additions — all are real (if inert-on-main) source changes made to unblock the bump.
 
 ---
 
@@ -482,17 +546,51 @@ If the distribution files differ between stable and prerelease (new CSS imports,
 
 ---
 
+## Known Gotchas (accumulated from prior runs)
+
+These are patterns, not fixed checklist items — the specific third-party packages named below will change over time. Recognize the *shape* of the problem, not the specific package name.
+
+### `--legacy-peer-deps` can silently drop a THIRD-PARTY package's own peer dependencies, not just PF's
+
+Phase 2.2C addresses PF packages specifically, but `--legacy-peer-deps` disables peer-dep auto-install for **every** package in the tree, not just PatternFly ones. If a build or test fails with `Cannot find module 'X'` where `X` isn't a PF package, check whether `X` is a `peerDependency` of something already installed:
+
+```bash
+grep -rl "\"X\"" node_modules/*/package.json | xargs -I{} python3 -c "
+import json,sys
+d = json.load(open('{}'))
+if 'X' in d.get('peerDependencies', {}):
+    print('{}', 'peer-deps on X')
+"
+```
+
+If confirmed, install it explicitly in the affected package (`npm install X@VERSION --legacy-peer-deps`), the same way Phase 2.2C does for PF packages. **Worked example (2026-08-19):** `mod-arch-shared` (used by `gen-ai`, `automl`, `autorag`) peer-deps on `mod-arch-kubeflow`, which silently failed to install and broke both unit tests (`Cannot find module 'mod-arch-kubeflow'` inside `ThemeAwareFormGroupWrapper.js`) and production builds identically. Fixed by installing `mod-arch-kubeflow` explicitly in all three affected apps. This specific package may not recur — the pattern will.
+
+### Before editing a CSS include-path file, verify it's actually imported by anything
+
+CSS parse/loader errors for a nested third-party package's bundled PF copy (e.g. `Module parse failed` or `no loaders configured` for a `.css` file inside `node_modules/some-package/node_modules/@patternfly/...`) look like they belong in a `stylePaths.js`-style file — several apps have one, listing exactly this kind of nested path. **Check first whether that file is actually imported by any webpack config before editing it:**
+
+```bash
+grep -rln "stylePaths" config/*.js
+```
+
+**Worked example (2026-08-19):** `packages/automl/frontend/config/stylePaths.js` and `packages/autorag/frontend/config/stylePaths.js` both exist and list nested PF paths, but neither is imported by `webpack.common.js`, `webpack.prod.js`, or `webpack.dev.js` in either project — dead code. The actual control point was the CSS rule's `include` array directly inside `webpack.prod.js`. Editing the unused file costs a full rebuild cycle to discover it did nothing; grep for the real usage first.
+
+---
+
 ## Key rules
 
 - **There is no top-level PF `overrides` block anymore.** Don't add one — it was removed by odh-dashboard#8660 in favor of `shared-modules-meta.ts`'s explicit sharing policy. Only the nested `@openshift/dynamic-plugin-sdk-utils` override still needs manual updates.
 - **Version bumps apply to every discovered `package.json`, not just `frontend/` and root.** Re-discover the file list each run (Phase 1.2) — it changes as remotes are added.
 - **`react-core` and `react-styles` have no fallback.** A version mismatch between the host and any single remote for these two packages specifically causes silent runtime breakage, not a build error. Verify alignment across every file (Phase 2.4) before installing, not after something looks broken.
 - **Every other PF package tolerates mismatch via fallback.** Don't chase nested-copy "hoisting" findings for these as if they were bugs — that's the architecture working as intended.
-- **Always clean install after version bumps.** `rm -rf node_modules package-lock.json && npm install`.
-- **CSS parse errors: check version alignment and `shared-modules-meta.ts` coverage before assuming a build-tooling artifact.** Some distributions have their own `stylePaths.js`; the main host does not.
-- **Commit any `stylePaths.js` or `packages/observability/package.json` changes on the RC branch** if they were needed to unblock the bump — they're inert on main.
+- **Always clean install after version bumps, with `--legacy-peer-deps` from the start.** `rm -rf node_modules package-lock.json && npm install --legacy-peer-deps`. This is a default, not a fallback for one bad ERESOLVE — confirmed to affect multiple unrelated PF packages in the same run (Phase 3).
+- **Add every bumped PF package as an explicit root `dependencies` entry, proactively, before installing (Phase 2.2C).** `--legacy-peer-deps` disables peer-dep auto-install, which 13+ packages rely on to get PF packages hoisted to the workspace root. Do this up front — discovering the gap via a Phase 5 build failure costs a full cycle.
+- **Install every "-frontend" app's independent sub-project separately (Phase 3.2), every run, unconditionally.** Only the host lives in the root npm workspace; 10 remotes have their own lockfiles the root install never touches.
+- **`--legacy-peer-deps` can drop non-PF peer dependencies too.** If something fails with `Cannot find module` for a package that isn't PatternFly, see Known Gotchas — the fix pattern (install it explicitly) is the same as for PF packages, just not automated since the specific package varies.
+- **CSS parse errors: check version alignment and `shared-modules-meta.ts` coverage before assuming a build-tooling artifact.** Some apps have a `stylePaths.js`-style file, but verify it's actually imported by a webpack config before editing it — see Known Gotchas; it's sometimes dead code, and the real CSS `include` array lives directly in `webpack.prod.js`.
+- **Commit any webpack config changes, explicit dependency additions, or `packages/observability/package.json` changes on the RC branch** if they were needed to unblock the bump — they're inert on main.
 - **Commit both `pf-prerelease-report.md` and `.html`** on the RC branch alongside any fixes — see Phase 6.
 - **Root-level `type-check`/`test-unit`/`test:cypress-ci`/`start:dev:ext` do not cover the whole monorepo.** They skip every "-frontend"-suffixed package (host + ~11 remotes) due to script-naming inconsistency (`test:type-check`/`test:unit` vs. the bare names turbo's root task expects) or, for Cypress, because the root script is hardcoded to the host only. Always run the Phase 5.1/5.2/5.4/5.5 per-package supplements — skipping them means the packages most likely to break from a PF bump were never actually tested.
 - **Every bumped `package.json` entry must be an exact pin — no `^`/`~`.** Prerelease semver strings are excluded from ranges by design; a stray range operator silently breaks both npm resolution and Module Federation's `requiredVersion` matching (Phase 2.3).
 - **Alignment for prerelease testing means exact string equality, not "same minor."** `6.6.0-prerelease.9` and `6.6.0-prerelease.10` are non-overlapping versions to semver — check every bumped package, not just react-core/react-styles, even though only the latter two are hard blockers (Phase 2.4).
-- **Removing the top-level PF override reopened a class of npm ERESOLVE risk** for any third-party dependency (beyond `@openshift/dynamic-plugin-sdk-utils`) that ranges on a bumped PF package. Check for this after install (Phase 3.2) — don't assume the nested override is the only consumer that needed handling.
+- **Removing the top-level PF override reopened a class of npm ERESOLVE risk** for any third-party dependency (beyond `@openshift/dynamic-plugin-sdk-utils`) that ranges on a bumped PF package. Check for this after install (Phase 3.3) — don't assume the nested override is the only consumer that needed handling.
