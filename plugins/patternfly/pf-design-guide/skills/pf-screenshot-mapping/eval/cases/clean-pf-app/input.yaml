@@ -1,0 +1,15 @@
+prompt: |
+  Here's a mid-fidelity mockup of a settings page I need to build. Can you map it to PatternFly components?
+
+  - Standard page layout with a left sidebar navigation (Settings is active, other items: Overview, Clusters, Networking)
+  - Masthead with "OpenShift" branding and a help icon + user dropdown on the right
+  - The main content area has:
+    - A page title "General Settings" with a subtitle underneath
+    - A horizontal tab bar with 3 tabs: General, Notifications, API Keys (General is active)
+    - Under the active tab, a form with:
+      - Text input for "Display name"
+      - Select dropdown for "Default timezone"
+      - A switch/toggle for "Enable email notifications"
+      - A text area for "Bio"
+      - An action group at the bottom: primary "Save" button + secondary "Cancel" button
+    - An alert banner at the top of the form area: "Settings were last updated 2 hours ago" (info variant)

@@ -1,0 +1,150 @@
+name: pf-screenshot-mapping-eval
+description: Evaluate pf-screenshot-mapping's structural component mapping and styling-language discipline
+
+# A/B delta: Without the skill, baseline Claude comments freely on visual styling
+# (rounded corners, shadows, colors, gradients) when analyzing UIs. The skill
+# uniquely contributes: strict forbidden-styling-language enforcement, two-table
+# output format (PF Component Mapping + PF Gaps & Recommendations), gap type
+# classification (gap/stretch/docs gap/extension), and PF6 doc link requirements.
+
+skill: pf-design-guide:pf-screenshot-mapping
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt describing a UI layout for PatternFly component mapping
+    - annotations.yaml: has_gaps (true/false), fidelity (low/mid/high), ui_type
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces two markdown tables: PF Component Mapping (region,
+      PF6 direction, doc links) and PF Gaps & Recommendations (region, type,
+      coverage, next step, notes). No visual styling commentary.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: has_two_tables
+    description: Output contains both required section headings
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_mapping = re.search(r'(?i)\bPF\s+Component\s+Mapping\b', text)
+      has_gaps = re.search(r'(?i)\bPF\s+Gaps\s+(&|and)\s+Recommendations\b', text)
+      if not has_mapping and not has_gaps:
+          return False, "Missing both required tables: PF Component Mapping and PF Gaps & Recommendations"
+      if not has_mapping:
+          return False, "Missing PF Component Mapping table"
+      if not has_gaps:
+          return False, "Missing PF Gaps & Recommendations table"
+      return True, "Both required tables present"
+
+  - name: no_forbidden_styling
+    description: Output does not contain forbidden visual styling language
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      parts = re.split(r'(?i)\bPF\s+Component\s+Mapping\b', text, maxsplit=1)
+      if len(parts) < 2:
+          return True, "No PF Component Mapping section found to check"
+      output_text = parts[1]
+      forbidden = [
+          (r'(?i)\b(border.radius|rounded.corner|squircle|pill.shape|soft.edge)', "border radius / rounded corners"),
+          (r'(?i)\b(shadow|elevation|floating.card|depth|glow)\b', "shadow / elevation"),
+          (r'(?i)\b(pill.button|fully.rounded)\b', "pill buttons"),
+          (r'(?i)\b(airy|cramped|tight)\b.{0,30}(?:spacing|density|layout)', "spacing as design critique"),
+          (r'(?i)\b(glassmorphic|neumorphic|frosted|blur.effect)\b', "decorative surface effects"),
+      ]
+      violations = []
+      for pattern, label in forbidden:
+          if re.search(pattern, output_text):
+              violations.append(label)
+      if violations:
+          return False, f"Contains forbidden styling language: {', '.join(violations)}"
+      return True, "No forbidden styling language detected"
+
+  - name: has_doc_links
+    description: PF Component Mapping includes patternfly.org documentation links
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf_links = re.findall(r'https?://www\.patternfly\.org/components/\S+', text)
+      if len(pf_links) < 2:
+          return False, f"Only {len(pf_links)} patternfly.org component links found — expected multiple for a full mapping"
+      return True, f"Found {len(pf_links)} patternfly.org doc links"
+
+  - name: has_gap_types
+    description: PF Gaps & Recommendations uses correct type classification labels
+    if: "annotations.get('has_gaps') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      gap_section = re.split(r'(?i)PF\s+Gaps\s+(?:&|and)\s+Recommendations', text)
+      if len(gap_section) < 2:
+          return False, "Could not locate PF Gaps & Recommendations section"
+      gap_text = gap_section[-1]
+      valid_types = [r'\bgap\b', r'\bstretch\b', r'\bdocs\s+gap\b', r'\bextension\b']
+      found = [t for t in valid_types if re.search(t, gap_text, re.IGNORECASE)]
+      if not found:
+          return False, "PF Gaps & Recommendations does not use required type labels (gap, stretch, docs gap, extension)"
+      return True, f"Found gap type labels: {found}"
+
+  - name: minimal_gaps_for_clean_ui
+    description: Standard PF app should have minimal or no structural gaps
+    if: "annotations.get('has_gaps') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      gap_section = re.split(r'(?i)PF\s+Gaps\s+(?:&|and)\s+Recommendations', text)
+      if len(gap_section) < 2:
+          return False, "Could not locate PF Gaps & Recommendations section"
+      gap_text = gap_section[-1][:500]
+      no_issues = re.search(r'(?i)(no\s+structural|maps\s+cleanly|no\s+(?:significant\s+)?(?:gap|coverage\s+issue)|full(?:y)?\s+covered)', gap_text)
+      gap_rows = len(re.findall(r'\|\s*(?:gap|stretch)\s*\|', gap_text, re.IGNORECASE))
+      if gap_rows > 2 and not no_issues:
+          return False, f"Found {gap_rows} gap/stretch entries for a standard PF app that should map cleanly"
+      return True, f"Gaps table is minimal for clean PF app (rows={gap_rows}, clean-statement={'yes' if no_issues else 'no'})"
+
+thresholds:
+  has_two_tables:
+    min_pass_rate: 1.0
+  no_forbidden_styling:
+    min_pass_rate: 0.67
+  has_doc_links:
+    min_pass_rate: 1.0
+  has_gap_types:
+    min_pass_rate: 0.67
+  minimal_gaps_for_clean_ui:
+    min_pass_rate: 0.67

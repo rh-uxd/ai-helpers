@@ -1,0 +1,11 @@
+prompt: |
+  I have a low-fidelity wireframe for an admin dashboard. Here's what's on the screen:
+
+  - Left side: a vertical navigation sidebar with 5 items (Dashboard, Users, Settings, Reports, Help), "Dashboard" is highlighted as active. There's a small icon to the left of each nav item.
+  - Top: a horizontal masthead bar with the app name "Admin Portal" on the left, and on the right a user avatar dropdown and a notification bell icon button.
+  - Main content area has:
+    - A toolbar row at the top with a text filter input, a "Status" dropdown filter, and a "Create user" primary button on the right
+    - Below that, a data table with columns: Name, Email, Role, Status, Actions. About 8 rows of data. The Actions column has a kebab menu per row.
+    - Below the table, pagination controls (items per page selector + page numbers)
+
+  Can I build this with PatternFly?

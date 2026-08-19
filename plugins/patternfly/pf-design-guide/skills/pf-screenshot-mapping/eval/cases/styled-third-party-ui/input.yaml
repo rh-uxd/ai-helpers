@@ -1,0 +1,16 @@
+prompt: |
+  I'm looking at a third-party analytics dashboard and want to know which PatternFly components could replicate the structure. Here's what I see:
+
+  - Very rounded card corners with soft drop shadows throughout
+  - A top navigation bar with pill-shaped buttons and a glassmorphic/frosted background effect
+  - The main area is a 3-column card grid layout. Each card has:
+    - A large donut chart showing a percentage
+    - A title and subtitle below the chart
+    - A colored status badge (green/yellow/red)
+  - Below the card grid, a two-column split layout:
+    - Left: a line chart showing trends over 30 days with a gradient fill under the line
+    - Right: a vertical bar chart comparing 4 categories
+  - Bottom section: an expandable accordion with 3 sections, each containing a description list of key-value pairs
+  - The whole UI uses a dark theme with neon accent colors and heavy use of gradients
+
+  Which PatternFly components map to this?
