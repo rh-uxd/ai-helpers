@@ -221,29 +221,27 @@ npm run dev
 
 ## Phase 8: Generate Report
 
-A report template is included with this skill. Read it:
+This skill shares a report data model and both output templates with the other `pf-prerelease-audit-*` skills — see:
 
-```
-[skill directory]/report-template.html
-```
+- `../_shared/pf-prerelease-report/schema.md` — the data model to fill in from Phases 1–7
+- `../_shared/pf-prerelease-report/report-template.md` — markdown output (git-diffable, pastes into PR descriptions)
+- `../_shared/pf-prerelease-report/report-template.html` — HTML output (self-contained, for email/stakeholder sharing)
 
-Adapt it for the current RC by updating:
-- `<title>` and heading — replace version number
-- Meta line — branch name, date, tester name
-- Verdict banner — compatible or issues found
-- Phase summary cards — actual pass/fail/skip for each phase
-- Version table — before and after version strings for each package discovered in Phase 0
-- Phase result details — actual findings, snapshot diffs, breaking changes, and any fixes applied
-- Install notes — whether `--legacy-peer-deps` was needed and which package triggered it
-- Recommendations — action items for the PF team
+Fill in the schema from this run's results, then render **both** templates and write:
 
-Write the completed report to `pf-prerelease-report.html` in the insights-chrome repo root. To embed visual diff images, base64-encode them:
+- `pf-prerelease-report.md` in the insights-chrome repo root
+- `pf-prerelease-report.html` in the insights-chrome repo root
 
-```bash
-base64 < "cypress/snapshots/.../___diff_output__/image.png" | tr -d '\n'
-```
+insights-chrome-specific notes for filling the schema:
 
-The report must be self-contained (no external dependencies) so it can be shared by email or attached to a PR.
+- `checks[]` — Lint / Build / Jest / Cypress / Visual (manual, mark `skip` if VPN unavailable). This skill doesn't run a baseline pass before bumping, so report a single result per check rather than baseline-vs-prerelease columns.
+- `findings[]` — snapshot changes (icon SVG diffs, OUIA ID format changes) belong under `runtime-failure` with a `<details>` diff block; only mark `verdict: "safe to accept"` if the diff matches one of the known-safe patterns in Phase 5, otherwise `"needs investigation"`.
+- Embed visual diff images as base64 in the HTML output:
+  ```bash
+  base64 < "cypress/snapshots/.../___diff_output__/image.png" | tr -d '\n'
+  ```
+- `installNotes[]` — **always** include an entry for the overrides/ERESOLVE workaround, even when overrides worked cleanly on the first try. If `--legacy-peer-deps` was needed, set `outcome: "did-not-work-fallback-used"` and name the conflicting package (see Phase 2's "Handling install failures").
+- The HTML output must stay self-contained (no external dependencies, no relative image paths) so it can be shared by email or attached to a PR.
 
 ---
 
@@ -254,7 +252,7 @@ git add package.json package-lock.json
 git add src/            # code fixes only
 git add cypress/snapshots/    # updated image baselines
 git add src/**/__snapshots__/ # updated Jest snapshots
-git add pf-prerelease-report.html  # report (stays on RC branch, not merged to master)
+git add pf-prerelease-report.md pf-prerelease-report.html  # reports (stay on RC branch, not merged to master)
 
 git commit -m "chore(deps): bump PatternFly to X.Y.Z-prerelease for RC validation"
 
@@ -262,7 +260,7 @@ git commit -m "chore(deps): bump PatternFly to X.Y.Z-prerelease for RC validatio
 git push -u origin chore/pf-X-Y-rc-testing
 ```
 
-Open a PR to `master`. Link the HTML report or paste the summary in the PR description.
+Open a PR to `master`. Paste the `.md` report body directly into the PR description; link or attach the `.html` report for stakeholders who want the skimmable version.
 
 ---
 
@@ -276,4 +274,4 @@ Open a PR to `master`. Link the HTML report or paste the summary in the PR descr
 | `src/components/Header/` | Masthead, Toolbar, Avatar |
 | `src/moduleOverrides/chart-utils-override.js` | Brittle chart webpack alias |
 | `cypress/component/NotEntitledModal/` | Uses deprecated Modal, most visual churn |
-| `pf-prerelease-report.html` | Generated report (RC branch only) |
+| `pf-prerelease-report.md` / `.html` | Generated reports (RC branch only) — see `../_shared/pf-prerelease-report/` for the shared template |

@@ -25,7 +25,29 @@ If versions were not passed as arguments, ask the user:
 
 > "Please paste the list of `@patternfly/*` prerelease versions you want to test (one per line, in `"pkg": "version"` format from package.json)."
 
+If no versions are available at all, discover the current `prerelease` dist-tag for each package already in `frontend/package.json` as a fallback, then confirm with the user before proceeding:
+
+```bash
+for pkg in $(grep -E '"@patternfly/' frontend/package.json | sed 's/.*"\(@patternfly\/[^"]*\)".*/\1/'); do
+  echo -n "$pkg prerelease: "
+  npm view "$pkg" dist-tags.prerelease 2>/dev/null || echo "none"
+done
+```
+
 Identify which packages are **already in `frontend/package.json`** vs new (not yet consumed by console). Only update packages that are already declared — do not add new packages unless the user explicitly asks. Note which prerelease packages are skipped (not consumed).
+
+### Version existence and sanity checks
+
+Before editing `package.json`, confirm every target version actually resolves on the npm registry — a late failure mid-install wastes a full install/build cycle:
+
+```bash
+for spec in "react-core:6.6.0-prerelease.9" ...; do   # one entry per target package:version
+  pkg="${spec%%:*}"; ver="${spec##*:}"
+  npm view "@patternfly/$pkg@$ver" version 2>&1
+done
+```
+
+Also compare each target version against what's currently installed (`grep -E '^"@patternfly' frontend/yarn.lock`). If any target is **older than or equal to** the currently installed version, flag this to the user before continuing — testing a downgrade or a no-op produces misleading results in the diff.
 
 ---
 
@@ -97,7 +119,9 @@ Replace each existing `@patternfly/*` entry's version with the target prerelease
 
 Prerelease PF packages often retain peer dependencies on the previous stable sibling versions, causing Yarn to install multiple resolutions simultaneously. The `check-patternfly-modules.ts` postinstall script rejects this.
 
-Add all bumped PF packages to the `resolutions` field (which already exists in this repo):
+Add all bumped PF packages to the `resolutions` field (which already exists in this repo).
+
+**This isn't unique to prerelease bumps** — any `@patternfly/*` version change (including a deliberate *downgrade*, e.g. for a dry-run of this skill against an already-current repo) can trigger the same dual-resolution conflict if other transitive deps still reference the old version. If `yarn install` reports `has multiple resolutions` during Phase 1 (baseline) rather than Phase 2, add `resolutions` entries for the baseline versions too before proceeding — don't assume this problem only appears when moving forward.
 
 ```json
 "resolutions": {
@@ -133,6 +157,8 @@ Check the printed `EXIT:` code first — `tee` always exits 0, so this is the on
 | `Please update check-patternfly-modules.ts to handle: @patternfly/foo` | New transitive dep in scope | Add to `PKGS_TO_CHECK` array |
 | `has no 6.x resolutions` | Added to `PKGS_TO_CHECK` but package not installed | Remove from `PKGS_TO_CHECK` |
 
+`resolutions` has resolved every dual-resolution conflict seen so far in this repo, but don't assume it always will. If an install still fails after adding a `resolutions` entry, capture the exact error in the report's Installation Notes rather than silently retrying — a future run may need a different workaround (e.g. Yarn's `--legacy-peer-deps` equivalent, or a nested resolution keyed to the conflicting parent package), and the report should say what was tried and failed, not just what eventually worked.
+
 ### 2.5 Run prerelease checks
 
 As in Phase 1.4, run the build first and alone — `tree-shaking.spec.ts`/`sdk-dist-imports.spec.ts` skip when `public/dist/` is absent, so building and testing in parallel turns that skip into a race condition.
@@ -161,6 +187,8 @@ Record the printed `EXIT:` code for each (0 = passed).
 
 Compare each log pair. Report only findings **new in prerelease** (not in baseline).
 
+Set the report's overall verdict per `../_shared/pf-prerelease-report/schema.md`'s verdict rules: `compatible` if the only findings are peer-dep warnings, `regressions-found` if there's a real finding with a workaround, `blocked` if something fails with no known fix.
+
 **Known non-issues (ignore if present in both runs):**
 - `React.jsx: type is invalid` warnings from `@patternfly/react-topology` `TopologyControlBar` — pre-existing in stable, not a regression
 - `[mobx-react-lite] importing batchingForReactDom is no longer needed` — pre-existing
@@ -170,22 +198,32 @@ Categorize new findings as:
 - **Import path break** — module moved, re-export removed
 - **CSS/SCSS break** — token renamed, class changed
 - **Runtime failure** — unit test failure (not just console.error warning)
-- **Bundle size change** — significant chunk size delta
 - **Peer dep warning** — new warning from `yarn install`
+
+This skill has no bundle-analysis phase, so **do not** report a "bundle size change" category — there's no step here that would catch one either way.
 
 ---
 
 ## Phase 4: Write Report
 
-Generate a markdown report at `pf-prerelease-report-YYYY-MM-DD.md` in the repo root containing:
+This skill shares a report data model and both output templates with the other `pf-prerelease-audit-*` skills — see:
 
-1. **Versions tested** table (baseline vs prerelease) covering only the packages actually declared in `frontend/package.json` and bumped — mark any packages from the prerelease manifest that were skipped as "not consumed by console," not as tested
-2. **Summary table** — Install / Build / TSC / Lint / Unit tests × Baseline / Prerelease / Result
-3. **Installation workaround** section — document the `resolutions` approach and note which packages had dual-resolution conflicts
-4. **Findings** — one section per category (TypeScript, CSS, runtime). If all clean, say so explicitly.
-5. **Pre-existing baseline observations** — list any warnings present in both runs (so PF team knows these are not new)
-6. **Recommendations** — split into "For PF team" and "For Console team"
-7. **Test environment** — Node version, Yarn version, OS, Webpack version
+- `../_shared/pf-prerelease-report/schema.md` — the data model to fill in from Phases 1–3
+- `../_shared/pf-prerelease-report/report-template.md` — markdown output (git-diffable, pastes into PRs/Slack)
+- `../_shared/pf-prerelease-report/report-template.html` — HTML output (self-contained, stakeholder-facing)
+
+Fill in the schema from this run's results, then render **both** templates and write:
+
+- `pf-prerelease-report-YYYY-MM-DD.md` in the repo root
+- `pf-prerelease-report-YYYY-MM-DD.html` in the repo root
+
+Console-specific notes for filling the schema:
+
+- `versions[]` — cover only packages actually declared in `frontend/package.json` and bumped. Packages from the prerelease manifest not in `frontend/package.json` go in the "not consumed" note, not in the table.
+- `checks[]` — Install / Build (`yarn dev-once`) / TSC / Lint / Unit tests (`yarn test --ci`), each with baseline and prerelease results.
+- `installNotes[]` — always include the `resolutions` workaround entry (see Phase 2.2 and the Known Gotchas section), even when it worked cleanly — this is expected friction for this repo, not an anomaly.
+- Bundle size is **not measured** by this skill (no `yarn analyze` step) — omit the `bundle-size-change` finding category entirely rather than reporting "None observed" for a category nothing here actually checks. Note the gap under Recommendations if it seems relevant.
+- `env.bundler` — rspack version from `frontend/package.json`'s `@rspack/core`.
 
 ---
 
@@ -231,4 +269,4 @@ The following changes are **test scaffolding only** and should NOT be committed 
 - `frontend/yarn.lock` — revert (`yarn install` rewrites it whenever `resolutions`/dependencies change; leaving prerelease entries in place can break a later immutable install or contaminate the branch)
 - `frontend/scripts/check-patternfly-modules.ts` — revert any `PKGS_TO_CHECK` additions (unless the packages are genuinely being added to the codebase)
 
-The report file (`pf-prerelease-report-YYYY-MM-DD.md`) can be committed or shared directly.
+The report files (`pf-prerelease-report-YYYY-MM-DD.md` and `.html`) can be committed or shared directly.

@@ -292,41 +292,24 @@ If `start:dev:ext` is running, open `http://localhost:4010`. Check:
 
 ## Phase 6: Report results
 
-Produce a summary:
+This skill shares a report data model and both output templates with the other `pf-prerelease-audit-*` skills — see:
 
-```markdown
-## PF X.Y Prerelease RC Testing Results
+- `../_shared/pf-prerelease-report/schema.md` — the data model to fill in from Phases 1–5
+- `../_shared/pf-prerelease-report/report-template.md` — markdown output (git-diffable, pastes into PR descriptions)
+- `../_shared/pf-prerelease-report/report-template.html` — HTML output (self-contained, for stakeholder sharing)
 
-Branch: `chore/pf-X-Y-rc-testing`
-Date: YYYY-MM-DD
+Fill in the schema from this run's results, then render **both** templates and write:
 
-### Version map
+- `pf-prerelease-report.md` in the odh-dashboard repo root
+- `pf-prerelease-report.html` in the odh-dashboard repo root
 
-| Package | Version |
-|---------|---------|
-| ... | ... |
+odh-dashboard-specific notes for filling the schema:
 
-### Test results
-
-| Test | Result | Notes |
-|------|--------|-------|
-| webpack build | PASS/FAIL | Error count |
-| type-check | X errors | Pre-existing vs new |
-| lint | X errors | Pre-existing vs new |
-| unit tests | X pass, Y fail | Pre-existing vs new |
-| cypress | X pass, Y fail | Pre-existing vs new |
-| visual smoke | PASS/FAIL | Notable issues |
-
-### New issues (caused by PF bump)
-- ...
-
-### Pre-existing issues (same on main)
-- ...
-
-### Webpack workarounds applied
-- [ ] Added `frontend/node_modules/@patternfly` to webpack.dev.js CSS include (hoisting fix)
-- [ ] Added observability transitive deps
-```
+- `checks[]` — dev server build / type-check / lint / unit tests / cypress / visual smoke, each compared against the Phase 5.6 baseline (`git stash` + rerun on `main`) so pre-existing failures aren't mistaken for new regressions.
+- `versions[]` — pull from the version map in Phase 1, annotated with which packages required top-level `overrides` (Phase 2.2C) vs which only needed the `dependencies` bump.
+- `findings[]` — CSS parse failures that turn out to be npm hoisting artifacts (see "Diagnosing CSS parse failures" below) go under `build-tooling-artifact`, **not** `css-scss-break` — the whole point of that diagnosis procedure is to keep false positives out of the PF-facing findings.
+- `installNotes[]` — always include the hoisting-check outcome from Phase 3.1 (nested copies found or not), and whether the Phase 4.2 webpack workaround was needed.
+- `fixesApplied[]` — include the webpack.dev.js CSS include change and any `packages/observability/package.json` transitive dep additions, since these are real (if inert-on-main) source changes made to unblock the bump.
 
 ---
 
@@ -382,3 +365,4 @@ If the distribution files differ between stable and prerelease (new CSS imports,
 - **CSS parse errors are hoisting problems until proven otherwise.** Fix goes in `webpack.dev.js` include paths, NOT `webpack.common.js` exclude.
 - **Sub-packages are deferred.** Only update `frontend/package.json` and root `package.json`.
 - **Commit the webpack workaround on the RC branch** — it's inert on main (no nested copies with stable versions).
+- **Commit both `pf-prerelease-report.md` and `.html`** on the RC branch alongside the workaround — see Phase 6.
