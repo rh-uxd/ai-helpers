@@ -97,9 +97,10 @@ ratings and the decision to publish findings.
 **Caller:** Another agent, eval harness, or automation that cannot
 answer interactive questions mid-run.
 
-1. Caller **must** supply `--framework <name>` (or `--assume-defaults`)
-   and `--review chat|none`. If either is missing, the skill stops with
-   an error — it does not default or guess.
+1. Caller **must** supply `--framework` and `--review chat|none` — or
+   use `--assume-defaults` (which covers both). If neither path is
+   satisfied, the skill stops with an error — it does not default or
+   guess.
 2. No interactive questions are asked. All decisions come from arguments.
 3. If `--review none`: reports are written with an **Unreviewed Draft**
    banner. Severity ratings are labeled "Suggested severity" (not
