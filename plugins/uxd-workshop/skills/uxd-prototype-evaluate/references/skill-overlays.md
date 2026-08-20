@@ -6,28 +6,48 @@ A skill overlay is a set of project-specific context that sits on top of the gen
 
 ## Why
 
-The evaluator should work for any product team — not just one product. By extracting product-specific assumptions into `config/product-overlay.yaml`, a new team can adopt the skill by creating their own overlay file.
+The evaluator should work for any product team — not just one product. The checked-in overlay is a **template** (`example.com` / empty). Filled-in org URLs belong elsewhere.
 
-The checked-in overlay is a **template**. Filled-in URLs for a particular org (internal GitLab remotes, MLflow clusters, Pages destinations) belong in a gitignored local overlay or an internal config repo — not in this marketplace plugin.
+## Where UXD/RHOAI values live
 
-## How to supply team-specific values
+Red Hat internal remotes, MLflow, Jira, and Pages URLs ship in the VPN-only repo:
 
-1. **Local overlay (gitignored):** copy `config/product-overlay.yaml` to `config/product-overlay.local.yaml` and fill in remotes / MLflow / Pages / Jira.
-2. **Internal config repo:** keep the filled overlay there and point at it:
-   ```bash
-   export EVAL_OVERLAY_PATH=/path/to/internal-ai-helpers/overlays/product-overlay.yaml
-   ```
-   (`UXD_OVERLAY_PATH` is an alias.) See [CONTRIBUTING-SKILLS.md](../../../../../CONTRIBUTING-SKILLS.md) for where internal-only config belongs.
-3. **Environment variables** still win when set:
-   - `MLFLOW_TRACKING_URI`
-   - `CONSISTENCY_CHECKER_REPO`
-   - `USABILITY_TESTING_REPO`
-   - `EVAL_PAGES_REPO` / `EVAL_PAGES_URL`
-   - `JIRA_BASE_URL`
+[gitlab.cee.redhat.com/uxd/internal-ai-helpers](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers) → plugin `uxd-eval-config` → `overlays/uxd-prototype-evaluate.yaml`
 
-Load order for the YAML overlay: checked-in template → `product-overlay.local.yaml` → `EVAL_OVERLAY_PATH`.
+The public skill loads that file automatically when it can see the clone or plugin install. You do not copy it into this repo.
 
-Scripts read overlay values via `scripts/overlay-get.js`.
+## How values are resolved
+
+Load order (later wins):
+
+1. `config/product-overlay.yaml` — generic template in this skill
+2. `config/product-overlay.local.yaml` — gitignored, optional personal override
+3. Auto-discovered `internal-ai-helpers` overlay (see below)
+4. `EVAL_OVERLAY_PATH` or `UXD_OVERLAY_PATH` — explicit path, always wins
+
+Auto-discovery checks:
+
+- `UXD_INTERNAL_HELPERS` (path to the internal-ai-helpers clone)
+- Parent dirs named `internal-ai-helpers` or `uxd/internal-ai-helpers`
+- Claude / Cursor plugin caches for `overlays/uxd-prototype-evaluate.yaml`
+
+Environment variables still override individual keys when the scripts read them first:
+
+- `MLFLOW_TRACKING_URI`
+- `CONSISTENCY_CHECKER_REPO`
+- `USABILITY_TESTING_REPO`
+- `EVAL_PAGES_REPO` / `EVAL_PAGES_URL`
+- `JIRA_BASE_URL`
+
+Scripts read overlay YAML via `scripts/overlay-get.js`.
+
+## Forced path (if discovery misses)
+
+```bash
+export UXD_INTERNAL_HELPERS="$HOME/code/uxd/internal-ai-helpers"
+# or
+export EVAL_OVERLAY_PATH="$UXD_INTERNAL_HELPERS/plugins/uxd-eval-config/overlays/uxd-prototype-evaluate.yaml"
+```
 
 ## What the Overlay Controls
 
@@ -48,17 +68,6 @@ Scripts read overlay values via `scripts/overlay-get.js`.
 | `navigation` | Which files define sidebar nav and routes |
 | `known_mrs` | Manual MR number mapping (until forge API is available) |
 
-## Dynamic vs. Static
-
-Currently overlays are static YAML files. This is fast (no generation latency) but can drift if conventions change.
-
-Future options:
-- Generate overlays via MCP server connected to product metadata
-- Auto-detect conventions from the target codebase at eval time
-- Periodically regenerate and commit (CI job)
-
-For now: edit the YAML manually when conventions change. The file is small and changes rarely.
-
 ## Origin
 
-Pattern from Carl Trieloff's data products ADLC team (Apr 2026). Their MCP server generates skill files from Snowflake metadata, providing product-specific context that eliminated inference errors and improved implementation quality. Our approach is simpler (static YAML) but follows the same principle: give the agent pre-computed context so it doesn't have to re-infer product structure every run.
+Pattern from Carl Trieloff's data products ADLC team (Apr 2026). Their MCP server generates skill files from Snowflake metadata. Ours is static YAML with the same idea: give the agent pre-computed product context so it does not re-infer it every run.

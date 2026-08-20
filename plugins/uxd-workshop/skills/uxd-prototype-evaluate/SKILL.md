@@ -89,7 +89,7 @@ Context repos (`.context/consistency-checker/` and `.context/usability-testing/`
 
 **Consistency:** `.context/consistency-checker/` (cloned automatically by the bootstrap script).
 
-Edit `${CLAUDE_SKILL_DIR}/config/product-overlay.yaml` (or a gitignored `product-overlay.local.yaml` / `EVAL_OVERLAY_PATH`) for product-specific Jira, git, MLflow, and context-repo settings.
+Product-specific Jira, git, MLflow, and context-repo settings come from the overlay (generic template in this skill; UXD/RHOAI values auto-discovered from internal-ai-helpers `uxd-eval-config`). Optional overrides: gitignored `product-overlay.local.yaml` or `EVAL_OVERLAY_PATH`. See `references/skill-overlays.md`.
 
 **Claude Code permissions (first run only):** The eval pipeline shells out to ~20 bundled Node/bash scripts and Playwright. Without auto-approve, Claude Code will prompt for each one. Ask the user:
 

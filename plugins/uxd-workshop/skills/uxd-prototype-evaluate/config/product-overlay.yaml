@@ -1,10 +1,10 @@
 # Product Overlay — defaults for uxd-prototype-evaluate
 # Checked-in template. Keep values generic (example.com / empty).
 #
-# Team-specific URLs (MLflow, internal git remotes, Pages, Jira) belong in a
-# gitignored overlay, not in this file:
-#   1. Copy this file to config/product-overlay.local.yaml and fill it in, OR
-#   2. Point EVAL_OVERLAY_PATH at an overlay from your internal config repo
+# Team-specific URLs (MLflow, internal git remotes, Pages, Jira) live in
+# internal-ai-helpers plugin uxd-eval-config (auto-discovered). Optional:
+#   1. config/product-overlay.local.yaml (gitignored personal override), OR
+#   2. EVAL_OVERLAY_PATH / UXD_INTERNAL_HELPERS
 # Env vars (MLFLOW_TRACKING_URI, CONSISTENCY_CHECKER_REPO, …) still win.
 # See references/skill-overlays.md.
 

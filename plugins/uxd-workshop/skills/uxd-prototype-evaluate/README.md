@@ -33,9 +33,9 @@ export USABILITY_TESTING_REPO="git@example.com:org/usability-testing.git"
 export CONSISTENCY_CHECKER_REPO="git@example.com:org/consistency-checker.git"
 ```
 
-Or put the same URLs in a gitignored overlay (`config/product-overlay.local.yaml` or `EVAL_OVERLAY_PATH`). The pipeline degrades if they are unset or unreachable.
+UXD/RHOAI internals (CEE remotes, MLflow, Pages) come from the `uxd-eval-config` plugin in the internal marketplace; `overlay-get.js` auto-discovers that overlay when the clone or plugin is present.
 
-Edit `config/product-overlay.yaml` for your product (Jira prefixes, repo URLs). Team-specific MLflow / internal git remotes belong in `product-overlay.local.yaml` (gitignored) or an overlay file from your internal config repo (`EVAL_OVERLAY_PATH`). Personas come from the plugin catalog at `plugins/uxd-workshop/knowledge/personas/` — not product overlays. Optional designer ground truth: copy `config/ground-truth.example.json` → `config/ground-truth.json`.
+Edit `config/product-overlay.yaml` only as a generic template. Personas come from the plugin catalog at `plugins/uxd-workshop/knowledge/personas/` — not product overlays. Optional designer ground truth: copy `config/ground-truth.example.json` → `config/ground-truth.json`.
 
 Start the prototype locally, then:
 
