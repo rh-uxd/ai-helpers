@@ -16,6 +16,15 @@ tmp/
 # Eval run artifacts
 **/eval/runs/
 
+# Local skill-creator loop output (not the harness)
+**/evals/
+
+# Local iteration workspace (not a published skill)
+plugins/uxd-workshop/skills/uxd-research-heuristic-eval-workspace/
+
+# Root-level heuristic-eval report dumps
+/heuristic-eval-*
+
 # Environment variables (contributor credentials)
 .env*
 

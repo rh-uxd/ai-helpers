@@ -20,13 +20,6 @@ between the interface and established heuristic principles. You do not
 interpret impact, assign severity ratings, or recommend fixes. Those
 are researcher activities that happen after the evaluation.
 
-## Purpose
-
-Surface usability violations in an interface through structured
-multi-evaluator heuristic inspection against established frameworks.
-
----
-
 ## Inputs
 
 | Input | Type | Required | Default |
@@ -51,7 +44,7 @@ multi-evaluator heuristic inspection against established frameworks.
 
 $ARGUMENTS
 
-Parse as: `<interface-input> [--framework <name>] [--heuristics <custom>] [--specialists <areas>] [--project <slug>]`
+Parse as: `<interface-input> [--framework <name>] [--heuristics <custom>] [--specialists <areas>] [--project <slug>] [--review chat|none] [--assume-defaults]`
 
 - `interface-input` — Screenshots, image files, text descriptions of
   screens, or URLs. For Figma prototypes, the user should provide
@@ -60,12 +53,97 @@ Parse as: `<interface-input> [--framework <name>] [--heuristics <custom>] [--spe
   (see [references/heuristic-frameworks.md](references/heuristic-frameworks.md)).
   Accepts a single framework or a comma-separated list
   (e.g., `--framework nielsen,shneiderman`). If not specified, **ask and
-  wait** — do not assume Nielsen or any other default.
+  wait** — do not assume Nielsen or any other default. Required in
+  Mode B unless `--assume-defaults` is used.
 - `--heuristics <custom>` — User-defined heuristics (overrides framework).
 - `--specialists <areas>` — Add specialist evaluators beyond the core
   three (e.g., `accessibility,information-architecture`).
 - `--project <slug>` — Project directory for saving output. If not
   specified, save to current working directory.
+- `--review chat|none` — Controls the researcher review gate.
+  `chat` = present consolidated findings and wait for researcher
+  confirm/dismiss/severity (current default behavior). `none` = skip
+  researcher review, use AI-suggested severities, and emit reports with
+  an "Unreviewed Draft" banner. In Mode A, if omitted, ask. In Mode B,
+  required (or use `--assume-defaults`).
+- `--assume-defaults` — Shorthand for `--framework nielsen --review none`
+  with no specialist passes. Explicitly opts into documented defaults
+  for non-interactive runs. Does not silently activate — the output will
+  state: "Defaults assumed: framework=Nielsen's 10, review=none, no
+  specialist passes."
+
+## Operating Modes
+
+This skill supports two operating modes. Mode detection is based on
+arguments — if `--review` or `--assume-defaults` is present, the skill
+operates in Mode B. Otherwise, Mode A.
+
+### Mode A — Human-operated (default)
+
+**Caller:** Researcher in an interactive session.
+
+1. Researcher provides interface input.
+2. If no `--framework`, the skill **asks and waits** (does not evaluate).
+3. After framework is confirmed, the skill offers specialist lenses.
+4. Agent runs Evaluator A/B/C (+ specialists if requested), reconciles.
+5. Agent asks review format (spreadsheet vs chat); **waits** for
+   confirm/dismiss/severity before writing reports.
+
+All interactive gates are enforced. The researcher owns severity
+ratings and the decision to publish findings.
+
+### Mode B — Agent-operated (explicit opt-in)
+
+**Caller:** Another agent, eval harness, or automation that cannot
+answer interactive questions mid-run.
+
+1. Caller **must** supply `--framework <name>` (or `--assume-defaults`)
+   and `--review chat|none`. If either is missing, the skill stops with
+   an error — it does not default or guess.
+2. No interactive questions are asked. All decisions come from arguments.
+3. If `--review none`: reports are written with an **Unreviewed Draft**
+   banner. Severity ratings are labeled "Suggested severity" (not
+   confirmed). The researcher can review later.
+4. If `--review chat`: findings are presented and the skill stops,
+   waiting for a human to resume.
+
+Mode B never simulates researcher decisions. It either defers them
+(with clear labeling) or waits for a human to arrive.
+
+### Pipeline integration
+
+If you are building an automated pipeline (CI, SDLC agent, eval
+harness) that invokes this skill, you **must** pass `--assume-defaults`
+or explicit `--framework`/`--review` flags in every invocation. The
+skill cannot auto-detect that it is running in an automated context —
+if arguments are missing, it stops with an error rather than silently
+skipping researcher gates.
+
+**Recommended invocation for fully automated pipelines:**
+
+```
+<interface-input> --assume-defaults
+```
+
+This is equivalent to `--framework nielsen --review none` with no
+specialist passes. Reports are emitted with an **Unreviewed Draft**
+banner so a researcher can review findings later.
+
+**If you want a human in the loop at review time:**
+
+```
+<interface-input> --framework nielsen --review chat
+```
+
+The skill runs all evaluator passes autonomously, then pauses and
+presents consolidated findings for a human to confirm or override
+before writing final reports.
+
+**One-time setup:** Configure your pipeline to always pass the
+appropriate flags. Individual invocations do not require manual
+intervention once the pipeline is set up correctly.
+
+---
 
 ## Step 0: Gather Input
 
@@ -165,7 +243,15 @@ replies.
 **Decline / cancel / no answer ≠ "Not sure".** If the interactive
 question is declined, cancelled, or unanswered, stop and re-ask (or ask
 in chat). Only default to Nielsen's 10 when the researcher explicitly
-selects option 6 ("Not sure").
+selects option 6 ("Not sure"). A declined `AskUserQuestion` is not
+permission to use Nielsen and continue — it means the question was not
+answered.
+
+**Mode B: framework is required.** In Mode B, if neither `--framework`
+nor `--assume-defaults` is provided, **stop with an error message:**
+"Mode B requires `--framework <name>` or `--assume-defaults`. Cannot
+proceed without a framework selection." Do not default to any framework
+and do not run evaluation passes.
 
 Load full heuristic definitions from
 [references/heuristic-frameworks.md](references/heuristic-frameworks.md).
@@ -176,6 +262,28 @@ Evaluators inspect against the combined set. Each violation maps to
 every applicable heuristic across all frameworks. Group findings by
 the first-listed framework. Cross-reference secondary framework
 heuristics within each violation. Report "no violations" per framework.
+
+### Specialist evaluators (Mode A only)
+
+After the framework is confirmed, offer specialist lenses. Use the
+environment's interactive question mechanism when available. If that
+mechanism is unavailable, ask in chat.
+
+> **Would you like to add specialist evaluator lenses beyond the three
+> generalist passes?**
+>
+> 1. **None** — Proceed with Evaluators A/B/C only
+> 2. **Accessibility** (WCAG)
+> 3. **Information architecture** (navigation, labeling, findability)
+> 4. **Interaction design** (micro-interactions, state transitions)
+> 5. **Content/UX writing** (labels, instructions, error messages)
+
+Multi-select allowed. If declined or no answer, proceed with
+generalist evaluators only — specialists are additive, not required.
+
+**In Mode B,** do not ask. Specialists are controlled by
+`--specialists` only. If `--specialists` is not provided, run
+generalist evaluators only.
 
 ## Step 1: Independent Evaluation — Three Passes
 
@@ -267,6 +375,8 @@ Number consolidated violations sequentially: V-01, V-02, V-03...
 
 ## Step 4: Researcher Review
 
+### Mode A and `--review chat`: interactive review (default)
+
 Present consolidated findings to the researcher before generating
 output. This is a required human gate. Follow the review format
 described in [references/researcher-review.md](references/researcher-review.md),
@@ -276,10 +386,44 @@ After review: remove dismissed violations, use researcher's severity
 ratings, append researcher context, and add any new violations the
 researcher identified.
 
+### `--review none`: skip review (Mode B)
+
+When `--review none` is set, skip the researcher review entirely:
+
+1. **Do not ask** for a review format (spreadsheet or chat).
+2. **Use AI-suggested severities** from Step 3 reconciliation. Label
+   every severity as **"Suggested severity"** — never bare "Severity"
+   or "Confirmed."
+3. **Do not pretend a human confirmed severities.** The output must
+   make clear that no researcher has reviewed or signed off.
+4. Proceed directly to Step 5 with the **Unreviewed Draft** banner.
+
+A researcher can review later by running the skill again with the same
+input and `--review chat`. See
+[references/researcher-review.md](references/researcher-review.md)
+for details on deferred review.
+
 ## Step 5: Generate Output
 
 Produce both a markdown report and an HTML report following the
 templates in [references/report-templates.md](references/report-templates.md).
+
+### Unreviewed draft banner (`--review none`)
+
+When `--review none` was used, **every output** (markdown and HTML)
+must include a prominent banner immediately after the report title,
+before the review subject block:
+
+> **⚠ Unreviewed Draft**
+>
+> Severity ratings are AI-suggested and have not been confirmed by a
+> researcher. Violations may include false positives. A researcher
+> should review all findings before sharing or acting on them.
+
+Additionally, replace all "Severity" field labels with "Suggested
+severity" throughout the report. See
+[references/report-templates.md](references/report-templates.md)
+for the banner format in each template.
 
 **Review subject is required in every output.** Prominently display
 the review subject record near the top of each report — including the
@@ -311,7 +455,8 @@ from the plugin's `plugin.json` manifest and populate `[version]`.
 - **Violations only, not interpretations.** Report observable mismatches.
   Do not infer user intent or claim impact without evidence.
 - **No severity ratings from evaluators.** The researcher assigns
-  severity during Step 4.
+  severity during Step 4. When review is skipped (`--review none`),
+  severities are labeled "Suggested" — never "Confirmed."
 - **No design recommendations.** The evaluation surfaces what violates
   principles. Fixes are a design decision.
 - **Not a substitute for usability testing.** They complement each other.
@@ -319,6 +464,16 @@ from the plugin's `plugin.json` manifest and populate `[version]`.
   specific screen, element, or interaction.
 - **AI transparency.** State that evaluations were conducted by
   AI-simulated evaluators, not human experts.
+- **Mode detection is explicit.** Mode B activates only when `--review`
+  or `--assume-defaults` is present. Never silently enter Mode B.
+  Never silently skip interactive gates.
+- **No invented gate answers.** In Mode B, do not simulate researcher
+  decisions. Do not treat a skipped or declined question as an answer.
+  Severities are "suggested" until a human confirms them.
+- **`--assume-defaults` is transparent.** When used, state in the
+  output: "Defaults assumed: framework=Nielsen's 10, review=none, no
+  specialist passes." The reader must be able to see that defaults were
+  used, not chosen.
 
 ---
 
@@ -336,4 +491,5 @@ from the plugin's `plugin.json` manifest and populate `[version]`.
 | [heuristic-frameworks.md](references/heuristic-frameworks.md) | Full definitions for all four built-in heuristic frameworks |
 | [report-templates.md](references/report-templates.md) | Markdown and HTML report output format templates |
 | [researcher-review.md](references/researcher-review.md) | Spreadsheet and chat review format details |
-| [human-vs-agent-operation.md](references/human-vs-agent-operation.md) | Human vs agent operating modes; what to change for reliable agent runs (design brief, not runtime procedure) |
+| [human-vs-agent-operation.md](references/human-vs-agent-operation.md) | Design brief for dual-mode operation (Mode A human / Mode B agent); rationale and open decisions behind the changes in this skill |
+| [evaluation-framework.md](references/evaluation-framework.md) | Framework for evaluating AI-assisted heuristic evaluation skills — six dimensions, metrics, benchmarks, and protocol |

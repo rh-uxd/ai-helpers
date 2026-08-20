@@ -327,6 +327,109 @@ judges:
           return False, "Review subject record does not reference the fixture input"
       return True, "Included required review subject record fields"
 
+  - name: agent_mode_assume_defaults
+    description: With --assume-defaults, uses Nielsen without asking, skips review, marks output as unreviewed draft
+    if: "annotations.get('case_type') == 'agent-mode-assume-defaults'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      tool_calls = outputs.get("tool_calls") or []
+
+      # Should NOT ask framework or review format questions
+      framework_ask = any(
+          c.get("name") == "AskUserQuestion"
+          and re.search(r"framework", str(c.get("input", {})), re.IGNORECASE)
+          for c in tool_calls
+      )
+      review_ask = any(
+          c.get("name") == "AskUserQuestion"
+          and re.search(r"(spreadsheet|review format|how.+review)", str(c.get("input", {})), re.IGNORECASE)
+          for c in tool_calls
+      )
+      if framework_ask:
+          return False, "Asked for framework despite --assume-defaults"
+      if review_ask:
+          return False, "Asked for review format despite --assume-defaults (implies --review none)"
+
+      # Should use Nielsen
+      uses_nielsen = re.search(r"Nielsen", text, re.IGNORECASE)
+      if not uses_nielsen:
+          return False, "Did not use Nielsen's heuristics (expected from --assume-defaults)"
+
+      # Should contain unreviewed draft banner
+      has_banner = re.search(
+          r"(unreviewed draft|unreviewed|severity ratings are AI-suggested)",
+          text,
+          re.IGNORECASE,
+      )
+      if not has_banner:
+          return False, "Missing Unreviewed Draft banner"
+
+      # Should use "Suggested severity" not bare "Severity"
+      has_suggested = re.search(r"Suggested severity", text, re.IGNORECASE)
+      if not has_suggested:
+          return False, "Did not label severities as 'Suggested severity'"
+
+      # Should state defaults were assumed
+      has_defaults_note = re.search(
+          r"(defaults assumed|assume.defaults)",
+          text,
+          re.IGNORECASE,
+      )
+      if not has_defaults_note:
+          return False, "Did not transparently state that defaults were assumed"
+
+      return True, "Used --assume-defaults correctly: Nielsen, no review, unreviewed banner"
+
+  - name: agent_mode_requires_framework
+    description: With --review none but no --framework, stops with error instead of defaulting
+    if: "annotations.get('case_type') == 'agent-mode-requires-framework'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      files = outputs.get("files", {}) or {}
+
+      # Should NOT produce evaluation passes
+      has_eval = re.search(
+          r"(Evaluator [ABC]\s*[—-]|V-[ABC]\d+|Candidate Violations)",
+          text,
+          re.IGNORECASE,
+      )
+      if has_eval:
+          return False, "Ran evaluation passes despite missing --framework in Mode B"
+
+      # Should NOT write report files
+      wrote_report = any(
+          ("heuristic-eval-" in path) and (path.endswith(".md") or path.endswith(".html"))
+          for path in files
+      )
+      if wrote_report:
+          return False, "Wrote report files despite missing --framework in Mode B"
+
+      # Should NOT silently default to Nielsen
+      silent_default = re.search(
+          r"(I('ll| will) (default to|use) Nielsen|proceeding with Nielsen|"
+          r"using Nielsen('s)? (10 )?by default|defaulting to Nielsen)",
+          text,
+          re.IGNORECASE,
+      )
+      if silent_default:
+          return False, "Silently defaulted to Nielsen instead of stopping"
+
+      # Should indicate an error or requirement for --framework
+      has_error = re.search(
+          r"(require|need|must).{0,60}(--framework|framework|--assume-defaults)|"
+          r"cannot proceed|Mode B requires",
+          text,
+          re.IGNORECASE,
+      )
+      if not has_error:
+          return False, "Did not explain that --framework is required in Mode B"
+
+      return True, "Stopped correctly when --framework missing in Mode B"
+
 thresholds:
   asks_for_framework:
     min_pass_rate: 1.0
@@ -339,4 +442,8 @@ thresholds:
   avoids_design_recommendations:
     min_pass_rate: 1.0
   includes_review_subject_record:
+    min_pass_rate: 1.0
+  agent_mode_assume_defaults:
+    min_pass_rate: 1.0
+  agent_mode_requires_framework:
     min_pass_rate: 1.0

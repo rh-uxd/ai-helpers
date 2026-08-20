@@ -1,7 +1,41 @@
 # Researcher Review Formats
 
+## Review mode selection
+
+The review step behaves differently depending on the operating mode
+and `--review` argument:
+
+| Scenario | Behavior |
+|----------|----------|
+| Mode A (no `--review`) | Ask researcher: spreadsheet or chat |
+| `--review chat` | Present findings in chat, wait for researcher |
+| `--review none` | Skip review entirely (see below) |
+
+## `--review none` — Deferred review
+
+When `--review none` is set (typically in Mode B / agent-operated
+runs), the researcher review is skipped entirely:
+
+- **No review format question** is asked.
+- **No spreadsheet or chat review** is conducted.
+- **All severities remain "Suggested"** — the output uses "Suggested
+  severity" labels, never bare "Severity" or "Confirmed."
+- **Reports carry an Unreviewed Draft banner** (see report-templates.md).
+- **No violations are dismissed or confirmed** — all candidate
+  violations from reconciliation appear in the final output.
+
+### Deferred review path
+
+A researcher can review findings later by running the skill again
+with the same interface input and `--review chat`. The skill will
+re-present the consolidated findings for interactive review, after
+which reviewed reports replace the unreviewed drafts.
+
+---
+
 ## Choose review format
 
+When `--review none` is NOT set, present the review format question.
 Before presenting findings, ask the researcher how they want to
 review:
 
