@@ -15,7 +15,7 @@ function parseArgs(argv) {
     artifacts: '',
     evalUrl: null,
     prototypeUrl: null,
-    jiraBase: 'https://issues.redhat.com/browse/',
+    jiraBase: 'https://issues.example.com/browse/',
     help: false,
   };
   for (let i = 2; i < argv.length; i++) {
@@ -39,7 +39,7 @@ function readJson(p) {
 
 function normalizeJiraBase(base) {
   const b = String(base || '').trim();
-  if (!b) return 'https://issues.redhat.com/browse/';
+  if (!b) return 'https://issues.example.com/browse/';
   return b.endsWith('/') ? b : `${b}/`;
 }
 

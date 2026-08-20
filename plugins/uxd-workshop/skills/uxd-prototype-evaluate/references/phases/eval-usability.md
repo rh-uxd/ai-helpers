@@ -4,7 +4,7 @@ Phase B of the eval pipeline. Runs discovery-based per-persona Playwright walkth
 
 Each persona navigates at their own competence level — an experienced user explores differently than a junior one. Navigation behavior is driven by the persona YAML fields: `exploration_tendency`, `experience_level`, `domain_knowledge`, and `constraints[]`.
 
-**Skip entirely only if** the plugin persona catalog is not available AND `.context/usability-testing/` does not exist AND VPN prevents bootstrap. The plugin persona catalog (`${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` or `${CLAUDE_SKILL_DIR}/../../knowledge/personas/catalog.yaml`) is bundled with the plugin and should always be present; `.context/usability-testing/` is cloned automatically. Phase B should never be skipped in normal operation. Prefer the catalog for IDs/names; deep behavioral YAML from `.context/` when present.
+**Skip entirely only if** the plugin persona catalog is not available AND `.context/usability-testing/` does not exist AND bootstrap cannot clone a configured usability-testing repo. The plugin persona catalog (`${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` or `${CLAUDE_SKILL_DIR}/../../knowledge/personas/catalog.yaml`) is bundled with the plugin and should always be present; `.context/usability-testing/` is cloned when `USABILITY_TESTING_REPO` or overlay `context_repos.usability_testing` is set. Phase B should never be skipped in normal operation. Prefer the catalog for IDs/names; deep behavioral YAML from `.context/` when present.
 
 ## Inputs
 

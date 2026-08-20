@@ -23,18 +23,23 @@ permissions:
 
 mlflow:
   experiment: uxd-prototype-evaluate
-  tracking_uri: https://mlflow-ux-eval.apps.rosa.uxdpoc7.9hji.p3.openshiftapps.com
   tags:
     team: uxd
     pipeline: prototype-evaluator
 
 dataset:
   path: cases
+  # Missing paths are skipped (asks-required-inputs / two-phase-orchestration
+  # have no .artifacts tree).
+  workspace:
+    files:
+      - .artifacts
   schema: |
     Each case directory contains:
     - input.yaml: prompt field with a realistic user request
     - annotations.yaml: case_type for conditional judges
     - Optional .artifacts/ fixture tree for review-mode cases
+      (copied into the agent workspace via dataset.workspace.files)
 
 outputs:
   - path: artifacts

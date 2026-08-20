@@ -1,4 +1,4 @@
-.PHONY: validate lint security scaffold help docs mlflow-poc7 mlflow-smoke mlflow-smoke-all test-subskills test-subskills-mlflow
+.PHONY: validate lint security scaffold help docs mlflow-env mlflow-smoke mlflow-smoke-all test-subskills test-subskills-mlflow
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
@@ -47,14 +47,19 @@ endif
 
 EVAL_SCRIPTS = plugins/uxd-workshop/skills/uxd-prototype-evaluate/scripts
 
-mlflow-poc7: ## Export MLFLOW_TRACKING_URI for POC7 cluster
-	@echo 'export MLFLOW_TRACKING_URI=https://mlflow-ux-eval.apps.rosa.uxdpoc7.9hji.p3.openshiftapps.com'
-	@echo 'unset MLFLOW_TRACKING_AUTH'
+mlflow-env: ## Print export MLFLOW_TRACKING_URI from env or product overlay
+	@uri="$${MLFLOW_TRACKING_URI:-$$(node $(EVAL_SCRIPTS)/overlay-get.js mlflow.tracking_uri 2>/dev/null)}"; \
+	if [ -z "$$uri" ]; then \
+		echo 'Set MLFLOW_TRACKING_URI or mlflow.tracking_uri in product-overlay.local.yaml'; \
+		exit 1; \
+	fi; \
+	echo "export MLFLOW_TRACKING_URI=$$uri"; \
+	echo 'unset MLFLOW_TRACKING_AUTH'
 
 SCORERS ?= pipeline-output
 MODEL ?= recommended-mix
-mlflow-smoke: ## Run eval scorers for one prototype: make mlflow-smoke KEY=RHAISTRAT-432
-	@if [ -z "$(KEY)" ]; then echo "Usage: make mlflow-smoke KEY=RHAISTRAT-432"; exit 1; fi
+mlflow-smoke: ## Run eval scorers for one prototype: make mlflow-smoke KEY=PROJ-298
+	@if [ -z "$(KEY)" ]; then echo "Usage: make mlflow-smoke KEY=PROJ-298"; exit 1; fi
 	@test -d .artifacts/$(KEY) || (echo "Missing .artifacts/$(KEY)"; exit 1)
 	@echo "MLFLOW_TRACKING_URI=$${MLFLOW_TRACKING_URI:-http://127.0.0.1:5000}"
 	uv run python3 $(EVAL_SCRIPTS)/mlflow-trace-eval.py \
@@ -65,7 +70,7 @@ mlflow-smoke: ## Run eval scorers for one prototype: make mlflow-smoke KEY=RHAIS
 		--scorers $(SCORERS) \
 		$(if $(SKILLS),--skills $(SKILLS),)
 
-mlflow-smoke-all: ## Run all scorers for one prototype: make mlflow-smoke-all KEY=RHAISTRAT-432
+mlflow-smoke-all: ## Run all scorers for one prototype: make mlflow-smoke-all KEY=PROJ-298
 	@$(MAKE) mlflow-smoke KEY=$(KEY) SCORERS=all MODEL=$(MODEL) SKILLS="$(SKILLS)"
 
 EVAL_TESTS = plugins/uxd-workshop/skills/uxd-prototype-evaluate/tests
@@ -73,5 +78,5 @@ EVAL_TESTS = plugins/uxd-workshop/skills/uxd-prototype-evaluate/tests
 test-subskills: ## Run all subskill validation tests against fixtures
 	bash $(EVAL_TESTS)/run-script-tests.sh
 
-test-subskills-mlflow: ## Run subskill tests with MLflow tracing: make test-subskills-mlflow KEY=RHAISTRAT-432
+test-subskills-mlflow: ## Run subskill tests with MLflow tracing: make test-subskills-mlflow KEY=PROJ-298
 	@$(MAKE) mlflow-smoke KEY=$(KEY) SCORERS="pipeline-output report-rendering script-tests" MODEL=$(MODEL)

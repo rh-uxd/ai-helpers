@@ -13,6 +13,7 @@ if (!artifactsDir) {
 }
 
 const { resolveProjectRoot, resolveKeyFromArtifactsDir } = require('./resolve-root');
+const { loadOverlay } = require('./overlay-get');
 const absArtifacts = path.resolve(artifactsDir);
 const projectRoot = resolveProjectRoot();
 const templatePath = path.join(__dirname, '..', 'templates', 'evaluation-report.html');
@@ -318,36 +319,23 @@ function readJsonOr(filePath, fallback) {
 let _overlayCache;
 function readProductOverlay() {
   if (_overlayCache) return _overlayCache;
-  const overlayPath = path.join(__dirname, '..', 'config', 'product-overlay.yaml');
-  const raw = readFileOr(overlayPath, '');
-  const overlay = { jira: { instances: [] }, git: {}, known_mrs: {} };
-
-  const jiraBlock = raw.match(/jira:\n((?:\s{2,}.+\n)*)/);
-  if (jiraBlock) {
-    const instanceBlocks = jiraBlock[1].matchAll(/-\s*prefix:\s*"?(.+?)"?\s*\n\s+url:\s*"?(.+?)"?\s*\n/g);
-    for (const ib of instanceBlocks) {
-      overlay.jira.instances.push({ prefix: ib[1].trim(), url: ib[2].trim() });
-    }
-  }
-
-  const gitBlock = raw.match(/git:\n((?:\s{2,}.+\n)*)/);
-  if (gitBlock) {
-    for (const line of gitBlock[1].split('\n')) {
-      const m = line.match(/\s+(\w+):\s*"?(.+?)"?\s*$/);
-      if (m && m[2]) overlay.git[m[1]] = m[2];
-    }
-  }
-
-  const mrsMatch = raw.match(/known_mrs:\n((?:\s+\S+.*\n)*)/);
-  if (mrsMatch) {
-    for (const line of mrsMatch[1].split('\n')) {
-      const m = line.match(/\s+(\S+):\s*(\d+)/);
-      if (m) overlay.known_mrs[m[1]] = parseInt(m[2], 10);
-    }
-  }
-
-  _overlayCache = overlay;
-  return overlay;
+  const loaded = loadOverlay();
+  const jira = loaded.jira || {};
+  const known = loaded.known_mrs && typeof loaded.known_mrs === 'object' && !Array.isArray(loaded.known_mrs)
+    ? loaded.known_mrs
+    : {};
+  _overlayCache = {
+    jira: {
+      instances: Array.isArray(jira.instances) ? jira.instances : [],
+      ticket_label: jira.ticket_label || 'Ticket',
+    },
+    git: loaded.git || {},
+    known_mrs: known,
+    mlflow: loaded.mlflow || {},
+    context_repos: loaded.context_repos || {},
+    publish: loaded.publish || {},
+  };
+  return _overlayCache;
 }
 
 function readKnownMRs() {
@@ -365,12 +353,39 @@ function overlayJiraUrlForKey(key) {
   if (!key) return '';
   const overlay = readProductOverlay();
   for (const inst of overlay.jira.instances) {
-    if (key.startsWith(inst.prefix)) {
+    if (inst.prefix && key.startsWith(inst.prefix)) {
       const base = inst.url.endsWith('/') ? inst.url : inst.url + '/';
       return `${base}${key}`;
     }
   }
-  return `https://issues.redhat.com/browse/${key}`;
+  const fallback = overlay.jira.instances[0];
+  if (fallback && fallback.url) {
+    const base = fallback.url.endsWith('/') ? fallback.url : fallback.url + '/';
+    return `${base}${key}`;
+  }
+  const publishBase = overlay.publish.jira_base_url || '';
+  if (publishBase) {
+    const base = publishBase.endsWith('/') ? publishBase : publishBase + '/';
+    return `${base}${key}`;
+  }
+  return '';
+}
+
+function overlayTicketLabel() {
+  return readProductOverlay().jira.ticket_label || 'Ticket';
+}
+
+function overlayMrUrl(mrNum, { diffs } = {}) {
+  const base = overlayGitBaseUrl();
+  if (!base || !mrNum) return '';
+  const style = String(readProductOverlay().git.mr_url_style || 'gitlab').replace(/"/g, '');
+  const cleaned = base.replace(/\.git$/, '').replace(/\/$/, '');
+  if (style === 'github') {
+    const url = `${cleaned}/pull/${mrNum}`;
+    return diffs ? `${url}/files` : url;
+  }
+  const url = `${cleaned}/-/merge_requests/${mrNum}`;
+  return diffs ? `${url}/diffs` : url;
 }
 
 function overlayGitBaseUrl() {
@@ -765,10 +780,10 @@ function buildDeltaHtml() {
 
   const protoId = extractPrototypeId();
   const mrNum = delta.mr_number || readKnownMRs()[protoId];
-  const mrDiffUrl = mrNum ? `${overlayGitBaseUrl() || 'https://gitlab.cee.redhat.com/uxd/prototypes/rhoai'}/-/merge_requests/${mrNum}/diffs` : '';
+  const mrDiffUrl = overlayMrUrl(mrNum, { diffs: true });
 
   let html = `<p class="small"><strong>${delta.stats?.files_changed || delta.total_files_changed || 0} files changed</strong> against <code>${escapeHtml(delta.base_branch || '?')}</code>`;
-  if (mrNum) html += ` · <a href="${mrDiffUrl}" target="_blank">View full diff on GitLab (MR !${mrNum})</a>`;
+  if (mrNum && mrDiffUrl) html += ` · <a href="${mrDiffUrl}" target="_blank">View full diff (MR !${mrNum})</a>`;
   html += `</p>`;
 
   // Show modified file list
@@ -1564,7 +1579,13 @@ function buildCodeDeltasHtml() {
 
   const protoId = extractPrototypeId();
   const mrNum = delta.mr_number || readKnownMRs()[protoId];
-  const baseUrl = `${overlayGitBaseUrl() || 'https://gitlab.cee.redhat.com/uxd/prototypes/rhoai'}/-/merge_requests`;
+  const mrBaseUrl = overlayGitBaseUrl();
+  const style = String(readProductOverlay().git.mr_url_style || 'gitlab').replace(/"/g, '');
+  const baseUrl = mrBaseUrl
+    ? (style === 'github'
+      ? `${mrBaseUrl.replace(/\.git$/, '').replace(/\/$/, '')}/pull`
+      : `${mrBaseUrl.replace(/\.git$/, '').replace(/\/$/, '')}/-/merge_requests`)
+    : '';
 
   const workspaceDir = delta.workspace || path.join(absArtifacts, 'workspace');
   const canReadDiff = fs.existsSync(workspaceDir);
@@ -1572,7 +1593,8 @@ function buildCodeDeltasHtml() {
   function getFileDiff(filePath, maxLines) {
     if (!canReadDiff) return null;
     try {
-      const diff = execSync(`git diff origin/3.5 HEAD -- "${filePath}" 2>/dev/null`, { cwd: workspaceDir, encoding: 'utf8', maxBuffer: 1024 * 100 });
+      const baseBranch = readProductOverlay().git.base_branch || 'main';
+      const diff = execSync(`git diff origin/${baseBranch} HEAD -- "${filePath}" 2>/dev/null`, { cwd: workspaceDir, encoding: 'utf8', maxBuffer: 1024 * 100 });
       if (!diff) return null;
       const lines = diff.split('\n');
       return lines.slice(0, maxLines || 40).join('\n');
@@ -2160,7 +2182,7 @@ function buildSmartComplianceTab(reason) {
   html += `<div class="card card-flat" style="margin:0 0 1.5rem">`;
   html += `<p style="font-weight:700;margin:0 0 0.25rem;color:var(--status-warning)">Automated Compliance Check Not Available</p>`;
   html += `<p class="small" style="margin:0">${escapeHtml(reason || 'consistency-checker not bootstrapped')}</p>`;
-  html += `<p class="small muted" style="margin:0.5rem 0 0">Ensure VPN is connected and SSH keys are configured for <code>gitlab.cee.redhat.com</code>, then re-run <code>bootstrap-consistency-checker.sh</code>.</p>`;
+  html += `<p class="small muted" style="margin:0.5rem 0 0">Set <code>context_repos.consistency_checker</code> in the product overlay (or <code>CONSISTENCY_CHECKER_REPO</code>), then re-run <code>bootstrap-consistency-checker.sh</code>.</p>`;
   html += `</div>`;
 
   const componentMap = readJsonOr(path.join(absArtifacts, 'component-map.json'), null);
@@ -3117,14 +3139,14 @@ function buildTokens(opts = {}) {
       const rfeUrl = bc.rfe.url || jiraUrlForKey(bc.rfe.key);
       parts.push(breadcrumbLink(bc.rfe.key, rfeUrl, bc.rfe.key + ' (RFE)', bc.rfe.validated !== false));
     }
-    // Outcome link (between RFE and STRAT)
+    // Outcome link (between RFE and ticket)
     const outcomeKey = outcomeContext && (outcomeContext.key || outcomeContext.outcome_key);
     if (outcomeKey) {
       parts.push(`<a href="${escapeHtml(jiraUrlForKey(outcomeKey))}">${escapeHtml(outcomeKey)} (Outcome)</a>`);
     }
     if (bc.strat && bc.strat.key) {
       const stratUrl = bc.strat.url || jiraUrlForKey(bc.strat.key);
-      parts.push(breadcrumbLink(bc.strat.key, stratUrl, bc.strat.key + ' (STRAT)', bc.strat.validated !== false));
+      parts.push(breadcrumbLink(bc.strat.key, stratUrl, bc.strat.key + ' (' + overlayTicketLabel() + ')', bc.strat.validated !== false));
     }
     if (bc.mr) parts.push(`<a href="${escapeHtml(bc.mr.url)}">${escapeHtml(bc.mr.id)}</a>`);
     else if (bc.prototype) parts.push(`<a href="${escapeHtml(bc.prototype.url)}">${escapeHtml(bc.prototype.label)}</a>`);
@@ -3141,7 +3163,7 @@ function buildTokens(opts = {}) {
     if (fallbackOutcomeKey) {
       parts.push(`<a href="${escapeHtml(jiraUrlForKey(fallbackOutcomeKey))}">${escapeHtml(fallbackOutcomeKey)} (Outcome)</a>`);
     }
-    parts.push(`<a href="${escapeHtml(jiraUrlForKey(protoId) || jiraUrl)}">${escapeHtml(protoId)} (STRAT)</a>`);
+    parts.push(`<a href="${escapeHtml(jiraUrlForKey(protoId) || jiraUrl)}">${escapeHtml(protoId)} (${escapeHtml(overlayTicketLabel())})</a>`);
     if (journeyLog && journeyLog.prototype_url) {
       parts.push(`<a href="${escapeHtml(journeyLog.prototype_url)}">Prototype</a>`);
     }
@@ -3757,7 +3779,7 @@ function buildTokens(opts = {}) {
       `<svg viewBox="0 0 512 512" width="36" height="36" fill="var(--text-secondary)" style="opacity:0.4;margin-bottom:0.75rem"><path d="M32 32c17.7 0 32 14.3 32 32V400c0 8.8 7.2 16 16 16H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H80c-44.2 0-80-35.8-80-80V64C0 46.3 14.3 32 32 32zM160 224c-17.7 0-32 14.3-32 32v64c0 17.7 14.3 32 32 32s32-14.3 32-32V256c0-17.7-14.3-32-32-32zm128-64v160c0 17.7 14.3 32 32 32s32-14.3 32-32V160c0-17.7-14.3-32-32-32s-32 14.3-32 32zm-64 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V224c0-17.7-14.3-32-32-32s-32 14.3-32 32z"/></svg><br>` +
       `<strong style="font-size:0.875rem;color:var(--text)">No usability scores yet</strong><br>` +
       `<span style="font-size:0.8125rem">Phase B (persona walkthroughs) did not produce dimension scores. To fix:</span><br>` +
-      `<span style="font-size:0.8125rem">1. Ensure <code>.context/usability-testing/</code> is cloned (requires VPN)</span><br>` +
+      `<span style="font-size:0.8125rem">1. Ensure <code>.context/usability-testing/</code> is cloned (set <code>USABILITY_TESTING_REPO</code> or overlay <code>context_repos.usability_testing</code>)</span><br>` +
       `<span style="font-size:0.8125rem">2. Re-run the eval (not in <code>review</code> mode) — Phase B runs automatically</span><br>` +
       `<span style="font-size:0.8125rem">3. If persona-results.json exists, run: <code>node scripts/validate-phase-b-output.js</code></span>` +
       `</div>`;
@@ -3996,15 +4018,17 @@ function buildTokens(opts = {}) {
       ? extractState.breadcrumb.prototype.url
       : evalStateYaml.prototype_url || '';
 
-  const gitlabBase = overlayGitBaseUrl() || 'https://gitlab.cee.redhat.com/uxd/prototypes/rhoai';
   const pagesBase = overlayPagesBaseUrl();
   const mrNumber = readKnownMRs()[protoId];
-  const mrUrl = mrNumber
-    ? `${gitlabBase}/-/merge_requests/${mrNumber}`
-    : gitlabBase ? `${gitlabBase}/-/merge_requests` : '';
+  const mrUrl = overlayMrUrl(mrNumber);
   const protoDeployUrl = mrNumber && pagesBase
     ? `${pagesBase.replace(/\/$/, '')}/${overlayMrBranchPattern().replace('{number}', mrNumber)}/`
     : prototypeUrl;
+
+  const dashboardUrl = readProductOverlay().publish.dashboard_url || '';
+  const dashboardHtml = dashboardUrl
+    ? `<a href="${escapeHtml(dashboardUrl)}" style="font-size:0.75rem;color:var(--text-secondary);text-decoration:none;margin-right:0.5rem" title="Back to Dashboard" data-tour="dashboard">&larr; Dashboard</a>`
+    : '';
 
   const isTitleUseful = (v) => v && v !== 'eval' && v !== protoId && v.length > 3;
   const reportTitle = (extractState && (
@@ -4021,6 +4045,7 @@ function buildTokens(opts = {}) {
     '{{RFE_URL}}': rfeUrl,
     '{{PROTOTYPE_REPO_URL}}': protoRepoUrl,
     '{{MR_URL}}': mrUrl,
+    '{{DASHBOARD_HTML}}': dashboardHtml,
     '{{STATUS_SECTION_HTML}}': buildHeroStatus(csvRows, passCount, failCount, flaggedCount, extractState, readJsonOr(path.join(absArtifacts, 'iteration-log.json'), null)),
     '{{AC_TABLE_ROWS_JIRA}}': acTableRowsJira,
     '{{AC_TABLE_ROWS_INFERRED}}': acTableRowsInferred,

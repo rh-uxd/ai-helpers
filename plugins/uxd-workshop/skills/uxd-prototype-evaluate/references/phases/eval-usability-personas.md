@@ -44,7 +44,7 @@ For each selected variant ID:
 .context/usability-testing/personas/<composed-id>.yaml
 ```
 
-When deep YAML is missing (VPN unreachable at bootstrap time), proceed with catalog + cards only. Re-run `bootstrap-usability-testing.sh` when VPN is available to restore full scoring fidelity.
+When deep YAML is missing (usability-testing context repo not cloned), proceed with catalog + cards only. Re-run `bootstrap-usability-testing.sh` after setting `USABILITY_TESTING_REPO` (or overlay `context_repos.usability_testing`) to restore full scoring fidelity.
 
 From deep YAML (when available), extract and use:
 - **`domain_knowledge`** — map of topics to skill levels (none/minimal/basic/intermediate/competent/strong/expert). Use in patience assessment to determine what the persona would understand vs. find confusing.

@@ -25,7 +25,7 @@ plugins/uxd-workshop/skills/uxd-research-heuristic-eval-workspace/
 # Root-level heuristic-eval report dumps
 /heuristic-eval-*
 
-# MLflow (development — POC7 cluster is canonical; see Makefile mlflow-poc7)
+# MLflow (development — POC7 cluster is canonical; see Makefile mlflow-env)
 mlflow.db*
 *.db.bak*
 *.db.old*
@@ -56,3 +56,6 @@ __pycache__/
 
 # Local-only skills (cloned for development, not published)
 eval-optimize-mlflow/
+
+# Team-specific overlay (MLflow URIs, internal git remotes, Pages, Jira)
+**/product-overlay.local.yaml

@@ -9,7 +9,6 @@ Evaluate a running prototype against a Jira ticket's acceptance criteria, automa
 | Node.js >= 18 | `brew install node` or `nvm install 18` | Yes |
 | Python 3 | `brew install python3` | Yes |
 | Atlassian MCP | Configure in your IDE (Cursor/Claude Code) | Yes |
-| Red Hat VPN | Connected for GitLab access | Yes |
 | Playwright | Auto-installs on first run | Auto |
 
 Run the preflight check to verify:
@@ -27,9 +26,16 @@ npm install
 npx playwright install chromium
 ```
 
-Context repos (`.context/consistency-checker/` and `.context/usability-testing/`) are bootstrapped automatically on first pipeline run. VPN access to `gitlab.cee.redhat.com` is required; the pipeline degrades gracefully if unreachable. To override the default repo URLs (e.g. for a fork), set `CONSISTENCY_CHECKER_REPO` or `USABILITY_TESTING_REPO` environment variables.
+Context repos (`.context/consistency-checker/` and `.context/usability-testing/`) are bootstrapped automatically on first pipeline run when a git URL is set. Point these at your own remotes — nothing is hardcoded:
 
-Edit `config/product-overlay.yaml` for your product (Jira prefixes, repo URLs). Personas come from the plugin catalog at `plugins/uxd-workshop/knowledge/personas/` — not product overlays. Optional designer ground truth: copy `config/ground-truth.example.json` → `config/ground-truth.json`.
+```bash
+export USABILITY_TESTING_REPO="git@example.com:org/usability-testing.git"
+export CONSISTENCY_CHECKER_REPO="git@example.com:org/consistency-checker.git"
+```
+
+Or put the same URLs in a gitignored overlay (`config/product-overlay.local.yaml` or `EVAL_OVERLAY_PATH`). The pipeline degrades if they are unset or unreachable.
+
+Edit `config/product-overlay.yaml` for your product (Jira prefixes, repo URLs). Team-specific MLflow / internal git remotes belong in `product-overlay.local.yaml` (gitignored) or an overlay file from your internal config repo (`EVAL_OVERLAY_PATH`). Personas come from the plugin catalog at `plugins/uxd-workshop/knowledge/personas/` — not product overlays. Optional designer ground truth: copy `config/ground-truth.example.json` → `config/ground-truth.json`.
 
 Start the prototype locally, then:
 

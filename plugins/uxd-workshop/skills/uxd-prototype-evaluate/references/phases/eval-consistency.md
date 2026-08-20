@@ -10,7 +10,7 @@ Runs PatternFly design consistency checks against the prototype using vendored g
 4. If count == 0: run `bash "${CLAUDE_SKILL_DIR}/scripts/bootstrap-consistency-checker.sh"`, then re-check.
 5. Only write `{"skipped": true, "reason": "consistency-checker not bootstrapped"}` if the re-check STILL finds zero guideline `.md` files.
 
-"VPN unreachable" is NOT a valid skip reason when guideline files already exist on disk from a prior clone.
+"Network unreachable" is NOT a valid skip reason when guideline files already exist on disk from a prior clone.
 
 ### Degraded Mode (no consistency-checker, workspace available)
 

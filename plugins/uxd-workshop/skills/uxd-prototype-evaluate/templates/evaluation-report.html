@@ -555,18 +555,18 @@ tr.dim-na{opacity:0.6;font-style:italic}
 
 <!-- Header Bar -->
 <div class="header-bar">
-  <a href="https://scout-evals-e89fda.pages.redhat.com/" style="font-size:0.75rem;color:var(--text-secondary);text-decoration:none;margin-right:0.5rem" title="Back to Dashboard" data-tour="dashboard">&larr; Dashboard</a>
+  {{DASHBOARD_HTML}}
   <h1>{{REPORT_TITLE}}</h1>
   <div class="header-links" data-tour="breadcrumb">
     <a href="{{OUTCOME_LINK_URL}}" target="_blank" style="{{OUTCOME_DISPLAY}}">{{OUTCOME_LABEL}}</a>
     <span class="arrow" style="{{OUTCOME_DISPLAY}}">→</span>
     <a href="{{RFE_URL}}" target="_blank">RFE</a>
     <span class="arrow">→</span>
-    <a href="{{JIRA_URL}}" target="_blank">STRAT</a>
+    <a href="{{JIRA_URL}}" target="_blank">Ticket</a>
     <span class="arrow">→</span>
     <a href="{{PROTOTYPE_REPO_URL}}" target="_blank">Prototype</a>
     <span class="arrow">·</span>
-    <a href="{{MR_URL}}" target="_blank" class="link-archived" style="opacity:0.8" title="View merge request on GitLab"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z" fill="#E24329"/></svg></a>
+    <a href="{{MR_URL}}" target="_blank" class="link-archived" style="opacity:0.8" title="View merge request"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z" fill="#E24329"/></svg></a>
   </div>
   <div class="header-actions">
     <button onclick="showWelcome()" title="How to read this report">Guide</button>
@@ -686,7 +686,7 @@ tr.dim-na{opacity:0.6;font-style:italic}
       <!-- Tab: PF Compliance -->
       <div class="appendix-content" id="appendix-compliance" data-tour="tab-compliance">
         <h2>PF Compliance</h2>
-        <p class="small muted" style="margin:-0.5rem 0 1rem">PatternFly design pattern compliance. Powered by <a href="https://gitlab.cee.redhat.com/bmorley/consistency-checker" target="_blank">consistency-checker</a>.</p>
+        <p class="small muted" style="margin:-0.5rem 0 1rem">PatternFly design pattern compliance. Powered by the optional consistency-checker context repo when bootstrapped.</p>
         {{COMPLIANCE_NARRATIVE}}
         {{CONSISTENCY_HTML}}
       </div>
@@ -705,9 +705,6 @@ tr.dim-na{opacity:0.6;font-style:italic}
 <div class="report-footer" style="text-align:left;padding:2rem 2.5rem">
   <div style="border-top:1px solid var(--border);padding-top:0.75rem;font-size:0.65rem;color:var(--text-secondary);display:flex;flex-wrap:wrap;gap:1rem;align-items:center">
     <span>Built with:</span>
-    <a href="https://github.com/andybraren/prototype-creator" target="_blank">prototype-creator</a>
-    <a href="https://gitlab.cee.redhat.com/zbodnar/automated-usability-testing" target="_blank">automated-usability-testing</a>
-    <a href="https://gitlab.cee.redhat.com/bmorley/consistency-checker" target="_blank">consistency-checker</a>
     <a href="https://www.patternfly.org" target="_blank">PatternFly</a>
   </div>
 </div>

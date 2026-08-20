@@ -113,31 +113,44 @@ SOURCE_DIR="${KEY_DIR}/code"
 SOURCE_AVAILABLE="false"
 
 if [ "${RESOLVED_TYPE}" = "remote" ] && [ -n "${MR_URL}" ]; then
-  # Parse GitLab MR URL: https://host/group/project/-/merge_requests/N
-  REPO_URL=$(echo "${MR_URL}" | sed -E 's|/-/merge_requests/[0-9]+.*||').git
-  MR_NUMBER=$(echo "${MR_URL}" | grep -oE '[0-9]+$')
-
-  if [ -d "${SOURCE_DIR}/.git" ]; then
-    cd "${SOURCE_DIR}"
-    git fetch origin 2>/dev/null || true
-    echo "Source clone already exists at ${SOURCE_DIR}, fetched latest"
+  REPO_URL=""
+  MR_NUMBER=""
+  MR_REF=""
+  if echo "${MR_URL}" | grep -qE '/-/merge_requests/'; then
+    REPO_URL=$(echo "${MR_URL}" | sed -E 's|/-/merge_requests/[0-9]+.*||').git
+    MR_NUMBER=$(echo "${MR_URL}" | grep -oE '[0-9]+$')
+    MR_REF="merge-requests/${MR_NUMBER}/head"
+  elif echo "${MR_URL}" | grep -qE '/pull/'; then
+    REPO_URL=$(echo "${MR_URL}" | sed -E 's|/pull/[0-9]+.*||').git
+    MR_NUMBER=$(echo "${MR_URL}" | grep -oE '[0-9]+$')
+    MR_REF="pull/${MR_NUMBER}/head"
   else
-    mkdir -p "${SOURCE_DIR}"
-    git clone --depth=50 "${REPO_URL}" "${SOURCE_DIR}" 2>/dev/null && {
+    echo "WARNING: Unrecognized MR/PR URL (expected GitLab …/-/merge_requests/N or GitHub …/pull/N): ${MR_URL}"
+    MR_URL=""
+  fi
+
+  if [ -n "${MR_URL}" ]; then
+    if [ -d "${SOURCE_DIR}/.git" ]; then
       cd "${SOURCE_DIR}"
-      echo "Cloned ${REPO_URL} to ${SOURCE_DIR}"
-    } || {
-      echo "WARNING: Could not clone ${REPO_URL} — continuing without source access"
-      MR_URL=""
-    }
+      git fetch origin 2>/dev/null || true
+      echo "Source clone already exists at ${SOURCE_DIR}, fetched latest"
+    else
+      mkdir -p "${SOURCE_DIR}"
+      git clone --depth=50 "${REPO_URL}" "${SOURCE_DIR}" 2>/dev/null && {
+        cd "${SOURCE_DIR}"
+        echo "Cloned ${REPO_URL} to ${SOURCE_DIR}"
+      } || {
+        echo "WARNING: Could not clone ${REPO_URL} — continuing without source access"
+        MR_URL=""
+      }
+    fi
   fi
 
   if [ -n "${MR_URL}" ] && [ -d "${SOURCE_DIR}/.git" ]; then
     cd "${SOURCE_DIR}"
-    # Fetch the MR ref and checkout
-    git fetch origin "merge-requests/${MR_NUMBER}/head:mr-${MR_NUMBER}" 2>/dev/null || true
+    git fetch origin "${MR_REF}:mr-${MR_NUMBER}" 2>/dev/null || true
     git checkout "mr-${MR_NUMBER}" 2>/dev/null || {
-      echo "WARNING: Could not checkout MR branch — using default branch"
+      echo "WARNING: Could not checkout MR/PR ref — using default branch"
     }
     SOURCE_AVAILABLE="true"
     cd "${PROJECT_ROOT}"

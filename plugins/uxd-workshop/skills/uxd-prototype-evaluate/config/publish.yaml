@@ -1,14 +1,15 @@
 # Report hosting configuration
 # Used by scripts/publish-report.sh
 #
-# FIRST-RUN SETUP: Replace placeholder values below with your team's GitLab Pages repo.
-# The eval pipeline works without publishing — this config is only needed for /uxd-prototype-publish.
+# FIRST-RUN SETUP: set EVAL_PAGES_REPO / EVAL_PAGES_URL, fill a local overlay
+# (config/product-overlay.local.yaml), or edit the values below.
+# The eval pipeline works without publishing.
 
-# Eval reports repo (GitLab Pages) — set to your team's repo
-gitlab_pages_repo: "${EVAL_PAGES_REPO:-}"
+# Eval reports repo (GitLab Pages / GitHub Pages) — set to your team's repo
+gitlab_pages_repo: ""
 
-# Base URL for GitLab Pages. Reports are served at <base>/evals/<KEY>/
-pages_base_url: "${EVAL_PAGES_URL:-}"
+# Base URL for Pages. Reports are served at <base>/evals/<KEY>/
+pages_base_url: ""
 
 # Default branch of the pages repo
 pages_branch: "main"
@@ -16,10 +17,10 @@ pages_branch: "main"
 # Directory in the repo where reports live (served directly by Pages)
 reports_dir: "public/evals"
 
-# Jira base URL for linking from the index page
-jira_base_url: "https://issues.redhat.com/browse"
+# Jira base URL for linking from the index page (override with overlay publish.jira_base_url)
+jira_base_url: "https://issues.example.com/browse"
 
-# Publish mode: "pages" (GitLab Pages) or "branch" (raw file on reports branch)
+# Publish mode: "pages" (Pages hosting) or "branch" (raw file on reports branch)
 default_mode: "pages"
 
 # Git identity for commits to the pages repo (reads from git config if unset)

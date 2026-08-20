@@ -8,19 +8,19 @@ mlflow-trace-eval.py against the generated artifacts to populate per-skill
 validation experiments.
 
 Usage:
-  eval "$(make mlflow-poc7)"
+  eval "$(make mlflow-env)"
 
   # Full pipeline run with Sonnet 5:
   uv run python3 plugins/uxd-workshop/skills/uxd-prototype-evaluate/scripts/mlflow-trace-pipeline.py \
-    --key RHAISTRAT-1433 --url http://127.0.0.1:9204 --model claude-sonnet-5
+    --key PROJ-298 --url http://127.0.0.1:9204 --model claude-sonnet-5
 
   # Full pipeline run with Opus 4.6:
   uv run python3 plugins/uxd-workshop/skills/uxd-prototype-evaluate/scripts/mlflow-trace-pipeline.py \
-    --key RHAISTRAT-1433 --url http://127.0.0.1:9204 --model claude-opus-4-6
+    --key PROJ-298 --url http://127.0.0.1:9204 --model claude-opus-4-6
 
   # With extra eval-iterate flags:
   uv run python3 plugins/uxd-workshop/skills/uxd-prototype-evaluate/scripts/mlflow-trace-pipeline.py \
-    --key RHAISTRAT-1433 --url http://127.0.0.1:9204 --model claude-opus-4-6 \
+    --key PROJ-298 --url http://127.0.0.1:9204 --model claude-opus-4-6 \
     --iterate-flags="--no-fix --fresh"
 """
 
@@ -39,8 +39,26 @@ SKILL_DIR = SCRIPT_DIR.parent
 PROJECT_ROOT = SKILL_DIR.parents[3]  # ai-helpers root
 
 sys.path.insert(0, str(PROJECT_ROOT))
-sys.path.insert(0, os.path.expanduser(
-    "~/.claude/plugins/cache/opendatahub-skills/agent-eval-harness/1.4.0"))
+
+def _agent_eval_harness_paths():
+    """Discover agent-eval-harness without pinning a cache version."""
+    paths = []
+    env = os.environ.get("AGENT_EVAL_HARNESS_PATH")
+    if env:
+        paths.append(os.path.expanduser(env))
+    cache = os.path.expanduser(
+        "~/.claude/plugins/cache/opendatahub-skills/agent-eval-harness")
+    if os.path.isdir(cache):
+        versions = sorted(
+            (os.path.join(cache, p) for p in os.listdir(cache)
+             if os.path.isdir(os.path.join(cache, p))),
+            reverse=True,
+        )
+        paths.extend(versions)
+    return paths
+
+for _harness in _agent_eval_harness_paths():
+    sys.path.insert(0, _harness)
 
 import mlflow
 from agent_eval.agent.stream_capture import (
@@ -55,7 +73,7 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="Wrap eval-iterate with MLflow tracing")
     parser.add_argument("--key", required=True,
-                        help="Jira key (e.g., RHAISTRAT-1433)")
+                        help="Jira key (e.g., PROJ-298)")
     parser.add_argument("--url", required=True,
                         help="Prototype URL (e.g., http://127.0.0.1:9204)")
     parser.add_argument("--model", default="claude-opus-4-6",

@@ -5,16 +5,16 @@ mlflow-trace-eval.py
 Runs eval scorers with full MLflow tracing (spans per check).
 Each run gets:
   - A unique eval_run_id (for linking to report generation)
-  - prototype_key tag (e.g., RHAISTRAT-1433)
+  - prototype_key tag (e.g., PROJ-298)
   - model tag (which LLM produced the artifacts)
 
 Usage:
-  eval "$(make mlflow-poc7)"
+  eval "$(make mlflow-env)"
   uv run python3 plugins/uxd-workshop/skills/uxd-prototype-evaluate/scripts/mlflow-trace-eval.py \
-    .artifacts/RHAISTRAT-1433/ --model claude-opus-4-6 --prototype-key RHAISTRAT-1433
+    .artifacts/PROJ-298/ --model claude-opus-4-6 --prototype-key PROJ-298
 
   # Smoke test shortcut:
-  make mlflow-smoke KEY=RHAISTRAT-432
+  make mlflow-smoke KEY=PROJ-298
 """
 
 import argparse

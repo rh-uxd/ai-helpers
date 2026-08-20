@@ -1,6 +1,12 @@
 # Product Overlay — defaults for uxd-prototype-evaluate
-# Copy or edit this file for your product. Pass a custom path via --overlay if needed.
-# See references/skill-overlays.md for the overlay pattern.
+# Checked-in template. Keep values generic (example.com / empty).
+#
+# Team-specific URLs (MLflow, internal git remotes, Pages, Jira) belong in a
+# gitignored overlay, not in this file:
+#   1. Copy this file to config/product-overlay.local.yaml and fill it in, OR
+#   2. Point EVAL_OVERLAY_PATH at an overlay from your internal config repo
+# Env vars (MLFLOW_TRACKING_URI, CONSISTENCY_CHECKER_REPO, …) still win.
+# See references/skill-overlays.md.
 
 product:
   name: "Product"
@@ -16,6 +22,7 @@ jira:
   outcome_project: ""
   outcome_issue_type: "Outcome"
   ac_location: "description"  # field where acceptance criteria live in the ticket
+  ticket_label: "Ticket"      # breadcrumb label for the evaluated issue
 
 # Git configuration — prototype repo conventions
 git:
@@ -24,7 +31,25 @@ git:
   local_workspace: ""
   pages_base_url: ""
   mr_branch_pattern: "mr-{number}"
+  mr_url_style: "gitlab"      # gitlab | github — how MR/PR links are built
   diff_url_template: ""
+
+# Optional context git remotes. Empty = skip bootstrap (pipeline degrades).
+# Override with CONSISTENCY_CHECKER_REPO / USABILITY_TESTING_REPO env vars.
+context_repos:
+  consistency_checker: ""
+  usability_testing: ""
+
+# MLflow tracking (opt-in). Empty = skip logging unless MLFLOW_TRACKING_URI is set.
+mlflow:
+  tracking_uri: ""
+
+# Report publish / hosted dashboard (used by publish-report.sh and the HTML header)
+publish:
+  gitlab_pages_repo: ""
+  pages_base_url: ""
+  jira_base_url: "https://issues.example.com/browse"
+  dashboard_url: ""
 
 # Design system — PatternFly configuration for consistency checks
 design_system:

@@ -364,7 +364,9 @@ sync_prototype_bar_config() {
     eval_url="/evals/${PROTO_KEY}/"
   fi
 
-  local jira_base="${JIRA_BASE_URL:-https://issues.redhat.com/browse/}"
+  local overlay_jira
+  overlay_jira="$(node "$SCRIPT_DIR/overlay-get.js" publish.jira_base_url 2>/dev/null || true)"
+  local jira_base="${JIRA_BASE_URL:-${overlay_jira:-https://issues.example.com/browse/}}"
   # prototype-bar.json lives at the key root, not under eval/
   node "$export_sync" \
     --artifacts "$KEY_DIR" \

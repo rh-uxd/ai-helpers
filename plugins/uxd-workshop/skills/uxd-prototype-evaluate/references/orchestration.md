@@ -657,4 +657,4 @@ one additional Phase A crank. See the git history for full design details.
 - **Prototype URL unreachable:** Wait 10s, retry once. If still down, stop with error.
 - **eval-fix produces no changes:** Stop Phase A — more iterations won't help. Proceed to Phase B.
 - **Dev server crashes after fix:** Stop Phase A, note which files may have caused it. Proceed to Phase B.
-- **Missing .context/ directories (VPN unreachable at bootstrap):** Phase A runs in degraded mode (pf-css-token-check fallback if available). Phase B runs using the bundled plugin persona catalog with reduced behavioral fidelity. Re-run bootstrap scripts when VPN reconnects.
+- **Missing .context/ directories (context repos not configured or unreachable):** Phase A runs in degraded mode (pf-css-token-check fallback if available). Phase B runs using the bundled plugin persona catalog with reduced behavioral fidelity. Re-run bootstrap scripts after setting `CONSISTENCY_CHECKER_REPO` / `USABILITY_TESTING_REPO` (or overlay `context_repos`).

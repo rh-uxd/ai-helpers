@@ -295,7 +295,7 @@ Two distinct scenarios determine how Playwright scripts navigate:
 The prototype is live at a URL. We may have an MR/PR link for code context, but the primary interaction target is the remote URL.
 
 **Characteristics:**
-- Live URL (e.g., `https://team-5171de.pages.redhat.com/`)
+- Live URL (e.g., `https://pages.example.com/mr-42/`)
 - May serve from a path prefix (e.g., `/mr-174/`)
 - We cannot modify the build or add `data-testid` attributes
 - Navigation must use heuristic locators based on visible UI

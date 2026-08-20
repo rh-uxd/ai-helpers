@@ -83,13 +83,13 @@ npx playwright install chromium
 cd "${UXD_PROJECT_ROOT}"
 ```
 
-Context repos (`.context/consistency-checker/` and `.context/usability-testing/`) are **bootstrapped automatically** on first pipeline run via `pipeline-setup.sh`. VPN access to `gitlab.cee.redhat.com` is required for full fidelity; the pipeline degrades gracefully if unreachable.
+Context repos (`.context/consistency-checker/` and `.context/usability-testing/`) are **bootstrapped automatically** on first pipeline run via `pipeline-setup.sh` when a git URL is configured (`CONSISTENCY_CHECKER_REPO` / `USABILITY_TESTING_REPO`, or `context_repos` in the product overlay). If unset, those phases degrade (PF token-check fallback / bundled persona catalog).
 
 **Personas:** Phase B must use the plugin catalog at `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` (role IDs, display names, audience map) and overlays at `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml` (experience, accessibility, regulation, team size). Deep behavioral YAML comes from `.context/usability-testing/` (cloned automatically by the bootstrap script).
 
 **Consistency:** `.context/consistency-checker/` (cloned automatically by the bootstrap script).
 
-Edit `${CLAUDE_SKILL_DIR}/config/product-overlay.yaml` for product-specific Jira/repo settings.
+Edit `${CLAUDE_SKILL_DIR}/config/product-overlay.yaml` (or a gitignored `product-overlay.local.yaml` / `EVAL_OVERLAY_PATH`) for product-specific Jira, git, MLflow, and context-repo settings.
 
 **Claude Code permissions (first run only):** The eval pipeline shells out to ~20 bundled Node/bash scripts and Playwright. Without auto-approve, Claude Code will prompt for each one. Ask the user:
 
@@ -125,7 +125,7 @@ If yes, read the permissions list from the README's "Claude Code permissions" se
 
 | Source type | Example | Behavior |
 |-------------|---------|----------|
-| Remote (GitLab Pages MR) | `https://rhoai-5171de.pages.redhat.com/mr-174/` | Probed with curl; used directly if reachable (2xx/3xx) |
+| Remote (hosted Pages / preview URL) | `https://pages.example.com/mr-42/` | Probed with curl; used directly if reachable (2xx/3xx) |
 | Local SPA (React/Angular) | `http://localhost:3000` or auto-started | If URL unreachable + workspace has `dist/index.html` with SPA indicators, starts `sirv --single` |
 | Local static | `http://localhost:3000` or auto-started | If URL unreachable + workspace has `dist/index.html` without SPA indicators, starts `sirv` |
 
@@ -242,7 +242,7 @@ After rendering the report, sync the Prototype Bar with `--artifacts ${KEY_DIR}`
 - **Prototype URL unreachable:** Falls back to local serving from workspace `dist/`. If no workspace or no `dist/`, fails with clear error at setup. See `scripts/resolve-prototype-url.sh`.
 - **eval-fix produces no changes:** Stop Phase A — more iterations won't help. Proceed to Phase B.
 - **Dev server crashes after fix:** Stop Phase A, note which files may have caused it. Proceed to Phase B.
-- **Missing .context/ directories (VPN down):** Phase A runs in degraded mode (pf-css-token-check fallback). Phase B still runs using the bundled plugin persona catalog; deep behavioral YAML unavailable until VPN reconnects.
+- **Missing .context/ directories:** Phase A runs in degraded mode (pf-css-token-check fallback). Phase B still runs using the bundled plugin persona catalog; deep behavioral YAML is unavailable until the usability-testing context repo is bootstrapped.
 
 ## Review Mode
 
