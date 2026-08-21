@@ -17,6 +17,7 @@ Each persona navigates at their own competence level — an experienced user exp
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/<card>.md` | Short persona cards (front matter + body) | Recommended |
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml` | Experience / accessibility / regulation / team overlays | Recommended |
 | `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/<id>.md` | Overlay cards | When audience needs them |
+| Internal `uxd-eval-config/knowledge/personas/<id>.md` | Research citations (study URLs); via `overlay-get.js --knowledge-persona` | No |
 | `.context/usability-testing/personas/` | Deep behavioral YAML (auto-cloned) | Yes |
 | `.context/usability-testing/prompts/evaluate-flow.md` | 7-dimension rubric | Yes |
 | `.artifacts/<KEY>/eval/navigation-hints.json` | Fallback hints for stuck personas | No |

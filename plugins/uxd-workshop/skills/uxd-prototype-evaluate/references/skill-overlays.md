@@ -10,11 +10,20 @@ The evaluator should work for any product team — not just one product. The che
 
 ## Where UXD/RHOAI values live
 
-Red Hat internal remotes, MLflow, Jira, and Pages URLs ship in the VPN-only repo:
+Red Hat internal remotes, MLflow, Jira, Pages URLs, and persona research citations ship in the VPN-only repo:
 
-[gitlab.cee.redhat.com/uxd/internal-ai-helpers](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers) → plugin `uxd-eval-config` → `overlays/uxd-prototype-evaluate.yaml`
+[gitlab.cee.redhat.com/uxd/internal-ai-helpers](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers) → plugin `uxd-eval-config` → `overlays/uxd-prototype-evaluate.yaml` and `knowledge/personas/`
 
 The public skill loads that file automatically when it can see the clone or plugin install. You do not copy it into this repo.
+
+Persona **research citations** (Google Docs / study URLs) live in the same plugin at `knowledge/personas/<id>.md`. Resolve them with:
+
+```bash
+node scripts/overlay-get.js --knowledge-personas-dir
+node scripts/overlay-get.js --knowledge-persona ml-engineer
+```
+
+Public persona cards stay product-agnostic (Who / When to use only). Skip silently if those commands print nothing.
 
 ## How values are resolved
 
@@ -67,6 +76,8 @@ export EVAL_OVERLAY_PATH="$UXD_INTERNAL_HELPERS/plugins/uxd-eval-config/overlays
 | `personas` | Persona + overlay catalog paths for usability scoring |
 | `navigation` | Which files define sidebar nav and routes |
 | `known_mrs` | Manual MR number mapping (until forge API is available) |
+
+Persona **Sources** are not overlay YAML. They are markdown files next to the overlay, discovered via `--knowledge-personas-dir`.
 
 ## Origin
 

@@ -22,7 +22,3 @@ Installs, configures, and operates the automation platform for others — creden
 - Audience is automation operators or admins of an automation platform
 - Flows involving installers, admin consoles, credentials, org/team setup, or usage analytics
 - When research separates platform admin from content creator (automation developer)
-
-## Sources
-
-- [Ansible Time to Value Conversations (2024)](https://docs.google.com/presentation/d/1tzWYixx2VSOFDPr3W_dUlfHw7ctnIBNQI2pjYwv4y4c/edit) — Automation Operator / Platform Admin personas; install, RBAC, persona-based onboarding

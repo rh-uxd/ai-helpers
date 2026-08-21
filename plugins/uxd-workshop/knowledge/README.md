@@ -31,6 +31,7 @@ ${CLAUDE_SKILL_DIR}/../../knowledge/...
 
 ## What does not belong here
 
-- Product-specific Jira keys, repo URLs, or MR maps → skill `config/product-overlay.yaml`
-- Deep behavioral scoring rubrics / full usability YAML → `.context/` (auto-bootstrapped from GitLab)
+- Product-specific Jira keys, repo URLs, or MR maps → skill `config/product-overlay.yaml` (internal values in [internal-ai-helpers](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers) `uxd-eval-config`)
+- Internal research citations / Google Docs study URLs → [internal-ai-helpers](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers) `plugins/uxd-eval-config/knowledge/personas/`
+- Deep behavioral scoring rubrics / full usability YAML → `.context/` (auto-bootstrapped when a usability-testing repo is configured)
 - Task procedures → `skills/`

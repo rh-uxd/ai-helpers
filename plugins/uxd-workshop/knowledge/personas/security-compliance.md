@@ -26,7 +26,3 @@ Owns proactive risk reduction — vulnerabilities, hardening baselines, audits, 
 - Audience is security, InfoSec, compliance auditors, or risk owners
 - Flows involving vulnerability management, compliance reporting, audit logs, or policy gates
 - When security posture is the primary job-to-be-done
-
-## Sources
-
-- [Insights Personas Readout — Sys Admin Persona Study (2022)](https://docs.google.com/presentation/d/1NtiNZ-FSfr5lQBoM60mKcpPo1aR_m8qneJxkqsVz_EU/edit) — InfoSec / proactive compliance facet (Prashant); stakeholder priority for security & compliance

@@ -22,8 +22,3 @@ Writes and maintains automation content — jobs, roles, inventories, and templa
 - Audience is automation developers, content creators, or automation authors
 - Flows involving writing/editing automation content, shared libraries, or runtimes
 - Learning, time-to-value, or developer-experience surfaces for automation tools
-
-## Sources
-
-- [Ansible Learning Conversations (2024)](https://docs.google.com/presentation/d/1j-RX7TtBBOWBUUCwKBcgqNdWeo8p6QJV02XrCQNYSpA/edit) — content-creator learning goals, structure, prerequisites
-- [Ansible Time to Value Conversations (2024)](https://docs.google.com/presentation/d/1tzWYixx2VSOFDPr3W_dUlfHw7ctnIBNQI2pjYwv4y4c/edit) — Automation Developer persona label; first-job content writing path

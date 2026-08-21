@@ -85,7 +85,7 @@ cd "${UXD_PROJECT_ROOT}"
 
 Context repos (`.context/consistency-checker/` and `.context/usability-testing/`) are **bootstrapped automatically** on first pipeline run via `pipeline-setup.sh` when a git URL is configured (`CONSISTENCY_CHECKER_REPO` / `USABILITY_TESTING_REPO`, or `context_repos` in the product overlay). If unset, those phases degrade (PF token-check fallback / bundled persona catalog).
 
-**Personas:** Phase B must use the plugin catalog at `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` (role IDs, display names, audience map) and overlays at `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml` (experience, accessibility, regulation, team size). Deep behavioral YAML comes from `.context/usability-testing/` (cloned automatically by the bootstrap script).
+**Personas:** Phase B must use the plugin catalog at `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` (role IDs, display names, audience map) and overlays at `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml` (experience, accessibility, regulation, team size). Deep behavioral YAML comes from `.context/usability-testing/` (cloned automatically by the bootstrap script). Internal research citations (study URLs) are **not** on the public cards — load them from internal-ai-helpers `uxd-eval-config` when present (`node ${CLAUDE_SKILL_DIR}/scripts/overlay-get.js --knowledge-persona <id>`). Skip if empty.
 
 **Consistency:** `.context/consistency-checker/` (cloned automatically by the bootstrap script).
 

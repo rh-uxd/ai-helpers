@@ -22,8 +22,3 @@ One short paragraph: what this role does day to day, what they know well, and wh
 - Research or requirements language that should select this role
 - Product flows or surfaces where this role is the primary actor
 
-## Sources
-
-- [Study title (Year)](https://example.com) — why this study informs the role
-# Prefer links from the UX research engagements catalog. Omit this section only if
-# no research artifact is available yet; add sources when research lands.

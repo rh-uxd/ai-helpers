@@ -9,8 +9,13 @@
  *   3. Auto-discovered internal overlay     (internal-ai-helpers clone or plugin cache)
  *   4. EVAL_OVERLAY_PATH / UXD_OVERLAY_PATH (explicit; always wins)
  *
- * CLI: node overlay-get.js <dotted.key>
- * Prints the scalar (or empty string). Nested maps print JSON.
+ * CLI:
+ *   node overlay-get.js <dotted.key>
+ *     Prints the scalar (or empty string). Nested maps print JSON.
+ *   node overlay-get.js --knowledge-personas-dir
+ *     Prints the internal persona-citations directory, or empty.
+ *   node overlay-get.js --knowledge-persona <id>
+ *     Prints the internal Sources file for that persona id, or empty.
  */
 
 const fs = require('fs');
@@ -20,6 +25,7 @@ const path = require('path');
 const SKILL_ROOT = path.resolve(__dirname, '..');
 const OVERLAY_REL = path.join('plugins', 'uxd-eval-config', 'overlays', 'uxd-prototype-evaluate.yaml');
 const OVERLAY_BASENAME = 'uxd-prototype-evaluate.yaml';
+const KNOWLEDGE_PERSONAS_REL = path.join('plugins', 'uxd-eval-config', 'knowledge', 'personas');
 
 function readFileOr(filePath) {
   try {
@@ -245,6 +251,55 @@ function discoverInternalOverlays() {
   return found;
 }
 
+function dirExists(p) {
+  try {
+    return fs.statSync(p).isDirectory();
+  } catch {
+    return false;
+  }
+}
+
+function pushIfDir(acc, p) {
+  const resolved = p ? path.resolve(p) : '';
+  if (resolved && dirExists(resolved) && !acc.includes(resolved)) acc.push(resolved);
+}
+
+/** `knowledge/personas` next to an overlay YAML in uxd-eval-config. */
+function knowledgePersonasBesideOverlay(overlayFile) {
+  if (!overlayFile) return '';
+  return path.join(path.dirname(overlayFile), '..', 'knowledge', 'personas');
+}
+
+function knowledgePersonasFromHelpersRoot(root) {
+  if (!root) return '';
+  return path.join(root, KNOWLEDGE_PERSONAS_REL);
+}
+
+/**
+ * Auto-discovered internal persona citation dirs (Sources / study URLs).
+ * Same clone + plugin-cache search as overlays; knowledge sits beside them.
+ */
+function discoverInternalKnowledgePersonasDirs() {
+  const found = [];
+  const envRoot = process.env.UXD_INTERNAL_HELPERS;
+  if (envRoot) pushIfDir(found, knowledgePersonasFromHelpersRoot(envRoot));
+  for (const overlay of discoverInternalOverlays()) {
+    pushIfDir(found, knowledgePersonasBesideOverlay(overlay));
+  }
+  return found;
+}
+
+/** Path to internal Sources file for a public persona id, or empty. */
+function resolveKnowledgePersonaCard(id) {
+  const stem = String(id || '').replace(/\.md$/, '').trim();
+  if (!stem) return '';
+  for (const dir of discoverInternalKnowledgePersonasDirs()) {
+    const p = path.join(dir, `${stem}.md`);
+    if (fileExists(p)) return p;
+  }
+  return '';
+}
+
 function loadOverlay() {
   const files = [
     path.join(SKILL_ROOT, 'config', 'product-overlay.yaml'),
@@ -281,13 +336,21 @@ if (require.main === module) {
   const key = process.argv[2];
   if (!key) {
     console.error('Usage: overlay-get.js <dotted.key>');
+    console.error('       overlay-get.js --knowledge-personas-dir');
+    console.error('       overlay-get.js --knowledge-persona <id>');
     process.exit(1);
   }
-  const val = get(key);
-  if (typeof val === 'object') {
-    process.stdout.write(JSON.stringify(val));
+  if (key === '--knowledge-personas-dir') {
+    process.stdout.write(discoverInternalKnowledgePersonasDirs()[0] || '');
+  } else if (key === '--knowledge-persona') {
+    process.stdout.write(resolveKnowledgePersonaCard(process.argv[3] || ''));
   } else {
-    process.stdout.write(val);
+    const val = get(key);
+    if (typeof val === 'object') {
+      process.stdout.write(JSON.stringify(val));
+    } else {
+      process.stdout.write(val);
+    }
   }
 }
 
@@ -298,4 +361,6 @@ module.exports = {
   parseSimpleYaml,
   deepMerge,
   discoverInternalOverlays,
+  discoverInternalKnowledgePersonasDirs,
+  resolveKnowledgePersonaCard,
 };

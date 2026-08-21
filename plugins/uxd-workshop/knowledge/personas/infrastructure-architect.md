@@ -23,8 +23,3 @@ Designs and stewards infrastructure for the business — version compatibility, 
 - Audience is infrastructure architects, solutions architects, or principal architects
 - Flows involving capacity planning, architecture standards, multi-OS estates, or change impact
 - When research or requirements distinguish architects from hands-on system admins or platform engineers
-
-## Sources
-
-- [Insights Personas Readout — Sys Admin Persona Study (2022)](https://docs.google.com/presentation/d/1NtiNZ-FSfr5lQBoM60mKcpPo1aR_m8qneJxkqsVz_EU/edit) — infrastructure architect facet (Rex); change impact and version compatibility
-- [K8s Capacity Planning (2022)](https://docs.google.com/presentation/d/10hM3nClcKyZZOne_roDLQMdhUIJE_Qrgn9LKA77Mmlg/edit) — solution / platform architect capacity-planning behaviors

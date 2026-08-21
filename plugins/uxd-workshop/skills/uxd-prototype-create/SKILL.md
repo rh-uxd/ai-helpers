@@ -147,7 +147,7 @@ Parse from the RFE:
 
 1. **User stories** — actor, action, goal (normalize bullet requirements if needed)
 2. **Acceptance criteria** — Given/When/Then, checkboxes, or AC sections
-3. **Personas / roles** — prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` when mapping roles via `aliases`; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/` for experience, accessibility, regulation, or team size
+3. **Personas / roles** — prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` when mapping roles via `aliases`; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/` for experience, accessibility, regulation, or team size. Internal study URLs are not on the public cards. If internal-ai-helpers is available (`UXD_INTERNAL_HELPERS` or a sibling `uxd/internal-ai-helpers` clone), read `plugins/uxd-eval-config/knowledge/personas/<id>.md` for Sources; skip if missing.
 4. **Key entities** — nouns the UI manipulates (cluster, pipeline, key, …)
 5. **Flows / user journeys** — ordered steps the user takes (screens **and** interaction UI states such as “modal open”). Prefer an explicit “User journey” section when present; otherwise infer from stories and ACs.
 6. **Page scenarios** — data/condition variants per page. Run the brainstorm checklist in [references/scenario-brainstorm.md](references/scenario-brainstorm.md) before writing `scenarios.json`: walk condition axes (presence, association, match quality, availability, post-action outcomes, recovery, errors), not only literal AC bullets. Prefer 3–7 distinct on-load end-states per page; skip duplicates that look identical after load.

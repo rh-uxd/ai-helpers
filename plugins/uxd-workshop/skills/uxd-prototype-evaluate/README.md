@@ -35,7 +35,7 @@ export CONSISTENCY_CHECKER_REPO="git@example.com:org/consistency-checker.git"
 
 UXD/RHOAI internals (CEE remotes, MLflow, Pages) come from the `uxd-eval-config` plugin in the internal marketplace; `overlay-get.js` auto-discovers that overlay when the clone or plugin is present.
 
-Edit `config/product-overlay.yaml` only as a generic template. Personas come from the plugin catalog at `plugins/uxd-workshop/knowledge/personas/` — not product overlays. Optional designer ground truth: copy `config/ground-truth.example.json` → `config/ground-truth.json`.
+Edit `config/product-overlay.yaml` only as a generic template. Personas come from the plugin catalog at `plugins/uxd-workshop/knowledge/personas/` — not product overlays. Internal study URLs for those personas live in internal-ai-helpers `uxd-eval-config/knowledge/personas/` and are auto-discovered the same way as the overlay. Optional designer ground truth: copy `config/ground-truth.example.json` → `config/ground-truth.json`.
 
 Start the prototype locally, then:
 

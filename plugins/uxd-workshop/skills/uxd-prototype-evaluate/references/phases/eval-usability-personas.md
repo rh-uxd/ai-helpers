@@ -25,6 +25,7 @@ ${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml
 4. Compose with experience overlays from each persona's `default_experience` (prefer one junior + one senior/experienced)
 5. If language matches overlay `aliases` (or slider level `aliases`) in the overlays catalog — e.g. accessibility, regulation, team size — attach those overlays onto the selected role personas; do **not** treat overlays as standalone personas
 6. Read matching persona cards under `knowledge/personas/<card>` and any overlay cards under `knowledge/personas/overlays/<id>.md`
+7. Optional internal citations: run `node ${CLAUDE_SKILL_DIR}/scripts/overlay-get.js --knowledge-persona <id>`. If it prints a path, read that file for Sources (VPN-only research links). If empty, skip — public cards are enough for Who / When to use.
 
 Do **not** invent new persona names when a catalog entry fits. If you must add a temporary persona, note it in `persona_selection.considered_but_rejected` / reasoning and prefer proposing a catalog update.
 
@@ -38,7 +39,8 @@ For each selected variant ID:
 2. Resolve the persona card from `personas/catalog.yaml` -> `card` (e.g. `data-scientist.md`)
 3. Read `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/<card>` (use front matter for `id`, `display_name`)
 4. For each overlay segment, read `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/<id>.md` (experience levels: `junior` / `senior` / `experienced`; team levels: `small-team` / `medium-team` / `large-team`; context overlays: `accessibility`, `regulation`)
-5. If present, read deep behavioral YAML:
+5. Optional: `node ${CLAUDE_SKILL_DIR}/scripts/overlay-get.js --knowledge-persona <persona-id>` — if a path is printed, read it for Sources. Skip if empty.
+6. If present, read deep behavioral YAML:
 
 ```
 .context/usability-testing/personas/<composed-id>.yaml
