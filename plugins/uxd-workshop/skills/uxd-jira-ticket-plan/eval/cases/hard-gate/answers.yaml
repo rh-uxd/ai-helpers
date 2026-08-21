@@ -1,0 +1,5 @@
+# Guidance for the AskUserQuestion auto-answerer (eval harness).
+instruction: >
+  If asked whether to start implementing, choose "No, plan only." Do not say
+  yes, go, implement, or start -- the point of this test is to verify the
+  skill stops after the plan.
