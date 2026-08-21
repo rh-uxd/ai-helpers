@@ -1,0 +1,9 @@
+prompt: >-
+  Using the uxd-figma-read skill and the fixture metadata.xml in this case
+  directory (treat it as the result of get_metadata for page 0:1), decide which
+  node IDs to pass to get_screenshot. List the IDs you would screenshot and
+  briefly explain why. Do not call the network or MCP.
+
+  Page ID from the file: 0:1
+  Fixture: metadata.xml
+fixture: metadata.xml
