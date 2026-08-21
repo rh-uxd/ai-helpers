@@ -8,8 +8,6 @@ allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
 
 This skill walks you through validating a PatternFly prerelease version in the insights-chrome repository. It's based on a real validation session and covers every step including known pitfalls.
 
-📄 Full runbook (with more detail): https://docs.google.com/document/d/1tVDH_BAZ6ygtuCCG69WGobCM_lXs9dkop3HjNH8EKVE/edit
-
 ---
 
 ## Phase 0: Orient
@@ -193,20 +191,20 @@ npm run test:ct -- --spec cypress/component/NotEntitledModal/NotEntitledModal.cy
 ## Phase 7: Visual Testing (VPN Required)
 
 Prerequisites:
-- Red Hat VPN connected
-- `/etc/hosts` has `127.0.0.1 stage.foo.redhat.com`
-- Stage account at https://ethel.rhsm.redhat.com
+- VPN connected
+- Access to a running insights-chrome dev environment (see your team's setup docs for environment URLs and auth configuration)
 
 ```bash
 npm run dev
-# Then open Firefox → https://stage.foo.redhat.com:1337
 ```
 
+Open the dev server URL in your browser. Consult your team's environment docs for the correct hostname, port, and any `/etc/hosts` entries required.
+
 **Troubleshooting:**
-- Port busy: `lsof -ti:1337 | xargs kill -9`
-- "Invalid parameter: redirect_uri": you visited `localhost:1337` — use `stage.foo.redhat.com:1337`
-- Blank page: VPN not connected
-- Chrome cert error: use Firefox instead
+- Port busy: `lsof -ti:<PORT> | xargs kill -9`
+- Auth redirect errors: ensure you're using the correct hostname (not `localhost`) that matches the OAuth redirect URI configured for your environment
+- Blank page: check VPN or environment access
+- Chrome cert error: try Firefox instead
 
 **Spot-check list:**
 - [ ] Header (logo, user menu, bell icon)
