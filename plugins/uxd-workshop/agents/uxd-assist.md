@@ -1,6 +1,6 @@
 ---
 name: uxd-assist
-description: UXD skill routing — maps task context to the right UXD sub-skills for research, design review, and prototyping. Active when the uxd-workshop plugin is installed.
+description: UXD skill routing — maps task context to the right UXD sub-skills for research, design review, prototyping, and Jira ticket planning. Active when the uxd-workshop plugin is installed.
 ---
 
 # UXD assist
@@ -34,11 +34,19 @@ When the user asks to create, iterate on, evaluate, or publish a prototype, thes
 | `/uxd-prototype-evaluate` | Evaluate prototype quality through rubric scoring and simulated usability testing |
 | `/uxd-prototype-publish` | Publish a prototype to a git repo, GitHub Pages, or other destination |
 
+## Implementation planning — Jira tickets to codebase plans
+
+When the user shares a Jira ticket URL or key, or asks to plan, break down, or implement a ticket:
+
+| Skill | What it does |
+|-------|-------------|
+| `/uxd-jira-ticket-plan` | Generate a codebase-mapped implementation plan from a Jira ticket, then optionally start guided implementation |
+
 ## Synthesis guidance
 
 When multiple skill results are available, help users interpret findings:
 
-1. Group findings by context (Research, Design Review, Prototyping)
+1. Group findings by context (Research, Design Review, Prototyping, Implementation planning)
 2. Deduplicate findings that overlap across skills
 3. For each finding, attribute which skill produced it
 4. Only include context sections that were activated

@@ -39,6 +39,7 @@ UXD team tools and skill incubator — prototyping, research, design review, tea
 <tr><td nowrap><code>uxd-discovery</code></td><td>Produce a structured UX discovery brief from a feature request, Jira issue, or problem statement.</td><td>stable</td></tr>
 <tr><td nowrap><code>uxd-evaluate-design-heuristics</code></td><td>Score a design against accessibility, visual hierarchy, content, and state coverage heuristics.</td><td>—</td></tr>
 <tr><td nowrap><code>uxd-figma-read</code></td><td>Retrieve design context from a Figma file.</td><td>—</td></tr>
+<tr><td nowrap><code>uxd-jira-ticket-plan</code></td><td>Generate a codebase-mapped implementation plan from a Jira ticket, then ask whether to start guided implementation.</td><td>stable</td></tr>
 <tr><td nowrap><code>uxd-prototype-create</code></td><td>Create or refine a UX prototype from various input sources — a Jira ticket, Figma design, feature description, or just an idea.</td><td>—</td></tr>
 <tr><td nowrap><code>uxd-prototype-evaluate</code></td><td>Evaluate a prototype's quality through rubric scoring, simulated usability testing, and desirability studies.</td><td>—</td></tr>
 <tr><td nowrap><code>uxd-prototype-publish</code></td><td>Publish a prototype to a target destination — push to a git repo as a merge request, or deploy a sanitized copy to GitHub Pages, GitLab Pages, or Vercel.</td><td>—</td></tr>
@@ -47,7 +48,7 @@ UXD team tools and skill incubator — prototyping, research, design review, tea
 
 <table>
 <tr><th>Agent</th><th>Description</th><th>Eval</th></tr>
-<tr><td nowrap><code>uxd-assist</code></td><td>UXD skill routing — maps task context to the right UXD sub-skills for research, design review, and prototyping.</td><td>—</td></tr>
+<tr><td nowrap><code>uxd-assist</code></td><td>UXD skill routing — maps task context to the right UXD sub-skills for research, design review, prototyping, and Jira ticket planning.</td><td>—</td></tr>
 </table>
 
 
@@ -200,4 +201,4 @@ PatternFly team tools and skill incubation — issue triage, release management,
 **Eval coverage**
 
 - Consumer: 25/25 (100%)
-- Workshop: 3/25 (12%)
+- Workshop: 4/26 (15%)
