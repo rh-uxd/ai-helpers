@@ -1,0 +1,159 @@
+name: pf-i18n-audit-eval
+description: Evaluate pf-i18n-audit's detection of i18n issues in PatternFly React code
+
+skill: pf-code-review:pf-i18n-audit
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: expect_issues (true/false), issue_types list, and fixture details
+    - A .tsx or .scss fixture file the prompt references
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces a text report identifying i18n issues
+      across hardcoded strings, concatenation, formatting, and RTL categories.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: flags_hardcoded_strings
+    description: Identifies hardcoded user-facing strings in PF components
+    if: "'hardcoded_strings' in annotations.get('issue_types', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      patterns = [
+          re.compile(r'hardcoded\b.*\bstring', re.IGNORECASE),
+          re.compile(r'externalize|translation\s+key|i18n\s+key', re.IGNORECASE),
+      ]
+      if any(p.search(text) for p in patterns):
+          return True, "Correctly identified hardcoded user-facing strings"
+      return False, "Did not flag hardcoded strings for externalization"
+
+  - name: flags_concatenation_antipattern
+    description: Identifies string concatenation that breaks in non-English locales
+    if: "'concatenation' in annotations.get('issue_types', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      patterns = [
+          re.compile(r'concatenat\w+.*\b(anti.?pattern|word\s+order|plural|locale)', re.IGNORECASE),
+          re.compile(r'(template\s+literal|interpolat)\w*.*\b(plural|order|locale|i18n)', re.IGNORECASE),
+          re.compile(r'(MessageFormat|plural.aware|t\(|formatMessage)', re.IGNORECASE),
+      ]
+      if any(p.search(text) for p in patterns):
+          return True, "Correctly flagged string concatenation anti-patterns"
+      return False, "Did not identify concatenation anti-patterns that break in other locales"
+
+  - name: flags_rtl_unsafe_css
+    description: Identifies physical CSS properties that break in RTL layouts
+    if: "'rtl_css' in annotations.get('issue_types', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      physical = re.compile(
+          r'(margin-left|margin-right|padding-left|padding-right|text-align:\s*(left|right)|float:\s*(left|right)|border-left|border-right)',
+          re.IGNORECASE
+      )
+      logical = re.compile(
+          r'(inline-start|inline-end|margin-inline|padding-inline|inset-inline)',
+          re.IGNORECASE
+      )
+      if physical.search(text) and logical.search(text):
+          return True, "Correctly flagged physical CSS properties and suggested logical equivalents"
+      return False, "Did not flag RTL-unsafe CSS properties or suggest logical equivalents"
+
+  - name: has_report_structure
+    description: Output follows the specified report format with categorized sections
+    if: "annotations.get('expect_issues') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      section_patterns = [
+          re.compile(r'#{1,3}\s+(hardcoded|concatenat|rtl|format|infrastr)', re.IGNORECASE),
+          re.compile(r'#{1,3}\s+(summary|audit)', re.IGNORECASE),
+      ]
+      matches = sum(1 for p in section_patterns if p.search(text))
+      if matches >= 2:
+          return True, f"Report has structured sections ({matches}/2 section types found)"
+      return False, f"Report missing structured sections ({matches}/2 found)"
+
+  - name: no_false_positives
+    description: Does not flag i18n-ready code as having issues
+    if: "annotations.get('expect_issues') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      false_positive_patterns = [
+          re.compile(r'(hardcoded|concatenat\w+|rtl.unsafe|physical\s+propert)\w*.*\b(found|detected|issue|violation|flag)', re.IGNORECASE),
+          re.compile(r'(found|detected|identified)\s+\d+\s+(issue|violation|problem)', re.IGNORECASE),
+      ]
+      for p in false_positive_patterns:
+          if p.search(text):
+              return False, f"False positive — flagged i18n-ready code as having issues"
+      return True, "Correctly identified code as i18n-ready with no false positives"
+
+  - name: distinguishes_user_vs_dev_strings
+    description: Does not flag developer-facing strings (console.log, testids, CSS classes)
+    if: "'hardcoded_strings' in annotations.get('issue_types', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      dev_string_flags = [
+          re.compile(r'console\.\w+.*\b(flag|issue|hardcoded|externalize)', re.IGNORECASE),
+          re.compile(r'(data-testid|testid|test.id).*\b(flag|issue|hardcoded|externalize)', re.IGNORECASE),
+      ]
+      for p in dev_string_flags:
+          if p.search(text):
+              return False, "Incorrectly flagged developer-facing strings (console.log, testids)"
+      return True, "Correctly distinguished user-facing from developer-facing strings"
+
+thresholds:
+  flags_hardcoded_strings:
+    min_pass_rate: 0.67
+  flags_concatenation_antipattern:
+    min_pass_rate: 0.67
+  flags_rtl_unsafe_css:
+    min_pass_rate: 0.67
+  has_report_structure:
+    min_pass_rate: 0.67
+  no_false_positives:
+    min_pass_rate: 1.0
+  distinguishes_user_vs_dev_strings:
+    min_pass_rate: 1.0
