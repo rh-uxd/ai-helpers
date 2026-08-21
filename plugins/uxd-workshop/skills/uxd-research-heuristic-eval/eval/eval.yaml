@@ -15,14 +15,20 @@ runner:
     - plugins/uxd-workshop
 
 models:
-  skill: claude-sonnet-4-6
-  judge: claude-sonnet-4-6
+  skill: claude-opus-4-6
+  judge: claude-sonnet-5
   hook: claude-haiku-4-5-20251001
 
 permissions:
   allow: []
   deny:
     - "mcp__*"
+
+mlflow:
+  experiment: uxd-research-heuristic-eval
+  tags:
+    team: uxd
+    pipeline: prototype-evaluator
 
 # Harness generates tool_handlers.yaml from inputs.tools at workspace setup.
 inputs:

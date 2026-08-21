@@ -1,0 +1,34 @@
+[
+  {
+    "iteration": 1,
+    "ac_id": "AC-1",
+    "action": "fix",
+    "file": "src/app/AIHub/Deployments/Deployments.tsx",
+    "result": "applied",
+    "detail": "Renamed 'Pending' to 'Queued' in scheduling status mapping"
+  },
+  {
+    "iteration": 1,
+    "ac_id": "AC-6",
+    "action": "fix",
+    "file": "src/app/AIHub/Deployments/Deployments.tsx",
+    "result": "applied",
+    "detail": "Added PF6 Tooltip to scheduling status label"
+  },
+  {
+    "iteration": 1,
+    "ac_id": "AC-4",
+    "action": "skip",
+    "file": null,
+    "result": "skipped",
+    "detail": "Backend integration concern — cannot fix in prototype"
+  },
+  {
+    "iteration": 2,
+    "ac_id": "AC-8",
+    "action": "fix",
+    "file": "src/app/AIHub/Deployments/Deployments.tsx",
+    "result": "regression",
+    "detail": "Fix to AC-8 broke AC-1 — 'Queued' label reverted to 'Pending'"
+  }
+]

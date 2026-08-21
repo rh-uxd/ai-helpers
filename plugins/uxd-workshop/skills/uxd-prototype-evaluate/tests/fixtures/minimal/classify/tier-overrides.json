@@ -1,0 +1,22 @@
+{
+  "overrides": [
+    {
+      "ac_id": "AC-1",
+      "original_tier": "T3",
+      "forced_tier": "T1",
+      "reasoning": "AC mentions 'Status column displays' which is a visible UI element"
+    },
+    {
+      "ac_id": "AC-4",
+      "original_tier": "T3",
+      "forced_tier": "T1",
+      "reasoning": "AC requires 'status updates within 5 seconds without page refresh' — testable via Playwright waitForSelector"
+    },
+    {
+      "ac_id": "AC-6",
+      "original_tier": "T2",
+      "forced_tier": "T1",
+      "reasoning": "Tooltip with resource details is a visible UI element that can be triggered by hover"
+    }
+  ]
+}

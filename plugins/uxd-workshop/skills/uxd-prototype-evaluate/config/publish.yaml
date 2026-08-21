@@ -1,0 +1,32 @@
+# Report hosting configuration
+# Used by scripts/publish-report.sh
+#
+# FIRST-RUN SETUP: set EVAL_PAGES_REPO / EVAL_PAGES_URL, fill a local overlay
+# (config/product-overlay.local.yaml), or edit the values below.
+# The eval pipeline works without publishing.
+
+# Eval reports repo (GitLab Pages / GitHub Pages) — set to your team's repo
+gitlab_pages_repo: ""
+
+# Base URL for Pages. Reports are served at <base>/evals/<KEY>/
+pages_base_url: ""
+
+# Default branch of the pages repo
+pages_branch: "main"
+
+# Directory in the repo where reports live (served directly by Pages)
+reports_dir: "public/evals"
+
+# Jira base URL for linking from the index page (override with overlay publish.jira_base_url)
+jira_base_url: "https://issues.example.com/browse"
+
+# Publish mode: "pages" (Pages hosting) or "branch" (raw file on reports branch)
+default_mode: "pages"
+
+# Git identity for commits to the pages repo (reads from git config if unset)
+git_user_name: ""
+git_user_email: ""
+
+# For branch mode: which remote and branch to push reports to
+branch_remote: "origin"
+branch_name: "reports"

@@ -1,0 +1,9 @@
+# ACCEPTANCE CRITERIA
+criterion_id,source,tier,criterion_text,verdict,rationale,evidence,fix_action,fix_file,human_action
+AC-1,jira,1,"Status column displays scheduling states",PASS,"Scheduling states visible in table",screenshots/journey-1-step-1.png,,,
+AC-2,jira,1,"No indicators when disabled",FAIL,"Feature flag hardcoded to true",screenshots/journey-2-step-1.png,Add toggle,,
+
+# USABILITY DIMENSIONS
+dimension_id,dimension_name,score,confidence,evidence,persona_scores
+workflow-continuity,Workflow Continuity & Integrity,2.5,high,Smooth flow,"alex-junior:2;alex-senior:3"
+system-status,System Status Visibility,3.0,high,Clear feedback,"alex-junior:3;alex-senior:3"

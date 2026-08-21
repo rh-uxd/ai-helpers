@@ -1,0 +1,32 @@
+# Eval Pipeline Settings
+# Configuration specific to the eval pipeline (design system context and usability testing).
+
+# --- Design System ---
+design_system:
+  name: PatternFly
+  version: "6"
+  docs_url: https://www.patternfly.org/
+  context_path: .context/design-system/
+
+# --- Usability Testing Integration ---
+# Cloned automatically by bootstrap-usability-testing.sh when a git URL is set
+# (USABILITY_TESTING_REPO or overlay context_repos.usability_testing).
+usability_testing:
+  repo: ""
+  context_path: .context/usability-testing/
+  personas_dir: personas/
+  rubric: prompts/evaluate-flow.md
+  dimensions:
+    - workflow_continuity
+    - cross_persona_handoffs
+    - scalability_complexity
+    - system_status_trust
+    - technical_abstraction
+    - mental_model_fidelity
+    - accessibility_inclusion
+
+# --- Eval Defaults ---
+defaults:
+  depth: deep
+  mode: informed
+  max_iterations: 3

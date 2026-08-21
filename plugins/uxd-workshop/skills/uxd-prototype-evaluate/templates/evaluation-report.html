@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluation: {{REPORT_TITLE}}</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;700&family=Red+Hat+Text:wght@400&family=Red+Hat+Mono&display=swap">
+<style>
+:root{--bg:#fff;--bg-secondary:#f0f0f0;--text:#151515;--text-secondary:#6a6e73;--border:#d2d2d2;--link:#0066cc;--status-success:#3e8635;--status-danger:#c9190b;--status-warning:#f0ab00;--success-text:#1e4f18;--danger-text:#a30000;--warning-text:#795600;--teal:#009596;--purple:#6753ac;--orange:#ec7a08;--shadow-sm:0 1px 2px rgba(0,0,0,0.05);--shadow-md:0 4px 12px rgba(0,0,0,0.08);--font-heading:'Red Hat Display',-apple-system,sans-serif;--font-body:'Red Hat Text',-apple-system,sans-serif;--font-mono:'Red Hat Mono','SFMono-Regular',monospace}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;font-family:var(--font-body);font-size:0.9375rem;line-height:1.6;color:var(--text);background:var(--bg)}
+h1,h2,h3{font-family:var(--font-heading);margin:0 0 0.75rem}
+h1{font-size:1.5rem;font-weight:700}
+h2{font-size:1.25rem;font-weight:700;margin-top:2rem}
+h3{font-size:1.125rem;font-weight:700}
+a{color:var(--link);text-decoration:none}
+a:hover{text-decoration:underline}
+p{margin:0.5rem 0}
+details{margin:1rem 0}
+details summary{cursor:pointer;font-weight:400;font-family:var(--font-mono);font-size:0.9375rem;padding:0.5rem 0;user-select:none;list-style:none}
+details summary::-webkit-details-marker{display:none}
+details summary::before{content:'';display:inline-block;margin-right:0.5rem;width:0;height:0;border-left:5px solid currentColor;border-top:4px solid transparent;border-bottom:4px solid transparent;transition:transform 0.2s}
+details[open] summary::before{transform:rotate(90deg)}
+
+/* PF Label — status (filled), categorical (outline), compact (inline) */
+.pf-label{display:inline-flex;align-items:center;gap:0.25rem;padding:0.15rem 0.5rem;border-radius:0.25rem;font-size:0.75rem;font-weight:400;font-family:var(--font-mono);line-height:1.4}
+.pf-label svg{width:12px;height:12px;fill:currentColor;flex-shrink:0}
+.pf-label-pass{background:rgba(62,134,53,0.12);color:var(--success-text)}
+.pf-label-fail{background:rgba(201,25,11,0.12);color:var(--danger-text)}
+.pf-label-flagged{background:rgba(240,171,0,0.15);color:var(--warning-text)}
+.pf-label-skip{background:var(--bg-secondary);color:var(--text-secondary)}
+.pf-label-outline{background:none;border:1px solid var(--border);color:var(--text-secondary)}
+.pf-label-compact{padding:0;border:none;background:none;font-size:0.75rem;font-family:var(--font-mono);color:var(--text)}
+/* Legacy badge aliases */
+.badge{display:inline-flex;align-items:center;gap:0.25rem;padding:0.15rem 0.5rem;border-radius:0.25rem;font-size:0.75rem;font-weight:400;font-family:var(--font-mono);line-height:1.4}
+.badge-pass{background:rgba(62,134,53,0.12);color:var(--success-text)}
+.badge-fail{background:rgba(201,25,11,0.12);color:var(--danger-text)}
+.badge-flagged{background:rgba(240,171,0,0.15);color:var(--warning-text)}
+
+/* Card — elevation tiers */
+.card{background:var(--bg);border:1px solid var(--border);border-radius:0.5rem;padding:1.25rem;margin:1rem 0;box-shadow:var(--shadow-sm)}
+.card-compact{padding:0.75rem}
+.card-flat{box-shadow:none;background:var(--bg-secondary);border:none}
+.card-elevated{box-shadow:var(--shadow-md)}
+
+/* Table */
+.tbl{width:100%;border-collapse:collapse;font-size:0.8125rem}
+.tbl th,.tbl td{padding:0.5rem 0.75rem;text-align:left;border-bottom:1px solid var(--border)}
+.tbl th{font-weight:400;font-family:var(--font-mono);color:var(--text-secondary);font-size:0.75rem}
+.tbl tr:last-child td{border-bottom:none}
+
+/* Narration */
+.narration{padding:0.4rem 0 0.4rem 1rem;margin:0.4rem 0 1.25rem;font-size:0.8125rem;color:var(--text-secondary);line-height:1.6;font-style:italic}
+
+/* Screenshot */
+.screenshot{margin:0.6rem 0;position:relative}
+.screenshot img{width:100%;border-radius:0.375rem;border:1px solid var(--border);display:block}
+
+/* Stat card */
+.stat{text-align:center;padding:0.75rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:0.5rem;box-shadow:var(--shadow-sm);cursor:pointer;transition:box-shadow 0.15s,border-color 0.15s}
+.stat:hover{border-color:var(--link);box-shadow:var(--shadow-md)}
+.stat-n{font-family:var(--font-heading);font-size:1.5rem;font-weight:700}
+.stat-l{font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-mono)}
+
+/* Main content — single column */
+.main-content{max-width:64rem;margin:0 auto;padding:2rem 2.5rem}
+@media(max-width:700px){.main-content{padding:1.5rem 1rem}}
+
+/* Appendix section */
+.appendix{border-top:2px solid var(--border);margin-top:3rem;padding-top:2rem}
+.appendix-label{font-family:var(--font-mono);font-size:0.75rem;font-weight:400;color:var(--text-secondary);margin:0 0 1.5rem}
+
+/* Appendix tab cards */
+.appendix-tabs{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:0.5rem;margin-bottom:1.5rem}
+.appendix-tab{display:flex;flex-direction:column;align-items:center;gap:0.25rem;padding:0.75rem 0.5rem;background:var(--bg);border:2px solid var(--border);border-radius:0.5rem;cursor:pointer;font-family:var(--font-body);text-align:center;transition:border-color 0.15s,background 0.15s}
+.appendix-tab:hover{border-color:var(--link);background:var(--bg-secondary)}
+.appendix-tab.active{border-color:var(--link);background:var(--bg-secondary)}
+.appendix-tab-icon{width:20px;height:20px;fill:var(--text-secondary);flex-shrink:0}
+.appendix-tab.active .appendix-tab-icon{fill:var(--link)}
+.appendix-tab-label{font-size:0.75rem;font-weight:400;font-family:var(--font-mono);color:var(--text)}
+.appendix-tab.active .appendix-tab-label{color:var(--link)}
+.appendix-content{display:none}
+.appendix-content.active{display:block}
+.appendix-narrative{font-size:0.85rem;color:var(--text-secondary);line-height:1.6;padding:0.75rem 1rem;background:var(--bg-secondary);border-radius:0.5rem;margin-bottom:1rem}
+
+/* Header bar */
+.header-bar{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:0.75rem 2rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap}
+.header-bar h1{margin:0;white-space:nowrap;font-size:0.9375rem;font-weight:700}
+.header-links{display:flex;align-items:center;gap:0.35rem;font-size:0.8125rem;flex-wrap:wrap}
+.header-links a{display:inline-flex;align-items:center}
+.header-links .arrow{color:var(--border);font-size:0.65rem;margin:0 0.1rem}
+.header-actions{display:flex;gap:0.5rem;margin-left:auto}
+.header-actions button{background:var(--bg-secondary);border:1px solid var(--border);color:var(--text);padding:0.35rem 0.75rem;border-radius:0.375rem;cursor:pointer;font-family:var(--font-body);font-size:0.8125rem;display:inline-flex;align-items:center;gap:0.3rem}
+.header-actions button:hover{background:var(--border)}
+
+/* Archived links */
+.link-archived{opacity:0.7;position:relative}
+.link-archived:hover::after{content:attr(title);position:absolute;bottom:-1.5rem;left:50%;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:0.2rem 0.5rem;border-radius:0.25rem;font-size:0.65rem;white-space:nowrap;z-index:10;pointer-events:none}
+
+
+
+/* Hero Status Section */
+.status-section{margin:1.5rem 0}
+.status-hero{text-align:center;padding:1.5rem 2rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:0.5rem}
+.status-hero-value{font-family:var(--font-heading);font-size:2.5rem;font-weight:700;color:var(--text);line-height:1.2}
+.status-hero-label{font-size:0.8125rem;color:var(--text-secondary);margin-top:0.25rem;font-family:var(--font-mono)}
+.status-bar{height:4px;background:var(--border);border-radius:2px;margin:1rem auto;max-width:20rem;overflow:hidden}
+.status-bar-fill{height:100%;background:var(--status-success);border-radius:2px;transition:width 0.4s ease}
+.status-hero-meta{font-size:0.75rem;color:var(--text-secondary);margin-top:0.5rem}
+.status-hero-issues{margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border)}
+.status-hero-issue{font-size:0.8rem;padding:0.35rem 0;color:var(--text);display:flex;align-items:baseline;gap:0.4rem}
+.status-hero-issue.fail .status-hero-issue-icon{color:var(--status-danger)}
+.status-hero-issue.flag .status-hero-issue-icon{color:var(--status-warning)}
+.status-hero-issue strong{font-family:var(--font-mono);font-size:0.75rem}
+.status-actions{display:flex;gap:0.75rem;margin-top:1rem;justify-content:center}
+.status-cta-primary{background:var(--link);color:#fff;border:none;padding:0.5rem 1.25rem;border-radius:0.25rem;font-family:var(--font-body);font-size:0.8125rem;font-weight:700;cursor:pointer;transition:background 0.15s}
+.status-cta-primary:hover{background:#0052a3}
+.status-cta-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border);padding:0.5rem 1.25rem;border-radius:0.25rem;font-family:var(--font-body);font-size:0.8125rem;font-weight:400;cursor:pointer;transition:border-color 0.15s}
+.status-cta-secondary:hover{border-color:var(--link);color:var(--link)}
+
+/* Think-aloud styles */
+.ta-step{background:var(--bg-secondary);border-radius:0.5rem;padding:1rem;margin:0.75rem 0}
+.ta-step-head{font-family:var(--font-heading);font-size:0.875rem;font-weight:700;margin-bottom:0.5rem}
+.ta-think{font-style:italic;font-size:0.8125rem;color:var(--text-secondary);line-height:1.6;margin:0.25rem 0;padding-left:1rem}
+
+/* Think-aloud timeline (interleaved See/Think/Action) */
+.ta-timeline{display:flex;flex-direction:column;gap:0.4rem;margin:0.5rem 0}
+.ta-timeline-row{display:flex;align-items:flex-start;gap:0.5rem;font-size:0.8125rem;line-height:1.6}
+.ta-timeline-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:0.4rem}
+.ta-timeline-dot-see{background:var(--teal)}
+.ta-timeline-dot-think{background:var(--purple)}
+.ta-timeline-dot-action{background:var(--status-success)}
+.ta-timeline-label{font-size:0.75rem;font-weight:400;font-family:var(--font-mono);min-width:40px;flex-shrink:0;margin-top:0.15rem}
+.ta-timeline-label-see{color:var(--teal)}
+.ta-timeline-label-think{color:var(--purple)}
+.ta-timeline-label-action{color:var(--status-success)}
+.ta-timeline-text{flex:1;color:var(--text);min-width:0}
+/* Patience heatmap + sparklines (Decision 12) */
+.patience-heatmap{margin-bottom:1rem;overflow-x:auto}
+.patience-hm-cell{min-width:60px}
+.patience-sparkline{padding:0.5rem 0.75rem;background:var(--bg-secondary);border-radius:0.375rem;border:1px solid var(--border)}
+.patience-spark-bar{transition:height 0.3s ease}
+
+.ta-patience{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.75rem;font-family:var(--font-mono);margin:0.35rem 0}
+.ta-patience-bar{width:80px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;display:inline-block}
+.ta-patience-fill{height:100%;border-radius:3px;transition:width 0.3s}
+.ta-patience-high .ta-patience-fill{background:var(--status-success)}
+.ta-patience-med .ta-patience-fill{background:var(--status-warning)}
+.ta-patience-low .ta-patience-fill{background:var(--status-danger)}
+.ta-callout{padding:0.5rem 0.75rem;border-radius:0.25rem;font-size:0.8125rem;margin:0.4rem 0}
+.ta-callout-confusion{background:rgba(240,171,0,0.08)}
+.ta-callout-expected{background:rgba(0,102,204,0.06)}
+.ta-callout-feedback{background:rgba(201,25,11,0.06)}
+.ta-callout strong{font-size:0.75rem;font-family:var(--font-mono);font-weight:400}
+.ta-strategy{display:inline-block;padding:0.1rem 0.4rem;border-radius:0.25rem;font-size:0.75rem;font-weight:400;font-family:var(--font-mono)}
+.ta-strategy-guess{background:rgba(240,171,0,0.12);color:var(--warning-text)}
+.ta-strategy-help{background:rgba(0,102,204,0.12);color:var(--link)}
+.ta-strategy-abandon{background:rgba(201,25,11,0.12);color:var(--danger-text)}
+.ta-confidence{font-size:0.75rem;font-weight:400;font-family:var(--font-mono)}
+.ta-confidence-high{color:var(--status-success)}
+.ta-confidence-low{color:var(--status-warning)}
+.ta-confidence-none{color:var(--status-danger)}
+
+/* Review section accent */
+#human-review-section{background:rgba(0,102,204,0.03);border:1px solid rgba(0,102,204,0.12);border-radius:0.75rem;padding:1.5rem;margin:2rem 0}
+
+/* Iteration Cards */
+.iteration-card{border-bottom:1px solid var(--border);padding:0.75rem 0;margin:0}
+.iteration-card:last-of-type{border-bottom:none}
+.iteration-card-current{border-bottom:none}
+.iter-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem}
+.iter-fail-summary{font-size:0.8rem;color:var(--status-danger);margin:0.2rem 0}
+.iter-fixes-list{margin:0.3rem 0;font-size:0.8rem}
+
+/* Iteration Timeline (legacy support) */
+.iter-timeline{display:flex;flex-direction:column;gap:0.75rem}
+.iter-step{display:flex;gap:1rem;align-items:flex-start;position:relative;padding-left:1.5rem}
+.iter-step::before{content:'';position:absolute;left:0.45rem;top:1.5rem;bottom:-0.75rem;width:2px;background:var(--border)}
+.iter-step:last-child::before{display:none}
+.iter-dot{width:0.75rem;height:0.75rem;border-radius:50%;position:absolute;left:0.1rem;top:0.35rem;border:2px solid var(--border);background:var(--bg)}
+.iter-dot-pass{border-color:var(--status-success);background:var(--status-success)}
+.iter-dot-fail{border-color:var(--status-danger);background:var(--status-danger)}
+.iter-dot-active{border-color:var(--link);background:var(--link)}
+.iter-body{flex:1}
+.iter-header{display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem}
+.iter-label{font-family:var(--font-heading);font-size:0.875rem;font-weight:700}
+.iter-counts{font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-mono)}
+.iter-changes{margin:0.35rem 0 0;font-size:0.75rem;color:var(--text-secondary);line-height:1.5}
+.iter-changes li{margin:0.15rem 0}
+.iter-delta{display:inline-block;padding:0.1rem 0.4rem;border-radius:0.25rem;font-size:0.75rem;font-weight:400;font-family:var(--font-mono);margin-left:0.3rem}
+.iter-delta-up{background:rgba(22,163,74,0.1);color:var(--status-success)}
+.iter-delta-down{background:rgba(220,38,38,0.1);color:var(--status-danger)}
+
+/* Screenshot cards with annotations */
+.screenshot-card{margin:0.6rem 0 1rem;border:1px solid var(--border);border-radius:0.5rem;overflow:hidden;background:var(--bg-secondary)}
+.screenshot-card .screenshot{margin:0}
+.screenshot-card .screenshot img{border-radius:0;border:none;border-bottom:1px solid var(--border)}
+.screenshot-card .narration{padding:0.5rem 0.75rem;margin:0;border-left:none;font-size:0.8rem}
+.screenshot-annotations{display:flex;flex-wrap:wrap;gap:0.3rem;padding:0.35rem 0.75rem;border-top:1px solid var(--border)}
+.sa-item{display:inline-block;position:relative}
+.sa-tag{display:inline-flex;align-items:center;gap:0.25rem;font-size:0.75rem;font-weight:400;padding:0.15rem 0.45rem;border-radius:0.25rem;cursor:pointer;border:none;font-family:var(--font-mono);transition:opacity 0.15s}
+.sa-tag:hover{opacity:0.8}
+.sa-error{background:rgba(220,38,38,0.08);color:var(--status-danger)}
+.sa-warning{background:rgba(217,119,6,0.08);color:var(--status-warning)}
+.sa-shell-toggle{margin:0.2rem 0.75rem 0.3rem;font-size:0.7rem}
+.sa-shell-toggle summary{cursor:pointer;list-style:none;user-select:none;color:var(--text-secondary)}
+.sa-shell-toggle summary::-webkit-details-marker{display:none}
+.sa-detail{margin:0}
+.sa-detail[open] .sa-detail-body{display:block}
+.sa-detail-body{display:none;background:var(--bg);border:1px solid var(--border);border-radius:0.375rem;padding:0.55rem 0.7rem;margin:0.3rem 0 0.2rem;font-size:0.75rem;line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.sa-location{font-family:var(--font-mono);font-size:0.8rem;font-weight:400;color:var(--text);margin:0 0 0.35rem;padding:0.3rem 0.5rem;background:var(--bg-secondary);border-radius:0.25rem}
+.sa-location code{font-size:0.8rem;background:none;padding:0}
+.sa-fix{margin:0 0 0.3rem;color:var(--text);padding:0.3rem 0.5rem;background:rgba(0,102,204,0.04);border-radius:0.25rem;font-size:0.75rem}
+.sa-doc-link{font-size:0.7rem;color:var(--link);text-decoration:none;display:inline-block}
+.sa-doc-link:hover{text-decoration:underline}
+
+/* Path comparison legend */
+.path-legend{margin:0.5rem 0 1.5rem}
+.path-legend summary{cursor:pointer;list-style:none;user-select:none}
+.path-legend summary::before{content:'';display:inline-block;margin-right:0.4rem;width:0;height:0;border-left:4px solid currentColor;border-top:3px solid transparent;border-bottom:3px solid transparent;transition:transform 0.2s}
+.path-legend[open] summary::before{transform:rotate(90deg)}
+.path-legend-dl{display:grid;grid-template-columns:auto 1fr;gap:0.3rem 0.75rem;margin:0;font-size:0.75rem}
+.path-legend-dl dt{font-weight:700;color:var(--text);white-space:nowrap}
+.path-legend-dl dd{margin:0;color:var(--text-secondary);line-height:1.5}
+.screenshot-persona{padding:0.55rem 0.75rem;border-top:1px solid var(--border);font-size:0.8125rem;color:var(--text);line-height:1.6;background:rgba(0,102,204,0.04)}
+.screenshot-persona strong{font-weight:700;font-size:0.8125rem}
+.screenshot-persona em{font-style:italic;color:var(--text)}
+
+/* Journey dividers */
+.journey-divider{border-top:2px solid var(--border);margin:2rem 0;padding-top:1.5rem}
+
+/* Footer */
+.report-footer{border-top:1px solid var(--border);padding:1.25rem 2.5rem;font-size:0.7rem;color:var(--text-secondary);background:var(--bg-secondary)}
+.report-footer a{color:var(--link);font-size:0.65rem}
+.report-footer details{margin:0.5rem 0}
+.report-footer details summary{list-style:none;user-select:none;font-size:0.7rem}
+.report-footer details summary::before{content:'+ ';font-weight:700;color:var(--link)}
+.report-footer details[open] summary::before{content:'- '}
+
+/* Code diff styling */
+.diff-block{font-family:var(--font-mono);font-size:0.7rem;line-height:1.5;border-radius:0.375rem;overflow:hidden;margin:0.5rem 0;border:1px solid var(--border)}
+.diff-block pre{margin:0;padding:0.75rem;overflow-x:auto;background:var(--bg)}
+.diff-line{display:block;padding:0.05rem 0.5rem;min-height:1.2em}
+.diff-line-add{background:rgba(22,163,74,0.08);color:#16a34a}
+.diff-line-del{background:rgba(220,38,38,0.06);color:#dc2626}
+.diff-line-context{color:var(--text-secondary)}
+.diff-line-header{color:var(--link);font-weight:400;font-family:var(--font-mono);background:rgba(0,102,204,0.04)}
+
+/* Delta summary */
+.delta-summary{background:var(--bg-secondary);border:1px solid var(--border);border-radius:0.5rem;padding:1rem 1.25rem;margin-bottom:1rem}
+.delta-summary-row{display:flex;gap:1.5rem;flex-wrap:wrap}
+.delta-stat{display:flex;flex-direction:column;align-items:center;min-width:48px}
+.delta-stat-n{font-family:var(--font-heading);font-size:1.25rem;font-weight:700;line-height:1.2}
+.delta-stat-l{font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-mono)}
+
+/* Delta routes */
+.delta-routes{display:flex;gap:0.4rem;flex-wrap:wrap;margin:0.75rem 0}
+.delta-route{display:inline-block;font-size:0.7rem;padding:0.2rem 0.55rem;background:rgba(0,102,204,0.06);border:1px solid rgba(0,102,204,0.15);border-radius:0.25rem;color:var(--link);font-family:var(--font-mono)}
+
+/* Delta file cards */
+.delta-group-heading{font-size:0.8rem;font-weight:400;font-family:var(--font-mono);color:var(--text-secondary);margin:1.5rem 0 0.5rem;padding-bottom:0.35rem;border-bottom:1px solid var(--border)}
+.delta-file-card{border:1px solid var(--border);border-radius:0.375rem;padding:0.65rem 0.85rem;margin:0.4rem 0;transition:border-color 0.15s}
+.delta-file-card:hover{border-color:color-mix(in srgb,var(--border) 50%,var(--text) 50%)}
+.delta-file-critical{background:rgba(201,25,11,0.03)}
+.delta-file-high{background:rgba(240,171,0,0.04)}
+.delta-file-medium{background:rgba(62,134,53,0.03)}
+.delta-file-low{}
+.delta-file-head{display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap}
+.delta-file-name{font-size:0.75rem;font-weight:400;font-family:var(--font-mono);background:none;padding:0;word-break:break-all}
+.delta-file-reason{font-size:0.75rem;color:var(--text-secondary);margin:0.25rem 0 0;line-height:1.4}
+.delta-file-reason-critical{font-size:0.75rem;color:var(--danger-text);font-weight:400;margin:0.25rem 0 0;line-height:1.4}
+.delta-score-impact{font-size:0.7rem;color:var(--status-danger);margin:0.2rem 0 0;padding:0.3rem 0.55rem;background:rgba(220,38,38,0.04);border-radius:0.25rem;display:inline-block}
+
+/* Delta tags */
+.delta-tags{display:flex;gap:0.3rem;flex-shrink:0}
+.delta-tag{display:inline-block;font-size:0.75rem;font-weight:400;font-family:var(--font-mono);padding:0.1rem 0.4rem;border-radius:0.25rem}
+.delta-tag-add{background:rgba(22,163,74,0.1);color:var(--status-success)}
+.delta-tag-mod{background:rgba(217,119,6,0.1);color:var(--status-warning)}
+.delta-tag-critical{background:rgba(220,38,38,0.1);color:var(--status-danger)}
+.delta-tag-high{background:rgba(217,119,6,0.1);color:var(--status-warning)}
+
+/* Section icons */
+.section-icon{display:inline-block;width:16px;height:16px;vertical-align:-2px;margin-right:0.4rem;opacity:0.6}
+.section-icon svg{width:16px;height:16px;fill:currentColor}
+details summary .section-icon{opacity:0.5}
+details[open] summary .section-icon{opacity:0.8}
+
+/* Delta file list */
+.delta-files{display:flex;gap:2rem;margin:0.75rem 0;font-size:0.8125rem;flex-wrap:wrap}
+.delta-file-group{min-width:200px}
+.delta-file-group h4{font-size:0.75rem;color:var(--text-secondary);margin:0 0 0.35rem;font-weight:400;font-family:var(--font-mono);display:flex;align-items:center;gap:0.3rem}
+.delta-file-list{list-style:none;padding:0;margin:0}
+.delta-file-list li{font-size:0.75rem;padding:0.15rem 0;font-family:var(--font-mono);display:flex;align-items:center;gap:0.3rem}
+.delta-file-list li code{font-size:0.7rem;background:none;padding:0}
+.delta-added{color:var(--status-success)}
+.delta-modified{color:var(--status-warning)}
+.delta-nav-warn{background:rgba(201,25,11,0.06);border:1px solid rgba(201,25,11,0.2);border-radius:0.25rem;padding:0.5rem 0.75rem;margin:0.75rem 0;font-size:0.8125rem;color:var(--danger-text);font-weight:400}
+.delta-meta{display:flex;gap:1.5rem;font-size:0.75rem;color:var(--text-secondary);margin:0.5rem 0;flex-wrap:wrap}
+.delta-meta span{display:flex;align-items:center;gap:0.25rem}
+
+/* Consistency violations */
+.consistency-summary{display:flex;gap:1.5rem;flex-wrap:wrap;margin-bottom:1rem}
+.consistency-stat{display:flex;flex-direction:column;align-items:center;min-width:52px;padding:0.5rem 0.75rem;background:var(--bg-secondary);border:1px solid var(--border);border-radius:0.375rem}
+.consistency-stat-n{font-family:var(--font-heading);font-size:1.125rem;font-weight:700;line-height:1.2}
+.consistency-stat-l{font-size:0.75rem;color:var(--text-secondary);font-family:var(--font-mono)}
+.consistency-finding{border:1px solid var(--border);border-radius:0.375rem;padding:0.65rem 0.85rem;margin:0.4rem 0}
+.consistency-finding-error{background:rgba(201,25,11,0.03)}
+.consistency-finding-warning{background:rgba(240,171,0,0.04)}
+.consistency-finding-head{display:flex;justify-content:space-between;align-items:center;gap:0.5rem;flex-wrap:wrap}
+.consistency-finding-head code{font-size:0.75rem;font-weight:400;background:none;padding:0}
+.consistency-guideline{font-size:0.75rem;color:var(--text-secondary);margin:0.2rem 0 0}
+.consistency-suggestion{font-size:0.75rem;color:var(--text);margin:0.35rem 0 0;padding:0.35rem 0.55rem;background:rgba(0,102,204,0.04);border-radius:0.25rem;line-height:1.5}
+.consistency-suggestion a{font-weight:400}
+.consistency-files{margin:0.35rem 0 0;padding:0;font-size:0.7rem}
+.consistency-file-row{padding:0.15rem 0;font-family:var(--font-mono);color:var(--text-secondary)}
+.consistency-file-row code{font-size:0.7rem;background:none;padding:0}
+
+/* CSV Preview */
+.csv-preview{background:var(--bg-secondary);border-bottom:1px solid var(--border);padding:0.75rem 2rem;max-height:40vh;overflow:auto}
+.csv-table-wrap{overflow-x:auto}
+.csv-table-wrap table{border-collapse:collapse;font-size:0.7rem;font-family:var(--font-mono);width:100%}
+.csv-table-wrap th{background:var(--bg);font-weight:400;font-family:var(--font-mono);position:sticky;top:0;text-align:left;padding:0.3rem 0.5rem;border-bottom:2px solid var(--border);font-size:0.75rem;color:var(--text-secondary);white-space:nowrap}
+.csv-table-wrap td{padding:0.25rem 0.5rem;border-bottom:1px solid var(--border);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.csv-table-wrap tr:hover td{background:rgba(0,102,204,0.03)}
+
+/* Utility */
+.max-w{max-width:64rem}
+.mono{font-family:var(--font-mono)}
+.small{font-size:0.8125rem}
+.muted{color:var(--text-secondary)}
+.mt1{margin-top:1rem}
+.mb1{margin-bottom:1rem}
+
+/* Executive Summary (tabbed context panel) */
+.exec-summary{margin-bottom:1.5rem;padding:1.5rem;background:var(--bg);border:1px solid var(--border);border-radius:0.5rem}
+.exec-header{display:flex;align-items:baseline;gap:0.75rem;margin-bottom:1rem}
+.exec-key{font-family:var(--font-mono);font-size:0.75rem;font-weight:400;color:var(--link);background:rgba(0,102,204,0.08);padding:0.2rem 0.5rem;border-radius:0.25rem;white-space:nowrap}
+.exec-title{font-family:var(--font-heading);font-size:1.1rem;font-weight:700;margin:0;color:var(--text)}
+.exec-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:0.75rem;gap:0}
+.exec-tab{padding:0.4rem 0.75rem;font-size:0.8125rem;font-weight:400;font-family:var(--font-mono);color:var(--text-secondary);cursor:pointer;border:none;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;transition:color 0.15s,border-color 0.15s}
+.exec-tab:hover{color:var(--text)}
+.exec-tab.active{color:var(--link);border-bottom-color:var(--link)}
+.exec-tab-content{display:none;padding:0.5rem 0}
+.exec-tab-content.active{display:block}
+.exec-detail{font-size:0.875rem;line-height:1.6;margin:0 0 0.4rem;color:var(--text)}
+.exec-detail code{font-family:var(--font-mono);font-size:0.8em;background:var(--bg-secondary);padding:0.1rem 0.3rem;border-radius:0.2rem}
+.exec-problem{margin-top:0.5rem;padding:0.6rem 0.75rem;background:var(--bg-secondary);border-radius:0.25rem;color:var(--text)}
+
+/* Welcome modal — first-visit onboarding */
+.welcome-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);z-index:2000;align-items:center;justify-content:center;padding:1.5rem}
+.welcome-overlay.active{display:flex}
+.welcome-modal{background:var(--bg);border-radius:0.75rem;max-width:480px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 40px -8px rgba(0,0,0,0.2);animation:welcomeIn 0.2s ease-out}
+@keyframes welcomeIn{from{opacity:0;transform:scale(0.97) translateY(8px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.welcome-header{padding:2.5rem 2.5rem 1.5rem}
+.welcome-header h2{font-family:var(--font-heading);font-size:1.5rem;font-weight:700;margin:0 0 0.5rem;color:var(--text)}
+.welcome-header p{font-size:0.9375rem;line-height:1.6;color:var(--text-secondary);margin:0}
+.welcome-sections{padding:0 2.5rem 1rem}
+.welcome-section{padding:1.25rem 0;border-top:1px solid var(--border)}
+.welcome-section:first-child{border-top:none;padding-top:0}
+.welcome-section-label{font-family:var(--font-mono);font-size:0.75rem;font-weight:400;color:var(--text-secondary);margin:0 0 0.6rem}
+.welcome-section p{font-size:0.875rem;line-height:1.7;color:var(--text);margin:0}
+.welcome-footer{padding:1rem 2.5rem 2.5rem;display:flex;gap:0.75rem;justify-content:center}
+.welcome-btn{border:none;padding:0.65rem 2rem;border-radius:0.25rem;font-family:var(--font-body);font-size:0.9375rem;font-weight:700;cursor:pointer;transition:background 0.15s,box-shadow 0.15s}
+.welcome-btn-primary{background:var(--link);color:#fff}
+.welcome-btn-primary:hover{background:#0052a3}
+.welcome-btn-secondary{background:var(--bg-secondary);color:var(--text);border:1px solid var(--border)}
+.welcome-btn-secondary:hover{background:var(--border)}
+@media(max-width:600px){.welcome-modal{margin:0.5rem;max-width:100%}.welcome-sections{padding:0 1.5rem 1rem}.welcome-header{padding:2rem 1.5rem 1.25rem}.welcome-footer{padding:0.75rem 1.5rem 1.5rem}}
+
+/* Help anchor (?) for section headers */
+.help-anchor{display:inline-flex;align-items:center;justify-content:center;width:1.1rem;height:1.1rem;border-radius:50%;border:1px solid var(--border);font-size:0.6rem;font-weight:700;color:var(--text-secondary);text-decoration:none;margin-left:0.4rem;vertical-align:middle;cursor:pointer;transition:border-color 0.15s,color 0.15s}
+.help-anchor:hover{border-color:var(--link);color:var(--link);text-decoration:none}
+
+/* Inline tooltip tour */
+.tour-tip{background:var(--text);color:#fff;padding:0.75rem 1rem;border-radius:0.5rem;font-size:0.8125rem;line-height:1.5;max-width:420px;margin:0.5rem 0;box-shadow:var(--shadow-md);animation:tourTipIn 0.2s ease-out}
+@keyframes tourTipIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.tour-tip-text{margin-bottom:0.4rem}
+.tour-tip-nav{display:flex;justify-content:space-between;align-items:center;gap:0.5rem}
+.tour-tip-btn{background:rgba(255,255,255,0.9);color:var(--text);border:none;padding:0.3rem 0.75rem;border-radius:0.25rem;font-size:0.75rem;font-weight:700;font-family:var(--font-body);cursor:pointer;transition:background 0.15s}
+.tour-tip-btn:hover{background:#fff}
+.tour-tip-counter{font-size:0.7rem;opacity:0.5;font-family:var(--font-mono)}
+.tour-highlight{outline:2px solid var(--link);outline-offset:4px;border-radius:0.25rem}
+
+/* AC table — summary and expand */
+.ac-summary{font-size:0.8125rem;line-height:1.5;color:var(--text)}
+.ac-details{margin:0.3rem 0 0}
+.ac-details summary.ac-expand{font-size:0.7rem;color:var(--link);cursor:pointer;list-style:none;padding:0.15rem 0;font-weight:500;display:inline-flex;align-items:center;gap:0.25rem}
+.ac-details summary.ac-expand::-webkit-details-marker{display:none}
+.ac-details summary.ac-expand::before{content:'';display:inline-block;width:0;height:0;border-left:4px solid var(--link);border-top:3px solid transparent;border-bottom:3px solid transparent;transition:transform 0.15s ease}
+.ac-details[open] summary.ac-expand::before{transform:rotate(90deg)}
+.ac-full-text{font-size:0.8125rem;line-height:1.6;color:var(--text);margin:0.35rem 0 0;padding:0.5rem 0.75rem;background:var(--bg-secondary);border-radius:0.375rem;border:1px solid var(--border)}
+.ac-view-link{display:inline-flex;align-items:center;gap:0.25rem;font-size:0.75rem;font-weight:400;font-family:var(--font-mono);color:var(--link);text-decoration:none;padding:0.2rem 0;white-space:nowrap}
+.ac-view-link:hover{text-decoration:underline}
+.ac-evidence-text{display:block;font-size:0.75rem;line-height:1.5;color:var(--text-secondary);margin-top:0.25rem}
+
+/* Evidence Viewer Modal */
+.ev-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);z-index:1100;align-items:center;justify-content:center;padding:0.5rem}
+.ev-overlay.active{display:flex}
+.ev-container{background:var(--bg);border-radius:0.5rem;width:98vw;max-width:none;height:96vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 25px 50px -12px rgba(0,0,0,0.4)}
+.ev-topbar{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;border-bottom:1px solid var(--border);background:var(--bg-secondary)}
+.ev-dropdown{font-family:var(--font-body);font-size:0.8125rem;padding:0.4rem 0.75rem;border:1px solid var(--border);border-radius:0.375rem;background:var(--bg);color:var(--text);min-width:560px}
+.ev-ac-toggle{cursor:pointer;display:flex;align-items:center;gap:0.5rem;text-align:left;width:100%}
+.ev-ac-menu{display:none;position:absolute;top:100%;left:0;z-index:100;background:var(--bg);border:1px solid var(--border);border-radius:0.5rem;box-shadow:0 8px 24px rgba(0,0,0,0.15);min-width:640px;max-height:400px;overflow-y:auto;margin-top:4px}
+.ev-ac-menu.open{display:block}
+.ev-ac-opt{display:flex;align-items:flex-start;gap:0.6rem;padding:0.5rem 0.75rem;cursor:pointer;font-size:0.8rem;line-height:1.5;border-bottom:1px solid var(--border)}
+.ev-ac-opt:last-child{border-bottom:none}
+.ev-ac-opt:hover{background:rgba(0,102,204,0.05)}
+.ev-ac-opt.selected{background:rgba(0,102,204,0.08)}
+.ev-ac-opt-icon{flex-shrink:0;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.65rem;font-weight:700;margin-top:2px}
+.ev-ac-opt-icon.pass{background:rgba(62,134,53,0.12);color:var(--success-text)}
+.ev-ac-opt-icon.fail{background:rgba(201,25,11,0.12);color:var(--danger-text)}
+.ev-ac-opt-icon.flagged{background:rgba(240,171,0,0.15);color:var(--warning-text)}
+.ev-ac-opt-id{font-family:var(--font-mono);font-weight:400;font-size:0.75rem;color:var(--text);white-space:nowrap;min-width:36px}
+.ev-ac-opt-text{flex:1;color:var(--text-secondary);font-size:0.75rem;line-height:1.4}
+.ev-close{background:none;border:none;font-size:1.5rem;color:var(--text-secondary);cursor:pointer;width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;border-radius:50%}
+.ev-close:hover{background:var(--bg-secondary);color:var(--text)}
+.ev-body{display:flex;flex:1;overflow:hidden}
+.ev-sidebar{width:230px;border-right:1px solid var(--border);overflow-y:auto;padding:0.75rem 0;flex-shrink:0;background:var(--bg-secondary)}
+.ev-main{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:1rem}
+.ev-main-split{display:flex;flex:1;gap:0.75rem;overflow:hidden;min-height:0}
+.ev-screenshot{flex:1.4;overflow:auto;display:flex;align-items:center;justify-content:center;background:var(--bg-secondary);border-radius:0.5rem;min-height:0;position:relative}
+.ev-screenshot img{max-width:100%;max-height:100%;object-fit:contain;border-radius:0.375rem}
+.ev-context{flex:0.6;padding:0.75rem 1rem;background:var(--bg-secondary);border-radius:0.5rem;font-size:0.8125rem;line-height:1.6;color:var(--text-secondary);overflow-y:auto;min-height:0}
+.ev-context strong{color:var(--text);display:block;margin-top:0.5rem;font-size:0.75rem;font-family:var(--font-mono);font-weight:400}
+.ev-context strong:first-child{margin-top:0}
+.ev-nav{display:flex;flex-direction:column;align-items:center;padding:0.5rem 0;border-top:1px solid var(--border);margin-top:0.5rem;gap:0.25rem}
+.ev-nav-row{display:flex;align-items:center;gap:0.75rem;width:100%}
+.ev-nav-btn{font-family:var(--font-body);font-size:0.8125rem;padding:0.4rem 1rem;border:1px solid var(--border);border-radius:0.375rem;background:var(--bg);color:var(--text);cursor:pointer;transition:background 0.15s,border-color 0.15s}
+.ev-nav-btn:hover{background:var(--border);border-color:var(--text-secondary)}
+.ev-nav-btn:active{background:var(--text-secondary);color:var(--bg)}
+.ev-nav-primary{background:var(--link);color:#fff;border-color:var(--link)}
+.ev-nav-primary:hover{background:#004d99;border-color:#004d99}
+.ev-nav-primary:active{background:#003d7a;border-color:#003d7a}
+.ev-nav-counter{font-family:var(--font-mono);font-size:0.75rem;color:var(--text-secondary)}
+.ev-flow{display:flex;align-items:center;flex:1;justify-content:center;gap:0;padding:0.25rem 0}
+.ev-flow-node{width:20px;height:20px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:0.55rem;font-weight:700;color:var(--text-secondary);cursor:pointer;flex-shrink:0;transition:all 0.15s;border:2px solid transparent}
+.ev-flow-node:hover{transform:scale(1.2)}
+.ev-flow-node.active{border-color:var(--link);background:var(--bg);color:var(--link);transform:scale(1.3)}
+.ev-flow-node.evidence{background:#f97316;color:#fff;border-color:transparent}
+.ev-flow-node.evidence.active{border-color:var(--text);transform:scale(1.3)}
+.ev-flow-node.dimmed{opacity:0.35}
+.ev-flow-edge{width:12px;height:2px;background:var(--border);flex-shrink:0}
+.ev-flow-edge.evidence{background:#f97316}
+.ev-tree-task{padding:0.35rem 0.75rem 0.25rem 1rem;font-size:0.75rem;font-weight:400;font-family:var(--font-mono);color:var(--text);display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;margin-top:0.25rem}
+.ev-tree-task-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ev-tree-task-acs{display:flex;gap:2px;flex-wrap:wrap}
+.ev-tree-task-ac{font-size:0.55rem;font-weight:700;padding:1px 4px;border-radius:2px;background:rgba(249,115,22,0.1);color:#f97316}
+.ev-tree-divider{height:1px;background:var(--border);margin:0.4rem 0.75rem}
+.ev-persona-header{display:flex;flex-direction:column;gap:0.25rem;margin-bottom:0.75rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border)}
+.ev-persona-name{font-family:var(--font-heading);font-size:0.875rem;font-weight:700;color:var(--text)}
+.ev-persona-role{font-size:0.7rem;color:var(--text-secondary)}
+.ev-persona-traits{display:flex;gap:0.5rem;font-size:0.65rem;color:var(--text-secondary);margin-top:0.15rem}
+.ev-persona-trait{display:flex;align-items:center;gap:0.2rem}
+.ev-task-header{margin-bottom:0.75rem;padding:0.6rem 0.75rem;background:rgba(0,102,204,0.05);border-radius:0.25rem}
+.ev-task-header-title{font-size:0.8rem;font-weight:400;color:var(--text);line-height:1.5}
+.ev-task-header-title strong{font-weight:700}
+.ev-task-header-acs{display:flex;gap:4px;margin-top:0.35rem;flex-wrap:wrap}
+.ev-tree-persona{padding:0.5rem 0.75rem;font-family:var(--font-heading);font-size:0.8125rem;font-weight:700;color:var(--text);display:flex;align-items:center;gap:0.4rem;cursor:pointer}
+.ev-tree-persona:hover{background:rgba(0,0,0,0.03)}
+.ev-tree-badge{font-size:0.65rem;font-weight:700;background:rgba(249,115,22,0.15);color:#f97316;padding:1px 5px;border-radius:3px;margin-left:auto}
+.ev-tree-step{padding:0.3rem 0.75rem 0.3rem 1.5rem;font-size:0.75rem;color:var(--text-secondary);display:flex;align-items:flex-start;gap:0.5rem;cursor:pointer;border-radius:0.25rem;margin:0 0.375rem}
+.ev-tree-step:hover{background:rgba(0,0,0,0.04)}
+.ev-tree-step.active{background:rgba(0,102,204,0.08);color:var(--text)}
+.ev-tree-step.dimmed{opacity:0.4}
+.ev-tree-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:0.35rem}
+.ev-tree-dot.evidence{background:#f97316}
+.ev-tree-dot.none{background:var(--border)}
+.ev-tree-step-num{font-family:var(--font-mono);font-size:0.65rem;color:var(--text-secondary);min-width:14px;margin-top:0.1rem}
+.ev-tree-step-label{flex:1;display:flex;flex-direction:column;gap:0;min-width:0}
+.ev-tree-step-action{font-weight:400;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-tree-step-target{font-size:0.65rem;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev-ac-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:0.5rem}
+.ev-ac-tag{font-size:0.75rem;font-weight:400;font-family:var(--font-mono);padding:2px 6px;border-radius:0.25rem;background:rgba(236,122,8,0.12);color:var(--orange)}
+.ev-patience{display:flex;align-items:center;gap:0.5rem;margin-top:0.3rem}
+.ev-patience-bar{width:120px;height:8px;background:var(--border);border-radius:4px;overflow:hidden}
+.ev-patience-fill{height:100%;border-radius:4px;background:var(--status-success)}
+.ev-patience-label{font-family:var(--font-mono);font-size:0.7rem;color:var(--text-secondary)}
+.ev-patience-state{font-size:0.75rem;font-weight:400;font-family:var(--font-mono)}
+
+/* Review Panel — slide-out from right */
+.rv-panel{position:fixed;top:0;right:-600px;width:600px;height:100vh;background:var(--bg);border-left:1px solid var(--border);box-shadow:-4px 0 24px rgba(0,0,0,0.12);z-index:1050;display:flex;flex-direction:column;transition:right 0.25s ease}
+.rv-panel.active{right:0}
+.rv-header{display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;border-bottom:1px solid var(--border);background:var(--bg-secondary)}
+.rv-title{font-family:var(--font-heading);font-size:0.9rem;font-weight:700;color:var(--text)}
+.rv-close{background:none;border:none;font-size:1.5rem;color:var(--text-secondary);cursor:pointer}
+.rv-info-callout{padding:0.5rem 0.75rem;margin:0.5rem 0.5rem 0;background:rgba(0,102,204,0.06);border-radius:0.375rem;font-size:0.7rem;color:var(--text-secondary);line-height:1.5;border-left:3px solid var(--link)}
+.rv-queue{padding:0.5rem;border-bottom:1px solid var(--border);max-height:220px;overflow-y:auto}
+.rv-bulk-bar{display:none;padding:0.4rem 0.75rem;background:var(--bg-secondary);border-bottom:1px solid var(--border);align-items:center;gap:0.5rem;font-size:0.75rem}
+.rv-bulk-bar.visible{display:flex}
+.rv-bulk-bar button{padding:0.25rem 0.5rem;border-radius:0.25rem;font-size:0.7rem;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg);color:var(--text-secondary)}
+.rv-bulk-bar button:hover{background:var(--bg-secondary);border-color:var(--text-secondary)}
+.rv-bulk-bar .bulk-pass{color:var(--success-text);border-color:var(--status-success)}
+.rv-bulk-bar .bulk-pass:hover{background:rgba(62,134,53,0.1)}
+.rv-bulk-bar .bulk-fail{color:var(--danger-text);border-color:var(--status-danger)}
+.rv-bulk-bar .bulk-fail:hover{background:rgba(201,25,11,0.1)}
+.rv-bulk-bar .bulk-count{flex:1;color:var(--text-secondary)}
+.rv-queue-item{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.75rem;border-radius:0.375rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary)}
+.rv-queue-item:hover{background:var(--bg-secondary)}
+.rv-queue-item.active{background:rgba(0,102,204,0.06);color:var(--text)}
+.rv-queue-item.reviewed{opacity:0.6}
+.rv-select-checkbox{width:14px;height:14px;cursor:pointer;flex-shrink:0;accent-color:var(--link)}
+.rv-queue-status{width:16px;height:16px;display:flex;align-items:center;justify-content:center;font-size:0.65rem;flex-shrink:0;border-radius:50%;color:var(--text-secondary)}
+.rv-queue-status.neutral{width:8px;height:8px;background:var(--border);margin:0 4px}
+.rv-queue-status.pass{color:var(--status-success);font-size:0.8rem}
+.rv-queue-status.fail{color:var(--status-danger);font-size:0.8rem}
+.rv-queue-label{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rv-queue-verdict{font-size:0.75rem;font-weight:400;font-family:var(--font-mono);padding:2px 5px;border-radius:0.25rem}
+.rv-queue-verdict.flagged{background:rgba(240,171,0,0.12);color:var(--warning-text)}
+.rv-queue-verdict.fail{background:rgba(201,25,11,0.12);color:var(--danger-text)}
+.rv-detail{flex:1;overflow-y:auto;padding:1rem}
+.rv-screenshot-wrap{position:relative;margin-bottom:0.75rem;cursor:pointer}
+.rv-screenshot-wrap:hover::after{content:'Click to view full size';position:absolute;bottom:0.5rem;right:0.5rem;background:rgba(0,0,0,0.7);color:#fff;padding:0.2rem 0.5rem;border-radius:0.25rem;font-size:0.65rem}
+.rv-screenshot{width:100%;border-radius:0.5rem;border:1px solid var(--border);max-height:320px;object-fit:contain;background:var(--bg-secondary);display:block}
+.img-lightbox{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:2rem;cursor:zoom-out}
+.img-lightbox.open{display:flex}
+.img-lightbox img{max-width:90vw;max-height:90vh;object-fit:contain;border-radius:0.5rem;box-shadow:0 8px 32px rgba(0,0,0,0.5)}
+.img-lightbox-close{position:absolute;top:1rem;right:1.5rem;font-size:1.5rem;color:#fff;cursor:pointer;background:rgba(255,255,255,0.15);border:none;border-radius:50%;width:2rem;height:2rem;display:flex;align-items:center;justify-content:center;font-weight:bold;transition:background 0.15s}
+.img-lightbox-close:hover{background:rgba(255,255,255,0.3)}
+.rv-detail-section{margin-bottom:1rem}
+.rv-detail-label{font-size:0.75rem;font-weight:400;font-family:var(--font-mono);color:var(--text-secondary);margin-bottom:0.35rem}
+.rv-detail-text{font-size:0.8125rem;color:var(--text);line-height:1.6}
+.rv-detail-rationale{font-size:0.8rem;color:var(--text-secondary);line-height:1.5;font-style:italic;padding:0.5rem 0.75rem 0.5rem 1rem;background:var(--bg-secondary);border-radius:0.25rem}
+.rv-verdict-controls{display:flex;gap:0.5rem;margin-top:0.5rem}
+.rv-verdict-btn{padding:0.4rem 0.75rem;border-radius:0.25rem;font-size:0.75rem;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--bg);color:var(--text-secondary);transition:all 0.15s}
+.rv-verdict-btn:hover{border-color:var(--text-secondary)}
+.rv-verdict-btn.selected-pass{background:rgba(62,134,53,0.1);border-color:var(--status-success);color:var(--success-text)}
+.rv-verdict-btn.selected-fail{background:rgba(201,25,11,0.1);border-color:var(--status-danger);color:var(--danger-text)}
+.rv-textarea{width:100%;min-height:80px;padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:0.375rem;font-family:var(--font-body);font-size:0.8rem;resize:vertical;color:var(--text);background:var(--bg);line-height:1.5}
+.rv-textarea:focus{outline:none;border-color:var(--link)}
+.rv-save-btn{display:inline-flex;align-items:center;gap:0.35rem;margin-top:0.5rem;padding:0.45rem 0.9rem;border-radius:0.25rem;font-family:var(--font-body);font-size:0.8rem;font-weight:700;cursor:pointer;background:var(--link);color:#fff;border:none;transition:opacity 0.15s}
+.rv-save-btn:hover{opacity:0.9}
+.rv-saved-toast{display:inline-block;margin-left:0.75rem;font-size:0.7rem;color:var(--status-success);font-weight:600;opacity:0;transition:opacity 0.3s}
+.rv-saved-toast.show{opacity:1}
+.rv-actions{padding:0.75rem 1rem;border-top:1px solid var(--border);background:var(--bg-secondary)}
+.rv-actions-progress{font-size:0.75rem;color:var(--text);margin-bottom:0.5rem;font-weight:600}
+.rv-progress-bar{height:4px;background:var(--border);border-radius:2px;margin-top:0.35rem;overflow:hidden}
+.rv-progress-fill{height:100%;background:var(--status-success);border-radius:2px;transition:width 0.3s}
+.rv-action-btn{display:block;width:100%;padding:0.55rem;border-radius:0.25rem;font-family:var(--font-body);font-size:0.8rem;font-weight:700;cursor:pointer;text-align:center;margin-bottom:0.4rem;border:none}
+.rv-action-btn.primary{background:var(--link);color:#fff}
+.rv-action-btn.primary:hover{opacity:0.9}
+.rv-action-btn.primary:disabled{opacity:0.5;cursor:not-allowed}
+.rv-action-links{display:flex;justify-content:center;gap:1rem;margin-top:0.35rem;font-size:0.7rem}
+.rv-action-links a{color:var(--text-secondary);text-decoration:none;cursor:pointer}
+.rv-action-links a:hover{color:var(--link);text-decoration:underline}
+.rv-reiterate-success{margin-top:0.5rem;padding:0.5rem 0.75rem;background:rgba(62,134,53,0.08);border-radius:0.375rem;border:1px solid rgba(62,134,53,0.2);font-size:0.75rem;color:var(--success-text)}
+.rv-reiterate-success summary{cursor:pointer;font-weight:600;font-size:0.7rem;margin-bottom:0.25rem}
+.rv-reiterate-success pre{font-size:0.65rem;white-space:pre-wrap;max-height:120px;overflow-y:auto;margin:0.25rem 0 0;color:var(--text-secondary)}
+body.rv-open{margin-right:600px;transition:margin-right 0.25s ease}
+tr.dim-na{opacity:0.6;font-style:italic}
+.score-na{color:var(--text-secondary);font-style:italic;font-size:0.85em}
+.score-na-label{font-size:0.7rem;color:var(--text-secondary);font-style:italic;margin-left:0.25rem;vertical-align:middle}
+</style>
+</head>
+<body>
+
+<!-- Header Bar -->
+<div class="header-bar">
+  {{DASHBOARD_HTML}}
+  <h1>{{REPORT_TITLE}}</h1>
+  <div class="header-links" data-tour="breadcrumb">
+    <a href="{{OUTCOME_LINK_URL}}" target="_blank" style="{{OUTCOME_DISPLAY}}">{{OUTCOME_LABEL}}</a>
+    <span class="arrow" style="{{OUTCOME_DISPLAY}}">→</span>
+    <a href="{{RFE_URL}}" target="_blank">RFE</a>
+    <span class="arrow">→</span>
+    <a href="{{JIRA_URL}}" target="_blank">Ticket</a>
+    <span class="arrow">→</span>
+    <a href="{{PROTOTYPE_REPO_URL}}" target="_blank">Prototype</a>
+    <span class="arrow">·</span>
+    <a href="{{MR_URL}}" target="_blank" class="link-archived" style="opacity:0.8" title="View merge request"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="vertical-align:middle"><path d="M22.65 14.39L12 22.13 1.35 14.39a.84.84 0 0 1-.3-.94l1.22-3.78 2.44-7.51A.42.42 0 0 1 4.82 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.49h8.1l2.44-7.51A.42.42 0 0 1 18.6 2a.43.43 0 0 1 .58 0 .42.42 0 0 1 .11.18l2.44 7.51L23 13.45a.84.84 0 0 1-.35.94z" fill="#E24329"/></svg></a>
+  </div>
+  <div class="header-actions">
+    <button onclick="showWelcome()" title="How to read this report">Guide</button>
+  </div>
+</div>
+
+<!-- CSV Preview (collapsible) -->
+<div class="csv-preview" id="csvPreview" style="display:none">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem">
+    <p style="margin:0;font-size:0.75rem;color:var(--text-secondary)">evaluation-report.csv · <code style="font-size:0.7rem">{{ARTIFACTS_PATH}}/evaluation-report.csv</code></p>
+    <div style="display:flex;gap:0.5rem;align-items:center">
+      <button onclick="downloadCSV()" style="background:var(--link);border:none;color:#fff;padding:0.35rem 0.75rem;border-radius:0.25rem;cursor:pointer;font-family:var(--font-body);font-size:0.8125rem;font-weight:700">Download CSV</button>
+      <button onclick="toggleCsvPreview()" style="background:none;border:none;cursor:pointer;color:var(--text-secondary);font-size:0.8rem">Close</button>
+    </div>
+  </div>
+  <div class="csv-table-wrap" id="csvTableWrap"></div>
+</div>
+
+<!-- Main Content — single column -->
+<main class="main-content">
+
+    <!-- Jira Source Attribution -->
+    {{JIRA_ATTRIBUTION_HTML}}
+
+    <!-- Executive Summary (tabbed context panel) -->
+    {{EXEC_SUMMARY_HTML}}
+
+    <!-- Status Hero — primary metric and AC checklist -->
+    {{STATUS_SECTION_HTML}}
+
+    <!-- Acceptance Criteria — primary content, always visible -->
+    <h2 id="ac-results" data-tour="ac-table">Acceptance Criteria</h2>
+    <div class="ac-sort-bar" style="display:flex;gap:0.5rem;margin-bottom:0.5rem;flex-wrap:wrap;align-items:center">
+      <span class="small muted" style="margin-right:0.25rem">Sort:</span>
+      <button class="ac-sort-btn active" onclick="sortAcTable('default')" data-sort="default" style="font-size:0.75rem;padding:0.2rem 0.6rem;border:1px solid var(--border);border-radius:0.25rem;background:var(--bg-secondary);cursor:pointer">Default</button>
+      <button class="ac-sort-btn" onclick="sortAcTable('flagged')" data-sort="flagged" style="font-size:0.75rem;padding:0.2rem 0.6rem;border:1px solid var(--border);border-radius:0.25rem;background:var(--bg);cursor:pointer;color:var(--status-warning)">Flagged first</button>
+      <button class="ac-sort-btn" onclick="sortAcTable('fail')" data-sort="fail" style="font-size:0.75rem;padding:0.2rem 0.6rem;border:1px solid var(--border);border-radius:0.25rem;background:var(--bg);cursor:pointer;color:var(--status-danger)">Fail first</button>
+      <button class="ac-sort-btn" onclick="sortAcTable('pass')" data-sort="pass" style="font-size:0.75rem;padding:0.2rem 0.6rem;border:1px solid var(--border);border-radius:0.25rem;background:var(--bg);cursor:pointer;color:var(--status-success)">Pass first</button>
+    </div>
+    <table class="tbl" id="ac-table-jira">
+      <thead>
+        <tr><th style="width:3.5rem">ID</th><th>Acceptance Criterion</th><th style="width:5.5rem">Verdict</th><th>Evidence</th></tr>
+      </thead>
+      <tbody>
+        {{AC_TABLE_ROWS_JIRA}}
+      </tbody>
+    </table>
+
+    <!-- Evaluator Checks (collapsed) -->
+    <div id="evaluator-checks" style="{{INFERRED_CHECKS_DISPLAY}}">
+      <details style="margin-top:1.5rem">
+        <summary style="font-size:0.9375rem">Evaluator Checks</summary>
+        <p class="small muted" style="margin:0.25rem 0 0.5rem">Additional quality checks identified from the code changes.</p>
+        <table class="tbl" style="opacity:0.85">
+          <thead>
+            <tr><th style="width:3.5rem">ID</th><th>Check</th><th style="width:5.5rem">Verdict</th><th>Evidence</th></tr>
+          </thead>
+          <tbody>
+            {{AC_TABLE_ROWS_INFERRED}}
+          </tbody>
+        </table>
+      </details>
+    </div>
+
+    <!-- Conclusion -->
+    <h2 id="conclusion">Conclusion</h2>
+    <div class="card">
+      {{CONCLUSION_HTML}}
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- Appendix — detailed evidence, organized by tab          -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <div class="appendix">
+      <div class="appendix-label">Appendix — Detailed Evidence</div>
+
+      <div class="appendix-tabs" data-tour="appendix-tabs">
+        <button class="appendix-tab active" onclick="switchAppendixTab('personas')">
+          <svg class="appendix-tab-icon" viewBox="0 0 448 512"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"/></svg>
+          <span class="appendix-tab-label">Personas</span>
+        </button>
+        <button class="appendix-tab" onclick="switchAppendixTab('scores')">
+          <svg class="appendix-tab-icon" viewBox="0 0 512 512"><path d="M32 32c17.7 0 32 14.3 32 32V400c0 8.8 7.2 16 16 16H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H80c-44.2 0-80-35.8-80-80V64C0 46.3 14.3 32 32 32zM160 224c-17.7 0-32 14.3-32 32v64c0 17.7 14.3 32 32 32s32-14.3 32-32V256c0-17.7-14.3-32-32-32zm128-64v160c0 17.7 14.3 32 32 32s32-14.3 32-32V160c0-17.7-14.3-32-32-32s-32 14.3-32 32zm-64 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V224c0-17.7-14.3-32-32-32s-32 14.3-32 32zm192-96v192c0 17.7 14.3 32 32 32s32-14.3 32-32V128c0-17.7-14.3-32-32-32s-32 14.3-32 32z"/></svg>
+          <span class="appendix-tab-label">Usability</span>
+        </button>
+        <button class="appendix-tab" onclick="switchAppendixTab('compliance')">
+          <svg class="appendix-tab-icon" viewBox="0 0 512 512"><path d="M256 0c4.6 0 9.2 1 13.4 2.9L457.7 82.8c22 9.3 38.4 31 38.3 57.2c-.5 99.2-41.3 280.7-213.6 363.2c-16.7 8-36.1 8-52.8 0C57.3 420.7 16.5 239.2 16 140c-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.8 1 251.4 0 256 0z"/></svg>
+          <span class="appendix-tab-label">PF Compliance</span>
+        </button>
+        <button class="appendix-tab" onclick="switchAppendixTab('changes')">
+          <svg class="appendix-tab-icon" viewBox="0 0 576 512"><path d="M0 80C0 53.5 21.5 32 48 32h96c26.5 0 48 21.5 48 48V96H384V80c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H432c-26.5 0-48-21.5-48-48V160H192v16c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V80zm0 256c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48V352H384V336c0-26.5 21.5-48 48-48h96c26.5 0 48 21.5 48 48v96c0 26.5-21.5 48-48 48H432c-26.5 0-48-21.5-48-48V416H192v16c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V336z"/></svg>
+          <span class="appendix-tab-label">Changes</span>
+        </button>
+      </div>
+
+      <!-- Tab: Personas -->
+      <div class="appendix-content active" id="appendix-personas" data-tour="tab-personas">
+        <h2>Persona Walkthroughs</h2>
+        <p class="small muted" style="margin:-0.5rem 0 1rem">Each persona navigated the prototype independently at their own competence level. Click "View evidence" on any AC row above to see per-persona screenshots and think-aloud narration.</p>
+        <div class="card" style="margin-bottom:1.25rem;border-left:3px solid var(--link);padding:0.75rem 1rem" data-tour="personas">
+          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem">
+            <svg width="14" height="14" viewBox="0 0 448 512" fill="var(--link)" style="flex-shrink:0"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H418.3c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304H178.3z"/></svg>
+            <span style="font-weight:700;font-size:0.8125rem">Persona Selection</span>
+          </div>
+          {{PERSONA_SELECTION_HTML}}
+        </div>
+        {{PERSONA_WALKTHROUGHS_HTML}}
+      </div>
+
+      <!-- Tab: Scores -->
+      <div class="appendix-content" id="appendix-scores">
+        <h2 id="usability-dimensions" data-tour="usability">Usability Dimension Scores <a class="help-anchor" href="#scoring-methodology" onclick="document.getElementById('scoring-methodology').open=true;return true" title="How scores are calculated">?</a></h2>
+        {{USABILITY_TABLE}}
+        {{PATIENCE_TRACKING}}
+      </div>
+
+      <!-- Tab: PF Compliance -->
+      <div class="appendix-content" id="appendix-compliance" data-tour="tab-compliance">
+        <h2>PF Compliance</h2>
+        <p class="small muted" style="margin:-0.5rem 0 1rem">PatternFly design pattern compliance. Powered by the optional consistency-checker context repo when bootstrapped.</p>
+        {{COMPLIANCE_NARRATIVE}}
+        {{CONSISTENCY_HTML}}
+      </div>
+
+      <!-- Tab: Changes -->
+      <div class="appendix-content" id="appendix-changes" data-tour="tab-changes">
+        {{CHANGES_TAB_HTML}}
+      </div>
+
+    </div><!-- end appendix -->
+
+
+</main>
+
+<!-- Footer -->
+<div class="report-footer" style="text-align:left;padding:2rem 2.5rem">
+  <div style="border-top:1px solid var(--border);padding-top:0.75rem;font-size:0.65rem;color:var(--text-secondary);display:flex;flex-wrap:wrap;gap:1rem;align-items:center">
+    <span>Built with:</span>
+    <a href="https://www.patternfly.org" target="_blank">PatternFly</a>
+  </div>
+</div>
+
+<!-- Review Panel (slide-out from right) -->
+<div class="rv-panel" id="review-panel">
+  <div class="rv-header">
+    <h3 class="rv-title">Review Items</h3>
+    <button class="rv-close" onclick="closeReviewPanel()">&times;</button>
+  </div>
+  <div class="rv-info-callout">Your overrides will be applied on the next evaluation run. The Conclusions section updates after re-iteration.</div>
+  <div class="rv-bulk-bar" id="rv-bulk-bar">
+    <span class="bulk-count" id="rv-bulk-count">0 selected</span>
+    <button class="bulk-pass" onclick="bulkVerdict('PASS')">&#10003; Pass selected</button>
+    <button class="bulk-fail" onclick="bulkVerdict('FAIL')">&#10007; Fail selected</button>
+    <button onclick="deselectAll()">Deselect</button>
+  </div>
+  <div class="rv-queue" id="rv-queue"></div>
+  <div class="rv-detail" id="rv-detail"></div>
+  <div class="rv-actions" id="rv-actions"></div>
+</div>
+
+<!-- Evidence Viewer Modal (IDE-pattern sidebar + main panel) -->
+<div class="ev-overlay" id="evidence-viewer-modal">
+  <div class="ev-container">
+    <div class="ev-topbar">
+      <div class="ev-filter" style="position:relative">
+        <span style="font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-secondary);margin-right:0.5rem;white-space:nowrap">Filter by criterion</span>
+        <button class="ev-dropdown ev-ac-toggle" id="ev-ac-toggle" onclick="toggleAcDropdown()">
+          <span id="ev-ac-toggle-label">All acceptance criteria</span>
+          <span style="margin-left:auto;font-size:0.6rem;opacity:0.5">&#9662;</span>
+        </button>
+        <div class="ev-ac-menu" id="ev-ac-menu"></div>
+        <select class="ev-dropdown" id="ev-ac-filter" onchange="filterByAc(this.value)" style="display:none">
+          <option value="">All acceptance criteria</option>
+        </select>
+      </div>
+      <button class="ev-close" onclick="closeEvidenceViewer()">&times;</button>
+    </div>
+    <div class="ev-body">
+      <div class="ev-sidebar">
+        <div style="padding:0.5rem 0.75rem 0.25rem;font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-secondary)">Persona walkthrough steps</div>
+        <div id="ev-tree"></div>
+      </div>
+      <div class="ev-main" id="ev-main">
+        <div class="ev-hint" id="ev-hint" style="display:none;padding:0.5rem 1rem;background:var(--link);color:#fff;font-size:0.75rem;text-align:center;border-radius:0 0 0.375rem 0.375rem;opacity:0.9;transition:opacity 0.5s">Use <kbd style="background:rgba(255,255,255,0.2);padding:0.1rem 0.35rem;border-radius:3px;font-size:0.7rem">&#8592;</kbd> <kbd style="background:rgba(255,255,255,0.2);padding:0.1rem 0.35rem;border-radius:3px;font-size:0.7rem">&#8594;</kbd> arrow keys or click steps in the sidebar to navigate between screenshots</div>
+        <div class="ev-main-split">
+          <div class="ev-screenshot" id="ev-screenshot"></div>
+          <div class="ev-context" id="ev-context"></div>
+        </div>
+        <div class="ev-nav">
+          <div class="ev-nav-row">
+            <button class="ev-nav-btn" id="ev-prev-btn" onclick="navigateStep(-1)">&larr; Prev</button>
+            <div class="ev-flow" id="ev-flow"></div>
+            <button class="ev-nav-btn ev-nav-primary" id="ev-next-btn" onclick="navigateStep(1)">Next &rarr;</button>
+          </div>
+          <span class="ev-nav-counter" id="ev-nav-counter"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var csvData = `{{CSV_DATA}}`;
+
+var flaggedData = {{FLAGGED_DATA}};
+var personaWalkthroughData = {{PERSONA_WALKTHROUGH_DATA}};
+var evidenceViewerData = {{EVIDENCE_VIEWER_DATA}};
+
+function downloadCSV() {
+  // Collect human review notes from the Review tab
+  var annotations = {};
+  var overrides = {};
+  document.querySelectorAll('.review-textarea').forEach(function(el) {
+    var val = el.value.trim();
+    if (val) annotations[el.getAttribute('data-ac')] = val;
+  });
+  document.querySelectorAll('[id^="override-"]').forEach(function(el) {
+    if (el.value) overrides[el.id.replace('override-', '')] = el.value;
+  });
+
+  var exportCsv = csvData;
+  var hasAnnotations = Object.keys(annotations).length > 0 || Object.keys(overrides).length > 0;
+
+  if (hasAnnotations) {
+    var lines = exportCsv.split('\n');
+    var inAcSection = false;
+    var headerIdx = -1;
+    for (var li = 0; li < lines.length; li++) {
+      if (lines[li].startsWith('# ACCEPTANCE CRITERIA')) { inAcSection = true; continue; }
+      if (lines[li].startsWith('#')) { inAcSection = false; continue; }
+      if (!inAcSection || !lines[li].trim()) continue;
+      // Detect header row
+      if (lines[li].match(/^criterion_id,/) || lines[li].startsWith('prototype_id,')) {
+        lines[li] += ',human_verdict,human_notes';
+        headerIdx = li;
+        continue;
+      }
+      // Data rows — find criterion_id (first field)
+      var fields = lines[li].match(/(".*?"|[^,]*)/g) || [];
+      var acId = (fields[0] || '').replace(/"/g, '');
+      var humanVerdict = overrides[acId] || '';
+      var humanNote = (annotations[acId] || '').replace(/"/g, '""');
+      lines[li] += ',"' + humanVerdict + '","' + humanNote + '"';
+    }
+    exportCsv = lines.join('\n');
+  }
+
+  var blob = new Blob([exportCsv], {type: 'text/csv'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'evaluation-{{PROTOTYPE_ID}}.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+var csvPreviewBuilt = false;
+function toggleCsvPreview() {
+  var el = document.getElementById('csvPreview');
+  var visible = el.style.display !== 'none';
+  el.style.display = visible ? 'none' : 'block';
+  if (!visible && !csvPreviewBuilt) {
+    csvPreviewBuilt = true;
+    var lines = csvData.trim().split('\n');
+    if (lines.length < 2) { document.getElementById('csvTableWrap').innerHTML = '<p class="muted small">No CSV data.</p>'; return; }
+
+    var html = '';
+    var currentHeaders = null;
+    var sectionColors = { 'ACCEPTANCE': '#0066cc', 'USABILITY': '#16a34a', 'GROUND': '#d97706' };
+
+    for (var r = 0; r < lines.length; r++) {
+      var line = lines[r].trim();
+      if (!line) continue;
+
+      if (line.startsWith('#')) {
+        if (currentHeaders) html += '</tbody></table>';
+        var sectionName = line.replace(/^#\s*/, '');
+        var sColor = '#6b7280';
+        for (var sk in sectionColors) { if (sectionName.toUpperCase().indexOf(sk) >= 0) { sColor = sectionColors[sk]; break; } }
+        html += '<div class="csv-section-header" style="padding:0.4rem 0.6rem;margin:1rem 0 0.5rem;font-size:0.75rem;font-weight:700;font-family:var(--font-mono);color:' + sColor + '">' + sectionName + '</div>';
+        currentHeaders = null;
+        continue;
+      }
+
+      if (!currentHeaders) {
+        currentHeaders = line.split(',');
+        html += '<table><thead><tr>';
+        for (var i = 0; i < currentHeaders.length; i++) html += '<th>' + currentHeaders[i] + '</th>';
+        html += '</tr></thead><tbody>';
+        continue;
+      }
+
+      var cells = line.match(/(".*?"|[^,]*)/g) || [];
+      html += '<tr>';
+      for (var c = 0; c < currentHeaders.length; c++) {
+        var val = (cells[c] || '').replace(/^"|"$/g, '');
+        var cls = '';
+        if (val === 'PASS') cls = ' style="color:var(--status-success);font-weight:700;font-family:var(--font-mono)"';
+        else if (val === 'FAIL') cls = ' style="color:var(--status-danger);font-weight:700;font-family:var(--font-mono)"';
+        else if (val === 'FLAGGED') cls = ' style="color:var(--status-warning);font-weight:700;font-family:var(--font-mono)"';
+        else if (val === 'P0') cls = ' style="color:var(--status-danger);font-weight:700;font-family:var(--font-mono)"';
+        else if (val === 'P1') cls = ' style="color:var(--status-warning);font-weight:700;font-family:var(--font-mono)"';
+        else if (val === 'P2') cls = ' style="color:var(--status-success);font-family:var(--font-mono)"';
+        else if (/^[0-3]$/.test(val)) {
+          var sc = parseInt(val);
+          cls = ' style="font-weight:700;font-family:var(--font-mono);color:' + (sc <= 1 ? 'var(--status-danger)' : sc === 2 ? 'var(--status-warning)' : 'var(--status-success)') + '"';
+        }
+        html += '<td' + cls + '>' + val + '</td>';
+      }
+      html += '</tr>';
+    }
+    if (currentHeaders) html += '</tbody></table>';
+    document.getElementById('csvTableWrap').innerHTML = html;
+  }
+}
+
+function switchAppendixTab(tab) {
+  document.querySelectorAll('.appendix-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.appendix-content').forEach(function(c) { c.classList.remove('active'); });
+  var btn = document.querySelector('[onclick="switchAppendixTab(\'' + tab + '\')"]');
+  if (btn) btn.classList.add('active');
+  var content = document.getElementById('appendix-' + tab);
+  if (content) content.classList.add('active');
+}
+
+function switchExecTab(tab) {
+  document.querySelectorAll('.exec-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.exec-tab-content').forEach(function(c) { c.classList.remove('active'); });
+  var btn = document.querySelector('[onclick="switchExecTab(\'' + tab + '\')"]');
+  if (btn) btn.classList.add('active');
+  var content = document.getElementById('exec-' + tab);
+  if (content) content.classList.add('active');
+}
+
+
+
+function sortAcTable(mode) {
+  var table = document.getElementById('ac-table-jira');
+  if (!table) return;
+  var tbody = table.querySelector('tbody');
+  if (!tbody) return;
+  var rows = Array.from(tbody.querySelectorAll('tr'));
+  var priority = { flagged: ['FLAGGED','FAIL','PASS'], fail: ['FAIL','FLAGGED','PASS'], pass: ['PASS','FLAGGED','FAIL'], default: null };
+  var order = priority[mode];
+  if (order) {
+    rows.sort(function(a, b) {
+      var va = (a.querySelector('td:nth-child(3)') || {}).textContent || '';
+      var vb = (b.querySelector('td:nth-child(3)') || {}).textContent || '';
+      va = va.trim().toUpperCase(); vb = vb.trim().toUpperCase();
+      var ia = order.indexOf(va); var ib = order.indexOf(vb);
+      if (ia === -1) ia = 99; if (ib === -1) ib = 99;
+      return ia - ib;
+    });
+  } else {
+    rows.sort(function(a, b) {
+      var idA = (a.querySelector('td:first-child') || {}).textContent || '';
+      var idB = (b.querySelector('td:first-child') || {}).textContent || '';
+      return idA.localeCompare(idB, undefined, { numeric: true });
+    });
+  }
+  rows.forEach(function(r) { tbody.appendChild(r); });
+  document.querySelectorAll('.ac-sort-btn').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-sort') === mode);
+    b.style.background = b.getAttribute('data-sort') === mode ? 'var(--bg-secondary)' : 'var(--bg)';
+  });
+}
+
+function overrideVerdict(acId, verdict) {
+  document.querySelectorAll('[data-override-ac="' + acId + '"] button').forEach(function(b) { b.className = ''; });
+  var cls = verdict === 'PASS' ? 'override-active-pass' : 'override-active-fail';
+  document.querySelectorAll('[data-override-ac="' + acId + '"] [data-verdict="' + verdict + '"]').forEach(function(b) { b.className = cls; });
+  document.querySelectorAll('[id="override-' + acId + '"]').forEach(function(el) { el.value = verdict; });
+  saveReviewState();
+}
+
+// Review Panel State
+var rvState = { items: [], currentIdx: 0, reviews: {}, selected: {} };
+
+function findAcScreenshot(acId) {
+  if (!evidenceViewerData || !evidenceViewerData.ac_to_steps) return '';
+  var steps = evidenceViewerData.ac_to_steps[acId];
+  if (!steps || !steps.length) return '';
+  var first = steps[0];
+  var personas = evidenceViewerData.personas || {};
+  var p = personas[first.persona];
+  if (!p || !p.tasks[first.task] || !p.tasks[first.task].steps[first.step]) return '';
+  return p.tasks[first.task].steps[first.step].screenshot || '';
+}
+
+function openReviewPanel(acId) {
+  rvState.items = (flaggedData || []).map(function(f) {
+    return { id: f.id || f.criterion_id, text: f.text || f.criterion_text, verdict: f.verdict || 'FLAGGED', rationale: f.rationale || '', human_action: f.humanAction || f.human_action || '' };
+  });
+
+  var saved = localStorage.getItem(reviewStorageKey);
+  if (saved) {
+    try { rvState.reviews = JSON.parse(saved).reviews || {}; } catch(e) {}
+  }
+
+  document.getElementById('review-panel').classList.add('active');
+  document.body.classList.add('rv-open');
+
+  if (acId) {
+    var idx = rvState.items.findIndex(function(item) { return item.id === acId; });
+    if (idx >= 0) rvState.currentIdx = idx;
+  }
+
+  renderReviewQueue();
+  renderReviewDetail();
+  renderReviewActions();
+}
+
+function closeReviewPanel() {
+  document.getElementById('review-panel').classList.remove('active');
+  document.body.classList.remove('rv-open');
+}
+
+function renderReviewQueue() {
+  var queue = document.getElementById('rv-queue');
+  var html = '';
+  rvState.items.forEach(function(item, i) {
+    var review = rvState.reviews[item.id] || {};
+    var isReviewed = review.reviewed;
+    var isActive = i === rvState.currentIdx;
+    var isSelected = rvState.selected[item.id];
+    var classes = 'rv-queue-item';
+    if (isActive) classes += ' active';
+    if (isReviewed) classes += ' reviewed';
+
+    html += '<div class="' + classes + '">';
+    html += '<input type="checkbox" class="rv-select-checkbox" ' + (isSelected ? 'checked' : '') + ' onclick="event.stopPropagation();toggleSelectItem(\'' + item.id + '\')">';
+
+    if (review.override === 'PASS') {
+      html += '<span class="rv-queue-status pass">&#10003;</span>';
+    } else if (review.override === 'FAIL') {
+      html += '<span class="rv-queue-status fail">&#10007;</span>';
+    } else {
+      html += '<span class="rv-queue-status neutral"></span>';
+    }
+
+    html += '<span class="rv-queue-label" onclick="selectReviewItem(' + i + ')">' + escHtml(item.id + ': ' + item.text.substring(0, 40)) + '</span>';
+    html += '<span class="rv-queue-verdict ' + item.verdict.toLowerCase() + '">' + item.verdict + '</span>';
+    html += '</div>';
+  });
+  queue.innerHTML = html;
+  renderBulkBar();
+}
+
+function renderBulkBar() {
+  var selectedCount = Object.keys(rvState.selected).filter(function(k) { return rvState.selected[k]; }).length;
+  var bar = document.getElementById('rv-bulk-bar');
+  var countEl = document.getElementById('rv-bulk-count');
+  if (selectedCount > 0) {
+    bar.classList.add('visible');
+    countEl.textContent = selectedCount + ' selected';
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function toggleSelectItem(id) {
+  rvState.selected[id] = !rvState.selected[id];
+  renderReviewQueue();
+}
+
+function deselectAll() {
+  rvState.selected = {};
+  renderReviewQueue();
+}
+
+function bulkVerdict(verdict) {
+  Object.keys(rvState.selected).forEach(function(id) {
+    if (rvState.selected[id]) {
+      if (!rvState.reviews[id]) rvState.reviews[id] = {};
+      rvState.reviews[id].override = verdict;
+      rvState.reviews[id].reviewed = true;
+    }
+  });
+  rvState.selected = {};
+  saveReviewToStorage();
+  renderReviewQueue();
+  renderReviewDetail();
+  renderReviewActions();
+}
+
+function selectReviewItem(idx) {
+  rvState.currentIdx = idx;
+  renderReviewQueue();
+  renderReviewDetail();
+}
+
+function renderReviewDetail() {
+  var detail = document.getElementById('rv-detail');
+  if (!rvState.items.length) { detail.innerHTML = '<p style="color:var(--text-secondary);font-size:0.8rem;">No items to review.</p>'; return; }
+
+  var item = rvState.items[rvState.currentIdx];
+  var review = rvState.reviews[item.id] || {};
+
+  var html = '';
+
+  // Find screenshot for this AC from evidence viewer data
+  var screenshot = findAcScreenshot(item.id);
+  if (screenshot) {
+    html += '<div class="rv-screenshot-wrap" onclick="openImageLightbox(this.querySelector(\'img\').src)">';
+    html += '<img class="rv-screenshot" src="' + screenshot + '" alt="Evidence for ' + escHtml(item.id) + '">';
+    html += '</div>';
+  }
+
+  html += '<div class="rv-detail-section">';
+  html += '<div class="rv-detail-label">Acceptance Criterion</div>';
+  html += '<div class="rv-detail-text"><strong>' + escHtml(item.id) + ':</strong> ' + escHtml(item.text) + '</div>';
+  html += '</div>';
+
+  if (item.rationale) {
+    html += '<div class="rv-detail-section">';
+    html += '<div class="rv-detail-label">AI Rationale</div>';
+    html += '<div class="rv-detail-rationale">' + escHtml(item.rationale) + '</div>';
+    html += '</div>';
+  }
+
+  if (item.human_action) {
+    html += '<div class="rv-detail-section">';
+    html += '<div class="rv-detail-label">Suggested Action</div>';
+    html += '<div class="rv-detail-text">' + escHtml(item.human_action) + '</div>';
+    html += '</div>';
+  }
+
+  html += '<div class="rv-detail-section">';
+  html += '<a href="#" onclick="openEvidenceViewer(\'' + escHtml(item.id) + '\');return false;" style="font-size:0.75rem;color:var(--link);">View full evidence walkthrough for ' + escHtml(item.id) + ' &rarr;</a>';
+  html += '</div>';
+
+  html += '<div class="rv-detail-section">';
+  html += '<div class="rv-detail-label">Your Verdict</div>';
+  html += '<div class="rv-verdict-controls">';
+  html += '<button class="rv-verdict-btn' + (review.override === 'PASS' ? ' selected-pass' : '') + '" onclick="setReviewVerdict(\'' + item.id + '\',\'PASS\')">&#10003; Pass</button>';
+  html += '<button class="rv-verdict-btn' + (review.override === 'FAIL' ? ' selected-fail' : '') + '" onclick="setReviewVerdict(\'' + item.id + '\',\'FAIL\')">&#10007; Fail</button>';
+  html += '</div></div>';
+
+  html += '<div class="rv-detail-section">';
+  html += '<div class="rv-detail-label">Notes</div>';
+  html += '<textarea class="rv-textarea" id="rv-notes" placeholder="Add your notes here..." onchange="saveReviewNotes(\'' + item.id + '\')">' + escHtml(review.notes || '') + '</textarea>';
+  html += '<div style="display:flex;align-items:center;margin-top:0.5rem">';
+  html += '<button class="rv-save-btn" onclick="saveAndNext(\'' + item.id + '\')">Save &amp; Next &#8594;</button>';
+  html += '<span class="rv-saved-toast" id="rv-saved-toast">&#10003; Saved</span>';
+  html += '</div>';
+  html += '</div>';
+
+  detail.innerHTML = html;
+}
+
+function renderReviewActions() {
+  var actions = document.getElementById('rv-actions');
+  var reviewedCount = Object.keys(rvState.reviews).filter(function(k) { return rvState.reviews[k].reviewed; }).length;
+  var total = rvState.items.length;
+  var pct = total > 0 ? Math.round((reviewedCount / total) * 100) : 0;
+
+  var html = '';
+  html += '<div class="rv-actions-progress">' + reviewedCount + ' of ' + total + ' items reviewed';
+  html += '<div class="rv-progress-bar"><div class="rv-progress-fill" style="width:' + pct + '%"></div></div>';
+  html += '</div>';
+  html += '<button class="rv-action-btn primary" onclick="saveAllAndReiterate()"' + (reviewedCount === 0 ? ' disabled' : '') + '>Save All &amp; Re-iterate</button>';
+  html += '<div class="rv-action-links"><a onclick="downloadReviewCsv()">Download CSV</a><a onclick="clearReviews()">Clear Reviews</a></div>';
+  html += '<div id="rv-reiterate-result"></div>';
+  actions.innerHTML = html;
+}
+
+function setReviewVerdict(acId, verdict) {
+  if (!rvState.reviews[acId]) rvState.reviews[acId] = {};
+  rvState.reviews[acId].override = verdict;
+  rvState.reviews[acId].reviewed = true;
+  saveReviewToStorage();
+  renderReviewQueue();
+  renderReviewDetail();
+  renderReviewActions();
+}
+
+function saveReviewNotes(acId) {
+  var textarea = document.getElementById('rv-notes');
+  if (!rvState.reviews[acId]) rvState.reviews[acId] = {};
+  rvState.reviews[acId].notes = textarea.value;
+  saveReviewToStorage();
+  renderReviewActions();
+}
+
+function saveAndNext(acId) {
+  var textarea = document.getElementById('rv-notes');
+  if (!rvState.reviews[acId]) rvState.reviews[acId] = {};
+  if (textarea) rvState.reviews[acId].notes = textarea.value;
+  rvState.reviews[acId].reviewed = true;
+  saveReviewToStorage();
+
+  var toast = document.getElementById('rv-saved-toast');
+  if (toast) { toast.classList.add('show'); setTimeout(function() { toast.classList.remove('show'); }, 1500); }
+
+  var nextIdx = -1;
+  for (var i = 0; i < rvState.items.length; i++) {
+    var idx = (rvState.currentIdx + 1 + i) % rvState.items.length;
+    var r = rvState.reviews[rvState.items[idx].id];
+    if (!r || !r.reviewed) { nextIdx = idx; break; }
+  }
+  if (nextIdx >= 0) {
+    setTimeout(function() { rvState.currentIdx = nextIdx; renderReviewQueue(); renderReviewDetail(); renderReviewActions(); }, 400);
+  } else {
+    renderReviewQueue();
+    renderReviewActions();
+  }
+}
+
+function clearReviews() {
+  if (!confirm('Clear all review verdicts and notes?')) return;
+  rvState.reviews = {};
+  localStorage.removeItem(reviewStorageKey);
+  renderReviewQueue();
+  renderReviewDetail();
+  renderReviewActions();
+}
+
+function saveReviewToStorage() {
+  localStorage.setItem(reviewStorageKey, JSON.stringify({ reviews: rvState.reviews }));
+}
+
+function downloadReviewCsv() {
+  var lines = csvData.split('\n');
+  var output = [];
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    if (line.startsWith('#') || !line.trim()) { output.push(line); continue; }
+    if (i === 0 || lines[i-1].startsWith('#')) {
+      if (line.includes('criterion_id')) { output.push(line + ',reviewer_override,reviewer_notes'); continue; }
+    }
+    var acMatch = line.match(/^(AC-\d+|NAV-\d+|FLAG-\d+|EVAL-\d+)/);
+    if (acMatch && rvState.reviews[acMatch[1]]) {
+      var r = rvState.reviews[acMatch[1]];
+      output.push(line + ',' + (r.override || '') + ',"' + (r.notes || '').replace(/"/g, '""') + '"');
+    } else {
+      output.push(line + ',,');
+    }
+  }
+
+  var blob = new Blob([output.join('\n')], { type: 'text/csv' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'evaluation-report-reviewed.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function buildReiterationPrompt() {
+  var prompt = 'Re-run evaluation with the following reviewer feedback:\n\n';
+  prompt += '## Reviewed Items\n\n';
+  rvState.items.forEach(function(item) {
+    var r = rvState.reviews[item.id] || {};
+    if (r.override || r.notes) {
+      prompt += '### ' + item.id + ': ' + item.text + '\n';
+      prompt += '- Original verdict: ' + item.verdict + '\n';
+      if (item.rationale) prompt += '- AI rationale: ' + item.rationale + '\n';
+      if (item.human_action) prompt += '- Suggested action: ' + item.human_action + '\n';
+      if (r.override) prompt += '- **Reviewer override: ' + r.override + '**\n';
+      if (r.notes) prompt += '- Reviewer notes: ' + r.notes + '\n';
+      prompt += '\n';
+    }
+  });
+  prompt += '## Instructions\n\n';
+  prompt += 'Please run eval-iterate with --max-iterations=1 incorporating the reviewer feedback above. ';
+  prompt += 'For items overridden to PASS, do not re-test. For items with notes, apply the feedback before re-evaluation.\n';
+  return prompt;
+}
+
+function saveAllAndReiterate() {
+  saveReviewToStorage();
+  var prompt = buildReiterationPrompt();
+  var resultEl = document.getElementById('rv-reiterate-result');
+
+  navigator.clipboard.writeText(prompt).then(function() {
+    showReiterateSuccess(resultEl, prompt);
+  }).catch(function() {
+    var ta = document.createElement('textarea');
+    ta.value = prompt;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showReiterateSuccess(resultEl, prompt);
+  });
+}
+
+function showReiterateSuccess(el, prompt) {
+  var html = '<div class="rv-reiterate-success">';
+  html += '&#10003; Feedback saved &amp; prompt copied to clipboard.';
+  html += '<br><span style="font-size:0.65rem;opacity:0.8">Paste into your agent to trigger re-iteration. In a future version, this will connect directly.</span>';
+  html += '<details><summary>View prompt</summary><pre>' + escHtml(prompt) + '</pre>';
+  html += '<a onclick="navigator.clipboard.writeText(document.querySelector(\'.rv-reiterate-success pre\').textContent)" style="font-size:0.65rem;color:var(--link);cursor:pointer">Copy again</a>';
+  html += '</details></div>';
+  el.innerHTML = html;
+}
+
+function requestReiteration() { saveAllAndReiterate(); }
+
+function scrollToSection(id) {
+  var el = document.getElementById(id);
+  if (el) el.scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+// Evidence Viewer — state
+var evState = { persona: null, task: 0, step: 0, acFilter: '' };
+
+// AC color palette — each AC gets a distinct color
+var acColors = ['#f97316','#8b5cf6','#0891b2','#dc2626','#059669','#d946ef','#0284c7','#ca8a04','#e11d48','#14b8a6','#7c3aed','#ea580c'];
+function getAcColor(acId) {
+  if (!evidenceViewerData || !evidenceViewerData.ac_list) return '#f97316';
+  var idx = evidenceViewerData.ac_list.findIndex(function(ac) { return ac.id === acId; });
+  return acColors[idx >= 0 ? idx % acColors.length : 0];
+}
+
+function openEvidenceViewer(acId) {
+  if (!evidenceViewerData) return;
+  var modal = document.getElementById('evidence-viewer-modal');
+  modal.classList.add('active');
+  document.body.style.overflow = 'hidden';
+
+  var hint = document.getElementById('ev-hint');
+  if (hint) {
+    hint.style.display = 'block'; hint.style.opacity = '0.9';
+    setTimeout(function() { hint.style.opacity = '0'; setTimeout(function() { hint.style.display = 'none'; }, 500); }, 6000);
+  }
+
+  buildAcDropdown(evidenceViewerData.ac_list || []);
+
+  if (acId) {
+    selectAcFilter(acId);
+  } else {
+    selectAcFilter('');
+  }
+}
+
+function closeEvidenceViewer() {
+  document.getElementById('evidence-viewer-modal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+function verdictIcon(verdict) {
+  var v = (verdict || '').toUpperCase();
+  if (v === 'PASS') return '<span class="ev-ac-opt-icon pass">&#10003;</span>';
+  if (v === 'FAIL') return '<span class="ev-ac-opt-icon fail">&#10007;</span>';
+  return '<span class="ev-ac-opt-icon flagged">&#9873;</span>';
+}
+
+function buildAcDropdown(acList) {
+  var menu = document.getElementById('ev-ac-menu');
+  var html = '<div class="ev-ac-opt selected" data-ac="" onclick="selectAcFilter(\'\')">';
+  html += '<span class="ev-ac-opt-icon" style="background:var(--bg-secondary);color:var(--text-secondary)">&#9776;</span>';
+  html += '<span class="ev-ac-opt-id" style="color:var(--text-secondary)">All</span>';
+  html += '<span class="ev-ac-opt-text">Show all acceptance criteria</span>';
+  html += '</div>';
+
+  acList.forEach(function(ac) {
+    var shortText = ac.text.length > 200
+      ? ac.text.replace(/^Given\s+/i, '').replace(/,\s*when\s+/i, ' \u2192 ').replace(/,\s*then\s+/i, ' \u2192 ').substring(0, 200) + '...'
+      : ac.text;
+    html += '<div class="ev-ac-opt" data-ac="' + escHtml(ac.id) + '" onclick="selectAcFilter(\'' + escHtml(ac.id) + '\')">';
+    html += verdictIcon(ac.verdict);
+    html += '<span class="ev-ac-opt-id">' + escHtml(ac.id) + '</span>';
+    html += '<span class="ev-ac-opt-text">' + escHtml(shortText) + '</span>';
+    html += '</div>';
+  });
+  menu.innerHTML = html;
+}
+
+function toggleAcDropdown() {
+  var menu = document.getElementById('ev-ac-menu');
+  menu.classList.toggle('open');
+  if (menu.classList.contains('open')) {
+    setTimeout(function() {
+      document.addEventListener('click', closeAcDropdownOnClick, { once: true });
+    }, 0);
+  }
+}
+
+function closeAcDropdownOnClick(e) {
+  var menu = document.getElementById('ev-ac-menu');
+  var toggle = document.getElementById('ev-ac-toggle');
+  if (!menu.contains(e.target) && !toggle.contains(e.target)) {
+    menu.classList.remove('open');
+  }
+}
+
+function selectAcFilter(acId) {
+  var menu = document.getElementById('ev-ac-menu');
+  menu.classList.remove('open');
+
+  menu.querySelectorAll('.ev-ac-opt').forEach(function(opt) {
+    opt.classList.toggle('selected', opt.getAttribute('data-ac') === acId);
+  });
+
+  var label = document.getElementById('ev-ac-toggle-label');
+  if (!acId) {
+    label.textContent = 'All acceptance criteria';
+  } else {
+    var acList = evidenceViewerData.ac_list || [];
+    var ac = acList.find(function(a) { return a.id === acId; });
+    if (ac) {
+      var v = (ac.verdict || '').toUpperCase();
+      var icon = v === 'PASS' ? 'P' : v === 'FAIL' ? 'F' : 'FL';
+      label.textContent = icon + ' ' + ac.id + ': ' + ac.text.substring(0, 50) + (ac.text.length > 50 ? '...' : '');
+    } else {
+      label.textContent = acId;
+    }
+  }
+
+  filterByAc(acId);
+}
+
+function filterByAc(acId) {
+  evState.acFilter = acId;
+  renderTree();
+
+  if (acId && evidenceViewerData && evidenceViewerData.ac_to_steps) {
+    var matches = evidenceViewerData.ac_to_steps[acId] || [];
+    if (matches.length > 0) {
+      var first = matches[0];
+      selectStep(first.persona, first.task, first.step);
+      return;
+    }
+    var ssEl = document.getElementById('ev-screenshot');
+    if (ssEl) ssEl.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-secondary);font-size:0.85rem;text-align:center;padding:2rem;">No visual evidence captured for this criterion.<br>The evaluator may have verified it via source code inspection.</div>';
+  }
+}
+
+function renderTree() {
+  var tree = document.getElementById('ev-tree');
+  if (!evidenceViewerData) { tree.innerHTML = ''; return; }
+  var html = '';
+  var personas = evidenceViewerData.personas || {};
+  var acSteps = evState.acFilter ? (evidenceViewerData.ac_to_steps[evState.acFilter] || []) : [];
+
+  Object.keys(personas).forEach(function(pid) {
+    var p = personas[pid];
+    var evidenceCount = 0;
+
+    if (evState.acFilter) {
+      evidenceCount = acSteps.filter(function(s) { return s.persona === pid; }).length;
+    }
+
+    html += '<div class="ev-tree-persona" onclick="togglePersona(\'' + pid + '\')">';
+    html += '<span>' + escHtml(p.name) + '</span>';
+    if (evState.acFilter && evidenceCount > 0) {
+      html += '<span class="ev-tree-badge">' + evidenceCount + '</span>';
+    }
+    html += '</div>';
+
+    p.tasks.forEach(function(task, ti) {
+      // Task header with AC chips
+      if (p.tasks.length > 1 || task.task) {
+        if (ti > 0) html += '<div class="ev-tree-divider"></div>';
+        var taskLabel = task.task ? task.task.substring(0, 35) + (task.task.length > 35 ? '...' : '') : 'Task ' + (ti + 1);
+        html += '<div class="ev-tree-task" title="' + escHtml(task.task || 'Task ' + (ti + 1)) + '">';
+        html += '<span class="ev-tree-task-label"><strong>Task ' + (ti + 1) + ':</strong> ' + escHtml(taskLabel) + '</span>';
+        if (task.covers_acs && task.covers_acs.length) {
+          html += '<span class="ev-tree-task-acs">';
+          task.covers_acs.forEach(function(ac) {
+            var acColor = getAcColor(ac);
+            html += '<span class="ev-tree-task-ac" style="background:' + acColor + '15;color:' + acColor + '">' + escHtml(ac) + '</span>';
+          });
+          html += '</span>';
+        }
+        html += '</div>';
+      }
+
+      task.steps.forEach(function(step, si) {
+        var isEvidence = false;
+        if (evState.acFilter) {
+          isEvidence = acSteps.some(function(s) { return s.persona === pid && s.task === ti && s.step === si; });
+        }
+        var isActive = evState.persona === pid && evState.task === ti && evState.step === si;
+        var classes = 'ev-tree-step';
+        if (isActive) classes += ' active';
+        if (evState.acFilter && !isEvidence) classes += ' dimmed';
+
+        html += '<div class="' + classes + '" onclick="selectStep(\'' + pid + '\',' + ti + ',' + si + ')">';
+        var dotStyle = '';
+        if (evState.acFilter && isEvidence) dotStyle = ' style="background:' + getAcColor(evState.acFilter) + '"';
+        html += '<span class="ev-tree-dot ' + (evState.acFilter ? (isEvidence ? 'evidence' : 'none') : 'none') + '"' + dotStyle + '></span>';
+        html += '<span class="ev-tree-step-num">' + (step.step || si + 1) + '</span>';
+        html += '<span class="ev-tree-step-label">';
+        if (step.actionVerb) {
+          html += '<span class="ev-tree-step-action">' + escHtml(step.actionVerb) + '</span>';
+          if (step.actionTarget) html += '<span class="ev-tree-step-target">&rarr; ' + escHtml(step.actionTarget) + '</span>';
+        } else {
+          html += '<span class="ev-tree-step-action">' + escHtml(step.action || step.trying || step.what_i_see || step.see || step.what_im_thinking || step.thinking || 'Step ' + (si + 1)) + '</span>';
+        }
+        html += '</span>';
+        html += '</div>';
+      });
+    });
+  });
+
+  tree.innerHTML = html;
+
+  if (!evState.persona) {
+    var firstPid = Object.keys(personas)[0];
+    if (firstPid && personas[firstPid].tasks.length > 0 && personas[firstPid].tasks[0].steps.length > 0) {
+      selectStep(firstPid, 0, 0);
+    }
+  }
+}
+
+function renderStepFlow() {
+  var flowEl = document.getElementById('ev-flow');
+  if (!flowEl || !evidenceViewerData) return;
+  var personas = evidenceViewerData.personas || {};
+  var p = personas[evState.persona];
+  if (!p || !p.tasks[evState.task]) { flowEl.innerHTML = ''; return; }
+
+  var steps = p.tasks[evState.task].steps;
+  var acSteps = evState.acFilter ? (evidenceViewerData.ac_to_steps[evState.acFilter] || []) : [];
+  var html = '';
+
+  steps.forEach(function(step, si) {
+    if (si > 0) {
+      var prevEvidence = false, currEvidence = false;
+      if (evState.acFilter) {
+        prevEvidence = acSteps.some(function(s) { return s.persona === evState.persona && s.task === evState.task && s.step === si - 1; });
+        currEvidence = acSteps.some(function(s) { return s.persona === evState.persona && s.task === evState.task && s.step === si; });
+      }
+      html += '<span class="ev-flow-edge' + (prevEvidence && currEvidence ? ' evidence' : '') + '"></span>';
+    }
+
+    var isEvidence = false;
+    if (evState.acFilter) {
+      isEvidence = acSteps.some(function(s) { return s.persona === evState.persona && s.task === evState.task && s.step === si; });
+    }
+    var isActive = evState.step === si;
+    var classes = 'ev-flow-node';
+    if (isActive) classes += ' active';
+    if (isEvidence) classes += ' evidence';
+    if (evState.acFilter && !isEvidence) classes += ' dimmed';
+
+    var nodeStyle = isEvidence && evState.acFilter ? ' style="background:' + getAcColor(evState.acFilter) + '"' : '';
+    html += '<span class="' + classes + '"' + nodeStyle + ' onclick="selectStep(\'' + evState.persona + '\',' + evState.task + ',' + si + ')">' + (step.step || si + 1) + '</span>';
+  });
+
+  flowEl.innerHTML = html;
+}
+
+function selectStep(persona, taskIdx, stepIdx) {
+  var hint = document.getElementById('ev-hint');
+  if (hint) hint.style.display = 'none';
+  evState.persona = persona;
+  evState.task = taskIdx;
+  evState.step = stepIdx;
+  renderTree();
+  renderStepFlow();
+  renderStepDetail();
+  updateNavButtons();
+}
+
+function updateNavButtons() {
+  if (!evidenceViewerData) return;
+  var personas = evidenceViewerData.personas || {};
+  var pids = Object.keys(personas);
+  var p = personas[evState.persona];
+  if (!p) return;
+
+  var prevBtn = document.getElementById('ev-prev-btn');
+  var nextBtn = document.getElementById('ev-next-btn');
+  var counter = document.getElementById('ev-nav-counter');
+
+  var steps = p.tasks[evState.task].steps;
+  var pidIdx = pids.indexOf(evState.persona);
+
+  // Prev button label
+  if (evState.step > 0) {
+    prevBtn.innerHTML = '&larr; Prev step';
+  } else if (evState.task > 0) {
+    prevBtn.innerHTML = '&larr; Prev task';
+  } else if (pidIdx > 0) {
+    prevBtn.innerHTML = '&larr; ' + escHtml(personas[pids[pidIdx - 1]].name);
+  } else {
+    prevBtn.innerHTML = '&larr; Prev';
+  }
+
+  // Next button label
+  if (evState.step < steps.length - 1) {
+    nextBtn.innerHTML = 'Next step &rarr;';
+  } else if (evState.task < p.tasks.length - 1) {
+    nextBtn.innerHTML = 'Next task &rarr;';
+    nextBtn.classList.add('ev-nav-primary');
+  } else if (pidIdx < pids.length - 1) {
+    nextBtn.innerHTML = escHtml(personas[pids[pidIdx + 1]].name) + ' &rarr;';
+    nextBtn.classList.add('ev-nav-primary');
+  } else {
+    nextBtn.innerHTML = 'Done';
+    nextBtn.classList.remove('ev-nav-primary');
+  }
+
+  // Counter: "Persona 1/2 · Task 2/3 · Step 1/4"
+  if (counter) {
+    var parts = [];
+    if (pids.length > 1) parts.push(escHtml(p.name));
+    if (p.tasks.length > 1) parts.push('Task ' + (evState.task + 1) + '/' + p.tasks.length);
+    parts.push('Step ' + (evState.step + 1) + '/' + steps.length);
+    counter.textContent = parts.join(' \u00B7 ');
+  }
+}
+
+function renderStepDetail() {
+  if (!evidenceViewerData) return;
+  var personas = evidenceViewerData.personas || {};
+  var p = personas[evState.persona];
+  if (!p || !p.tasks[evState.task] || !p.tasks[evState.task].steps[evState.step]) return;
+
+  var task = p.tasks[evState.task];
+  var step = task.steps[evState.step];
+
+  var ssEl = document.getElementById('ev-screenshot');
+  if (step.screenshot) {
+    var ssHtml = '<img src="' + step.screenshot + '" alt="Step ' + (step.step || evState.step + 1) + '">';
+    if (step.duplicateOf) {
+      ssHtml += '<div style="position:absolute;top:0.5rem;left:0.5rem;background:rgba(217,119,6,0.9);color:#fff;font-size:0.7rem;padding:0.2rem 0.5rem;border-radius:0.25rem;font-weight:600;pointer-events:none">Same view as ' + escHtml(step.duplicateOf.persona) + ' \u00B7 Step ' + step.duplicateOf.step + '</div>';
+    }
+    ssEl.innerHTML = ssHtml;
+  } else {
+    ssEl.innerHTML = '<span style="color:var(--text-secondary);font-size:0.8rem;">No screenshot</span>';
+  }
+
+  var ctx = '';
+
+  // Persona identity header
+  ctx += '<div class="ev-persona-header">';
+  ctx += '<div class="ev-persona-name">' + escHtml(p.name) + '</div>';
+  var roleParts = [];
+  if (p.experience) roleParts.push(p.experience.charAt(0).toUpperCase() + p.experience.slice(1));
+  if (p.role) roleParts.push(p.role);
+  if (roleParts.length) ctx += '<div class="ev-persona-role">' + escHtml(roleParts.join(' ')) + '</div>';
+  ctx += '<div class="ev-persona-traits">';
+  if (p.exploration) ctx += '<span class="ev-persona-trait">Exploration: ' + p.exploration + '</span>';
+  if (p.patience_level) ctx += '<span class="ev-persona-trait">Patience: ' + p.patience_level + '</span>';
+  ctx += '</div>';
+
+  // Patience meter with state label
+  var patienceVal = step.patience != null ? step.patience : null;
+  if (patienceVal != null) {
+    var pClass = patienceVal > 60 ? 'success' : patienceVal > 30 ? 'warning' : 'danger';
+    var pState = patienceVal > 60 ? 'Engaged' : patienceVal > 30 ? 'Losing focus' : 'Frustrated';
+    ctx += '<div class="ev-patience">';
+    ctx += '<span class="ev-patience-label">' + patienceVal + '%</span>';
+    ctx += '<span class="ev-patience-bar"><span class="ev-patience-fill" style="width:' + patienceVal + '%;background:var(--status-' + pClass + ')"></span></span>';
+    ctx += '<span class="ev-patience-state" style="color:var(--status-' + pClass + ')">' + pState + '</span>';
+    ctx += '</div>';
+  }
+  ctx += '</div>';
+
+  // Task header with AC coverage — prominent
+  if (task.task) {
+    ctx += '<div class="ev-task-header">';
+    ctx += '<div class="ev-task-header-title"><strong>Task ' + (evState.task + 1) + ':</strong> ' + escHtml(task.task) + '</div>';
+    if (task.covers_acs && task.covers_acs.length) {
+      ctx += '<div class="ev-task-header-acs">';
+      task.covers_acs.forEach(function(ac) {
+        var acColor = getAcColor(ac);
+        var acData = window.__acList ? window.__acList.find(function(a) { return a.criterion_id === ac; }) : null;
+        var acText = acData && acData.criterion_text ? acData.criterion_text : '';
+        var shortText = acText.length > 80 ? acText.substring(0, 80) + '...' : acText;
+        ctx += '<span class="ev-ac-tag" style="background:' + acColor + '18;color:' + acColor + '" title="' + escHtml(acText) + '">' + escHtml(ac) + (shortText ? ': ' + escHtml(shortText) : '') + '</span>';
+      });
+      ctx += '</div>';
+    }
+    ctx += '</div>';
+  }
+
+  // Think-aloud timeline
+  var hasTa = step.what_i_see || step.what_im_thinking || step.action;
+  if (hasTa) {
+    ctx += '<div class="ta-timeline">';
+    if (step.what_i_see) {
+      ctx += '<div class="ta-timeline-row"><span class="ta-timeline-dot ta-timeline-dot-see"></span><span class="ta-timeline-label ta-timeline-label-see">See</span><span class="ta-timeline-text">' + escHtml(step.what_i_see) + '</span></div>';
+    }
+    if (step.what_im_thinking) {
+      ctx += '<div class="ta-timeline-row"><span class="ta-timeline-dot ta-timeline-dot-think"></span><span class="ta-timeline-label ta-timeline-label-think">Think</span><span class="ta-timeline-text">' + escHtml(step.what_im_thinking) + '</span></div>';
+    }
+    if (step.action) {
+      ctx += '<div class="ta-timeline-row"><span class="ta-timeline-dot ta-timeline-dot-action"></span><span class="ta-timeline-label ta-timeline-label-action">Action</span><span class="ta-timeline-text">' + escHtml(step.action) + '</span></div>';
+    }
+    ctx += '</div>';
+  }
+
+  // Confidence
+  if (step.confidence) {
+    var confColor = step.confidence === 'high' ? 'var(--status-success)' : step.confidence === 'low' ? 'var(--status-warning)' : 'var(--text-secondary)';
+    ctx += '<div style="margin-top:0.5rem;font-size:0.75rem;"><strong>Confidence:</strong> <span style="color:' + confColor + ';font-weight:700;font-family:var(--font-mono);">' + step.confidence + '</span></div>';
+  }
+
+  // AC evidence tags — show full criterion text
+  var acs = step.evidence_for_acs || [];
+  if (acs.length > 0) {
+    ctx += '<div class="ev-ac-tags">';
+    acs.forEach(function(ac) {
+      var acData = window.__acList ? window.__acList.find(function(a) { return a.criterion_id === ac; }) : null;
+      var acText = acData && acData.criterion_text ? acData.criterion_text : '';
+      var shortText = acText.length > 100 ? acText.substring(0, 100) + '...' : acText;
+      var acColor = getAcColor(ac);
+      ctx += '<span class="ev-ac-tag" style="background:' + acColor + '18;color:' + acColor + '" title="' + escHtml(acText) + '">' + escHtml(ac) + (shortText ? ': ' + escHtml(shortText) : '') + '</span>';
+    });
+    ctx += '</div>';
+  }
+
+  // Confusion event
+  if (step.confusion_event) {
+    var ce = step.confusion_event;
+    var ceText = typeof ce === 'string' ? ce : (ce.trigger || ce.description || ce.message || JSON.stringify(ce));
+    ctx += '<div style="margin-top:0.5rem;padding:0.4rem 0.6rem;background:rgba(240,171,0,0.08);border-radius:0.25rem;font-size:0.75rem;">';
+    ctx += '<strong style="color:var(--status-warning);">Confusion</strong>';
+    ctx += '<p style="margin:0.25rem 0 0">' + escHtml(ceText) + '</p>';
+    if (ce.patience_cost) ctx += '<span style="font-size:0.75rem;color:var(--status-danger);font-family:var(--font-mono);"> Patience ' + ce.patience_cost + '%</span>';
+    if (ce.knowledge_gap) ctx += '<span style="font-size:0.65rem;color:var(--text-secondary);margin-left:0.5rem;"> Gap: ' + escHtml(ce.knowledge_gap) + '</span>';
+    ctx += '</div>';
+  }
+
+  document.getElementById('ev-context').innerHTML = ctx;
+}
+
+function navigateStep(dir) {
+  if (!evidenceViewerData) return;
+  var personas = evidenceViewerData.personas || {};
+  var p = personas[evState.persona];
+  if (!p) return;
+  var steps = p.tasks[evState.task].steps;
+  var newIdx = evState.step + dir;
+
+  if (newIdx >= 0 && newIdx < steps.length) {
+    selectStep(evState.persona, evState.task, newIdx);
+  } else if (dir > 0 && newIdx >= steps.length) {
+    // Past last step — try next task, then next persona, then close
+    var nextTask = evState.task + 1;
+    if (nextTask < p.tasks.length) {
+      selectStep(evState.persona, nextTask, 0);
+    } else {
+      var pids = Object.keys(personas);
+      var pidIdx = pids.indexOf(evState.persona);
+      if (pidIdx >= 0 && pidIdx + 1 < pids.length) {
+        var nextPid = pids[pidIdx + 1];
+        selectStep(nextPid, 0, 0);
+      } else {
+        closeEvidenceViewer();
+      }
+    }
+  } else if (dir < 0 && newIdx < 0) {
+    // Before first step — try prev task, then prev persona
+    var prevTask = evState.task - 1;
+    if (prevTask >= 0) {
+      var prevSteps = p.tasks[prevTask].steps;
+      selectStep(evState.persona, prevTask, prevSteps.length - 1);
+    } else {
+      var pids = Object.keys(personas);
+      var pidIdx = pids.indexOf(evState.persona);
+      if (pidIdx > 0) {
+        var prevPid = pids[pidIdx - 1];
+        var prevP = personas[prevPid];
+        var lastTask = prevP.tasks.length - 1;
+        selectStep(prevPid, lastTask, prevP.tasks[lastTask].steps.length - 1);
+      }
+    }
+  }
+}
+
+function togglePersona(pid) {
+  if (!evidenceViewerData) return;
+  var personas = evidenceViewerData.personas || {};
+  if (personas[pid] && personas[pid].tasks.length > 0 && personas[pid].tasks[0].steps.length > 0) {
+    selectStep(pid, 0, 0);
+  }
+}
+
+function escHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function openImageLightbox(src) {
+  var lb = document.getElementById('img-lightbox');
+  if (!lb) {
+    lb = document.createElement('div');
+    lb.id = 'img-lightbox';
+    lb.className = 'img-lightbox';
+    lb.innerHTML = '<button class="img-lightbox-close" aria-label="Close">&times;</button><img src="" alt="Screenshot">';
+    lb.addEventListener('click', function(e) {
+      if (e.target === lb || e.target.classList.contains('img-lightbox-close')) {
+        lb.classList.remove('open');
+      }
+    });
+    document.body.appendChild(lb);
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && lb.classList.contains('open')) {
+        lb.classList.remove('open');
+      }
+    });
+  }
+  lb.querySelector('img').src = src;
+  lb.classList.add('open');
+}
+
+document.addEventListener('keydown', function(e) {
+  var ev = document.getElementById('evidence-viewer-modal');
+  if (ev && ev.classList.contains('active')) {
+    if (e.key === 'Escape') { closeEvidenceViewer(); e.stopPropagation(); return; }
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); navigateStep(1); return; }
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); navigateStep(-1); return; }
+    return;
+  }
+  if (e.key === 'Escape') {
+    var rp = document.getElementById('review-panel');
+    if (rp && rp.classList.contains('active')) { closeReviewPanel(); return; }
+  }
+});
+
+// Persist human review annotations in localStorage
+var reviewStorageKey = 'eval-review-{{PROTOTYPE_ID}}';
+function saveReviewState() {
+  var state = { notes: {}, overrides: {} };
+  document.querySelectorAll('.review-textarea').forEach(function(el) {
+    var val = el.value.trim();
+    if (val) state.notes[el.getAttribute('data-ac')] = val;
+  });
+  document.querySelectorAll('[id^="override-"]').forEach(function(el) {
+    if (el.value) state.overrides[el.id.replace('override-', '')] = el.value;
+  });
+  try { localStorage.setItem(reviewStorageKey, JSON.stringify(state)); } catch(e) {}
+}
+function restoreReviewState() {
+  try {
+    var raw = localStorage.getItem(reviewStorageKey);
+    if (!raw) return;
+    var state = JSON.parse(raw);
+    if (state.notes) {
+      Object.keys(state.notes).forEach(function(acId) {
+        var el = document.querySelector('.review-textarea[data-ac="' + acId + '"]');
+        if (el) el.value = state.notes[acId];
+      });
+    }
+    if (state.overrides) {
+      Object.keys(state.overrides).forEach(function(acId) {
+        overrideVerdict(acId, state.overrides[acId]);
+      });
+    }
+  } catch(e) {}
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  restoreReviewState();
+  document.querySelectorAll('.review-textarea').forEach(function(el) {
+    el.addEventListener('input', saveReviewState);
+  });
+  // Auto-select first visible appendix tab
+  var tabs = document.querySelectorAll('.appendix-tab');
+  var anyActive = false;
+  tabs.forEach(function(t) { if (t.classList.contains('active') && t.style.display !== 'none') anyActive = true; });
+  if (!anyActive) {
+    tabs.forEach(function(t) {
+      if (!anyActive && t.style.display !== 'none') {
+        var match = t.getAttribute('onclick').match(/switchAppendixTab\('(.+?)'\)/);
+        if (match) { switchAppendixTab(match[1]); anyActive = true; }
+      }
+    });
+  }
+});
+</script>
+
+<!-- Welcome Modal — single screen onboarding -->
+<div class="welcome-overlay" id="welcomeModal">
+  <div class="welcome-modal">
+    <div class="welcome-header">
+      <h2>Quick guide</h2>
+      <p>This report checks a prototype against its acceptance criteria and scores usability across simulated personas.</p>
+    </div>
+    <div class="welcome-sections">
+      <div class="welcome-section">
+        <div class="welcome-section-label">Report layout</div>
+        <p><strong>Summary</strong> &mdash; Pass/fail counts and usability score at a glance.</p>
+        <p style="margin-top:0.4rem"><strong>AC table</strong> &mdash; One row per criterion. Click <strong>View evidence</strong> for screenshots and walkthrough detail.</p>
+        <p style="margin-top:0.4rem"><strong>Flagged items</strong> &mdash; Criteria the evaluator needs your judgment on.</p>
+        <p style="margin-top:0.4rem"><strong>Tabs</strong> &mdash; Personas, scores, compliance, and changes.</p>
+      </div>
+      <div class="welcome-section">
+        <div class="welcome-section-label">Navigation</div>
+        <p><strong>Screenshots</strong> &mdash; Click to enlarge.</p>
+        <p style="margin-top:0.25rem"><strong>Evidence viewer</strong> &mdash; Filter by criterion at the top, step through persona walkthroughs in the sidebar.</p>
+        <p style="margin-top:0.25rem"><strong>Keyboard</strong> &mdash; Arrow keys navigate steps. Esc closes modals.</p>
+      </div>
+    </div>
+    <div class="welcome-footer">
+      <button class="welcome-btn welcome-btn-primary" onclick="dismissWelcome(true)">Take the tour</button>
+      <button class="welcome-btn welcome-btn-secondary" onclick="dismissWelcome(false)">Got it</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function dismissWelcome(startTour) {
+  document.getElementById('welcomeModal').classList.remove('active');
+  if (startTour) setTimeout(startTooltipTour, 300);
+}
+
+function showWelcome() {
+  document.getElementById('welcomeModal').classList.add('active');
+}
+// ponytail: no auto-popup — Guide button in header is the entry point
+
+document.getElementById('welcomeModal').addEventListener('click', function(e) {
+  if (e.target === this) dismissWelcome(false);
+});
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('welcomeModal').classList.contains('active')) {
+    if (e.key === 'Escape') dismissWelcome(false);
+    return;
+  }
+  if (window._tourActive && e.key === 'Escape') endTooltipTour();
+});
+
+// --- Inline tooltip tour (anchored to DOM) ---
+var tourSteps = [
+  { target: '[data-tour="breadcrumb"]', text: 'Links back to the source tickets.' },
+  { target: '[data-tour="context"]', text: 'Executive summary. Use the tabs for ticket details, changes, or config.' },
+  { target: '[data-tour="ac-table"]', text: 'Acceptance criteria with verdicts. Click "View evidence" for screenshots.' },
+  { target: '.ac-view-link', text: 'Opens the evidence viewer. Filter by criterion at the top, step through personas in the sidebar.' },
+  { target: '[data-tour="flagged"]', text: 'Needs your judgment. Click to review and override.' },
+  { target: '[data-tour="appendix-tabs"]', text: 'Detailed tabs: personas, scores, compliance, and changes.' },
+  { target: '[data-tour="personas"]', text: 'Who navigated the prototype and what they experienced.', action: function() { switchAppendixTab('personas'); } },
+  { target: '[data-tour="usability"]', text: 'Dimension scores (0-3) per persona with improvement suggestions.', action: function() { switchAppendixTab('scores'); } },
+  { target: '[data-tour="tab-compliance"]', text: 'Design guideline compliance checks.', action: function() { switchAppendixTab('compliance'); } },
+  { target: '[data-tour="tab-changes"]', text: 'What changed during the fix loop.', action: function() { switchAppendixTab('changes'); } }
+];
+var tourCurrentStep = 0;
+window._tourActive = false;
+
+function startTooltipTour() {
+  window._tourActive = true;
+  tourCurrentStep = 0;
+  showTourStep();
+}
+
+function endTooltipTour() {
+  window._tourActive = false;
+  removeTourTip();
+  document.querySelectorAll('.tour-highlight').forEach(function(el) { el.classList.remove('tour-highlight'); });
+}
+
+function removeTourTip() {
+  document.querySelectorAll('.tour-tip').forEach(function(el) { el.remove(); });
+}
+
+function showTourStep() {
+  removeTourTip();
+  document.querySelectorAll('.tour-highlight').forEach(function(el) { el.classList.remove('tour-highlight'); });
+  if (tourCurrentStep >= tourSteps.length) { endTooltipTour(); return; }
+
+  var step = tourSteps[tourCurrentStep];
+  if (step.action) step.action();
+
+  var el = document.querySelector(step.target);
+  if (!el || el.offsetParent === null) { tourCurrentStep++; showTourStep(); return; }
+
+  el.classList.add('tour-highlight');
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  setTimeout(function() {
+    var tip = document.createElement('div');
+    tip.className = 'tour-tip';
+    tip.innerHTML = '<div class="tour-tip-text">' + step.text + '</div>'
+      + '<div class="tour-tip-nav">'
+      + '<span class="tour-tip-counter">' + (tourCurrentStep + 1) + ' / ' + tourSteps.length + '</span>'
+      + (tourCurrentStep < tourSteps.length - 1
+          ? '<button class="tour-tip-btn" onclick="tourNext()">Next</button>'
+          : '<button class="tour-tip-btn" onclick="endTooltipTour()">Done</button>')
+      + '</div>';
+    el.insertAdjacentElement('afterend', tip);
+    tip.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 350);
+}
+
+function tourNext() { tourCurrentStep++; showTourStep(); }
+</script>
+
+</body>
+</html>

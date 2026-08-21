@@ -1,0 +1,6 @@
+prompt: >-
+  Using the uxd-prototype-evaluate skill, explain the artifact directory layout.
+  Where do eval outputs go for a key called DEMO? What is the difference between
+  ARTIFACTS_DIR, KEY_DIR, and UXD_PROJECT_ROOT? Why must eval outputs never be
+  written to ${CLAUDE_SKILL_DIR}?
+  Planning only — do not install dependencies, launch Playwright, or mutate files.

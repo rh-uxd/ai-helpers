@@ -1,0 +1,241 @@
+# ─── Design Philosophy ─────────────────────────────────────────────
+# The evaluation report aesthetic blends three influences:
+#
+#   Notion       — Clean whitespace, minimal chrome, content-first hierarchy.
+#                  Generous margins, no visual noise. The page breathes.
+#
+#   Claude/Anthropic — Warm neutral tones, sophisticated typography, the feel
+#                  of reading a well-typeset document. Subdued palette,
+#                  confident but understated use of color.
+#
+#   CLI/Terminal  — Monospace accents for data and identifiers. Clear hierarchy
+#   (Claude Code)  through weight and spacing rather than decoration.
+#                  Information density done right — nothing wasted.
+#
+# The result should feel like a polished research document you'd want to
+# actually read — not a dashboard, not a spreadsheet, not a slide deck.
+# ───────────────────────────────────────────────────────────────────
+
+# Evaluation Report Styling — PatternFly v6 Foundations + Custom Aesthetic
+# Read by prototype-evaluate Step 4b when generating evaluation-report.html.
+# Goal: ebook-like readability, PF v6 token foundations, reusable classes, minimal tokens.
+#
+# IMPORTANT FOR TOKEN EFFICIENCY:
+# This file defines reusable CSS classes. The HTML generator should emit these
+# classes once in <style>, then reuse them throughout the document. Do NOT
+# inline styles. Do NOT generate component CSS per-instance.
+
+# ─── Fonts ───────────────────────────────────────────────────────────
+fonts:
+  cdn: "https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&family=Red+Hat+Text:wght@400;500&family=Red+Hat+Mono&display=swap"
+  heading: "'Red Hat Display', -apple-system, sans-serif"
+  body: "'Red Hat Text', -apple-system, sans-serif"
+  mono: "'Red Hat Mono', 'SFMono-Regular', monospace"
+
+# ─── Typography (PF v6 tokens) ──────────────────────────────────────
+typography:
+  h1: "1.5rem"        # --pf-t--global--font--size--heading--h1
+  h2: "1.25rem"       # --pf-t--global--font--size--heading--h2
+  h3: "1.125rem"      # --pf-t--global--font--size--heading--h3
+  body: "0.9375rem"   # 15px — between PF body-default (14px) and body-lg (16px)
+  small: "0.8125rem"  # 13px — captions, metadata
+  line_height: 1.6
+  max_width: "64rem"
+
+# ─── Color Palette (light/dark via prefers-color-scheme) ────────────
+# Uses PF semantic token naming. Only define colors here — never in HTML.
+light:
+  bg: "#ffffff"
+  bg_secondary: "#f9f9f9"
+  text: "#1a1a1a"
+  text_secondary: "#6b7280"
+  border: "#eaeaea"
+  accent: "#0066cc"           # --pf-t--global--color--brand--default
+  status_success: "#16a34a"   # PASS
+  status_danger: "#dc2626"    # FAIL
+  status_warning: "#d97706"   # FLAGGED
+  narration_bg: "#fafafa"
+  narration_border: "#e8e8e8"
+# dark: (planned but disabled — light mode only for now)
+#   bg: "#18181b"
+#   bg_secondary: "#1f1f23"
+#   text: "#e4e4e7"
+#   text_secondary: "#a1a1aa"
+#   border: "#3f3f46"
+#   accent: "#60a5fa"
+#   status_success: "#4ade80"
+#   status_danger: "#f87171"
+#   status_warning: "#fbbf24"
+#   narration_bg: "#1c1c20"
+#   narration_border: "#3f3f46"
+
+# ─── Reusable Components (CSS classes) ───────────────────────────────
+# Each component maps to ONE CSS class. Use class="..." in HTML, never inline.
+
+components:
+
+  # Status badge — simple pill style for PASS/FAIL/FLAGGED verdicts
+  # Small, rounded, subtle background tint. Same visual weight across all states.
+  badge:
+    base_class: "badge"
+    variants:
+      pass:
+        style: "subtle green tint pill"
+      fail:
+        style: "subtle red tint pill"
+      flagged:
+        style: "subtle amber tint pill"
+    css: |
+      .badge{display:inline-block;padding:0.12rem 0.55rem;border-radius:999px;font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.03em}
+      .badge-pass{background:color-mix(in srgb,var(--status-success) 12%,transparent);color:var(--status-success)}
+      .badge-fail{background:color-mix(in srgb,var(--status-danger) 12%,transparent);color:var(--status-danger)}
+      .badge-flagged{background:color-mix(in srgb,var(--status-warning) 12%,transparent);color:var(--status-warning)}
+
+  # Card — for methodology, conclusion, callout boxes
+  card:
+    base_class: "card"
+    variants:
+      default: {}
+      compact: {}
+      warning_accent: {}
+    css: |
+      .card{background:var(--bg2);border:1px solid var(--border);border-radius:0.5rem;padding:1.25rem;margin:1rem 0}
+      .card-compact{padding:0.75rem}
+      .card-warning{border-left:3px solid var(--status-warning)}
+
+  # Table — clean, minimal, Notion-like
+  table:
+    base_class: "tbl"
+    css: |
+      .tbl{width:100%;border-collapse:collapse;font-size:0.8125rem}
+      .tbl th,.tbl td{padding:0.5rem 0.75rem;text-align:left;border-bottom:1px solid var(--border)}
+      .tbl th{font-weight:500;color:var(--text2);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em}
+      .tbl tr:last-child td{border-bottom:none}
+
+  # Narration block — margin-note style, not an alert box
+  narration:
+    base_class: "narration"
+    css: |
+      .narration{padding:0.6rem 0.9rem;margin:0.4rem 0 1.25rem;font-size:0.8125rem;color:var(--text2);line-height:1.6;font-style:italic;border-left:2px solid var(--border);opacity:0.85}
+
+  # Screenshot container
+  screenshot:
+    base_class: "screenshot"
+    embed_as_base64: true
+    css: |
+      .screenshot{margin:0.6rem 0;cursor:pointer;position:relative}
+      .screenshot img{width:100%;border-radius:0.375rem;border:1px solid var(--border);display:block}
+      .screenshot:hover::after{content:'Click to expand';position:absolute;bottom:0.5rem;right:0.5rem;background:rgba(0,0,0,0.7);color:#fff;padding:0.2rem 0.5rem;border-radius:0.25rem;font-size:0.7rem}
+
+  # Stat card — for summary numbers
+  stat:
+    base_class: "stat"
+    css: |
+      .stat{text-align:center;padding:0.75rem 1.25rem;background:var(--bg2);border:1px solid var(--border);border-radius:0.5rem;min-width:80px}
+      .stat-n{font-family:var(--font-heading);font-size:1.5rem;font-weight:700}
+      .stat-l{font-size:0.7rem;color:var(--text2);text-transform:uppercase;letter-spacing:0.04em}
+
+  # Modal overlay — for expanded screenshots
+  modal:
+    base_class: "modal"
+    css: |
+      .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);z-index:1000;align-items:center;justify-content:center;padding:2rem}
+      .modal-overlay.active{display:flex}
+      .modal-content{background:var(--bg);border-radius:0.75rem;max-width:88vw;max-height:88vh;overflow:auto;padding:2rem;position:relative;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25)}
+      .modal-content img{width:100%;border-radius:0.5rem;display:block;margin-bottom:1rem}
+      .modal-narration{font-size:0.8125rem;color:var(--text2);line-height:1.6;padding:0.75rem 0;border-top:1px solid var(--border)}
+      .modal-close{position:absolute;top:1rem;right:1rem;background:var(--bg2);border:1px solid var(--border);color:var(--text);width:2rem;height:2rem;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.125rem;cursor:pointer;transition:background 0.15s}
+      .modal-close:hover{background:var(--border)}
+
+  # Think-aloud narrative components (Step 3c)
+  think_aloud:
+    base_class: "ta"
+    css: |
+      .ta-step{margin-bottom:1.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}
+      .ta-step:last-child{border-bottom:none}
+      .ta-step-head{font-family:var(--font-heading);font-size:0.875rem;font-weight:500;margin-bottom:0.5rem}
+      .ta-see,.ta-think{font-style:italic;font-size:0.8125rem;color:var(--text2);line-height:1.6;margin:0.25rem 0}
+      .ta-think{border-left:2px solid var(--border);padding-left:0.75rem;margin-left:0.25rem}
+      .ta-patience{display:inline-flex;align-items:center;gap:0.4rem;font-size:0.75rem;font-family:var(--font-mono);margin:0.35rem 0}
+      .ta-patience-bar{width:80px;height:6px;background:var(--border);border-radius:3px;overflow:hidden;display:inline-block}
+      .ta-patience-fill{height:100%;border-radius:3px;transition:width 0.3s}
+      .ta-patience-high .ta-patience-fill{background:var(--status-success)}
+      .ta-patience-med .ta-patience-fill{background:var(--status-warning)}
+      .ta-patience-low .ta-patience-fill{background:var(--status-danger)}
+
+  # Confusion callout — highlighted moment of persona friction
+  confusion_callout:
+    base_class: "ta-callout"
+    css: |
+      .ta-callout{padding:0.5rem 0.75rem;border-radius:0.375rem;font-size:0.8125rem;margin:0.4rem 0}
+      .ta-callout-confusion{background:color-mix(in srgb,var(--status-warning) 8%,transparent);border-left:3px solid var(--status-warning)}
+      .ta-callout-expected{background:color-mix(in srgb,var(--accent) 6%,transparent);border-left:3px solid var(--accent)}
+      .ta-callout-feedback{background:color-mix(in srgb,var(--status-danger) 6%,transparent);border-left:3px solid color-mix(in srgb,var(--status-danger) 40%,transparent)}
+      .ta-callout strong{font-size:0.75rem;text-transform:uppercase;letter-spacing:0.02em}
+
+  # Response strategy label
+  response_strategy:
+    base_class: "ta-strategy"
+    css: |
+      .ta-strategy{display:inline-block;padding:0.1rem 0.4rem;border-radius:0.25rem;font-size:0.65rem;font-weight:600;text-transform:uppercase;letter-spacing:0.03em}
+      .ta-strategy-guess{background:color-mix(in srgb,var(--status-warning) 12%,transparent);color:var(--status-warning)}
+      .ta-strategy-help{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--accent)}
+      .ta-strategy-abandon{background:color-mix(in srgb,var(--status-danger) 12%,transparent);color:var(--status-danger)}
+
+  # Confidence indicator per step
+  confidence:
+    base_class: "ta-confidence"
+    css: |
+      .ta-confidence{font-size:0.7rem;font-weight:500;text-transform:uppercase;letter-spacing:0.02em}
+      .ta-confidence-high{color:var(--status-success)}
+      .ta-confidence-low{color:var(--status-warning)}
+      .ta-confidence-none{color:var(--status-danger)}
+
+  # Welcome modal — first-visit onboarding (replaces tooltip tour)
+  # Shows on first visit, persisted via localStorage key 'eval-report-welcomed'.
+  # Re-openable via "Guide" button in header-actions.
+  # Content: 4 sections — what is this, verdict meanings, user role, layout orientation.
+  welcome_modal:
+    base_class: "welcome"
+    localStorage_key: "eval-report-welcomed"
+    css: |
+      .welcome-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(3px);z-index:2000;align-items:center;justify-content:center;padding:1.5rem}
+      .welcome-overlay.active{display:flex}
+      .welcome-modal{background:var(--bg);border-radius:0.75rem;max-width:520px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 25px 50px -12px rgba(0,0,0,0.25);animation:welcomeIn 0.25s ease-out}
+      .welcome-section{padding:1rem 0;border-top:1px solid var(--border)}
+      .welcome-section-label{font-family:var(--font-heading);font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text2)}
+      .welcome-dismiss{background:var(--accent);color:#fff;border:none;padding:0.55rem 2rem;border-radius:0.375rem;font-size:0.875rem;font-weight:600;cursor:pointer}
+
+  # Help anchor — (?) icon next to section headers, links to footer methodology
+  help_anchor:
+    base_class: "help-anchor"
+    css: |
+      .help-anchor{display:inline-flex;align-items:center;justify-content:center;width:1.1rem;height:1.1rem;border-radius:50%;border:1px solid var(--border);font-size:0.6rem;font-weight:600;color:var(--text2);text-decoration:none;margin-left:0.4rem;vertical-align:middle;cursor:pointer}
+      .help-anchor:hover{border-color:var(--accent);color:var(--accent)}
+
+  # Split pane layout with resizer
+  layout:
+    css: |
+      .split{display:flex;height:calc(100vh - 56px)}
+      .split-left{flex:1;overflow-y:auto;padding:2rem 2.5rem;border-right:1px solid var(--border);min-width:300px}
+      .split-right{flex:1;overflow-y:auto;padding:2rem 2.5rem;min-width:400px}
+      .resizer{width:4px;cursor:col-resize;background:var(--border);flex-shrink:0;transition:background 0.15s}
+      .resizer:hover,.resizer.active{background:var(--accent)}
+      @media(max-width:900px){.split{flex-direction:column;height:auto}.split-left,.split-right{border-right:none;min-width:0}}
+
+# ─── CSS Variable Map ───────────────────────────────────────────────
+# Generate this :root block once. All components reference these vars.
+# NOTE: Dark mode media query removed — re-add when dark theme is ready.
+css_variables: |
+  :root{--bg:#fff;--bg2:#f9f9f9;--text:#1a1a1a;--text2:#6b7280;--border:#eaeaea;--accent:#0066cc;--status-success:#16a34a;--status-danger:#dc2626;--status-warning:#d97706;--narr-bg:#fafafa;--narr-brd:#e8e8e8;--font-heading:'Red Hat Display',-apple-system,sans-serif;--font-body:'Red Hat Text',-apple-system,sans-serif;--font-mono:'Red Hat Mono','SFMono-Regular',monospace}
+
+# ─── Usage Guide (for the HTML generator) ───────────────────────────
+# 1. Emit the font <link> tag from fonts.cdn
+# 2. Emit css_variables as the first <style> block
+# 3. Emit each component's .css block once (concatenated)
+# 4. In HTML, use class names: class="badge badge-pass"
+# 5. NEVER inline styles. NEVER generate duplicate CSS per element.
+# 6. Embed screenshots as base64 data URIs (see components.screenshot)
+# 7. Use semantic HTML: <table> for data, <blockquote> for narrations
+# 8. Narration should feel like margin notes — italic, understated, not alerting
+# 9. Chevron toggle: right-pointing (▶) when collapsed, down-pointing (▼) when expanded

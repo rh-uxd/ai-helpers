@@ -25,8 +25,37 @@ plugins/uxd-workshop/skills/uxd-research-heuristic-eval-workspace/
 # Root-level heuristic-eval report dumps
 /heuristic-eval-*
 
+# MLflow (development — POC7 cluster is canonical; see Makefile mlflow-env)
+mlflow.db*
+*.db.bak*
+*.db.old*
+mlruns/
+mlartifacts/
+
+# Trace run outputs (from mlflow-compare-models / mlflow-trace-pipeline)
+tmp/trace-runs/
+
 # Environment variables (contributor credentials)
 .env*
 
 # Local Claude Code settings (user-specific)
 .claude/settings.local.json
+.claude/settings.json
+
+# Generated artifacts
+.artifacts/
+
+# Bootstrap caches (consistency-checker, usability-testing clones)
+.context/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Local-only skills (cloned for development, not published)
+eval-optimize-mlflow/
+
+# Team-specific overlay (MLflow URIs, internal git remotes, Pages, Jira)
+**/product-overlay.local.yaml

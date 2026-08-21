@@ -1,0 +1,6 @@
+prompt: >-
+  Using the uxd-prototype-evaluate skill in review mode:
+  /uxd-prototype-evaluate review MISSING-KEY
+
+  There are no prior eval artifacts for MISSING-KEY.
+  What should happen? Do not fabricate eval results.

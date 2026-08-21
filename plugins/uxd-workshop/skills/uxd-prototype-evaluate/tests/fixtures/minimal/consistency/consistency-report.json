@@ -1,0 +1,35 @@
+{
+  "source": "pf-css-token-check",
+  "degraded": false,
+  "checked_at": "2026-08-01T10:00:00.000Z",
+  "source_mode": {
+    "ran": true,
+    "violations": [
+      {
+        "file": "src/app/AIHub/Deployments/Deployments.tsx",
+        "line": 42,
+        "property": "color",
+        "value": "#c9190b",
+        "suggestion": "Use --pf-t--global--color--status--danger--default"
+      },
+      {
+        "file": "src/app/AIHub/Deployments/Deployments.tsx",
+        "line": 87,
+        "property": "margin-top",
+        "value": "16px",
+        "suggestion": "Use --pf-t--global--spacer--md"
+      }
+    ]
+  },
+  "visual_mode": {
+    "ran": true,
+    "screenshots_checked": 4,
+    "findings": []
+  },
+  "summary": {
+    "total_guidelines_checked": 10,
+    "violations": 2,
+    "warnings": 1,
+    "passes": 7
+  }
+}

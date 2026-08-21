@@ -1,0 +1,92 @@
+# Cross-cutting overlays — apply on top of role personas.
+# Path: ${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml
+#
+# Overlays are contexts/lenses, not job roles. A data scientist can also be
+# evaluated under accessibility, regulation, team size, and/or experience level.
+#
+# aliases: also-known-as phrases that select this overlay (or level). Use singular
+# forms only — substring matching covers plurals. Skills match free-text language
+# against overlay aliases and, for sliders, level aliases (case-insensitive
+# substring). Applied in addition to a role persona.
+
+version: "1.1"
+
+overlays:
+  - id: experience
+    display_name: Experience level
+    kind: slider
+    summary: >-
+      How long the person has done the work. Compose with a persona ID as
+      {persona-id}+{level} (e.g. data-scientist+junior).
+    card: experience.md
+    levels:
+      - id: junior
+        label: Junior
+        aliases:
+          - junior
+          - early career
+          - novice
+      - id: senior
+        label: Senior
+        aliases:
+          - senior
+      - id: experienced
+        label: Experienced
+        aliases:
+          - experienced
+          - expert
+
+  - id: accessibility
+    display_name: Accessibility
+    kind: context
+    summary: >-
+      Keyboard, assistive tech, and clear structure. Layer onto a role persona;
+      do not use as the only evaluator.
+    aliases:
+      - accessibility
+      - a11y
+      - screen reader
+    card: accessibility.md
+
+  - id: regulation
+    display_name: Regulated environment
+    kind: context
+    summary: >-
+      Compliance, air-gap, or strict change-control constraints. Layer onto a
+      role persona; do not use as a standalone job role.
+    aliases:
+      - regulated
+      - air-gapped
+      - air gapped
+      - compliance
+      - fedramp
+    card: regulation.md
+
+  - id: team
+    display_name: Team size
+    kind: slider
+    summary: >-
+      Org / team scale. Compose level IDs as {persona-id}+…+{level}
+      (e.g. data-scientist+senior+small-team).
+    card: team.md
+    levels:
+      - id: small-team
+        label: Small team
+        aliases:
+          - small team
+          - small-team
+          - startup
+          - early stage
+      - id: medium-team
+        label: Medium team
+        aliases:
+          - medium team
+          - mid-size team
+          - mid size team
+      - id: large-team
+        label: Large team
+        aliases:
+          - large team
+          - large-team
+          - enterprise
+          - platform org

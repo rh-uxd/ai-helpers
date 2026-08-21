@@ -1,0 +1,30 @@
+[
+  {
+    "iteration": 1,
+    "timestamp": "2026-08-04T23:45:00.000Z",
+    "pass_count": 4,
+    "fail_count": 6,
+    "flagged_count": 0,
+    "exit_reason": "has_failures",
+    "rerun_acs": [],
+    "verdicts": {
+      "AC1": "FAIL", "AC2": "PASS", "AC3": "PASS", "AC4": "FAIL",
+      "AC5": "PASS", "AC6": "FAIL", "AC7": "FAIL", "AC8": "FAIL",
+      "AC9": "PASS", "AC10": "FAIL"
+    }
+  },
+  {
+    "iteration": 2,
+    "timestamp": "2026-08-05T00:45:40.837Z",
+    "pass_count": 10,
+    "fail_count": 0,
+    "flagged_count": 0,
+    "exit_reason": "all_pass",
+    "rerun_acs": ["AC1", "AC4", "AC6", "AC7", "AC8", "AC10"],
+    "verdicts": {
+      "AC1": "PASS", "AC2": "PASS", "AC3": "PASS", "AC4": "PASS",
+      "AC5": "PASS", "AC6": "PASS", "AC7": "PASS", "AC8": "PASS",
+      "AC9": "PASS", "AC10": "PASS"
+    }
+  }
+]

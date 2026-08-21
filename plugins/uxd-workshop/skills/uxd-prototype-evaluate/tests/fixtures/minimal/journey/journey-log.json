@@ -1,0 +1,88 @@
+{
+  "depth": "deep",
+  "prototype_url": "http://localhost:9204/deployments",
+  "evaluated_at": "2026-08-01T10:00:00.000Z",
+  "persona_selection": {
+    "method": "target-audience",
+    "personas": ["alex-junior", "alex-senior"]
+  },
+  "journeys": [
+    {
+      "id": "journey-1",
+      "title": "View scheduling status in deployments table",
+      "verdict": "PASS",
+      "verdict_detail": "All scheduling columns visible with correct states",
+      "ac_ids": ["AC-1", "AC-3"],
+      "steps": [
+        {
+          "step": 1,
+          "action": "Navigate to AI Hub > Models > Deployments",
+          "result": "success",
+          "screenshot": "screenshots/journey-1-step-1.png",
+          "narration": "Table loads with Queue and Scheduling columns visible"
+        },
+        {
+          "step": 2,
+          "action": "Verify scheduling states for Kueue-managed deployments",
+          "result": "success",
+          "screenshot": "screenshots/journey-1-step-2.png",
+          "narration": "Correct Kueue states displayed"
+        },
+        {
+          "step": 3,
+          "action": "Verify non-Kueue deployment shows normal status",
+          "result": "success",
+          "screenshot": "screenshots/journey-1-step-3.png",
+          "narration": "Llama-3.1 shows Ready with no Kueue indicators"
+        }
+      ]
+    },
+    {
+      "id": "journey-2",
+      "title": "Hover for resource tooltip",
+      "verdict": "FAIL",
+      "verdict_detail": "No tooltip appears on hover over scheduling status",
+      "ac_ids": ["AC-6"],
+      "steps": [
+        {
+          "step": 1,
+          "action": "Hover over scheduling status label",
+          "result": "fail",
+          "screenshot": "screenshots/journey-2-step-1.png",
+          "narration": "No tooltip rendered on hover"
+        }
+      ]
+    }
+  ],
+  "usability_dimensions": [
+    {
+      "id": "workflow-continuity",
+      "name": "Workflow Continuity & Integrity",
+      "composite_score": 2.5
+    },
+    {
+      "id": "system-status",
+      "name": "System Status Visibility",
+      "composite_score": 3.0
+    }
+  ],
+  "overall_score": 5.5,
+  "max_score": 6,
+  "personas_evaluated": ["alex-junior", "alex-senior"],
+  "persona_overlays": [
+    {
+      "persona": "alex-junior",
+      "task_index": 0,
+      "dimension_id": "workflow-continuity",
+      "score": 2,
+      "rationale": "Junior found the flow straightforward"
+    },
+    {
+      "persona": "alex-senior",
+      "task_index": 0,
+      "dimension_id": "workflow-continuity",
+      "score": 3,
+      "rationale": "Senior completed with no hesitation"
+    }
+  ]
+}

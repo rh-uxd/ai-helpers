@@ -1,0 +1,9 @@
+prompt: >-
+  Using the uxd-prototype-evaluate skill in review mode:
+  /uxd-prototype-evaluate review ITER-DEMO
+
+  Prior eval artifacts are under .artifacts/ITER-DEMO/ in this case directory.
+  The eval ran 2 iterations: iteration 1 had 4 pass / 6 fail, iteration 2 had
+  10 pass / 0 fail. Usability score is 14/18. Summarize the iteration progression,
+  final results, and usability scores. Do NOT re-run Playwright, Phase A, or Phase B.
+fixture: .artifacts/ITER-DEMO

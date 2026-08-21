@@ -1,0 +1,9 @@
+prompt: >-
+  Using the uxd-prototype-create skill with these answers already decided:
+  - Source: plain-text feature — "A user settings page with profile fields and a save button"
+  - Workspace: standalone
+  - Decisions: skip
+
+  Print the Prototype Plan summary (Source, Workspace, Decisions; omit Depth when
+  decisions are skip) and ask for confirmation. After printing the plan, STOP —
+  do not generate the prototype or write any files.

@@ -1,0 +1,84 @@
+# Product Overlay — defaults for uxd-prototype-evaluate
+# Checked-in template. Keep values generic (example.com / empty).
+#
+# Team-specific URLs (MLflow, internal git remotes, Pages, Jira) live in
+# internal-ai-helpers plugin uxd-eval-config (auto-discovered). Optional:
+#   1. config/product-overlay.local.yaml (gitignored personal override), OR
+#   2. EVAL_OVERLAY_PATH / UXD_INTERNAL_HELPERS
+# Env vars (MLFLOW_TRACKING_URI, CONSISTENCY_CHECKER_REPO, …) still win.
+# See references/skill-overlays.md.
+
+product:
+  name: "Product"
+  short_name: "product"
+  version: "main"
+
+# Jira configuration — maps project key prefixes to instance URLs
+jira:
+  instances:
+    - prefix: "PROJ-"
+      url: "https://issues.example.com/browse/"
+      type: "story"
+  outcome_project: ""
+  outcome_issue_type: "Outcome"
+  ac_location: "description"  # field where acceptance criteria live in the ticket
+  ticket_label: "Ticket"      # breadcrumb label for the evaluated issue
+
+# Git configuration — prototype repo conventions
+git:
+  base_branch: "main"
+  remote_url: ""
+  local_workspace: ""
+  pages_base_url: ""
+  mr_branch_pattern: "mr-{number}"
+  mr_url_style: "gitlab"      # gitlab | github — how MR/PR links are built
+  diff_url_template: ""
+
+# Optional context git remotes. Empty = skip bootstrap (pipeline degrades).
+# Override with CONSISTENCY_CHECKER_REPO / USABILITY_TESTING_REPO env vars.
+context_repos:
+  consistency_checker: ""
+  usability_testing: ""
+
+# MLflow tracking (opt-in). Empty = skip logging unless MLFLOW_TRACKING_URI is set.
+mlflow:
+  tracking_uri: ""
+
+# Report publish / hosted dashboard (used by publish-report.sh and the HTML header)
+publish:
+  gitlab_pages_repo: ""
+  pages_base_url: ""
+  jira_base_url: "https://issues.example.com/browse"
+  dashboard_url: ""
+
+# Design system — PatternFly configuration for consistency checks
+design_system:
+  name: "PatternFly 6"
+  context_path: ".context/consistency-checker/"
+  guidelines_path: ".context/consistency-checker/guidelines/"
+  analyze_script: ".context/consistency-checker/scripts/analyze.py"
+
+# Personas — canonical catalogs live in the plugin; deep behavioral YAML from .context/usability-testing/
+personas:
+  catalog_path: "${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml"
+  cards_path: "${CLAUDE_PLUGIN_ROOT}/knowledge/personas/"
+  overlays_catalog_path: "${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/catalog.yaml"
+  overlays_path: "${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/"
+  context_path: ".context/usability-testing/personas/"
+  rubric_path: ".context/usability-testing/prompts/evaluate-flow.md"
+  # Leave empty to use catalog.yaml defaults.pair
+  default_pair: []
+
+# Navigation conventions — adjust to the target prototype codebase
+navigation:
+  sidebar_file: ""
+  routes_file: ""
+  feature_flags_file: ""
+
+# Known MR mapping — optional static map of Jira keys to MR numbers
+known_mrs: {}
+
+# Google Sheet integration (optional — leave sheet_id empty to disable)
+tracking:
+  sheet_id: ""
+  sheet_name: "Automated Eval"

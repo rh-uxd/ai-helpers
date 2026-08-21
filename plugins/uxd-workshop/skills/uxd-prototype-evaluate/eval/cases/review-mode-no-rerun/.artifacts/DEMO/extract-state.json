@@ -1,0 +1,14 @@
+{
+  "key": "DEMO",
+  "title": "Settings page prototype",
+  "ac_list": [
+    {
+      "criterion_id": "AC-1",
+      "criterion_text": "User can open the settings page"
+    },
+    {
+      "criterion_id": "AC-2",
+      "criterion_text": "User can save profile changes"
+    }
+  ]
+}
