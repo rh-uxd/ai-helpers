@@ -1,0 +1,10 @@
+expect_issues: true
+issue_categories:
+  - missing_defensive
+notes: |
+  Should flag: users.slice() crashes when users is undefined (optional prop),
+  users[0] crashes on empty array, onSelect(user) crashes when onSelect
+  is undefined (optional prop), user.role.name crashes if role is null,
+  user.role.permissions.join() crashes if permissions is undefined.
+  Missing: default value for users prop, optional chaining on onSelect,
+  null checks on nested role properties, bounds check on users[0].

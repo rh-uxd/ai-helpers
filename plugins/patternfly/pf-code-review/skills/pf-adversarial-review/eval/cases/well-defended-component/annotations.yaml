@@ -1,0 +1,11 @@
+expect_issues: false
+issue_categories: []
+notes: |
+  Negative control — this component is well-defended:
+  - Default values for items (=[]) and isLoading (=false)
+  - Optional chaining on onSelect?.() and metadata?.owner
+  - Nullish coalescing for description and owner fallbacks
+  - Loading, error, and empty states all handled
+  - dataLabel on every Td for responsive mode
+  - Truncate for overflow protection
+  Should NOT report critical or high findings. May note strengths.

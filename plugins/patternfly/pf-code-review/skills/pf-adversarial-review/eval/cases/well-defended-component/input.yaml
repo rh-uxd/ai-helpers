@@ -1,0 +1,1 @@
+prompt: "Run an adversarial review on SafeList.tsx. Probe for crashes with undefined props, empty arrays, and missing nested data. Report any edge cases found."
