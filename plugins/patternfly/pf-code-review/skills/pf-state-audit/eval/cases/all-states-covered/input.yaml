@@ -1,0 +1,46 @@
+prompt: |
+  Audit this component for missing UI states:
+
+  ```tsx
+  import React from 'react';
+  import { Spinner, Bullseye, Alert, EmptyState, EmptyStateIcon, EmptyStateBody } from '@patternfly/react-core';
+  import { Table, Thead, Tr, Th, Tbody, Td } from '@patternfly/react-table';
+  import SearchIcon from '@patternfly/react-icons/dist/dynamic/icons/search-icon';
+  import LockIcon from '@patternfly/react-icons/dist/dynamic/icons/lock-icon';
+  import { useQuery } from '@tanstack/react-query';
+
+  const ProjectList = ({ hasAccess }: { hasAccess: boolean }) => {
+    const { data, isLoading, error } = useQuery({ queryKey: ['projects'], queryFn: fetchProjects });
+
+    if (!hasAccess) {
+      return (
+        <EmptyState titleText="Access restricted" icon={LockIcon}>
+          <EmptyStateBody>You don't have permission to view projects.</EmptyStateBody>
+        </EmptyState>
+      );
+    }
+
+    if (isLoading) {
+      return <Bullseye><Spinner aria-label="Loading projects" /></Bullseye>;
+    }
+
+    if (error) {
+      return <Alert variant="danger" title="Failed to load projects" actionLinks={<a onClick={() => refetch()}>Retry</a>} />;
+    }
+
+    if (!data?.length) {
+      return (
+        <EmptyState titleText="No projects found" icon={SearchIcon}>
+          <EmptyStateBody>Create a new project to get started.</EmptyStateBody>
+        </EmptyState>
+      );
+    }
+
+    return (
+      <Table aria-label="Projects">
+        <Thead><Tr><Th>Name</Th><Th>Status</Th></Tr></Thead>
+        <Tbody>{data.map(p => <Tr key={p.id}><Td>{p.name}</Td><Td>{p.status}</Td></Tr>)}</Tbody>
+      </Table>
+    );
+  };
+  ```
