@@ -180,6 +180,9 @@ PatternFly team tools and skill incubation — issue triage, release management,
 <tr><td nowrap><code>pf-figma-diff</code></td><td>Diff Figma designs to identify what changed and generate code update checklists.</td><td>—</td></tr>
 <tr><td nowrap><code>pf-modifier-scan</code></td><td>Analyze PatternFly modifier class (pf-m-*) usage across SCSS files and generate usage reports.</td><td>—</td></tr>
 <tr><td nowrap><code>pf-org-version-update</code></td><td>Update patternfly-org for a new PatternFly release — resolve versions, update package.json and versions.json, and provide build steps.</td><td>—</td></tr>
+<tr><td nowrap><code>pf-prerelease-audit-insights-chrome</code></td><td>Test a PatternFly prerelease against insights-chrome (RedHatInsights/insights-chrome) — branch setup, npm overrides, build/lint/test validation, breaking change fixes, visual testing via dev server, and compatibility report.</td><td>—</td></tr>
+<tr><td nowrap><code>pf-prerelease-audit-odh-dashboard</code></td><td>Audit PatternFly prerelease compatibility against odh-dashboard — version bumps across ~25-30 workspace packages, shared-module-config verification (Module Federation), full validation suite, and compatibility report.</td><td>—</td></tr>
+<tr><td nowrap><code>pf-prerelease-audit-openshift-console</code></td><td>Audit PatternFly prerelease compatibility against OpenShift Console — baseline comparison, Yarn resolutions, build/tsc/lint/unit test validation, and compatibility report.</td><td>—</td></tr>
 <tr><td nowrap><code>pf-prototype-mode</code></td><td>Enable prototype mode for React apps with grayscale styling and a banner overlay.</td><td>—</td></tr>
 <tr><td nowrap><code>pf-quarterly-report-gen</code></td><td>Generate quarterly Jira status reports with RAG assessment, blocker tracking, and next-quarter recommendations.</td><td>—</td></tr>
 <tr><td nowrap><code>pf-rhds-icon-finder</code></td><td>Find Red Hat Design System icons (@rhds/icons) by keyword or use case with visual previews.</td><td>—</td></tr>
@@ -200,4 +203,4 @@ PatternFly team tools and skill incubation — issue triage, release management,
 **Eval coverage**
 
 - Consumer: 25/25 (100%)
-- Workshop: 3/25 (12%)
+- Workshop: 3/28 (10%)
