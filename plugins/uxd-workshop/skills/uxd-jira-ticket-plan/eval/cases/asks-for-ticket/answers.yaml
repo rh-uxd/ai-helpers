@@ -2,4 +2,4 @@
 instruction: >
   If asked for a Jira URL or issue key, say you do not have one yet. Do not
   invent a ticket -- the point of this test is to verify the skill asks
-  before planning. If asked whether to implement, choose "No, plan only."
+  before planning. If asked how to proceed, choose "show plan only."

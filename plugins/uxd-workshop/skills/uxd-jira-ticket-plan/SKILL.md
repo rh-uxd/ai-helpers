@@ -3,14 +3,14 @@ name: uxd-jira-ticket-plan
 version: 0.1.0
 description: >-
   Generate a codebase-mapped implementation plan from a Jira ticket, then ask
-  whether to start guided implementation. Use when the user shares a Jira
-  ticket link, issue key (e.g. PROJ-123), or asks to plan, break down, or
-  implement a Jira ticket.
+  whether to show the plan only, implement the whole plan, or go step by step.
+  Use when the user shares a Jira ticket link, issue key (e.g. PROJ-123), or
+  asks to plan, break down, or implement a Jira ticket.
 ---
 
 # Jira Ticket Plan
 
-Turn a Jira ticket into a concrete, codebase-mapped plan. **Stop after the plan** and ask whether to start guided implementation. Implement only after the user says yes.
+Turn a Jira ticket into a concrete, codebase-mapped plan. **Stop after the plan** and ask how to proceed. Implement only after the user chooses whole plan or step by step.
 
 ## Requirements
 
@@ -24,13 +24,42 @@ If Atlassian / Jira MCP is available, prefer it. The script is the no-MCP fallba
 
 ## Hard gate
 
-1. Produce the analysis first.
-2. Ask: **Do you want guidance implementing these changes?**
+1. Produce the analysis first. The user-facing message must include the **complete numbered plan** before any question.
+2. Only after that plan is written, ask how to proceed. Do not ask in a turn that only did research; the plan must already be visible.
 3. Wait for the answer. Do not edit files, create branches, or start coding in the same turn as the analysis.
-4. If the user says yes (or equivalent: "go", "implement", "start"), begin guided implementation immediately.
-5. If the user says no, stop. Offer to refine the plan only if they ask.
+4. If the user says **show plan only**, stop. Offer to refine the plan only if they ask.
+5. If the user says **implement whole plan** or **implement plan step by step**, ask about the git branch next (see Branch). Do not start coding until they answer.
+6. If the user says **implement whole plan**, implement all remaining steps in order.
+7. If the user says **implement plan step by step**, implement only the next unfinished plan step, then stop and ask before the following step.
 
-Use an interactive question when available, with options **Yes, start implementing** and **No, plan only**. Otherwise ask in chat and wait.
+Use an interactive question when available:
+
+- Prompt: **How should we proceed?**
+- Options (use this wording):
+  - show plan only
+  - implement whole plan
+  - implement plan step by step
+
+Otherwise ask in chat and wait.
+
+If the user later switches mode (for example “just finish the rest”), follow that.
+
+### Branch
+
+After they choose whole plan or step by step, and **before any file edits**, ask whether to create a branch or stay on the current one. Ask this once per ticket, not before every step.
+
+Use an interactive question when available:
+
+- Prompt: **Create a new branch, or develop on the current one?**
+- Options (use this wording):
+  - create a new branch
+  - develop on the current branch
+
+If **create a new branch**: create a branch named from the ticket key and a short slug (for example `PROJ-123-short-slug`). Then implement on that branch.
+
+If **develop on the current branch**: stay on HEAD and implement there.
+
+Do not commit unless the user asks.
 
 ## Workflow
 
@@ -133,19 +162,92 @@ Rules for the plan:
 - Do not skip tests if the repo has them.
 - Flag product decisions; do not silently pick them.
 
-### 5. Ask to implement
+### 5. Ask how to proceed
 
-End the analysis turn with the question. Do not start work.
+End the analysis turn with the full plan and then the question. Do not start work.
 
-### 6. Guided implementation (only after yes)
+### 6. Implementation (only after whole plan or step by step)
 
-Start immediately. Work the plan in order:
+Resolve the branch question first. Before any file edits, **show the whole numbered plan again**. Then implement. Do not start coding in a turn that has not yet displayed that plan.
 
-- Say which step you are on and what you will change before editing.
-- Follow existing project conventions (commit style, tests, i18n, lint).
-- Keep scope to the ticket. Do not drive-by refactor.
-- After each meaningful chunk, briefly confirm what landed and what is next.
-- If a step is blocked by an open question, stop and ask — do not guess product behavior.
-- Do not commit unless the user asks.
+Follow existing project conventions (commit style, tests, i18n, lint). Keep scope to the ticket. Do not drive-by refactor. Do not commit unless the user asks. If a step is blocked by an open question, stop and ask — do not guess product behavior.
 
-If the user later says to continue, resume from the next unfinished step.
+**Every implementation turn** must open with the current step, then say what you will change, then edit:
+
+```markdown
+Implementing step N of M: **[step title from the plan]**
+```
+
+After the step lands, briefly confirm what changed. If more steps remain in whole-plan mode, announce the next step the same way before touching files.
+
+#### Whole plan
+
+Re-show the full plan, then work remaining numbered steps in order. Before each step, print `Implementing step N of M: **…**`. After each step, say what landed. Do not wait for approval between steps unless blocked.
+
+#### Step by step
+
+1. Re-show the full plan (or the remaining steps) if it is not already in this turn.
+2. Print `Implementing step N of M: **…**` for the next unfinished step.
+3. Implement **only that step**. Stop. Do not start the following step.
+4. Ask: **Continue to step N?** (next unfinished number). Also allow skip this step, switch to whole plan, or stop.
+5. Wait for the answer before any further edits.
+6. Repeat until the plan is done or the user stops.
+
+If the user later says to continue, resume from the next unfinished step and announce it with `Implementing step N of M` before editing.
+
+### 7. Checks (when implementation is done)
+
+After all plan steps are finished, **do not run tests or lint on your own**. Detect what this repo actually has, then ask.
+
+Look in the repo you changed (plugin vs core when both exist):
+
+- `package.json` scripts: `test`, `lint`, or similarly named scripts
+- Other manifests the project already uses for tests and lint
+
+List the commands you found in the message. Then ask. Use an interactive multi-select question when available.
+
+- Prompt: **Which checks should I run? You can select more than one.**
+- Options (include only those that exist in this repo; always include skip):
+  - run unit tests
+  - run lint
+  - skip checks
+
+If they pick **run unit tests** and/or **run lint**, run the matching commands (scoped to the files you changed when the tool allows). Report pass/fail. If they pick **skip checks**, skip.
+
+Then write the PR description (section 8).
+
+### 8. PR description (when implementation is done)
+
+When all plan steps are finished (or the user says the work is done), write a **summary of changes in markdown**. Do this after the checks question (and after any checks they asked to run). Do not open a PR unless the user asks.
+
+**Output format (required):** put the entire description in a fenced markdown code block so the user can copy the raw markdown:
+
+````
+```markdown
+…filled description here…
+```
+````
+
+Do not only render it as chat headings. The fenced block is the deliverable.
+
+Look for a template in the repo (first match wins):
+
+- `.github/PULL_REQUEST_TEMPLATE.md`
+- `.github/pull_request_template.md`
+- `.github/PULL_REQUEST_TEMPLATE/*.md`
+- `docs/pull_request_template.md`
+- `PULL_REQUEST_TEMPLATE.md`
+
+**If a template exists:** fill every section from what was implemented. Keep the heading text. Do not delete template headings. Leave a section empty only if it truly does not apply, and say so.
+
+**If there is no template:**
+
+```markdown
+## Summary
+- What changed and why (ticket key + link)
+
+## Test plan
+- How to verify
+```
+
+Base the text on the actual diff, not the original plan if they diverged. Include the Jira key and link.

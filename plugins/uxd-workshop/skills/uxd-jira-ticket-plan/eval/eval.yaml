@@ -1,7 +1,7 @@
 name: uxd-jira-ticket-plan-eval
 description: >-
   Evaluate uxd-jira-ticket-plan ticket intake, codebase mapping, plan
-  structure, inferred acceptance criteria, and the implement hard gate
+  structure, inferred acceptance criteria, and the proceed hard gate
 
 skill: uxd-workshop:uxd-jira-ticket-plan
 
@@ -29,10 +29,10 @@ inputs:
     - match: Questions asked to the user via AskUserQuestion.
       prompt: |
         Answer based on the test case context in input.yaml and answers.yaml.
-        If asked whether to start implementing, choose "No, plan only"
+        If asked how to proceed after a plan, choose "show plan only"
         unless answers.yaml says otherwise.
         Default: pick the first option or answer "yes" for confirmations
-        that are not the implement hard gate.
+        that are not the proceed hard gate.
 
 dataset:
   path: cases
@@ -59,7 +59,7 @@ outputs:
       whether source files were edited. Offline cases use fixture-ticket.md;
       no Jira/MCP/network.
   - tool: AskUserQuestion
-    schema: Ticket-key clarifying questions and the implement hard-gate question.
+    schema: Ticket-key clarifying questions and the proceed hard-gate question.
 
 traces:
   stdout: true
@@ -69,16 +69,16 @@ traces:
 
 # With-skill / without-skill A/B delta
 #
-# Discriminating signal: stop after a codebase-mapped plan and ask before
-# editing. Baseline models given "plan and implement PROJ-412" often start
-# coding, invent file paths, or restate the ticket instead of citing workspace
-# files. They also rarely label inferred AC.
+# Discriminating signal: stop after a codebase-mapped plan and ask how to
+# proceed (plan only / whole plan / step by step) before editing. Baseline
+# models given "plan and implement PROJ-412" often start coding, invent file
+# paths, or restate the ticket instead of citing workspace files.
 #
 # Expected delta:
 # | Case              | Without skill                         | With skill                                      |
 # |-------------------|---------------------------------------|-------------------------------------------------|
 # | asks-for-ticket   | Invents a ticket / generic plan       | Asks for a Jira URL or key                      |
-# | hard-gate         | Starts editing source files           | Plans, then asks; does not implement            |
+# | hard-gate         | Starts editing source files           | Plans, then asks how to proceed; does not edit  |
 # | structured-plan   | Loose summary, missing sections       | Required plan sections + real file citations    |
 # | inferred-ac       | Silently treats guesses as ticket AC  | Labels inferred criteria as Inferred            |
 
@@ -147,20 +147,21 @@ judges:
       asked_via_tool = any(
           c.get("name") == "AskUserQuestion"
           and re.search(
-              r"(implement|plan only|start implementing|guidance implementing)",
+              r"(how should we proceed|show plan only|implement whole plan|"
+              r"implement plan step by step|plan only)",
               json.dumps(c.get("input", {})),
               re.IGNORECASE,
           )
           for c in tool_calls
       )
       asks_in_text = re.search(
-          r"(do you want guidance implementing|start implementing|"
-          r"want me to implement|plan only|implement these changes)",
+          r"(how should we proceed|show plan only|implement whole plan|"
+          r"implement plan step by step|plan only)",
           text,
           re.IGNORECASE,
       )
       if not asked_via_tool and not asks_in_text:
-          return False, "Produced a plan but did not ask whether to implement"
+          return False, "Produced a plan but did not ask how to proceed"
       return True, "Planned first and stopped without editing source files"
 
   - name: produces_required_sections

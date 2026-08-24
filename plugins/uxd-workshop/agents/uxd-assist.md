@@ -40,7 +40,7 @@ When the user shares a Jira ticket URL or key, or asks to plan, break down, or i
 
 | Skill | What it does |
 |-------|-------------|
-| `/uxd-jira-ticket-plan` | Generate a codebase-mapped implementation plan from a Jira ticket, then optionally start guided implementation |
+| `/uxd-jira-ticket-plan` | Generate a codebase-mapped implementation plan from a Jira ticket, then optionally implement the whole plan or one step at a time |
 
 ## Synthesis guidance
 
