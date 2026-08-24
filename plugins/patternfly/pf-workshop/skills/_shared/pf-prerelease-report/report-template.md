@@ -54,6 +54,9 @@ schema.md's "Category vs. skill capability" note.
 ### Runtime failure
 {{finding or "None observed."}}
 
+### Peer dependency warning
+{{finding or "None observed."}}
+
 ### Build tooling artifact
 <!-- Things that look like a PF break but are actually npm/yarn hoisting, webpack config,
      lockfile quirks, etc. Include this section whenever such a false positive was

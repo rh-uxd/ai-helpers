@@ -1,7 +1,8 @@
 ---
 name: pf-prerelease-audit-insights-chrome
 description: "Test a PatternFly prerelease against insights-chrome (RedHatInsights/insights-chrome) — branch setup, npm overrides, build/lint/test validation, breaking change fixes, visual testing via dev server, and compatibility report. Produces a structured compatibility report for the PF team. Use when testing a PF prerelease or RC against insights-chrome."
-allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
+allowed-tools: Bash, Read, Edit, Write
+disable-model-invocation: true
 ---
 
 # PatternFly Prerelease Bump — insights-chrome
@@ -40,7 +41,7 @@ for pkg in $(grep '"@patternfly/' package.json | sed 's/.*"\(@patternfly\/[^"]*\
 done
 ```
 
-Use `AskUserQuestion` to confirm the target version list before continuing.
+Present the discovered version list and ask the user to confirm before continuing.
 
 ### Version sanity check
 
@@ -170,7 +171,7 @@ On first run after a fresh install, Cypress may need to download its binary (~5 
 Failure message: `"Image was X% different from saved snapshot with Y different pixels"`
 
 Diff images saved to:
-```
+```text
 cypress/snapshots/cypress/component/{Component}/{TestFile}/__diff_output__/
 ```
 
@@ -233,10 +234,10 @@ Fill in the schema from this run's results, then render **both** templates and w
 insights-chrome-specific notes for filling the schema:
 
 - `checks[]` — Lint / Build / Jest / Cypress / Visual (manual, mark `skip` if VPN unavailable). This skill doesn't run a baseline pass before bumping, so report a single result per check rather than baseline-vs-prerelease columns.
-- `findings[]` — snapshot changes (icon SVG diffs, OUIA ID format changes) belong under `runtime-failure` with a `<details>` diff block; only mark `verdict: "safe to accept"` if the diff matches one of the known-safe patterns in Phase 5, otherwise `"needs investigation"`.
+- `findings[]` — unknown snapshot changes (icon SVG diffs, OUIA ID format changes with unrecognized diff patterns) belong under `runtime-failure` with a `<details>` diff block and `verdict: "needs investigation"`. Known-safe changes (diffs that match the patterns in Phase 5) must **not** go in `findings[]` — they would force a `regressions-found` verdict. Instead, note accepted snapshot updates in `installNotes[]` or in a prose paragraph under the report's Fixes Applied section.
 - Embed visual diff images as base64 in the HTML output:
   ```bash
-  base64 < "cypress/snapshots/.../___diff_output__/image.png" | tr -d '\n'
+  base64 < "cypress/snapshots/.../__diff_output__/image.png" | tr -d '\n'
   ```
 - `installNotes[]` — **always** include an entry for the overrides/ERESOLVE workaround, even when overrides worked cleanly on the first try. If `--legacy-peer-deps` was needed, set `outcome: "did-not-work-fallback-used"` and name the conflicting package (see Phase 2's "Handling install failures").
 - The HTML output must stay self-contained (no external dependencies, no relative image paths) so it can be shared by email or attached to a PR.

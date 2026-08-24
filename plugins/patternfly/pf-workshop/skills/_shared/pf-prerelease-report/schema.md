@@ -6,7 +6,7 @@ Not every skill has every field (e.g. odh-dashboard has no Cypress visual diffs;
 
 ## Fields
 
-```
+```text
 repo            — e.g. "openshift/console", "RedHatInsights/insights-chrome"
 branch          — testing branch name
 date            — YYYY-MM-DD

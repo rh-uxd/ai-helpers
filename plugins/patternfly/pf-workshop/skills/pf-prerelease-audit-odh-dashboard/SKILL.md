@@ -27,7 +27,7 @@ odh-dashboard is a Module Federation monorepo: one host (`frontend/`) plus ~15 i
 
 `$ARGUMENTS` — Required. A JSON-style list of `"@patternfly/PACKAGE": "VERSION"` pairs provided by the user. Example:
 
-```
+```text
 "@patternfly/patternfly": "6.6.0-prerelease.16",
 "@patternfly/react-core": "6.6.0-prerelease.9",
 "@patternfly/chatbot": "6.7.0-prerelease.4",
@@ -130,13 +130,16 @@ Phase 3 installs with `--legacy-peer-deps`, which disables npm's automatic peer-
 
 ```bash
 python3 -c "
-import json
+import json, os
 d = json.load(open('package.json'))
-d.setdefault('dependencies', {}).update(VERSION_MAP)  # every bumped @patternfly/* package
+version_map = json.loads(os.environ['VERSION_MAP_JSON'])
+d.setdefault('dependencies', {}).update(version_map)  # every bumped @patternfly/* package
 with open('package.json', 'w') as f:
     f.write(json.dumps(d, indent=2) + '\n')
 "
 ```
+
+> `VERSION_MAP_JSON` is the shell variable set in Phase 1.1 when `$ARGUMENTS` was parsed (same variable used in the per-package version-alignment check in Phase 2.4). If you haven't set it yet, set it now: `export VERSION_MAP_JSON='{"@patternfly/react-core":"6.6.0-prerelease.9",...}'`
 
 Do this proactively in Phase 2, not reactively after a Phase 5 build failure — it costs nothing when unnecessary and saves an entire install/build cycle when it is.
 
@@ -207,7 +210,7 @@ fi
 # (allowFallback: false) is not and needs investigation.
 # NOTE: evaluate the captured text, not the exit code — `grep -v` exits 1 (looks
 # like "failure") on the CLEAN/good case where nothing survives the filter.
-NESTED=$(find . -path "*/node_modules/@patternfly/*" -maxdepth 5 -type d | \
+NESTED=$(find . -path "*/node_modules/@patternfly/*" -maxdepth 8 -type d | \
   grep -v "^./node_modules/" | grep -v ".cache")
 if [ -n "$NESTED" ]; then
   echo "Nested PF copies found — check against shared-modules-meta.ts (Phase 4):"
@@ -283,7 +286,7 @@ odh-dashboard#8660 replaced implicit npm-hoisting-dependent PF sharing with expl
 ```bash
 # Evaluate the captured text, not the exit code — chained `grep -v` filters exit
 # 1 (looks like "failure") on the clean case where nothing survives the filter.
-NESTED=$(find . -path "*/node_modules/@patternfly/*" -maxdepth 5 -type d | \
+NESTED=$(find . -path "*/node_modules/@patternfly/*" -maxdepth 8 -type d | \
   grep -v "^./node_modules/" | grep -v ".cache" | sort)
 if [ -n "$NESTED" ]; then
   echo "Nested PF copies found — investigate before assuming this is benign:"
@@ -457,13 +460,27 @@ If time-constrained, prioritize the remotes whose PF-consuming code is most affe
 
 ### 5.6 Baseline comparison
 
-For each failing step, compare against `main` to separate pre-existing failures from new PF regressions:
+For each failing step, compare against `main` to separate pre-existing failures from new PF regressions. Stash the prerelease changes, rerun **the same commands** that failed (from Phases 5.1, 5.2, 5.4, and 5.5 respectively), and record each baseline result separately before popping:
 
 ```bash
 git stash
-npm run type-check 2>&1 | tail -10  # or whichever command
+
+# Re-run whichever commands produced failures above — for example:
+# Phase 5.1 (host build):
+cd frontend && npm run build 2>&1 | tail -20; echo "EXIT:$?"
+# Phase 5.2 (type-check):
+cd frontend && npx turbo run type-check 2>&1 | tail -20; echo "EXIT:$?"
+# Phase 5.4 (unit tests — per affected package):
+for pkg in frontend packages/*/frontend packages/*; do
+  [ -f "$pkg/package.json" ] && (cd "$pkg" && npx turbo run test-unit 2>&1 | tail -5)
+done
+# Phase 5.5 (Cypress — per affected remote):
+# (same loop as Phase 5.5)
+
 git stash pop
 ```
+
+Record each baseline outcome in the report so failures can be correctly classified as pre-existing vs. new PF regression. If `git stash` has nothing to stash (no local changes), the install itself altered files — note that in the report and compare against a fresh `main` checkout instead.
 
 ### 5.7 Visual smoke test
 
@@ -491,5 +508,5 @@ Fill in the schema from this run's results, then render **both** templates and w
 Before filling the schema, read the companion reference file for odh-dashboard-specific schema-filling notes, CSS failure diagnosis, known gotchas, and key architecture rules:
 
 ```
-Read: plugins/patternfly/pf-workshop/skills/pf-prerelease-audit-odh-dashboard/REFERENCE.md
+Read: plugins/patternfly/pf-workshop/skills/pf-prerelease-audit-odh-dashboard/reference.md
 ```
