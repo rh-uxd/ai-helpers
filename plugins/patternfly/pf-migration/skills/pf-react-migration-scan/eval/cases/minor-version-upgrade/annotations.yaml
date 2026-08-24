@@ -1,3 +1,0 @@
-expect_findings: true
-migration_type: minor
-has_css_only: false

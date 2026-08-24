@@ -1,0 +1,15 @@
+prompt: |
+  We're migrating from PF5 to PF6. Our codebase has both issues:
+
+  React API:
+  - import { Chip, ChipGroup } from '@patternfly/react-core'
+  - import { Text, TextVariants } from '@patternfly/react-core'
+
+  CSS classes in JSX:
+  - className="pf-v5-c-card pf-v5-c-card__body"
+  - className="pf-c-button pf-u-mt-lg"
+
+  SCSS files:
+  - var(--pf-global--spacer--md)
+
+  Scan everything and give me a full migration report covering both CSS and React API changes.

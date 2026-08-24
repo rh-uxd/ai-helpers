@@ -2,4 +2,4 @@ expected_routing:
   - pf-import-check
   - pf-component-check
   - pf-color-scan
-  - pf-css-migration-scan
+  - pf-migration-scan

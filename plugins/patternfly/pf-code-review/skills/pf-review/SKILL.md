@@ -29,7 +29,7 @@ When code files exist, invoke each of these skills using the Skill tool:
 | `/pf-import-check` | Import paths across `@patternfly/*` packages |
 | `/pf-component-check` | Component nesting, wrapper hierarchies, layout composition |
 | `/pf-color-scan` | Hardcoded hex/rgb/hsl values that should use design tokens |
-| `/pf-css-migration-scan` | Legacy CSS classes from older PF versions |
+| `/pf-migration-scan` | Legacy CSS classes, removed props, renamed components, changed APIs |
 | `/pf-security-scan` | XSS, unsanitized user input, insecure href patterns |
 
 Invoke each skill in sequence. Pass the same target directory or files to each. If a sub-skill is unavailable or returns an error, continue with the remaining skills and note the skip in the report. Collect all findings before moving to conditional skills.

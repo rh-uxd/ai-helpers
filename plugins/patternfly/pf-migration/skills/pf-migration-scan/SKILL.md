@@ -1,21 +1,25 @@
 ---
-name: pf-react-migration-scan
+name: pf-migration-scan
 description: >-
-  Scan code for @patternfly/react-* API breaking changes and produce a markdown
-  report. Use when upgrading PatternFly React versions, auditing component API
-  usage, or checking for removed props, renamed components, or import path changes.
+  Scan code for PatternFly migration issues — deprecated CSS classes, removed props,
+  renamed components, changed APIs, and legacy tokens. Use when upgrading between
+  PF versions, auditing a codebase for breaking changes, or planning migration effort.
 disable-model-invocation: true
 ---
 
-# PF React Breaking Changes
+# PF Migration Scanner
 
-Identify **@patternfly/react-* API breaking changes** in a codebase and deliver a markdown report. Do not include CSS class migrations, `@patternfly/patternfly` changes, or non-React packages (for example `@patternfly/chatbot`).
-
-For CSS class and token name migrations, use `pf-css-migration-scan` instead.
+Identify **all PatternFly migration issues** in a codebase — CSS classes, React API breaking changes, legacy tokens — and deliver a unified markdown report.
 
 ## Scope
 
-### In scope (report these)
+### CSS and token migrations
+
+- Legacy versioned classes (`pf-v5-*`, `pf-v4-*`)
+- Unversioned legacy classes (`pf-c-*`, `pf-u-*`, `pf-l-*`)
+- Legacy token patterns (`--pf-v6-*`, `--pf-global-*`) that should use semantic tokens (`--pf-t--*`)
+
+### React API breaking changes
 
 Packages matching `@patternfly/react-*`, including:
 
@@ -35,10 +39,8 @@ Breaking change types:
 | Renamed TypeScript types or enums | `SplitButtonOptions` deleted, enum value removed |
 | Hook or render-prop signature changes | Callback arity or argument shape changed |
 
-### Out of scope (do not report)
+### Out of scope
 
-- PatternFly CSS classes (`pf-v5-*`, `pf-c-*`, `pf-v6-u-*`, etc.)
-- CSS custom properties in stylesheets (unless imported from `@patternfly/react-tokens`)
 - `@patternfly/patternfly`, `@patternfly/chatbot`, `@patternfly/patternfly-mcp`
 - App-level refactors unrelated to PatternFly API changes
 - Purely visual/CSS override breakage without a React API change
@@ -50,13 +52,35 @@ Breaking change types:
 Confirm with the user (or infer from `package.json` / git diff):
 
 - **Scan path** — directory or files (default: project `src/`)
-- **From version** — current PatternFly React version(s)
+- **From version** — current PatternFly version(s)
 - **To version** — target version (for example PF5 → PF6, or `6.2.0` → `6.3.0`)
 - **Packages** — which `@patternfly/react-*` packages are in use
 
 Read `package.json` (and lockfile if needed) for installed `@patternfly/react-*` versions.
 
-### 2. Inventory PatternFly React usage
+### 2. Scan for CSS and token issues
+
+Search the scan path for legacy class names and tokens:
+
+```bash
+rg "pf-v5-|pf-v4-|pf-c-|pf-u-|pf-l-" --glob "*.{ts,tsx,js,jsx,scss,css,html}" <scan-path>
+rg "--pf-v6-|--pf-global-" --glob "*.{ts,tsx,js,jsx,scss,css}" <scan-path>
+```
+
+For each finding record:
+
+- File path and line number
+- Current class or token
+- Recommended PF6 replacement
+- Confidence (`high`, `medium`, `low`)
+
+CSS replacement guidance:
+
+- Prefer PatternFly React component props and composition first.
+- If a utility class is still needed, use `pf-v6-u-*` variants.
+- Prefer semantic tokens (`--pf-t--*`) over hardcoded values and legacy token names.
+
+### 3. Inventory PatternFly React usage
 
 Search the scan path for imports and API usage:
 
@@ -73,7 +97,7 @@ Build a list of:
 
 Group by file for cross-referencing.
 
-### 3. Load authoritative breaking changes
+### 4. Load authoritative breaking changes
 
 Use the **PatternFly MCP server** before guessing:
 
@@ -89,7 +113,7 @@ For **PF5 → PF6**, also reference the [pf-codemods README](https://github.com/
 
 For **minor/patch upgrades**, check the target release notes and GitHub PRs for `@patternfly/react-core` and related packages.
 
-### 4. Optional — validate with pf-codemods
+### 5. Optional — validate with pf-codemods
 
 When upgrading to PF6 (or when the user asks for machine verification), run a **dry run** (no `--fix`):
 
@@ -99,27 +123,27 @@ npx @patternfly/pf-codemods@latest --v6 <scan-path>
 
 Use codemod output to supplement MCP findings. Codemod hits are **in scope** because they flag React API breaking changes. Do not auto-fix unless the user requests it.
 
-### 5. Cross-reference codebase
+### 6. Cross-reference codebase
 
 For each known breaking change in the version range:
 
-1. Search the inventory for affected components, props, imports, or types.
+1. Search the inventory for affected components, props, imports, types, classes, or tokens.
 2. Record **file path**, **line number**, **current usage**, and **required change**.
 3. Assign **severity**:
-   - **Critical** — build/runtime failure (removed export, removed required prop replacement, invalid import)
+   - **Critical** — build/runtime failure (removed export, removed required prop replacement, invalid import, missing class causing broken layout)
    - **High** — deprecated API with recommended replacement; behavior change likely
-   - **Medium** — deprecated but still works via `@patternfly/react-core/deprecated`; manual follow-up advised
+   - **Medium** — deprecated but still works via `@patternfly/react-core/deprecated` or legacy class with a direct rename; manual follow-up advised
 
 4. Assign **confidence**:
-   - **high** — direct match (import of removed component, use of removed prop name)
+   - **high** — direct match (import of removed component, use of removed prop name, exact legacy class prefix)
    - **medium** — usage pattern likely affected (composition change, markup change affecting tests)
    - **low** — possible impact; note for manual review
 
 Do not invent breaking changes. If MCP/docs do not document a change for the stated version range, omit it or mark as "unverified — manual review".
 
-### 6. Generate the markdown report
+### 7. Generate the markdown report
 
-Write the report to a file the user can share (default: `pf-react-migration-scan-report.md` in the project root unless the user specifies otherwise).
+Write the report to a file the user can share (default: `pf-migration-scan-report.md` in the project root unless the user specifies otherwise).
 
 Use the template in [references/report-template.md](references/report-template.md).
 
@@ -129,9 +153,15 @@ Present the report to the user and summarize the highest-severity items.
 
 When MCP/docs identify a breaking change, search the codebase with targeted patterns.
 
-The examples below use **PF5 → PF6** component and prop names (`Chip`, `KebabToggle`, `Tile`). For minor/patch upgrades (for example `6.2.0` → `6.3.0`), derive search patterns from the breaking changes documented in release notes — do not blindly search for these PF5→PF6 names.
+The examples below use **PF5 → PF6** component and prop names. For minor/patch upgrades, derive search patterns from the breaking changes documented in release notes — do not blindly search for these PF5→PF6 names.
 
 ```bash
+# Legacy CSS classes
+rg "pf-v5-|pf-v4-|pf-c-|pf-u-|pf-l-" --glob "*.{ts,tsx,js,jsx,scss,css,html}" <scan-path>
+
+# Legacy tokens
+rg "--pf-v6-|--pf-global-" --glob "*.{ts,tsx,js,jsx,scss,css}" <scan-path>
+
 # Removed or deprecated components
 rg "\bChip\b|\bKebabToggle\b|\bTile\b" --glob "*.{ts,tsx}" <scan-path>
 
@@ -155,7 +185,6 @@ Adapt patterns to the breaking changes documented for the user's version range �
 
 | Tool | When to use |
 |------|-------------|
-| `pf-css-migration-scan` | CSS class and legacy token names in markup/styles |
 | `pf-import-check` | Invalid import paths after upgrade |
 | `pf-codemods` | Automated fixes for many PF5 → PF6 React API changes |
 | PatternFly MCP | Authoritative upgrade guide, release notes, component schemas |
@@ -164,8 +193,9 @@ Adapt patterns to the breaking changes documented for the user's version range �
 
 Before delivering the report:
 
-- [ ] Every finding references an `@patternfly/react-*` API change
-- [ ] No CSS-only or `@patternfly/patternfly` findings included
+- [ ] Every finding references a specific file, line, and PatternFly change
+- [ ] CSS class and React API findings are clearly categorized in separate report sections
 - [ ] Each finding has file location, current code, migration guidance, severity, and confidence
 - [ ] Version range and scan scope are documented in the report header
 - [ ] Summary counts match the detailed findings
+- [ ] For PF5 → PF6 major upgrades, pf-codemods is referenced

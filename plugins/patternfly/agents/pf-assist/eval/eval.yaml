@@ -73,7 +73,7 @@ judges:
       pf_subskills = [
           "pf-figma-check", "pf-color-scan", "pf-import-check",
           "pf-component-check", "pf-test-gen", "pf-figma-token-check",
-          "pf-css-migration-scan", "pf-security-scan", "pf-project-gen",
+          "pf-migration-scan", "pf-security-scan", "pf-project-gen",
           "pf-icon-finder", "pf-ai-audit", "pf-review"
       ]
       found_pf = [s for s in pf_subskills if s in text]
