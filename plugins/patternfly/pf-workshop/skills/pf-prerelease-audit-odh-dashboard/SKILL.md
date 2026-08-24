@@ -203,13 +203,10 @@ if [ "$PF_COUNT" -lt 15 ]; then
   echo "INTEGRITY FAILURE — expected 15+, found $PF_COUNT. Likely a partial/ENOTEMPTY install — see 3.3."
 fi
 
-# Check for duplicate/nested PF copies. Scan all @patternfly/* packages, not just
-# react-core — the bumped package set varies per run based on the user-provided
-# version map. A nested copy of a fallback-tolerant package (see Architecture
-# section) is expected/benign; a nested copy of react-core or react-styles
-# (allowFallback: false) is not and needs investigation.
-# NOTE: evaluate the captured text, not the exit code — `grep -v` exits 1 (looks
-# like "failure") on the CLEAN/good case where nothing survives the filter.
+# Check for duplicate/nested PF copies across all @patternfly/* packages.
+# Nested copies of allowFallback:true packages are expected (fallback working as designed).
+# Nested copies of react-core/react-styles (allowFallback:false) need investigation.
+# NOTE: evaluate the text, not the exit code — `grep -v` exits 1 on the clean case.
 NESTED=$(find . -path "*/node_modules/@patternfly/*" -maxdepth 8 -type d | \
   grep -v "^./node_modules/" | grep -v ".cache")
 if [ -n "$NESTED" ]; then
@@ -298,15 +295,7 @@ fi
 
 If nested copies appear for a module marked `allowFallback: true` in `shared-modules-meta.ts`, that's expected — it's the fallback copy working as designed, not a bug. If nested copies appear for `react-core` or `react-styles` (`allowFallback: false`), that's unexpected and worth investigating: either the version genuinely can't be shared (a real prerelease compatibility break) or `shared-modules-meta.ts` / `getRuntimeOdhPackages.ts` isn't picking up the package correctly.
 
-### 4.2 If CSS parse errors occur
-
-Some distributions (e.g. `distributions/core-bff/frontend/config/stylePaths.js`) maintain their own explicit PF CSS include paths, including nested-copy paths, independent of the shared-modules-meta.ts mechanism — check whether the failing package's distribution has a `stylePaths.js` and whether it needs a new path added for the prerelease version's actual resolved location. The main host (`frontend/`) does not use this pattern; a CSS parse error there is more likely a real distribution-format change in the prerelease package (see "Diagnosing CSS parse failures" below) than a path-include gap.
-
-### 4.3 Handle observability transitive dependencies
-
-The `@perses-dev` dependencies in `packages/observability` are fragile — they rely on implicit hoisting for transitive deps unrelated to `@patternfly/*` sharing.
-
-If you see webpack errors about missing modules from `@perses-dev` packages, add the missing transitive deps to `packages/observability/package.json`.
+For CSS parse failure diagnosis (including `stylePaths.js` investigation) and `@perses-dev` / observability transitive dependency handling, see `reference.md` (loaded in Phase 6).
 
 ---
 
@@ -464,23 +453,12 @@ For each failing step, compare against `main` to separate pre-existing failures 
 
 ```bash
 git stash
-
-# Re-run whichever commands produced failures above — for example:
-# Phase 5.1 (host build):
-cd frontend && npm run build 2>&1 | tail -20; echo "EXIT:$?"
-# Phase 5.2 (type-check):
-cd frontend && npx turbo run type-check 2>&1 | tail -20; echo "EXIT:$?"
-# Phase 5.4 (unit tests — per affected package):
-for pkg in frontend packages/*/frontend packages/*; do
-  [ -f "$pkg/package.json" ] && (cd "$pkg" && npx turbo run test-unit 2>&1 | tail -5)
-done
-# Phase 5.5 (Cypress — per affected remote):
-# (same loop as Phase 5.5)
-
+# Re-run the same commands that failed — use the loops from 5.1/5.2/5.4/5.5 verbatim.
+# Record each result separately before popping.
 git stash pop
 ```
 
-Record each baseline outcome in the report so failures can be correctly classified as pre-existing vs. new PF regression. If `git stash` has nothing to stash (no local changes), the install itself altered files — note that in the report and compare against a fresh `main` checkout instead.
+Record each baseline outcome so failures can be classified as pre-existing vs. new PF regression. If `git stash` has nothing to stash (install altered files), compare against a fresh `main` checkout instead.
 
 ### 5.7 Visual smoke test
 

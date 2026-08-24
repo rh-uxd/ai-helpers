@@ -81,6 +81,10 @@ if 'X' in d.get('peerDependencies', {}):
 
 If confirmed, install it explicitly in the affected package (`npm install X@VERSION --legacy-peer-deps`), the same way Phase 2.2C does for PF packages. **Worked example (2026-08-19):** `mod-arch-shared` (used by `gen-ai`, `automl`, `autorag`) peer-deps on `mod-arch-kubeflow`, which silently failed to install and broke both unit tests (`Cannot find module 'mod-arch-kubeflow'` inside `ThemeAwareFormGroupWrapper.js`) and production builds identically. Fixed by installing `mod-arch-kubeflow` explicitly in all three affected apps. This specific package may not recur — the pattern will.
 
+### `@perses-dev` transitive dependencies in `packages/observability`
+
+The `@perses-dev` packages rely on implicit hoisting for transitive deps unrelated to PF sharing. If webpack errors show missing `@perses-dev` modules, add the missing transitive deps to `packages/observability/package.json`. The pattern is the same as the `mod-arch-shared` gotcha below — `--legacy-peer-deps` can silently drop any package's peer deps, not just PF's.
+
 ### Before editing a CSS include-path file, verify it's actually imported by anything
 
 CSS parse/loader errors for a nested third-party package's bundled PF copy (e.g. `Module parse failed` or `no loaders configured` for a `.css` file inside `node_modules/some-package/node_modules/@patternfly/...`) look like they belong in a `stylePaths.js`-style file — several apps have one, listing exactly this kind of nested path. **Check first whether that file is actually imported by any webpack config before editing it:**
