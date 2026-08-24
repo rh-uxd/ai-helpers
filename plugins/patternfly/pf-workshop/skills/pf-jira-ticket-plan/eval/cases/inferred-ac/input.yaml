@@ -1,4 +1,4 @@
 prompt: >-
-  Using the uxd-jira-ticket-plan skill: plan SAT-2201. The ticket is in
+  Using the pf-jira-ticket-plan skill: plan SAT-2201. The ticket is in
   fixture-ticket.md in this case directory. Do not call network or MCP.
 fixture: fixture-ticket.md

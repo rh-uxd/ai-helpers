@@ -1,5 +1,5 @@
 ---
-name: uxd-jira-ticket-plan
+name: pf-jira-ticket-plan
 version: 0.1.0
 description: >-
   Generate a codebase-mapped implementation plan from a Jira ticket, then ask

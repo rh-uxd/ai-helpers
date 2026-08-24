@@ -1,4 +1,4 @@
 prompt: >-
-  Using the uxd-jira-ticket-plan skill: plan and implement PROJ-412. The ticket
+  Using the pf-jira-ticket-plan skill: plan and implement PROJ-412. The ticket
   is in fixture-ticket.md in this case directory. Do not call network or MCP.
 fixture: fixture-ticket.md

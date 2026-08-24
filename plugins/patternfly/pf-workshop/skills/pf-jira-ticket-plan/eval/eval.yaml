@@ -1,9 +1,9 @@
-name: uxd-jira-ticket-plan-eval
+name: pf-jira-ticket-plan-eval
 description: >-
-  Evaluate uxd-jira-ticket-plan ticket intake, codebase mapping, plan
+  Evaluate pf-jira-ticket-plan ticket intake, codebase mapping, plan
   structure, inferred acceptance criteria, and the proceed hard gate
 
-skill: uxd-workshop:uxd-jira-ticket-plan
+skill: pf-workshop:pf-jira-ticket-plan
 
 execution:
   mode: case
@@ -12,7 +12,7 @@ execution:
 runner:
   type: claude-code
   plugin_dirs:
-    - plugins/uxd-workshop
+    - plugins/patternfly/pf-workshop
 
 models:
   skill: claude-sonnet-4-6
