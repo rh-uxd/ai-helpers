@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- REPLACE: repo name and version in title -->
+<title>PatternFly X.Y Prerelease Compatibility Report — {{REPO_SHORT}}</title>
+<style>
+  :root { --pf-red: #c9190b; --pf-green: #3e8635; --pf-blue: #06c; --pf-gold: #f0ab00; --pf-bg: #f0f0f0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Red Hat Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #151515; background: #fff; max-width: 960px; margin: 0 auto; padding: 2rem; }
+  h1 { font-size: 1.75rem; border-bottom: 3px solid var(--pf-blue); padding-bottom: 0.5rem; margin-bottom: 1.5rem; }
+  h2 { font-size: 1.35rem; margin-top: 2rem; margin-bottom: 0.75rem; color: #151515; }
+  h3 { font-size: 1.1rem; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+  p, li { margin-bottom: 0.5rem; }
+  .meta { color: #6a6e73; font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+  .summary-card { background: var(--pf-bg); border-radius: 8px; padding: 1.25rem; text-align: center; }
+  .summary-card .number { font-size: 2rem; font-weight: 700; }
+  .summary-card .label { font-size: 0.85rem; color: #6a6e73; }
+  .pass { color: var(--pf-green); }
+  .fail { color: var(--pf-red); }
+  .warn { color: var(--pf-gold); }
+  .skip { color: #6a6e73; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }
+  th, td { padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #d2d2d2; }
+  th { background: var(--pf-bg); font-weight: 600; }
+  tr:hover { background: #f9f9f9; }
+  code { background: #f0f0f0; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.85rem; }
+  pre { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.82rem; line-height: 1.5; margin: 0.75rem 0; }
+  pre .added { color: #6a9955; }
+  pre .removed { color: #f48771; }
+  .badge { display: inline-block; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.78rem; font-weight: 600; }
+  .badge-pass { background: #f2faf2; color: var(--pf-green); border: 1px solid var(--pf-green); }
+  .badge-fail { background: #fff5f4; color: var(--pf-red); border: 1px solid var(--pf-red); }
+  .badge-skip { background: #f5f5f5; color: #6a6e73; border: 1px solid #6a6e73; }
+  .badge-warn { background: #fffbec; color: #795600; border: 1px solid var(--pf-gold); }
+  .callout { border-left: 4px solid var(--pf-blue); background: #f0f7ff; padding: 0.75rem 1rem; border-radius: 0 6px 6px 0; margin: 1rem 0; }
+  .callout.warn { border-color: var(--pf-gold); background: #fffbec; }
+  .callout.pass { border-color: var(--pf-green); background: #f2faf2; }
+  img.snapshot { max-width: 100%; border: 1px solid #d2d2d2; border-radius: 6px; margin-top: 0.5rem; }
+  details { border: 1px solid #d2d2d2; border-radius: 6px; margin: 0.75rem 0; }
+  details summary { padding: 0.6rem 1rem; cursor: pointer; font-weight: 600; background: var(--pf-bg); border-radius: 6px; }
+  details[open] summary { border-radius: 6px 6px 0 0; }
+  details .details-body { padding: 1rem; }
+  .verdict { font-size: 1.1rem; font-weight: 700; padding: 1rem; border-radius: 8px; margin: 1.5rem 0; }
+  .verdict.compatible { background: #f2faf2; border: 2px solid var(--pf-green); color: var(--pf-green); }
+  .verdict.regressions { background: #fffbec; border: 2px solid var(--pf-gold); color: #795600; }
+  .verdict.blocked { background: #fff5f4; border: 2px solid var(--pf-red); color: var(--pf-red); }
+</style>
+</head>
+<body>
+
+<!-- REPLACE: repo name and version in heading -->
+<h1>PatternFly X.Y Prerelease Compatibility Report</h1>
+
+<!-- REPLACE: repo, branch, date, tester -->
+<p class="meta">
+  Repository: <strong>{{REPO}}</strong> &nbsp;·&nbsp;
+  Branch: <code>{{BRANCH}}</code> &nbsp;·&nbsp;
+  Date: <strong>{{DATE}}</strong> &nbsp;·&nbsp;
+  Tester: {{TESTER}}
+</p>
+
+<!-- REPLACE: use exactly one verdict class — compatible / regressions / blocked — per schema.md's verdict rules -->
+<div class="verdict compatible">✅ Compatible — {{VERDICT_NOTE}}</div>
+<!-- <div class="verdict regressions">⚠️ Regressions found — {{VERDICT_NOTE}}</div> -->
+<!-- <div class="verdict blocked">❌ Blocked — {{VERDICT_NOTE}}</div> -->
+
+<h2>Check Summary</h2>
+<!--
+  REPLACE: one card per check this skill actually runs (build, tsc, lint, unit, cypress,
+  visual, etc. — varies by repo). Do not include a card for a check the skill doesn't run.
+  Use .pass/.fail/.skip on .number to color the glyph.
+-->
+<div class="summary-grid">
+  <div class="summary-card">
+    <div class="number pass">✓</div>
+    <div class="label">{{Check name}}<br>{{result detail}}</div>
+  </div>
+</div>
+
+<h2>Versions Tested</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Package</th>
+      <th>Before</th>
+      <th>After (prerelease)</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <!-- REPLACE: one row per @patternfly/* dep bumped. Add a row-level note
+         (e.g. "unchanged, no prerelease target differs") where relevant instead
+         of a separate table. -->
+    <tr>
+      <td><code>@patternfly/{{pkg}}</code></td>
+      <td><code>{{before}}</code></td>
+      <td><code>{{after}}</code></td>
+      <td>{{note or blank}}</td>
+    </tr>
+  </tbody>
+</table>
+<!-- REPLACE or delete: packages present on the prerelease manifest but not consumed by this repo -->
+<p><em>Not consumed by {{REPO_SHORT}}:</em> {{list}}</p>
+
+<h2>Findings</h2>
+<!--
+  REPLACE: one subsection per category this skill's phases can actually detect
+  (see schema.md's category list and "Category vs. skill capability" note).
+  Only assert "None observed" for a category the skill actually checked —
+  omit categories the skill has no way to test rather than implying coverage.
+-->
+<h3>TypeScript API break</h3>
+<p>{{finding, or "None observed."}}</p>
+
+<h3>Import path break</h3>
+<p>{{finding, or "None observed."}}</p>
+
+<h3>CSS/SCSS break</h3>
+<p>{{finding, or "None observed."}}</p>
+
+<h3>Runtime failure</h3>
+<p>{{finding, or "None observed."}}</p>
+
+<h3>Peer dependency warning</h3>
+<p>{{finding, or "None observed."}}</p>
+
+<!-- Include only if a false-positive investigation happened (e.g. npm hoisting mistaken for a PF break) -->
+<h3>Build tooling artifact</h3>
+<p>{{finding, or delete this h3 block if none arose}}</p>
+
+<!-- Use <details> for any finding with a non-trivial diff (snapshot change, visual regression) -->
+<details>
+  <summary>{{View diff — short description}}</summary>
+  <div class="details-body">
+    <p><strong>File:</strong> <code>{{path}}</code><br>
+    <strong>Tests affected:</strong> <code>{{test name}}</code></p>
+    <p><strong>Change:</strong> {{what changed and why}}</p>
+    <pre><code>{{diff, using .added/.removed spans}}</code></pre>
+    <p><strong>Verdict:</strong> {{safe to accept / needs investigation}}</p>
+  </div>
+</details>
+
+<!-- Embed visual diff images as base64 so the report stays a single self-contained file -->
+<img class="snapshot" src="data:image/png;base64,{{BASE64}}" alt="{{description}}">
+
+<h2>Installation Notes</h2>
+<!-- REPLACE: always state what was tried, including failed attempts. Delete this
+     section only if install had zero friction. -->
+<div class="callout warn">
+  <strong>{{workaround}}</strong> — cause: {{cause}}.
+  <br><br>
+  Outcome: {{worked / fell back to X because Y / not needed}}.
+</div>
+
+<h2>Fixes Applied</h2>
+<!-- REPLACE: source changes made to unblock the bump, or delete section if none needed -->
+<p>{{description, or "None required."}}</p>
+
+<h2>Pre-existing Observations</h2>
+<!-- REPLACE: warnings/failures present in both baseline and prerelease (or on main
+     independent of this bump) — call these out so they aren't mistaken for regressions -->
+<ul>
+  <li>{{observation}}</li>
+</ul>
+
+<h2>Recommendations</h2>
+<h3>For PF team</h3>
+<ul>
+  <li>{{recommendation}}</li>
+</ul>
+<h3>For {{REPO_SHORT}} team</h3>
+<ul>
+  <li>{{recommendation}}</li>
+</ul>
+
+<h2>Test Environment</h2>
+<ul>
+  <li>Node: {{node version}}</li>
+  <li>Package manager: {{npm/yarn}} {{version}}</li>
+  <li>OS: {{os}}</li>
+  <li>Bundler: {{bundler, if applicable}}</li>
+</ul>
+
+<hr style="margin: 2rem 0; border-color: #d2d2d2;">
+<!-- REPLACE: date and branch -->
+<p class="meta">Generated {{DATE}} · {{REPO_SHORT}} prerelease validation · Branch: <code>{{BRANCH}}</code></p>
+
+</body>
+</html>
