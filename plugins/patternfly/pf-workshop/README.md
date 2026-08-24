@@ -15,6 +15,7 @@ PatternFly team tools and skill incubation — issue triage, release management,
 - **PF CSS Var Scan** (`/pf-workshop:pf-css-var-scan`) — Analyze --pf- CSS custom property usage and naming patterns in PatternFly SCSS.
 - **PF Duplicate Epic** (`/pf-workshop:pf-duplicate-epic`) — Clone a Jira epic from another project into the PF Jira space with back-links and feature attachment.
 - **PF Figma Diff** (`/pf-workshop:pf-figma-diff`) — Diff Figma designs to identify what changed and generate code update checklists.
+- **PF Jira Ticket Plan** (`/pf-workshop:pf-jira-ticket-plan`) — Generate a codebase-mapped implementation plan from a Jira ticket, then ask whether to show the plan only, implement the whole plan, or go step by step.
 - **PF Modifier Scan** (`/pf-workshop:pf-modifier-scan`) — Analyze PatternFly modifier class (pf-m-*) usage across SCSS files and generate usage reports.
 - **PF Org Version Update** (`/pf-workshop:pf-org-version-update`) — Update patternfly-org for a new PatternFly release — resolve versions, update package.json and versions.json, and provide build steps.
 - **PF Prototype Mode** (`/pf-workshop:pf-prototype-mode`) — Enable prototype mode for React apps with grayscale styling and a banner overlay.

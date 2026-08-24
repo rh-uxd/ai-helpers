@@ -1,0 +1,245 @@
+name: pf-jira-ticket-plan-eval
+description: >-
+  Evaluate pf-jira-ticket-plan ticket intake, codebase mapping, plan
+  structure, inferred acceptance criteria, and the proceed hard gate
+
+skill: pf-workshop:pf-jira-ticket-plan
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-workshop
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+  hook: claude-haiku-4-5-20251001
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+inputs:
+  tools:
+    - match: Questions asked to the user via AskUserQuestion.
+      prompt: |
+        Answer based on the test case context in input.yaml and answers.yaml.
+        If asked how to proceed after a plan, choose "show plan only"
+        unless answers.yaml says otherwise.
+        Default: pick the first option or answer "yes" for confirmations
+        that are not the proceed hard gate.
+
+dataset:
+  path: cases
+  # Missing files are skipped (asks-for-ticket has no fixture).
+  workspace:
+    files:
+      - fixture-ticket.md
+      - NotificationSettings.tsx
+      - notifications.ts
+      - NotificationSettings.test.tsx
+      - HostsTable.tsx
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: case_type for conditional judges
+    - Optional fixture-ticket.md simulating Jira issue content
+    - Optional source fixtures the plan should map to
+    - Optional answers.yaml for AskUserQuestion auto-answer guidance
+
+outputs:
+  - path: artifacts
+    schema: |
+      Judges check conversation text for plan sections, file citations, and
+      whether source files were edited. Offline cases use fixture-ticket.md;
+      no Jira/MCP/network.
+  - tool: AskUserQuestion
+    schema: Ticket-key clarifying questions and the proceed hard-gate question.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+# With-skill / without-skill A/B delta
+#
+# Discriminating signal: stop after a codebase-mapped plan and ask how to
+# proceed (plan only / whole plan / step by step) before editing. Baseline
+# models given "plan and implement PROJ-412" often start coding, invent file
+# paths, or restate the ticket instead of citing workspace files.
+#
+# Expected delta:
+# | Case              | Without skill                         | With skill                                      |
+# |-------------------|---------------------------------------|-------------------------------------------------|
+# | asks-for-ticket   | Invents a ticket / generic plan       | Asks for a Jira URL or key                      |
+# | hard-gate         | Starts editing source files           | Plans, then asks how to proceed; does not edit  |
+# | structured-plan   | Loose summary, missing sections       | Required plan sections + real file citations    |
+# | inferred-ac       | Silently treats guesses as ticket AC  | Labels inferred criteria as Inferred            |
+
+judges:
+  - name: asks_for_ticket
+    description: Asks for a Jira URL or key when none is provided rather than inventing a ticket
+    if: "annotations.get('case_type') == 'asks-for-ticket'"
+    check: |
+      import re, json
+
+      text = outputs.get("conversation", "")
+      tool_calls = outputs.get("tool_calls") or []
+      asked_via_tool = any(
+          c.get("name") == "AskUserQuestion"
+          and re.search(
+              r"(jira|ticket|issue key|issue URL|browse)",
+              json.dumps(c.get("input", {})),
+              re.IGNORECASE,
+          )
+          for c in tool_calls
+      )
+      asks_in_text = re.search(
+          r"(jira (url|link|ticket|key)|issue key|ticket (url|link|key)|"
+          r"share .{0,40}(jira|ticket|issue)|provide .{0,40}(jira|ticket|key)|"
+          r"what (ticket|issue))",
+          text,
+          re.IGNORECASE,
+      )
+      if not asked_via_tool and not asks_in_text:
+          return False, "Did not ask for a Jira URL or issue key"
+
+      fabricated = re.search(
+          r"(## Step-by-step plan|## Affected areas|## Acceptance criteria)",
+          text,
+          re.IGNORECASE,
+      )
+      if fabricated:
+          return False, "Produced an implementation plan without a ticket"
+      return True, "Asked for a Jira URL or key before planning"
+
+  - name: hard_gate_no_implementation
+    description: Produces a plan and asks to implement without editing source files
+    if: "annotations.get('case_type') == 'hard-gate'"
+    check: |
+      import re, json
+
+      text = outputs.get("conversation", "")
+      files = outputs.get("files", {}) or {}
+      tool_calls = outputs.get("tool_calls") or []
+
+      edited_source = [
+          path for path in files
+          if path.endswith((".tsx", ".ts", ".jsx", ".js", ".py", ".rb", ".scss", ".css"))
+      ]
+      if edited_source:
+          return False, f"Started implementing by writing {edited_source}"
+
+      has_plan = re.search(
+          r"(Step-by-step plan|Affected areas|## Goal)",
+          text,
+          re.IGNORECASE,
+      )
+      if not has_plan:
+          return False, "Did not produce a plan before asking to implement"
+
+      asked_via_tool = any(
+          c.get("name") == "AskUserQuestion"
+          and re.search(
+              r"(how should we proceed|show plan only|implement whole plan|"
+              r"implement plan step by step|plan only)",
+              json.dumps(c.get("input", {})),
+              re.IGNORECASE,
+          )
+          for c in tool_calls
+      )
+      asks_in_text = re.search(
+          r"(how should we proceed|show plan only|implement whole plan|"
+          r"implement plan step by step|plan only)",
+          text,
+          re.IGNORECASE,
+      )
+      if not asked_via_tool and not asks_in_text:
+          return False, "Produced a plan but did not ask how to proceed"
+      return True, "Planned first and stopped without editing source files"
+
+  - name: produces_required_sections
+    description: Plan includes the required analysis sections
+    if: "annotations.get('case_type') == 'structured-plan'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      required = {
+          "Goal": r"\bGoal\b",
+          "Acceptance criteria": r"Acceptance criteria",
+          "Current behavior vs desired": r"Current behavior",
+          "Affected areas": r"Affected areas",
+          "Step-by-step plan": r"Step-by-step plan",
+          "Risks and open questions": r"(Risks|open questions)",
+          "Test plan": r"Test plan",
+      }
+      missing = [
+          name for name, pattern in required.items()
+          if not re.search(pattern, text, re.IGNORECASE)
+      ]
+      if missing:
+          return False, f"Missing required plan sections: {', '.join(missing)}"
+      if not re.search(r"PROJ-412", text):
+          return False, "Plan does not identify ticket key PROJ-412"
+      return True, "Plan contains all required sections"
+
+  - name: maps_to_workspace_files
+    description: Cites real workspace files instead of inventing paths
+    if: "annotations.get('case_type') == 'structured-plan'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      has_settings = re.search(r"NotificationSettings\.tsx", text)
+      has_api = re.search(r"notifications\.ts", text)
+      has_test = re.search(r"NotificationSettings\.test\.tsx", text)
+      missing = []
+      if not has_settings:
+          missing.append("NotificationSettings.tsx")
+      if not has_api:
+          missing.append("notifications.ts")
+      if not has_test:
+          missing.append("NotificationSettings.test.tsx")
+      if missing:
+          return False, f"Plan did not cite workspace files: {', '.join(missing)}"
+      invented = re.search(
+          r"(src/pages/Settings\.jsx|app/views/notifications_controller)",
+          text,
+      )
+      if invented:
+          return False, "Plan invented file paths that are not in the workspace"
+      return True, "Cited NotificationSettings.tsx, notifications.ts, and the test file"
+
+  - name: labels_inferred_ac
+    description: Labels inferred acceptance criteria when the ticket has none
+    if: "annotations.get('case_type') == 'inferred-ac'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      has_ac = re.search(r"Acceptance criteria", text, re.IGNORECASE)
+      if not has_ac:
+          return False, "No Acceptance criteria section found"
+      has_inferred = re.search(r"\bInferred\b", text)
+      if not has_inferred:
+          return False, "Did not label inferred acceptance criteria as Inferred"
+      return True, "Labeled inferred acceptance criteria"
+
+thresholds:
+  asks_for_ticket:
+    min_pass_rate: 1.0
+  hard_gate_no_implementation:
+    min_pass_rate: 1.0
+  produces_required_sections:
+    min_pass_rate: 1.0
+  maps_to_workspace_files:
+    min_pass_rate: 1.0
+  labels_inferred_ac:
+    min_pass_rate: 1.0

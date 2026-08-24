@@ -1,0 +1,5 @@
+prompt: >-
+  Using the pf-jira-ticket-plan skill: create an implementation plan for
+  PROJ-412. The ticket is in fixture-ticket.md in this case directory. Map the
+  work to the source files in this workspace. Do not call network or MCP.
+fixture: fixture-ticket.md

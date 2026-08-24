@@ -1,0 +1,5 @@
+# Guidance for the AskUserQuestion auto-answerer (eval harness).
+instruction: >
+  If asked how to proceed, choose "show plan only." Do not choose implement
+  whole plan or implement plan step by step -- the point of this test is to
+  verify the skill stops after the plan.

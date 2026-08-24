@@ -178,6 +178,7 @@ PatternFly team tools and skill incubation — issue triage, release management,
 <tr><td nowrap><code>pf-css-var-scan</code></td><td>Analyze --pf- CSS custom property usage and naming patterns in PatternFly SCSS.</td><td>—</td></tr>
 <tr><td nowrap><code>pf-duplicate-epic</code></td><td>Clone a Jira epic from another project into the PF Jira space with back-links and feature attachment.</td><td>—</td></tr>
 <tr><td nowrap><code>pf-figma-diff</code></td><td>Diff Figma designs to identify what changed and generate code update checklists.</td><td>—</td></tr>
+<tr><td nowrap><code>pf-jira-ticket-plan</code></td><td>Generate a codebase-mapped implementation plan from a Jira ticket, then ask whether to show the plan only, implement the whole plan, or go step by step.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-modifier-scan</code></td><td>Analyze PatternFly modifier class (pf-m-*) usage across SCSS files and generate usage reports.</td><td>—</td></tr>
 <tr><td nowrap><code>pf-org-version-update</code></td><td>Update patternfly-org for a new PatternFly release — resolve versions, update package.json and versions.json, and provide build steps.</td><td>—</td></tr>
 <tr><td nowrap><code>pf-prototype-mode</code></td><td>Enable prototype mode for React apps with grayscale styling and a banner overlay.</td><td>—</td></tr>
@@ -200,4 +201,4 @@ PatternFly team tools and skill incubation — issue triage, release management,
 **Eval coverage**
 
 - Consumer: 25/25 (100%)
-- Workshop: 3/25 (12%)
+- Workshop: 4/26 (15%)

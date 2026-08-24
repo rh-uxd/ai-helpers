@@ -1,0 +1,3 @@
+# Guidance for the AskUserQuestion auto-answerer (eval harness).
+instruction: >
+  If asked how to proceed, choose "show plan only."
