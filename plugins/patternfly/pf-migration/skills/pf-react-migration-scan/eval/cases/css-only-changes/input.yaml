@@ -1,9 +1,0 @@
-prompt: |
-  We're migrating from PF5 to PF6. Our code uses these PatternFly CSS classes:
-  - pf-v5-c-button
-  - pf-v5-u-mt-md
-  - pf-v5-c-card__body
-
-  We also have some custom CSS with --pf-v5-global--Color--100 variables.
-
-  Can you scan for breaking changes?

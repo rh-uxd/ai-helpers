@@ -129,8 +129,7 @@ PF version migration — breaking change detection, class scanning, upgrade plan
 
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
-<tr><td nowrap><code>pf-css-migration-scan</code></td><td>Scan code for legacy PatternFly CSS classes and recommend PF6-safe replacements.</td><td>stable</td></tr>
-<tr><td nowrap><code>pf-react-migration-scan</code></td><td>Scan code for @patternfly/react-* API breaking changes and produce a markdown report.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-migration-scan</code></td><td>Scan code for PatternFly migration issues — deprecated CSS classes, removed props, renamed components, changed APIs, and legacy tokens.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-release-candidate-update</code></td><td>Update @patternfly/* npm dependencies to the latest release candidate versions.</td><td>stable</td></tr>
 </table>
 
@@ -199,5 +198,5 @@ PatternFly team tools and skill incubation — issue triage, release management,
 
 **Eval coverage**
 
-- Consumer: 25/25 (100%)
+- Consumer: 24/24 (100%)
 - Workshop: 3/25 (12%)

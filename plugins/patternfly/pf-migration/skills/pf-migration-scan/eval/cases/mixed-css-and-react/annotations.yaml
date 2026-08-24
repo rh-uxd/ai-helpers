@@ -1,0 +1,10 @@
+expect_findings: true
+migration_type: major
+has_mixed_findings: true
+expect_css_findings: true
+expect_react_findings: true
+legacy_patterns:
+  - "pf-v5-c-card"
+  - "pf-c-button"
+  - "pf-u-mt-lg"
+  - "--pf-global--"

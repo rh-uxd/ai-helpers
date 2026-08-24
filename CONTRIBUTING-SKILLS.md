@@ -75,7 +75,7 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 <tr><td nowrap><b>pf-code-review</b></td><td>Code review and quality — adversarial review, security patterns</td><td>`pf-review`, `pf-security-scan`</td></tr>
 <tr><td nowrap><b>pf-design-audit</b></td><td>Design audit — validate existing code and designs against PatternFly standards</td><td>`pf-ai-audit`, `pf-color-scan`, `pf-css-token-check`</td></tr>
 <tr><td nowrap><b>pf-design-guide</b></td><td>Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation</td><td>`pf-figma-design-mode`, `pf-screenshot-mapping`</td></tr>
-<tr><td nowrap><b>pf-migration</b></td><td>PF version migration — breaking change detection, class scanning, upgrade planning</td><td>`pf-css-migration-scan`, `pf-react-migration-scan`, `pf-release-candidate-update`</td></tr>
+<tr><td nowrap><b>pf-migration</b></td><td>PF version migration — breaking change detection, class scanning, upgrade planning</td><td>`pf-migration-scan`, `pf-release-candidate-update`</td></tr>
 <tr><td nowrap><b>pf-react</b></td><td>React component development — coding standards, testing, and structure</td><td>`pf-chart-gen`, `pf-component-check`, `pf-component-reuse-check`</td></tr>
 <tr><td nowrap><b>pf-workshop</b></td><td>PatternFly team tools and skill incubation — issue triage, release management, codebase auditing, new skill development</td><td>`pf-analytics-repo-pruning`, `pf-bug-triage`, `pf-content-review`</td></tr>
 </table>

@@ -22,7 +22,7 @@ When `.tsx`, `.jsx`, `.css`, or `.scss` files exist, these skills are available 
 | `/pf-import-check` | pf-react | Import paths across `@patternfly/*` packages |
 | `/pf-component-check` | pf-react | Component nesting, wrapper hierarchies, layout composition |
 | `/pf-color-scan` | pf-design-audit | Hardcoded hex/rgb/hsl values that should use design tokens |
-| `/pf-css-migration-scan` | pf-migration | Legacy CSS classes from older PF versions |
+| `/pf-migration-scan` | pf-migration | Legacy CSS classes, removed props, renamed components, changed APIs |
 | `/pf-security-scan` | pf-code-review | XSS, unsanitized user input in PF components, insecure href patterns |
 
 ## Conditional skills available

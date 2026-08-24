@@ -1,2 +1,0 @@
-prompt: |
-  We're upgrading @patternfly/react-core from 6.1.0 to 6.3.0. Our project uses Button, Modal, Table, Alert, and Select components. Can you check if there are any breaking changes we need to handle?

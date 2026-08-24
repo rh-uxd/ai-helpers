@@ -1,18 +1,24 @@
 # Report template
 
-Copy this structure when generating `pf-react-migration-scan-report.md`.
+Copy this structure when generating `pf-migration-scan-report.md`.
 
 ```markdown
-# PatternFly React Breaking Changes Report
+# PatternFly Migration Report
 
 **Generated:** [YYYY-MM-DD]
 **Scan path:** [path]
-**Version range:** [@patternfly/react-core X.Y.Z → A.B.C]
+**Version range:** [PF X → PF Y]
 **Packages scanned:** [list of @patternfly/react-* packages found in codebase]
 
 ## Executive summary
 
 [2–4 sentences: total findings, highest severity items, estimated migration effort]
+
+| Category | Count |
+|----------|-------|
+| CSS class migrations | [n] |
+| Token migrations | [n] |
+| React API breaking changes | [n] |
 
 | Severity | Count |
 |----------|-------|
@@ -28,7 +34,27 @@ Copy this structure when generating `pf-react-migration-scan-report.md`.
 
 ---
 
-## Findings by severity
+## CSS and token findings
+
+### Legacy classes
+
+[Omit section if none]
+
+| File | Line | Current class | Replacement | Confidence |
+|------|------|---------------|-------------|------------|
+| `src/...` | 12 | `pf-v5-c-button` | Use `<Button>` component or `pf-v6-c-button` | high |
+
+### Legacy tokens
+
+[Omit section if none]
+
+| File | Line | Current token | Replacement | Confidence |
+|------|------|---------------|-------------|------------|
+| `src/...` | 34 | `--pf-global--spacer--md` | `--pf-t--global--spacer--md` | high |
+
+---
+
+## React API findings by severity
 
 ### Critical
 
@@ -86,20 +112,11 @@ Alphabetical index for developers fixing one component at a time.
 
 1. [ ] Update `@patternfly/react-*` dependencies in `package.json`
 2. [ ] Run `npx @patternfly/pf-codemods@latest --v6 <path>` (review before `--fix`)
-3. [ ] Address Critical findings in [components/files]
-4. [ ] Address High findings
-5. [ ] Run build and tests; fix TypeScript errors from removed exports/props
-6. [ ] Review Medium / deprecated usage for cleanup
-
----
-
-## Out of scope (not included in this report)
-
-This report covers **@patternfly/react-* API changes only**. The following were intentionally excluded:
-
-- CSS class renames (`pf-v5-*` → `pf-v6-*`) — use `pf-css-migration-scan`
-- Stylesheet CSS variable updates — use `pf-css-migration-scan` or css-vars codemods
-- `@patternfly/chatbot` and other non-`react-*` packages
+3. [ ] Address Critical findings
+4. [ ] Address CSS class and token migrations
+5. [ ] Address High findings
+6. [ ] Run build and tests; fix TypeScript errors from removed exports/props
+7. [ ] Review Medium / deprecated usage for cleanup
 
 ---
 
