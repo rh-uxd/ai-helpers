@@ -1,0 +1,7 @@
+# FIGMA_PAT is cleared in eval.yaml (execution.env / runner.env), not via this prompt.
+prompt: >-
+  Using the uxd-figma-read skill, retrieve design context from this Figma file.
+  Figma MCP tools are unavailable. Follow the skill's error handling — do not
+  invent page names, frames, or screenshots.
+
+  URL: https://www.figma.com/design/AbCdEfGhIjKlMnOp/Settings-Redesign?node-id=16-1047
