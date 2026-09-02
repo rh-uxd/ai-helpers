@@ -266,7 +266,7 @@ When the refinement procedure runs, update `prototype-summary.yaml` in place:
 
 Written during Step 4 (kept in sync if flows change). Drives implementation reachability in Step 8 and batch export.
 
-**Canonical schema:** [journeys-schema.md](../../uxd-prototype-export/references/journeys-schema.md) in `uxd-prototype-export`.
+**Canonical schema:** [journeys-schema.md](../../../../uxd-workshop/skills/uxd-prototype-export/references/journeys-schema.md) in `uxd-prototype-export`.
 
 Also keep the flat `screens` list in `metadata.json` / `prototype-summary.yaml` as a convenience index of screen names.
 
@@ -274,7 +274,7 @@ Also keep the flat `screens` list in `metadata.json` / `prototype-summary.yaml` 
 
 Written during Step 4 (kept in sync if pages/conditions change). Sibling to `journeys.json`. Catalog of **data/condition variants** per page. Interaction states (modal open) stay in journey `actions` — not scenarios.
 
-**Canonical schema:** [scenarios-schema.md](../../uxd-prototype-export/references/scenarios-schema.md) in `uxd-prototype-export`.
+**Canonical schema:** [scenarios-schema.md](../../../../uxd-workshop/skills/uxd-prototype-export/references/scenarios-schema.md) in `uxd-prototype-export`.
 
 Brainstorm checklist: [scenario-brainstorm.md](scenario-brainstorm.md). Mock wiring: [scenario-mocks.md](scenario-mocks.md). Every journey route needs at least a `default` scenario.
 

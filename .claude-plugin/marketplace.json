@@ -15,6 +15,11 @@
       "description": "UXD team tools — prototyping, research, design review"
     },
     {
+      "name": "uxd-prototype",
+      "source": "./plugins/uxd-prototype",
+      "description": "UX prototyping pipeline — create, evaluate, and publish prototypes"
+    },
+    {
       "name": "pf-react",
       "source": "./plugins/patternfly/pf-react",
       "description": "React component development — coding standards, testing, and structure"

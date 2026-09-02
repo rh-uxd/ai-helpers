@@ -70,6 +70,7 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 <table>
 <tr><th>Plugin</th><th>What it does</th><th>Example skills</th></tr>
 <tr><td nowrap><b>patternfly</b></td><td>Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs</td><td></td></tr>
+<tr><td nowrap><b>uxd-prototype</b></td><td>UX prototyping pipeline — create, evaluate, and publish prototypes</td><td>`uxd-prototype-create`</td></tr>
 <tr><td nowrap><b>uxd-workshop</b></td><td>UXD team tools and skill incubator — prototyping, research, design review, team workflows</td><td>`uxd-design-handoff`, `uxd-discovery`, `uxd-evaluate-design-heuristics`</td></tr>
 <tr><td nowrap><b>pf-a11y</b></td><td>Accessibility auditing, reporting, and documentation</td><td>`pf-a11y-audit`, `pf-a11y-keyboard`</td></tr>
 <tr><td nowrap><b>pf-code-review</b></td><td>Code review and quality — adversarial review, security patterns</td><td>`pf-review`, `pf-security-scan`</td></tr>
@@ -93,6 +94,7 @@ Plugin names must tell a user exactly what the plugin helps them do. A user brow
 <!-- BEGIN GOOD NAMES -->
 **Good names** describe the capability:
 - `patternfly` — Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
+- `uxd-prototype` — UX prototyping pipeline — create, evaluate, and publish prototypes
 - `pf-a11y` — Accessibility auditing, reporting, and documentation
 - `pf-code-review` — Code review and quality — adversarial review, security patterns
 - `pf-design-audit` — Design audit — validate existing code and designs against PatternFly standards
@@ -134,7 +136,7 @@ All skills use a domain prefix — `pf-` for PatternFly, `uxd-` for UXD — rega
 | Skill | PF — generates PF component tests | `react` | `pf-test-gen` |
 | Skill | PF — PF design token auditing | `design-audit` | `pf-figma-token-check` |
 | Skill | PF — summarizes PR reviews | `pf-workshop` | `pf-summarize-pr-reviews` |
-| Skill | UXD — creates prototypes | `uxd-workshop` | `uxd-prototype-create` |
+| Skill | UXD — creates prototypes | `uxd-prototype` | `uxd-prototype-create` |
 | Skill | UXD — retrieves research insights | `uxd-workshop` | `uxd-research-insights` |
 | Agent | PF — PF React coding standards | `react` | `pf-coding-standards` |
 | Agent | UXD — workflow routing | `uxd-workshop` | `uxd-assist` |

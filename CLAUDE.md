@@ -26,7 +26,8 @@ Load additional context based on the task at hand:
 ## Project Structure
 
 ```
-plugins/uxd-workshop/              — UXD plugins (top level)
+plugins/uxd-workshop/              — UXD workshop (skill incubator)
+plugins/uxd-prototype/             — UX prototyping pipeline (create, evaluate, export, publish)
 plugins/patternfly/                — PatternFly meta-plugin (installs all PF sub-plugins)
   ├── .claude-plugin/plugin.json   — Meta-plugin manifest (dependencies only, no skills)
   ├── agents/pf-assist.md          — PatternFly routing agent

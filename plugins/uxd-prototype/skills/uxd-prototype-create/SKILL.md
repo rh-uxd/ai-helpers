@@ -1,6 +1,6 @@
 ---
 name: uxd-prototype-create
-version: 0.1.0
+version: 1.0.0
 description: >-
   Create or refine a UX prototype from a Jira ticket, Figma design, feature
   description, or rough idea. Enumerates user journeys and page scenarios
@@ -160,8 +160,8 @@ Parse from the RFE: user stories, acceptance criteria, personas/roles, key entit
 
 Journey and scenario rules (canonical schemas in `uxd-prototype-export`):
 
-- One journey per primary flow; mark key screens `"export": true`. Interaction states that are not distinct URLs keep the same `route` and add `actions`. Schema: [journeys-schema.md](../uxd-prototype-export/references/journeys-schema.md).
-- One `pages[]` entry per distinct journey `route`, with at least a `default` scenario. Each `description` names the **on-load end-state**. Scenario ids are filename-safe (`[a-z0-9-]+`). Schema: [scenarios-schema.md](../uxd-prototype-export/references/scenarios-schema.md). Mock wiring: [references/scenario-mocks.md](references/scenario-mocks.md).
+- One journey per primary flow; mark key screens `"export": true`. Interaction states that are not distinct URLs keep the same `route` and add `actions`. Schema: [journeys-schema.md](../../../uxd-workshop/skills/uxd-prototype-export/references/journeys-schema.md).
+- One `pages[]` entry per distinct journey `route`, with at least a `default` scenario. Each `description` names the **on-load end-state**. Scenario ids are filename-safe (`[a-z0-9-]+`). Schema: [scenarios-schema.md](../../../uxd-workshop/skills/uxd-prototype-export/references/scenarios-schema.md). Mock wiring: [references/scenario-mocks.md](references/scenario-mocks.md).
 
 ## Step 5: Resolve Workspace
 
@@ -312,8 +312,8 @@ Reads `.artifacts/{ID}/eval/evaluation-report.csv` + `refinement-suggestions.jso
 | Doc | When to load |
 |-----|-------------|
 | [output-formats.md](references/output-formats.md) | Writing create artifact files |
-| [journeys-schema.md](../uxd-prototype-export/references/journeys-schema.md) | `journeys.json` shape (owned by export) |
-| [scenarios-schema.md](../uxd-prototype-export/references/scenarios-schema.md) | `scenarios.json` shape (owned by export) |
+| [journeys-schema.md](../../../uxd-workshop/skills/uxd-prototype-export/references/journeys-schema.md) | `journeys.json` shape (owned by export) |
+| [scenarios-schema.md](../../../uxd-workshop/skills/uxd-prototype-export/references/scenarios-schema.md) | `scenarios.json` shape (owned by export) |
 | [scenario-brainstorm.md](references/scenario-brainstorm.md) | Planning page scenarios |
 | [scenario-mocks.md](references/scenario-mocks.md) | Wiring `?scenario=` mocks |
 | [decision-workflow.md](references/decision-workflow.md) | `--decisions=auto` or `human` |

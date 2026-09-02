@@ -1,7 +1,7 @@
 name: uxd-prototype-create-eval
 description: Evaluate uxd-prototype-create's conversational onboarding and plan confirmation
 
-skill: uxd-workshop:uxd-prototype-create
+skill: uxd-prototype:uxd-prototype-create
 
 execution:
   mode: case
@@ -9,6 +9,8 @@ execution:
 
 runner:
   type: claude-code
+  plugin_dirs:
+    - plugins/uxd-prototype
 
 models:
   skill: claude-opus-4-6
