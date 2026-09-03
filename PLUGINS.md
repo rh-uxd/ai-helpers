@@ -5,6 +5,8 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 ## Table of Contents
 
 - [patternfly](#patternfly) — Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
+- [pf-assist](#pf-assist) — PatternFly skill routing — maps project signals to the right PF sub-skills for compliance, migration, and design audits
+- [uxd-assist](#uxd-assist) — UXD skill routing — discover the right skills for research, design review, and prototyping workflows
 - [uxd-workshop](#uxd-workshop) — UXD team tools and skill incubator — prototyping, research, design review, team workflows
 - [pf-a11y](#pf-a11y) — Accessibility auditing, reporting, and documentation
 - [pf-code-review](#pf-code-review) — Code review and quality — adversarial review, security patterns
@@ -21,9 +23,30 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 
 Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
 
+No skills or agents yet.
+
+
+<br>
+
+### pf-assist
+
+PatternFly skill routing — maps project signals to the right PF sub-skills for compliance, migration, and design audits
+
 <table>
 <tr><th>Agent</th><th>Description</th><th>Eval</th></tr>
 <tr><td nowrap><code>pf-assist</code></td><td>PatternFly skill routing — maps project signals to the right PF sub-skills.</td><td>stable</td></tr>
+</table>
+
+
+<br>
+
+### uxd-assist
+
+UXD skill routing — discover the right skills for research, design review, and prototyping workflows
+
+<table>
+<tr><th>Agent</th><th>Description</th><th>Eval</th></tr>
+<tr><td nowrap><code>uxd-assist</code></td><td>UXD skill routing — maps task context to the right UXD sub-skills for research, design review, and prototyping.</td><td>stable</td></tr>
 </table>
 
 
@@ -44,11 +67,6 @@ UXD team tools and skill incubator — prototyping, research, design review, tea
 <tr><td nowrap><code>uxd-prototype-export</code></td><td>Export a prototype page or journey step as static HTML, a React component tree, or a PatternFly implementation spec, and install the Prototype Bar (Sources, Prototype|Eval, Scenario, Export).</td><td>—</td></tr>
 <tr><td nowrap><code>uxd-prototype-publish</code></td><td>Publish a prototype to a git merge request, GitHub Pages, GitLab Pages, or Vercel.</td><td>stable</td></tr>
 <tr><td nowrap><code>uxd-research-heuristic-eval</code></td><td>Conduct a heuristic evaluation of a prototype or interface using three independent expert evaluators.</td><td>stable</td></tr>
-</table>
-
-<table>
-<tr><th>Agent</th><th>Description</th><th>Eval</th></tr>
-<tr><td nowrap><code>uxd-assist</code></td><td>UXD skill routing — maps task context to the right UXD sub-skills for research, design review, and prototyping.</td><td>—</td></tr>
 </table>
 
 

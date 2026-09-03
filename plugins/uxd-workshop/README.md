@@ -17,7 +17,3 @@ UXD team tools and skill incubator — prototyping, research, design review, tea
 - **UXD Prototype Export** (`/uxd-workshop:uxd-prototype-export`) — Export a prototype page or journey step as static HTML, a React component tree, or a PatternFly implementation spec, and install the Prototype Bar (Sources, Prototype|Eval, Scenario, Export).
 - **UXD Prototype Publish** (`/uxd-workshop:uxd-prototype-publish`) — Publish a prototype to a git merge request, GitHub Pages, GitLab Pages, or Vercel.
 - **UXD Research Heuristic Eval** (`/uxd-workshop:uxd-research-heuristic-eval`) — Conduct a heuristic evaluation of a prototype or interface using three independent expert evaluators.
-
-### Agents
-
-- **UXD Assist** (`uxd-assist`) — UXD skill routing — maps task context to the right UXD sub-skills for research, design review, and prototyping.
