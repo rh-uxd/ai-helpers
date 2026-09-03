@@ -1,0 +1,120 @@
+name: pf-state-audit-eval
+description: Tests that pf-state-audit detects missing UI states and recommends correct PF6 components for each.
+
+skill: pf-code-review:pf-state-audit
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml with a prompt: field and inline component code
+    - annotations.yaml with expect_gaps (true/false) and missing_states list
+
+outputs:
+  - path: artifacts
+    schema: |
+      A state audit report with Missing States table and Coverage Summary.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: identifies_missing_states
+    description: Correctly identifies which states are missing from the component
+    if: "annotations.get('expect_gaps') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      ann = outputs.get("annotations", {})
+      missing = ann.get("missing_states", [])
+      found = 0
+      for state in missing:
+          pattern = r'(missing|not\s+handl|absent|no\s+' + state + r'|gap).*?\b' + state + r'\b|\b' + state + r'\b.*?(missing|not\s+handl|absent|gap)'
+          if re.search(pattern, text, re.IGNORECASE):
+              found += 1
+      if found >= len(missing):
+          return (True, f"All {len(missing)} missing states identified: {missing}")
+      return (False, f"Only {found}/{len(missing)} missing states found. Expected: {missing}")
+
+  - name: recommends_pf6_components
+    description: Recommends specific PF6 components (Spinner, Skeleton, Alert, EmptyState) not generic solutions
+    if: "annotations.get('expect_gaps') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf_patterns = [
+          r'(use|add|recommend|include|wrap\s+with|render|show)\s+.*?\b(Spinner|Skeleton|Alert|EmptyState)\b',
+          r'\b(Spinner|Skeleton|Alert|EmptyState)\b\s+(component|for|to\s+show|to\s+display|with\s+variant)',
+      ]
+      found = sum(1 for p in pf_patterns if re.search(p, text, re.IGNORECASE))
+      if found >= 1:
+          return (True, f"Found {found} PF6 component recommendation pattern(s)")
+      return (False, "No PF6 component recommendations found — skill should suggest Spinner, Skeleton, Alert, or EmptyState in recommendation context")
+
+  - name: has_coverage_summary
+    description: Output includes a coverage summary with state counts
+    if: "annotations.get('expect_gaps') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_table = bool(re.search(r'coverage\s+summary|state\s+coverage|#{1,3}\s+(coverage|summary)', text, re.IGNORECASE))
+      has_counts = bool(re.search(r'\d+\s*%|\d+\s*/\s*\d+', text))
+      if has_table and has_counts:
+          return (True, "Coverage summary with counts found")
+      if has_table:
+          return (True, "Coverage summary section found")
+      return (False, "No coverage summary found — skill specifies a coverage table in output")
+
+  - name: no_false_gaps
+    description: Does not flag missing states when all four are handled
+    if: "annotations.get('expect_gaps') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      gap_signals = [
+          r'missing\s+(loading|error|empty|unauthorized)',
+          r'does\s+not\s+handle',
+          r'no\s+(loading|error|empty|unauthorized)\s+(state|ui|indicator)',
+          r'gap(s)?\s+found',
+      ]
+      false_flags = sum(1 for p in gap_signals if re.search(p, text, re.IGNORECASE))
+      if false_flags == 0:
+          return (True, "No false gaps flagged for fully-covered component")
+      return (False, f"Flagged {false_flags} gaps on a component that handles all four states")
+
+thresholds:
+  identifies_missing_states:
+    min_pass_rate: 0.67
+  recommends_pf6_components:
+    min_pass_rate: 0.67
+  has_coverage_summary:
+    min_pass_rate: 0.67
+  no_false_gaps:
+    min_pass_rate: 1.0
