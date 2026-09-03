@@ -1,0 +1,11 @@
+expect_issues: true
+issue_categories:
+  - pf_contract
+notes: |
+  PF contract violations:
+  - Td missing dataLabel prop — content vanishes in responsive/mobile mode
+  - Select missing onSelect handler — selections don't register
+  - Duplicate eventKey={0} on two Tabs — wrong tab renders
+  - Pagination with count 0 and no empty state guard
+  Should recommend: add dataLabel to each Td, add onSelect to Select,
+  use unique eventKey values, guard empty state when filteredOrders is empty.

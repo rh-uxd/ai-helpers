@@ -1,0 +1,1 @@
+prompt: "Review UserTable.tsx for edge cases and missing defensive code. Probe with adversarial inputs — what happens with undefined props, empty arrays, and missing nested data?"
