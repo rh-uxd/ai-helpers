@@ -1,0 +1,20 @@
+prompt: |
+  Reproduce this bug report:
+
+  **Title:** Card component has no padding or styling in PF6
+
+  **PatternFly version:** @patternfly/react-core 6.0.0
+  **React version:** 18.2.0
+
+  **Steps to reproduce:**
+  1. Import Card, CardBody, CardTitle from @patternfly/react-core
+  2. Render a basic Card with CardTitle and CardBody
+  3. The card renders with no styling — no border, no padding, no background
+
+  **Expected:** Card should render with PatternFly's default card styling.
+  **Actual:** Card renders as unstyled divs.
+
+  **Note:** I'm importing CSS like this:
+  ```tsx
+  import '@patternfly/patternfly/patternfly.css';
+  ```

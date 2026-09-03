@@ -1,0 +1,6 @@
+prompt: |
+  Can you try to reproduce this issue someone reported?
+
+  "The table component is broken. It doesn't work right when I click on things. I'm using PatternFly."
+
+  That's all the info I have from the user.

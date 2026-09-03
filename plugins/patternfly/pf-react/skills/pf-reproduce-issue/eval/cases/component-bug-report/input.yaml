@@ -1,0 +1,18 @@
+prompt: |
+  Reproduce this PatternFly bug:
+
+  **Title:** Select dropdown closes immediately on scroll in PF6
+
+  **PatternFly version:** @patternfly/react-core 6.1.0, @patternfly/react-templates 6.1.0
+  **React version:** 18.3.1
+
+  **Steps to reproduce:**
+  1. Create a Select component with enough options to require scrolling
+  2. Open the dropdown
+  3. Try to scroll through the options using the mouse wheel
+  4. The dropdown closes immediately on scroll
+
+  **Expected behavior:** The dropdown should stay open while scrolling through options.
+  **Actual behavior:** The dropdown closes as soon as any scroll event fires.
+
+  This only happens when the Select is inside a PageSection with `hasOverscrollBehavior`. Works fine in a standalone page.
