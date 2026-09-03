@@ -1,7 +1,7 @@
 name: pf-import-check-eval
-description: Evaluate pf-import-check's detection of incorrect PF6 import paths
+description: Evaluate pf-import-check's detection of incorrect PF6 import paths and bundle-size anti-patterns
 
-skill: react:pf-import-check
+skill: pf-react:pf-import-check
 
 execution:
   mode: case
@@ -46,7 +46,10 @@ judges:
     check: |
       import re
       text = outputs.get("conversation", "")
-      invalid_path = annotations.get("invalid_import", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      ann = outputs.get("annotations", {})
+      invalid_path = ann.get("invalid_import", "")
       if not invalid_path:
           return False, "Test case missing invalid_import annotation"
       if invalid_path not in text:
@@ -55,11 +58,14 @@ judges:
 
   - name: suggests_correct_path
     description: Recommends the correct PF6 import subpath
-    if: "annotations.get('expect_violations') == True"
+    if: "annotations.get('correct_import', '') != ''"
     check: |
       import re
       text = outputs.get("conversation", "")
-      correct_path = annotations.get("correct_import", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      ann = outputs.get("annotations", {})
+      correct_path = ann.get("correct_import", "")
       if not correct_path:
           return False, "Test case missing correct_import annotation"
       if correct_path not in text:
@@ -72,6 +78,8 @@ judges:
     check: |
       import re
       text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
       valid_imports = [
           "@patternfly/react-charts/victory",
           "@patternfly/chatbot/dist/dynamic",
@@ -88,10 +96,52 @@ judges:
               return False, f"False positive — flagged valid import as violation: {imp}"
       return True, "No false positives for valid PF6 imports"
 
+  - name: flags_bundle_issue
+    description: Identifies bundle-size anti-patterns (barrel icons, full CSS, duplicate modules)
+    if: "annotations.get('bundle_issue') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      bundle_terms = [
+          r'bundle',
+          r'barrel',
+          r'tree.shak',
+          r'bloat',
+          r'entire\s+(icon|css|stylesheet|package)',
+          r'deep\s+import',
+          r'individual\s+import',
+          r'per.component',
+          r'duplicate',
+          r'1\.8\s*MB',
+      ]
+      matches = sum(1 for p in bundle_terms if re.search(p, text, re.IGNORECASE))
+      if matches >= 2:
+          return True, f"Found {matches} bundle-size related terms in output"
+      return False, f"Only {matches} bundle-size term(s) — expected discussion of bundle impact for this anti-pattern"
+
+  - name: suggests_deep_icon_import
+    description: Suggests deep import path for barrel icon imports
+    if: "annotations.get('violation_type') == 'barrel-icon-import'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_deep = bool(re.search(r'@patternfly/react-icons/dist/', text))
+      if has_deep:
+          return True, "Suggests deep icon import path"
+      return False, "Did not suggest deep import from @patternfly/react-icons/dist/"
+
 thresholds:
   flags_invalid_import:
     min_pass_rate: 1.0
   suggests_correct_path:
     min_pass_rate: 1.0
   no_false_positives:
+    min_pass_rate: 1.0
+  flags_bundle_issue:
+    min_pass_rate: 0.67
+  suggests_deep_icon_import:
     min_pass_rate: 1.0

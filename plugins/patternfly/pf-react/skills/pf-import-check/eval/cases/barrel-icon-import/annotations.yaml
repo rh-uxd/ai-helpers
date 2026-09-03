@@ -1,0 +1,4 @@
+expect_violations: true
+violation_type: barrel-icon-import
+invalid_import: "from '@patternfly/react-icons'"
+bundle_issue: true
