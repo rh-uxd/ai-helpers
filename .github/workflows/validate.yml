@@ -14,8 +14,5 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - name: Validate manifests and skill consistency
-        run: bash scripts/validate-manifests.sh
-
-      - name: Validate skill and agent integrity
-        run: bash scripts/validate-skills.sh
+      - name: Validate manifests, skills, and generated docs
+        run: make validate
