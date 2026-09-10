@@ -69,10 +69,11 @@ hash_file() {
 
 audit_file() {
   local file="$1"
-  local skill_dir name description lines core_words reference_words eval_words other_words
+  local file_errors skill_dir name description lines core_words reference_words eval_words other_words
   local core_tokens reference_tokens eval_tokens other_tokens tokens size audience inputs outputs hash eval_file
 
   [ -f "$file" ] || { fail "$file" "file not found"; return; }
+  file_errors=$ERRORS
   skill_dir=$(dirname "$file")
   name=$(frontmatter_field "$file" name)
   description=$(description_text "$file")
@@ -164,7 +165,11 @@ PY
     printf 'RECOMMEND: %s: keep the core instructions focused and move optional detail into references/\n' "$file"
   fi
   RESULTS+=("$file|$tokens|$size|$core_tokens|$reference_tokens|$eval_tokens|$other_tokens|$hash")
-  printf 'PASS: %s (%s)\n' "$file" "$size"
+  if [ "$ERRORS" -gt "$file_errors" ]; then
+    printf 'CHECKED: %s (%s)\n' "$file" "$size"
+  else
+    printf 'PASS: %s (%s)\n' "$file" "$size"
+  fi
 }
 
 paths=()
@@ -182,10 +187,10 @@ done
 if [ "${#paths[@]}" -eq 0 ]; then
   base_ref="${BASE_SHA:-}"
   if [ -z "$base_ref" ]; then
-    if git rev-parse --verify main >/dev/null 2>&1; then
-      base_ref="main"
-    elif git rev-parse --verify origin/main >/dev/null 2>&1; then
+    if git rev-parse --verify origin/main >/dev/null 2>&1; then
       base_ref="origin/main"
+    elif git rev-parse --verify main >/dev/null 2>&1; then
+      base_ref="main"
     fi
   fi
 
