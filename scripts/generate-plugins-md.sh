@@ -82,23 +82,35 @@ get_frontmatter_field() {
 get_section_summary() {
   local file="$1"
   local heading="$2"
-  awk -v heading="$heading" '
-    BEGIN { found=0; text="" }
-    $0 ~ "^##+ " heading "s?([[:space:]]|$)" { found=1; next }
-    found && /^##+ / { exit }
-    found && NF {
-      line=$0
-      gsub(/[|`*_]/, "", line)
-      gsub(/^[-# ]+/, "", line)
-      if (line !~ /^---/) text=text " " line
-    }
-    END {
-      gsub(/[[:space:]]+/, " ", text)
-      sub(/^ /, "", text)
-      if (length(text) > 96) text=substr(text, 1, 93) "..."
-      print text
-    }
-  ' "$file"
+  python3 - "$file" "$heading" <<'PY'
+import pathlib
+import re
+import sys
+
+path = pathlib.Path(sys.argv[1])
+heading = re.escape(sys.argv[2])
+section = re.compile(rf"^##+ {heading}s?(?:\s|$)")
+next_section = re.compile(r"^##+ ")
+parts = []
+found = False
+
+for raw_line in path.read_text(encoding="utf-8").splitlines():
+    if section.match(raw_line):
+        found = True
+        continue
+    if found and next_section.match(raw_line):
+        break
+    if found and raw_line.strip():
+        line = re.sub(r"[|`*_]", "", raw_line)
+        line = re.sub(r"^[-# ]+", "", line)
+        if not line.startswith("---"):
+            parts.append(line)
+
+summary = re.sub(r"\s+", " ", " ".join(parts)).strip()
+if len(summary) > 96:
+    summary = summary[:93] + "..."
+print(summary)
+PY
 }
 
 get_skill_audience() {
