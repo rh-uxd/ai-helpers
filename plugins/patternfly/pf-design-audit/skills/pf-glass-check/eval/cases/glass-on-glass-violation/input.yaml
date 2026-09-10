@@ -1,0 +1,2 @@
+prompt: "Audit this React component for Glass Mode violations. The application has .pf-v6-theme-glass on the html tag."
+fixture: GlassPage.tsx

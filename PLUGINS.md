@@ -109,7 +109,13 @@ Design audit — validate existing code and designs against PatternFly standards
 <tr><td nowrap><code>pf-css-token-check</code></td><td>Detect hardcoded color, spacing, typography, border radius and shadow values that have PF token equivalents and suggest the correct design token replacements.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-figma-check</code></td><td>Check Figma designs against PatternFly v6 standards for colors, typography, spacing, and component usage.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-figma-token-check</code></td><td>Audit designs against the PatternFly 6 token architecture and bridge Figma styles to PF semantic tokens.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-glass-check</code></td><td>Audit PatternFly prototypes for Glass Mode handbook violations — glass-on-glass layering, missing isPlain, accessibility overrides, and background image rules.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-icon-finder</code></td><td>Identify PatternFly icons in design mockups and provide the correct React import statements.</td><td>stable</td></tr>
+</table>
+
+<table>
+<tr><th>Agent</th><th>Description</th><th>Eval</th></tr>
+<tr><td nowrap><code>pf-glass-standards</code></td><td>PatternFly Glass Mode standards — glass-on-glass prevention, isPlain vs default styling, Drawer variant rules, accessibility overrides, and background image rules.</td><td>—</td></tr>
 </table>
 
 
@@ -218,5 +224,5 @@ PatternFly team tools and skill incubation — issue triage, release management,
 
 **Eval coverage**
 
-- Consumer: 25/25 (100%)
+- Consumer: 26/26 (100%)
 - Workshop: 6/26 (23%)

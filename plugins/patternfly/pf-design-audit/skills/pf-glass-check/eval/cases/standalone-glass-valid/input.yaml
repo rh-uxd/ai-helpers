@@ -1,0 +1,2 @@
+prompt: "Audit this React component for Glass Mode violations. This page does NOT have .pf-v6-theme-glass enabled."
+fixture: StandaloneGlassCard.tsx
