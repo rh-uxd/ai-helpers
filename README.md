@@ -2,8 +2,8 @@
 
 [![License](https://img.shields.io/github/license/rh-uxd/ai-helpers)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
-[![Plugins](https://img.shields.io/badge/plugins-11-blueviolet)](./PLUGINS.md)
-[![Skills](https://img.shields.io/badge/skills-51-blue)](./PLUGINS.md)
+[![Plugins](https://img.shields.io/badge/plugins-12-blueviolet)](./PLUGINS.md)
+[![Skills](https://img.shields.io/badge/skills-52-blue)](./PLUGINS.md)
 [![Agents](https://img.shields.io/badge/agents-7-teal)](./PLUGINS.md)
 [![skillsaw grade](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Frh-uxd%2Fai-helpers%2Fmain%2F.skillsaw-badge.json)](https://github.com/rh-uxd/ai-helpers/blob/main/.skillsaw-baseline.json)
 
