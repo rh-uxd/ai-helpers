@@ -141,7 +141,19 @@ get_skill_outputs() {
 get_skill_token_cost() {
   local skill_dir="$1"
   local words tokens size
-  words=$(find "$skill_dir" -type f \( -name '*.md' -o -name '*.yaml' -o -name '*.yml' \) -print0 2>/dev/null | xargs -0 wc -w 2>/dev/null | awk 'END {print $1}')
+  words=$(python3 - "$skill_dir" <<'PY'
+import pathlib
+import re
+import sys
+
+root = pathlib.Path(sys.argv[1])
+count = 0
+for path in sorted(root.rglob("*")):
+    if path.is_file() and path.suffix in {".md", ".yaml", ".yml"}:
+        count += len(re.findall(r"\S+", path.read_text(encoding="utf-8")))
+print(count)
+PY
+  )
   words=${words:-0}
   tokens=$(( (words * 13 + 9) / 10 ))
   if [ "$tokens" -le 1000 ]; then size="S";
