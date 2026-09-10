@@ -70,6 +70,83 @@ get_description() {
   echo "$desc"
 }
 
+# Read a simple single-line metadata field from skill frontmatter.
+get_frontmatter_field() {
+  local file="$1"
+  local field="$2"
+  sed -n '/^---$/,/^---$/p' "$file" | sed -n "s/^${field}: *//p" | head -1 | sed 's/^"//;s/"$//'
+}
+
+# Return a short summary from a markdown section when explicit metadata is absent.
+get_section_summary() {
+  local file="$1"
+  local heading="$2"
+  awk -v heading="$heading" '
+    BEGIN { found=0; text="" }
+    $0 ~ "^##+ " heading "([[:space:]]|$)" { found=1; next }
+    found && /^##+ / { exit }
+    found && NF {
+      line=$0
+      gsub(/[|`*_]/, "", line)
+      gsub(/^[-# ]+/, "", line)
+      if (line !~ /^---/) text=text " " line
+    }
+    END {
+      gsub(/[[:space:]]+/, " ", text)
+      sub(/^ /, "", text)
+      if (length(text) > 96) text=substr(text, 1, 93) "..."
+      print text
+    }
+  ' "$file"
+}
+
+get_skill_audience() {
+  local skill_file="$1"
+  local plugin_dir="$2"
+  local category="$3"
+  local value
+  value=$(get_frontmatter_field "$skill_file" "audience")
+  if [ -n "$value" ]; then
+    echo "$value"
+  elif [ "$category" = "workshop" ]; then
+    echo "Contributors and maintainers"
+  elif [[ "$plugin_dir" == *"patternfly"* ]]; then
+    echo "PatternFly designers and developers"
+  else
+    echo "UXD practitioners"
+  fi
+}
+
+get_skill_inputs() {
+  local skill_file="$1"
+  local value
+  value=$(get_frontmatter_field "$skill_file" "inputs")
+  [ -n "$value" ] || value=$(get_section_summary "$skill_file" "Inputs")
+  [ -n "$value" ] || value="Task context"
+  echo "$value" | tr '|' ' '
+}
+
+get_skill_outputs() {
+  local skill_file="$1"
+  local value
+  value=$(get_frontmatter_field "$skill_file" "outputs")
+  [ -n "$value" ] || value=$(get_section_summary "$skill_file" "Output")
+  [ -n "$value" ] || value="Structured result"
+  echo "$value" | tr '|' ' '
+}
+
+# Estimates prompt footprint from words in the skill and its colocated references.
+# This is a comparison metric, not a model billing estimate.
+get_skill_token_cost() {
+  local skill_dir="$1"
+  local words tokens size
+  words=$(find "$skill_dir" -type f \( -name '*.md' -o -name '*.yaml' -o -name '*.yml' \) -print0 2>/dev/null | xargs -0 wc -w 2>/dev/null | awk 'END {print $1}')
+  words=${words:-0}
+  tokens=$(( (words * 13 + 9) / 10 ))
+  if [ "$tokens" -lt 800 ]; then size="S"; elif [ "$tokens" -lt 1600 ]; then size="M"; else size="L"; fi
+  echo "~${tokens} tokens (${size})"
+}
+
 # First sentence only for table display
 get_desc_first_sentence() {
   local desc="$1"
@@ -327,6 +404,32 @@ HEADER
       echo "- Workshop: ${workshop_eval}/${workshop_total} (${workshop_pct}%)"
     fi
   fi
+
+  echo ""
+  echo "---"
+  echo ""
+  echo "## Skill discovery matrix"
+  echo ""
+  echo "Generated from skill frontmatter and section headings. Token cost is an approximate prompt-footprint metric (word count × 1.3) for comparing skills, not a model billing estimate."
+  echo ""
+  echo "| Skill | Audience | Inputs | Outputs | Token cost |"
+  echo "|---|---|---|---|---|"
+  for plugin_dir in plugins/*/ plugins/*/*/; do
+    [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
+    plugin=$(basename "$plugin_dir")
+    is_listed "$plugin" || continue
+    plugin_category=$(get_plugin_json_field "$plugin_dir" "category")
+    [ -d "${plugin_dir}skills" ] || continue
+    for skill_dir in "${plugin_dir}skills"/*/; do
+      [ -f "${skill_dir}SKILL.md" ] || continue
+      skill_name=$(basename "$skill_dir")
+      audience=$(get_skill_audience "${skill_dir}SKILL.md" "$plugin_dir" "$plugin_category")
+      inputs=$(get_skill_inputs "${skill_dir}SKILL.md")
+      outputs=$(get_skill_outputs "${skill_dir}SKILL.md")
+      token_cost=$(get_skill_token_cost "$skill_dir")
+      echo "| \`${skill_name}\` | ${audience} | ${inputs} | ${outputs} | ${token_cost} |"
+    done
+  done
 } > "$OUTPUT"
 
 echo "Generated $OUTPUT"

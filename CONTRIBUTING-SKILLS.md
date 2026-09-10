@@ -155,6 +155,18 @@ All skills use a domain prefix — `pf-` for PatternFly, `uxd-` for UXD — rega
 - Skill directory: `skills/pf-test-gen/SKILL.md` with `name: pf-test-gen`
 - Agent file: `agents/pf-coding-standards.md` with `name: pf-coding-standards`
 
+## Discovery metadata
+
+New skills should keep these optional frontmatter fields current so the generated [skill discovery matrix](PLUGINS.md#skill-discovery-matrix) can describe them accurately:
+
+```yaml
+audience: "PatternFly developers"
+inputs: "React component source and test requirements"
+outputs: "A complete Testing Library test file"
+```
+
+If a legacy skill does not include these fields, the generator derives audience from its plugin and summarizes its `Inputs` and `Output` sections. Token cost is an approximate prompt-footprint comparison: all colocated Markdown/YAML words multiplied by 1.3, rounded to a whole-token estimate and grouped as S (<800), M (<1600), or L. It is not a model billing estimate.
+
 ### Verb suffixes
 
 End your skill name with one of these four verbs, unless the name is already a recognizable process.
