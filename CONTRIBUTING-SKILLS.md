@@ -161,7 +161,7 @@ inputs: "React component source and test requirements"
 outputs: "A complete Testing Library test file"
 ```
 
-If a legacy skill does not include these fields, the generator derives audience from its plugin and summarizes its `Inputs` and `Output` sections. Token cost is an approximate prompt-footprint comparison: all colocated Markdown/YAML words multiplied by 1.3, rounded to a whole-token estimate and grouped as S (<800), M (<1600), or L. It is not a model billing estimate.
+If a legacy skill does not include these fields, the generator derives audience from its plugin and summarizes its `Inputs` and `Output` sections. Token cost is a relative prompt-footprint comparison: all colocated Markdown/YAML words multiplied by 1.3, then grouped into ranges. `S` is up to 1,000 estimated tokens, `M` is 1,001–3,000, `L` is 3,001–10,000, and `XL` is more than 10,000. This is not runtime usage or a model billing estimate.
 
 ### Verb suffixes
 

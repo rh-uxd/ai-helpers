@@ -135,16 +135,19 @@ get_skill_outputs() {
   echo "$value" | tr '|' ' '
 }
 
-# Estimates prompt footprint from words in the skill and its colocated references.
-# This is a comparison metric, not a model billing estimate.
+# Classifies prompt footprint from words in the skill and its colocated references.
+# This is a relative comparison metric, not a model billing estimate.
 get_skill_token_cost() {
   local skill_dir="$1"
   local words tokens size
   words=$(find "$skill_dir" -type f \( -name '*.md' -o -name '*.yaml' -o -name '*.yml' \) -print0 2>/dev/null | xargs -0 wc -w 2>/dev/null | awk 'END {print $1}')
   words=${words:-0}
   tokens=$(( (words * 13 + 9) / 10 ))
-  if [ "$tokens" -lt 800 ]; then size="S"; elif [ "$tokens" -lt 1600 ]; then size="M"; else size="L"; fi
-  echo "~${tokens} tokens (${size})"
+  if [ "$tokens" -le 1000 ]; then size="S";
+  elif [ "$tokens" -le 3000 ]; then size="M";
+  elif [ "$tokens" -le 10000 ]; then size="L";
+  else size="XL"; fi
+  echo "$size"
 }
 
 # First sentence only for table display
@@ -410,7 +413,7 @@ HEADER
   echo ""
   echo "## Skill discovery matrix"
   echo ""
-  echo "Generated from skill frontmatter and section headings. Token cost is an approximate prompt-footprint metric (word count × 1.3) for comparing skills, not a model billing estimate."
+  echo "Generated from skill frontmatter and section headings. Token cost is a relative prompt-footprint size, not runtime usage or a model billing estimate. See contributor guidance for size ranges and methodology."
   echo ""
   echo "| Skill | Audience | Inputs | Outputs | Token cost |"
   echo "|---|---|---|---|---|"
