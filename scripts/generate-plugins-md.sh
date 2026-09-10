@@ -78,12 +78,13 @@ get_frontmatter_field() {
 }
 
 # Return a short summary from a markdown section when explicit metadata is absent.
+# The optional trailing s supports legacy singular headings too.
 get_section_summary() {
   local file="$1"
   local heading="$2"
   awk -v heading="$heading" '
     BEGIN { found=0; text="" }
-    $0 ~ "^##+ " heading "([[:space:]]|$)" { found=1; next }
+    $0 ~ "^##+ " heading "s?([[:space:]]|$)" { found=1; next }
     found && /^##+ / { exit }
     found && NF {
       line=$0
@@ -121,7 +122,7 @@ get_skill_inputs() {
   local skill_file="$1"
   local value
   value=$(get_frontmatter_field "$skill_file" "inputs")
-  [ -n "$value" ] || value=$(get_section_summary "$skill_file" "Inputs")
+  [ -n "$value" ] || value=$(get_section_summary "$skill_file" "Input")
   [ -n "$value" ] || value="Task context"
   echo "$value" | tr '|' ' '
 }
