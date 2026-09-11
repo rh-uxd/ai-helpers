@@ -48,7 +48,7 @@ judges:
       text = outputs.get("conversation", "")
       for path, content in outputs.get("files", {}).items():
           text += "\n" + content
-      ann = outputs.get("annotations", {})
+      ann = outputs.get("annotations") or annotations
       invalid_path = ann.get("invalid_import", "")
       if not invalid_path:
           return False, "Test case missing invalid_import annotation"
@@ -64,7 +64,7 @@ judges:
       text = outputs.get("conversation", "")
       for path, content in outputs.get("files", {}).items():
           text += "\n" + content
-      ann = outputs.get("annotations", {})
+      ann = outputs.get("annotations") or annotations
       correct_path = ann.get("correct_import", "")
       if not correct_path:
           return False, "Test case missing correct_import annotation"

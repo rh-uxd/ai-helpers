@@ -1,0 +1,14 @@
+import React from 'react';
+import { Button } from '@patternfly/react-core';
+import { Alert } from '@patternfly/react-core/dist/esm/components/Alert';
+import { Tooltip } from '@patternfly/react-core';
+
+export const NotificationBar = () => (
+  <div>
+    <Alert variant="info" title="New message">
+      <Tooltip content="Click to dismiss">
+        <Button variant="link">Dismiss</Button>
+      </Tooltip>
+    </Alert>
+  </div>
+);
