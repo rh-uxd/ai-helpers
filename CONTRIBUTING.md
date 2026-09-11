@@ -214,6 +214,20 @@ graph LR
 7. A maintainer reviews for intent and quality
 8. On merge, CI regenerates `PLUGINS.md` and the README plugin table
 
+### Pre-PR quality gate
+
+Before opening a PR that adds or changes a skill, run the contributor audit against the changed files:
+
+```bash
+make skill-audit
+```
+
+The command automatically finds changed and untracked skill files. Pass `SKILLS="path/to/SKILL.md"` only when you want a targeted audit. The audit checks frontmatter, naming, description quality, metadata completeness, line count, concrete output examples, consumer eval coverage, and estimated token footprint. A passing run writes `.skill-audit.json` as a verifiable watermark. CI reruns the audit and checks the watermark against changed skill file hashes. Also run `make validate`; the audit does not replace repository validation, linting, or security checks.
+
+The audit requires Python 3 for deterministic token breakdowns and watermark verification.
+
+The audit reports core skill, reference, eval, and other supporting-content token estimates. It classifies total footprint as `S`, `M`, `L`, or `XL` and prints non-blocking recommendations when the core skill is too large, supporting content has no `references/` location, or the file is approaching the line limit. These recommendations help contributors optimize the default instructions without blocking otherwise valid work.
+
 ### Quality checklist
 
 Before opening your PR, verify:

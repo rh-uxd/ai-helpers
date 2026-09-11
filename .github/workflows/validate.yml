@@ -7,15 +7,32 @@ on:
       - '.claude-plugin/**'
       - '.cursor-plugin/**'
       - 'scripts/**'
+      - 'Makefile'
+      - '.skill-audit.json'
+      - '.github/workflows/validate.yml'
+      - 'CONTRIBUTING.md'
 
 jobs:
   validate:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Validate manifests and skill consistency
-        run: bash scripts/validate-manifests.sh
+      - name: Validate manifests, skills, and generated docs
+        run: make validate
 
-      - name: Validate skill and agent integrity
-        run: bash scripts/validate-skills.sh
+      - name: Run skill quality audit
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          NO_WATERMARK: "1"
+        run: make skill-audit
+
+      - name: Verify skill audit watermark
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: make skill-audit-verify

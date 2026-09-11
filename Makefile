@@ -1,4 +1,6 @@
-.PHONY: validate lint security scaffold help
+.PHONY: validate lint security scaffold skill-audit skill-audit-verify help
+
+export SKILLS BASE_SHA NO_WATERMARK
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
@@ -33,6 +35,15 @@ security: ## Run AI Guardian security scan (zero-install via uvx)
 
 docs: ## Regenerate PLUGINS.md, README plugin table, and CONTRIBUTING-SKILLS.md
 	@bash scripts/generate-plugins-md.sh
+
+skill-audit: ## Audit changed skills automatically; optionally pass SKILLS="path/to/SKILL.md"
+	@bash scripts/audit-skill-quality.sh
+
+skill-audit-verify: ## Verify audit watermark: make skill-audit-verify BASE_SHA=<sha>
+ifndef BASE_SHA
+	$(error BASE_SHA is required. Usage: make skill-audit-verify BASE_SHA=<sha>)
+endif
+	@bash scripts/verify-skill-audit.sh
 
 scaffold: ## Scaffold a new skill: make scaffold PLUGIN=pf-react SKILL=pf-my-skill
 ifndef PLUGIN
