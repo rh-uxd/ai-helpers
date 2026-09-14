@@ -138,7 +138,7 @@ Every pull request runs through automated quality gates:
 
 | Gate | What it checks |
 |------|---------------|
-| **Validate** | Manifest consistency, generated docs freshness, skill frontmatter integrity |
+| **Validate** | Manifest consistency and skill frontmatter integrity |
 | **Skillsaw** | Skill content quality — structure, clarity, completeness |
 | **Eval lint** | Eval config correctness — schema validation, judge quality |
 | **Eval required** | Consumer-facing skills must include an eval suite |
