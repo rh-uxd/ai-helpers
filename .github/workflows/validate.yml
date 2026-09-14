@@ -23,7 +23,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Validate manifests, skills, and generated docs
+      - name: Validate manifests and skill integrity
         run: make validate
 
       - name: Run skill quality audit
