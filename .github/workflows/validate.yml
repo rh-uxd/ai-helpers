@@ -18,5 +18,8 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Validate manifests, skills, and generated docs
-        run: make validate
+      - name: Validate manifests and skill consistency
+        run: bash scripts/validate-manifests.sh
+
+      - name: Validate skill and agent integrity
+        run: bash scripts/validate-skills.sh

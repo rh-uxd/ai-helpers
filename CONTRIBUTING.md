@@ -231,16 +231,6 @@ Before opening your PR, verify:
 - [ ] Did not edit auto-generated docs (`PLUGINS.md`, README plugin table/badges, CONTRIBUTING-SKILLS plugin table, per-plugin READMEs)
 - [ ] `make lint` passes locally (optional — CI runs it automatically)
 
-### Keeping generated docs current
-
-Run the documentation generator whenever you add, remove, or rename a skill or agent, change plugin manifest metadata, or change skill frontmatter used by the discovery matrix (`audience`, `inputs`, `outputs`, or `description`):
-
-```bash
-make docs
-```
-
-If CI reports stale generated files, run `make docs`, review the generated changes, and commit them. Before opening a PR, you can run `make validate`; CI runs the same validation and fails with instructions when generated files are out of date.
-
 ## Your first contribution
 
 New to AI skills? Start with the [Choose Your Path](#choose-your-path) section above — it routes you to the right guide for your domain.
