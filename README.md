@@ -139,7 +139,7 @@ Every pull request runs through automated quality gates:
 
 | Gate | What it checks |
 |------|---------------|
-| **Validate** | Manifest consistency, generated docs freshness, skill frontmatter integrity |
+| **Validate** | Manifest consistency and skill frontmatter integrity |
 | **Secret scan** | Internal URLs and potential credentials in tracked files |
 | **Link check** | Broken internal markdown links |
 | **Boundary check** | PF skills don't reference UXD internals and vice versa |
