@@ -1,24 +1,45 @@
-# PatternFly plugins
-plugins/patternfly/                 @jpuzz0 @nicolethoen @dlabaj
+# Plugin ownership — last matching pattern wins.
+# GitHub requests reviews from these people on PRs that touch the path.
+# Owners also need write access for required code-owner reviews to apply.
 
-# UXD plugins
-plugins/uxd-*/                      @jpuzz0 @maryctucker @andybraren
+# Default for anything not matched below
+* @rh-uxd/ai-helpers-maintainers
+
+# --- PatternFly plugins ---
+plugins/patternfly/                   @jpuzz0
+plugins/patternfly/pf-react/          @jpuzz0
+plugins/patternfly/pf-design-guide/   @jpuzz0
+plugins/patternfly/pf-design-audit/   @jpuzz0
+plugins/patternfly/pf-a11y/           @thatblindgeye
+plugins/patternfly/pf-migration/      @jpuzz0
+plugins/patternfly/pf-code-review/    @jpuzz0
+plugins/patternfly/pf-mcp/            @jpuzz0
+plugins/patternfly/pf-workshop/       @jpuzz0
+plugins/pf-assist/                    @jpuzz0
+
+# --- UXD plugins ---
+plugins/uxd-prototype/                @andybraren @jpuzz0
+plugins/uxd-research/                 @maryctucker @jpuzz0
+
+# Skills still incubating in the workshop — route to the target plugin owner
+plugins/uxd-workshop/skills/uxd-prototype-*/** @andybraren @jaquevan
+plugins/uxd-workshop/skills/uxd-research-*/**  @maryctucker
 
 # Shared infrastructure
-.claude-plugin/marketplace.json     @rh-uxd/ai-helpers-maintainers
-.cursor-plugin/marketplace.json     @rh-uxd/ai-helpers-maintainers
-scripts/                            @rh-uxd/ai-helpers-maintainers
+.claude-plugin/marketplace.json        @jpuzz0
+.cursor-plugin/marketplace.json        @jpuzz0
+scripts/                               @jpuzz0
 
 # Governance and contributing docs
-GOVERNANCE.md                       @rh-uxd/ai-helpers-maintainers
-CONTRIBUTING.md                     @rh-uxd/ai-helpers-maintainers
-CONTRIBUTING-SKILLS.md              @rh-uxd/ai-helpers-maintainers
-.github/CODEOWNERS                  @rh-uxd/ai-helpers-maintainers
+GOVERNANCE.md                          @rh-uxd/ai-helpers-maintainers
+CONTRIBUTING.md                        @rh-uxd/ai-helpers-maintainers
+CONTRIBUTING-SKILLS.md                 @rh-uxd/ai-helpers-maintainers
+.github/CODEOWNERS                     @rh-uxd/ai-helpers-maintainers
 
 # CI/CD
-.github/workflows/                  @rh-uxd/ai-helpers-maintainers
-.coderabbit.yaml                    @rh-uxd/ai-helpers-maintainers
+.github/workflows/                     @jpuzz0
+.coderabbit.yaml                       @jpuzz0
 
 # Repo-level config
-CLAUDE.md                           @rh-uxd/ai-helpers-maintainers
-.agents/                            @rh-uxd/ai-helpers-maintainers
+CLAUDE.md                              @rh-uxd/ai-helpers-maintainers
+.agents/                               @rh-uxd/ai-helpers-maintainers

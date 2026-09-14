@@ -34,7 +34,7 @@ A maintainer reviews every PR for intent-level issues that automated tools miss:
 
 ### Ownership
 
-All plugins are maintained by `@rh-uxd/ai-helpers-maintainers`. This single team owns the full plugin surface — PatternFly and UXD alike.
+Each plugin has a designated owner in [CODEOWNERS](.github/CODEOWNERS). PRs that touch a plugin automatically request a review from that plugin's owner.
 
 PRs require at least 1 approval from a CODEOWNERS-designated reviewer. Review routing is defined in [CODEOWNERS](.github/CODEOWNERS).
 

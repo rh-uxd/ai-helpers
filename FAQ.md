@@ -14,7 +14,7 @@ Under `plugins/patternfly/<plugin-name>/skills/`. For example, a React testing s
 
 ### Do I need to understand UXD tooling to contribute?
 
-No. The [PatternFly contributions](CONTRIBUTING.md#patternfly-contributions) section is self-contained. PF PRs are reviewed by PF maintainers — you don't interact with UXD tooling at all.
+No. The [PatternFly contributions](CONTRIBUTING.md#patternfly-contributions) section is self-contained. PF PRs are reviewed by the plugin's code owner — you don't interact with UXD tooling at all.
 
 ### Why is this repo called `ai-helpers` if I'm contributing PatternFly skills?
 
