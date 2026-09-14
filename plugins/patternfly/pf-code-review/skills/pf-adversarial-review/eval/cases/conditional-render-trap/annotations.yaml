@@ -1,0 +1,11 @@
+expect_issues: true
+issue_categories:
+  - conditional_render
+notes: |
+  Conditional rendering traps with && operator:
+  - errorCount && <Alert> renders 0 (the number) when errorCount is 0
+  - warningCount && <Label> renders 0 when warningCount is 0
+  - items.length && <ul> renders 0 when items is empty array
+  All three should use ternary or Boolean() or > 0 check.
+  The message && <p> is fine because message is a string (empty string
+  renders nothing, which is correct).

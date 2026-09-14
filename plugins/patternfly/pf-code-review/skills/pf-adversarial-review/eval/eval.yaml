@@ -1,0 +1,158 @@
+name: pf-adversarial-review-eval
+description: Evaluate pf-adversarial-review's detection of edge cases and missing defensive code in PF components
+
+skill: pf-code-review:pf-adversarial-review
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic review request
+    - annotations.yaml: expect_issues (true/false), issue_categories list
+    - A .tsx fixture file the prompt references
+
+outputs:
+  - path: artifacts
+    schema: |
+      The agent produces a severity-grouped report identifying edge cases,
+      missing defensive code, and PF component contract violations.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: flags_missing_defensive_code
+    description: Identifies missing optional chaining, default values, or type guards
+    if: "'missing_defensive' in annotations.get('issue_categories', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      patterns = [
+          re.compile(r'(optional\s+chain|undefined|null\s+check|default\s+value|type\s+guard|defensive)', re.IGNORECASE),
+          re.compile(r'(\?\.|\.map\(\)|\.length)\b.*\b(crash|undefined|error|fail)', re.IGNORECASE),
+          re.compile(r'(missing|lacks?|no|without)\b.*\b(guard|check|validation|default)', re.IGNORECASE),
+      ]
+      if any(p.search(text) for p in patterns):
+          return True, "Correctly identified missing defensive code patterns"
+      return False, "Did not flag missing defensive code (optional chaining, defaults, type guards)"
+
+  - name: flags_pf_contract_violation
+    description: Identifies PF-specific component misuse that fails silently
+    if: "'pf_contract' in annotations.get('issue_categories', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf_issues = [
+          re.compile(r'(dataLabel|responsive)\b.*\b(missing|without|vanish|mobile)', re.IGNORECASE),
+          re.compile(r'(onSelect|handler)\b.*\b(missing|without|undefined|silent)', re.IGNORECASE),
+          re.compile(r'(empty\s*state|EmptyState)\b.*\b(missing|guard|when|zero|empty)', re.IGNORECASE),
+          re.compile(r'(eventKey|duplicate)\b.*\b(collision|duplicate|wrong|break)', re.IGNORECASE),
+      ]
+      if any(p.search(text) for p in pf_issues):
+          return True, "Correctly identified PF component contract violation"
+      return False, "Did not flag PF-specific component misuse"
+
+  - name: flags_conditional_render_issue
+    description: Identifies unsafe conditional rendering with && operator
+    if: "'conditional_render' in annotations.get('issue_categories', [])"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      patterns = [
+          re.compile(r'(&&|short.circuit).*\b(0|zero|empty|falsy|render)', re.IGNORECASE),
+          re.compile(r'(conditional\w*\s+render)\w*.*\b(0|zero|falsy|truthy)', re.IGNORECASE),
+          re.compile(r'render\w*\s+(0|zero|the\s+number)\b', re.IGNORECASE),
+      ]
+      if any(p.search(text) for p in patterns):
+          return True, "Correctly identified unsafe conditional rendering with && operator"
+      return False, "Did not flag conditional rendering trap (0 or '' with &&)"
+
+  - name: has_severity_grouping
+    description: Output groups findings by severity level
+    if: "annotations.get('expect_issues') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      severity_patterns = [
+          re.compile(r'(critical|crash|data\s+loss)', re.IGNORECASE),
+          re.compile(r'(high[\s-]severity|high[\s-]impact|silent\s+fail|broken\s+ui)', re.IGNORECASE),
+          re.compile(r'(medium|degrade)', re.IGNORECASE),
+      ]
+      matches = sum(1 for p in severity_patterns if p.search(text))
+      if matches >= 2:
+          return True, f"Report groups findings by severity ({matches}/3 levels found)"
+      return False, f"Report missing severity grouping ({matches}/3 levels found)"
+
+  - name: suggests_pf6_fixes
+    description: Recommends PF6 components for fixes (Alert, Spinner, EmptyState, Truncate)
+    if: "annotations.get('expect_issues') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf6_fixes = re.compile(
+          r'(recommend|suggest|use|consider|add|replace|wrap)\b.*\b(Alert|Spinner|Skeleton|EmptyState|Truncate|ErrorBoundary|isTruncated)\b',
+          re.IGNORECASE
+      )
+      if pf6_fixes.search(text):
+          return True, "Recommends specific PF6 components for fixes"
+      return False, "Did not recommend PF6 components (Alert, Spinner, EmptyState, etc.) for fixes"
+
+  - name: no_false_positives
+    description: Does not flag well-defended code as having edge-case issues
+    if: "annotations.get('expect_issues') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      false_positive_patterns = [
+          re.compile(r'(critical|crash|data\s+loss)\b[^.]{0,120}\b(found|detected|identified)', re.IGNORECASE),
+          re.compile(r'(found|detected|identified)\s+\d+\s+(critical|high)\s+(issue|finding|problem)', re.IGNORECASE),
+      ]
+      for p in false_positive_patterns:
+          if p.search(text):
+              return False, "False positive — flagged well-defended code as having critical/high issues"
+      return True, "Correctly recognized well-defended component without false critical/high findings"
+
+thresholds:
+  flags_missing_defensive_code:
+    min_pass_rate: 0.67
+  flags_pf_contract_violation:
+    min_pass_rate: 0.67
+  flags_conditional_render_issue:
+    min_pass_rate: 0.67
+  has_severity_grouping:
+    min_pass_rate: 0.67
+  suggests_pf6_fixes:
+    min_pass_rate: 0.67
+  no_false_positives:
+    min_pass_rate: 1.0
