@@ -44,6 +44,10 @@ mkdir -p "${SKILL_DIR}"
 cat > "${SKILL_DIR}/SKILL.md" << 'TEMPLATE'
 ---
 name: SKILL_NAME_PLACEHOLDER
+version: 0.1.0
+audience: "[Primary audience]"
+inputs: "[Primary inputs]"
+outputs: "[Primary outputs]"
 description: >-
   [Action verb] [what it does]. Use when [trigger context].
 ---
