@@ -227,7 +227,7 @@ Use PatternFly docs MCP if available. Same scenario wiring as above.
 *Skip if `--no-prototype-bar`. Otherwise mandatory.*
 
 ```bash
-EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
+EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../../../uxd-workshop/skills/uxd-prototype-export"
 bash "${EXPORT_SKILL}/scripts/install-prototype-bar.sh" \
   --artifacts ".artifacts/{ID}" \
   --source "<prototype-dir-or-workspace>" \
@@ -250,11 +250,11 @@ Install deps if needed, lint/build/type-check changed files, fix failures introd
 
 1. Confirm `journeys.json` (prefer `"export": true`; else `--export-all-if-unset`) and `scenarios.json`
 2. Resolve `--url` — ask if missing. For standalone, serve `prototype/` and use that origin
-3. `cd "${CLAUDE_SKILL_DIR}/../uxd-prototype-export" && npm install`
+3. `cd "${CLAUDE_SKILL_DIR}/../../../uxd-workshop/skills/uxd-prototype-export" && npm install`
 4. Run:
 
 ```bash
-EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
+EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../../../uxd-workshop/skills/uxd-prototype-export"
 node "${EXPORT_SKILL}/scripts/export-journey.mjs" \
   --base-url "{URL}" \
   --journeys ".artifacts/{ID}/journeys.json" \
