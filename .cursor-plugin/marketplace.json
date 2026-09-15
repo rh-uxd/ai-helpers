@@ -27,7 +27,7 @@
     {
       "name": "uxd-workshop",
       "source": "./plugins/uxd-workshop",
-      "description": "UXD team tools — prototyping, research, design review"
+      "description": "UXD skill incubator — new skills start here before graduating to consumer plugins"
     },
     {
       "name": "uxd-prototype",

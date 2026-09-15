@@ -106,7 +106,7 @@ Optional fields: `journeys_path`, `scenarios_path`, `prototype_bar`, `exports` (
 Written during Step 9 (and refreshed by evaluate / publish-report). Runtime config for the Prototype Bar Sources dropdown and Prototype ↔ Eval switch. Prefer generating it with:
 
 ```bash
-EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
+EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../../../uxd-workshop/skills/uxd-prototype-export"
 node "${EXPORT_SKILL}/scripts/sync-prototype-bar-config.mjs" \
   --artifacts ".artifacts/{ID}"
 ```

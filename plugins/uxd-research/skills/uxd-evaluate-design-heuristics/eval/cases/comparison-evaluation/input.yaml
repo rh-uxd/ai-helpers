@@ -1,0 +1,5 @@
+prompt: >-
+  Using the uxd-evaluate-design-heuristics skill: evaluate and compare the
+  designs described in fixture-comparison.md in this case directory. Do not call
+  network or MCP.
+fixture: fixture-comparison.md

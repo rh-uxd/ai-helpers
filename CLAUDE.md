@@ -12,7 +12,7 @@ AI marketplace for UXD teams and the products they support. This repo contains p
 - Plugin manifests (`plugin.json`) must be identical in `.claude-plugin/` and `.cursor-plugin/` — always update both. Marketplace configs (`marketplace.json`) may differ between platforms.
 - Do not add `mcpServers` to plugin.json files — the PatternFly MCP is a separate user install
 - All PF plugins use the `pf-` prefix (e.g., `pf-react`, `pf-design-audit`)
-- All UXD plugins use the `uxd-` prefix (e.g., `uxd-workshop`)
+- All UXD plugins use the `uxd-` prefix (e.g., `uxd-research`, `uxd-design`, `uxd-prototype`)
 - All skills and agents follow the same prefix convention (`pf-test-gen`, `uxd-prototype-create`)
 
 ## Context Routing
@@ -25,8 +25,10 @@ Load additional context based on the task at hand:
 ## Project Structure
 
 ```
-plugins/uxd-workshop/              — UXD workshop (skill incubator)
-plugins/uxd-prototype/             — UX prototyping (create)
+plugins/uxd-research/              — UX research (heuristic eval, discovery, design heuristics)
+plugins/uxd-design/                — UX design (Figma context, design handoff)
+plugins/uxd-prototype/             — UX prototyping (create, evaluate, shared persona knowledge)
+plugins/uxd-workshop/              — UXD skill incubator (export/publish utilities remain here while newer skills graduate out)
 plugins/patternfly/                — PatternFly meta-plugin (installs all PF sub-plugins)
   ├── .claude-plugin/plugin.json   — Meta-plugin manifest (dependencies only, no skills)
   ├── agents/pf-assist.md          — PatternFly routing agent

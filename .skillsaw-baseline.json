@@ -62,7 +62,7 @@
     {
       "fingerprint": "895e14a1f6d9b680",
       "rule_id": "context-budget",
-      "file_path": "plugins/uxd-workshop/skills/uxd-research-heuristic-eval/SKILL.md",
+      "file_path": "plugins/uxd-research/skills/uxd-research-heuristic-eval/SKILL.md",
       "message": "Estimated 3,459 tokens exceeds skill warn limit of 3,000",
       "severity": "warning",
       "value": 3459,
