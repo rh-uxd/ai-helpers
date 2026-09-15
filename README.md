@@ -96,6 +96,22 @@ For MCP server access (component docs and design tokens), also install `pf-mcp`.
 
 See [PLUGINS.md](PLUGINS.md) for the full list of skills, agents, and usage details.
 
+## Recommended Workflows
+
+Start with the skill that matches the artifact or decision in front of you:
+
+| If you need to... | Start with | What it delivers |
+|---|---|---|
+| Frame a feature before design or development | `uxd-discovery` | A focused brief with the problem, users, decisions, constraints, and success measures. |
+| Explore a design, screenshot, or mockup | `uxd-evaluate-design-heuristics` | A structured critique of accessibility, hierarchy, content, and state coverage. |
+| Build an interactive concept | `uxd-prototype-create` | A runnable prototype with user journeys, scenarios, and reusable artifacts. |
+| Validate a prototype against a ticket | `uxd-prototype-evaluate` | Acceptance-criteria results and persona-based usability evidence. |
+| Prepare a design for implementation | `uxd-design-handoff` | Components, interaction states, decisions, and testable acceptance criteria. |
+| Review PatternFly code before merging | `pf-review` | A consolidated check for PatternFly structure, imports, tokens, migration, and security issues. |
+| Check accessibility in a PatternFly interface | `pf-a11y-audit` | WCAG and ARIA findings with evidence and remediation guidance. |
+
+Use the [skill discovery matrix](PLUGINS.md#skill-discovery-matrix) to compare audience, inputs, outputs, and relative prompt footprint. These skills support judgment, not judgment replacement: use them to prepare or extend human review when the work involves product decisions, sensitive research, or high-impact user experiences.
+
 ## How It Works
 
 1. You add this repo as a **marketplace** in Claude Code or Cursor
