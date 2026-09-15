@@ -1,0 +1,141 @@
+name: pf-reproduce-issue-eval
+description: Tests that pf-reproduce-issue produces structured reproduction reports with verdicts, parsed components, and environment details.
+
+skill: pf-react:pf-reproduce-issue
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml with a prompt: field containing a pasted bug report or issue description
+    - annotations.yaml with has_steps (true/false), has_version (true/false),
+      expect_verdict (true), and optional incomplete/import_issue flags
+
+outputs:
+  - path: artifacts
+    schema: |
+      A structured reproduction report with Verdict, Environment, Components,
+      Steps Taken, Result (Expected/Actual), Evidence, and Recommendations sections.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: has_verdict
+    description: Output contains a verdict from the skill's taxonomy
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      verdict_pattern = re.compile(
+          r'\bverdict\b[^.]{0,120}\b(reproduced|not\s+reproduced|partial|cannot\s+reproduce)\b',
+          re.IGNORECASE
+      )
+      if verdict_pattern.search(text):
+          return (True, "Found verdict from the skill's taxonomy")
+      return (False, "No verdict found — expected Reproduced, Not reproduced, Partial, or Cannot reproduce anchored to 'Verdict'")
+
+  - name: has_report_sections
+    description: Output includes the required report sections
+    if: "annotations.get('has_steps') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      sections = [
+          r'environment',
+          r'components',
+          r'steps\s+taken',
+          r'(result|expected.*actual|actual.*expected)',
+          r'(evidence|recommendations)',
+      ]
+      found = sum(1 for s in sections if re.search(s, text, re.IGNORECASE))
+      if found >= 4:
+          return (True, f"Found {found}/5 required report sections")
+      return (False, f"Only {found}/5 report sections found — skill specifies Environment, Components, Steps Taken, Result, Evidence/Recommendations")
+
+  - name: extracts_components
+    description: Output identifies PF components mentioned in the issue
+    if: "annotations.get('has_steps') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf_components = re.findall(r'\b(Select|Card|Table|Toolbar|Modal|Page\w*|Menu\w*|Form\w*)\b', text)
+      if len(pf_components) >= 2:
+          return (True, f"Extracted {len(set(pf_components))} PF component references")
+      return (False, "Did not extract PF components from the issue — skill should identify components involved")
+
+  - name: notes_incomplete_info
+    description: Incomplete reports trigger a cannot-reproduce or info-request response
+    if: "annotations.get('incomplete') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      patterns = [
+          r'cannot\s+reproduce',
+          r'insufficient|missing\s+information',
+          r'need\s+more\s+(info|detail|context)',
+          r'unclear|vague|not\s+enough',
+          r'which\s+(version|component|browser)',
+      ]
+      matches = sum(1 for p in patterns if re.search(p, text, re.IGNORECASE))
+      if matches >= 1:
+          return (True, "Correctly identified incomplete information in the report")
+      return (False, "Did not flag the incomplete bug report — skill should note missing repro steps and version info")
+
+  - name: references_import_skill
+    description: CSS import issues trigger a cross-reference to pf-import-check
+    if: "annotations.get('import_issue') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      patterns = [
+          r'pf-import-check',
+          r'import\s+(issue|problem|incorrect|wrong)',
+          r'css\s+import',
+          r'base\.css',
+          r'patternfly\.css.*full.*bundle|full.*bundle.*patternfly\.css',
+      ]
+      matches = sum(1 for p in patterns if re.search(p, text, re.IGNORECASE))
+      if matches >= 2:
+          return (True, f"Found {matches} import-related terms — correctly identified CSS import issue")
+      return (False, f"Only {matches} import-related term(s) — skill should identify the CSS import problem and reference pf-import-check")
+
+thresholds:
+  has_verdict:
+    min_pass_rate: 1.0
+  has_report_sections:
+    min_pass_rate: 0.67
+  extracts_components:
+    min_pass_rate: 0.67
+  notes_incomplete_info:
+    min_pass_rate: 1.0
+  references_import_skill:
+    min_pass_rate: 0.67

@@ -1,0 +1,4 @@
+has_steps: false
+has_version: false
+expect_verdict: true
+incomplete: true
