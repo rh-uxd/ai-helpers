@@ -1,0 +1,2 @@
+prompt: "Check the PatternFly imports in this component for issues."
+fixture: SettingsToolbar.tsx
