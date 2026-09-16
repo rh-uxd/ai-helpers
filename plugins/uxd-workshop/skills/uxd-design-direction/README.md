@@ -1,4 +1,4 @@
-# UXD PatternFly UX Decisions
+# UXD Design Direction
 
 Workshop-ready PatternFly decision engine for UXD teams. The skill turns
 PatternFly guidance, implementation evidence, and staged local preferences into

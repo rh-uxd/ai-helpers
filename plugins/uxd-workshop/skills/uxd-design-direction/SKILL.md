@@ -1,5 +1,5 @@
 ---
-name: uxd-patternfly-ux-decisions
+name: uxd-design-direction
 version: 0.1.0
 description: >-
   Recommend a PatternFly UI direction by mapping user intent to the right host
@@ -9,7 +9,7 @@ description: >-
   first-pass ticket UI recommendation.
 ---
 
-# PatternFly UX Decisions
+# UX Design Direction
 
 Orchestrator skill. Do not jump straight to components. Inspect the current
 implementation when evidence exists, walk the decision tree, then compare the
