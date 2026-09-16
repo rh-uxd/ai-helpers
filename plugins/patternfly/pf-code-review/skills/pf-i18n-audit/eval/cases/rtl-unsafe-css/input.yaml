@@ -1,0 +1,1 @@
+prompt: "Audit sidebar.scss for RTL layout issues. Flag any physical CSS properties that should use logical equivalents."

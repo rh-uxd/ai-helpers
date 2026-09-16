@@ -1,0 +1,7 @@
+test_libraries:
+  - rtl
+  - jest-axe
+expect_aria_tests: true
+expect_axe_tests: true
+expect_multiple_states: true
+expect_gap_report: true

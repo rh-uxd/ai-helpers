@@ -4,7 +4,7 @@ slug: uxd-research-heuristic-eval
 type: crossover
 phase: evaluative
 status: experimental
-description: "Conduct a heuristic evaluation of a prototype or interface using three independent expert evaluators. Use when running a usability audit, evaluating a UI against Nielsen's heuristics or other frameworks, or preparing for user testing."
+description: "Conduct a heuristic evaluation of a prototype or interface using three independent expert evaluators. Use when running a usability audit, evaluating a UI against Nielsen's heuristics or other frameworks, or preparing for user testing. Do not use for accessibility audits, WCAG checks, or axe scans."
 ---
 
 # Heuristic Evaluation — Multi-Evaluator Usability Inspection
@@ -24,10 +24,10 @@ are researcher activities that happen after the evaluation.
 
 | Input | Type | Required | Default |
 |---|---|---|---|
-| Interface to evaluate | Screenshots, image files, text descriptions, or URLs (URLs inspected via Playwright MCP when available) | yes | — |
+| Interface to evaluate | Screenshots, image files, text descriptions, or URLs (URLs inspected in a live browser — Playwright MCP or equivalent) | yes | — |
 | Framework | Heuristic framework(s) to use (e.g., `nielsen`, `shneiderman`) | yes | ask researcher |
 | Custom heuristics | User-defined heuristics (overrides framework) | no | — |
-| Specialist areas | Additional specialist evaluators (e.g., `accessibility`) | no | — |
+| Specialist areas | Additional specialist evaluators (e.g., `information-architecture`) | no | — |
 | Project slug | Project directory for saving output | no | current working directory |
 
 ---
@@ -47,7 +47,8 @@ $ARGUMENTS
 Parse as: `<interface-input> [--framework <name>] [--heuristics <custom>] [--specialists <areas>] [--project <slug>] [--review chat|none] [--assume-defaults]`
 
 - `interface-input` — Screenshots, image files, text descriptions of
-  screens, or URLs. For Figma prototypes, the user should provide
+  screens, or URLs. URLs must be inspected in a live browser (not
+  curl/WebFetch). For Figma prototypes, the user should provide
   exported screenshots (Figma links cannot be inspected directly).
 - `--framework <name>[,<name>]` — Which heuristic framework(s) to use
   (see [references/heuristic-frameworks.md](references/heuristic-frameworks.md)).
@@ -57,7 +58,8 @@ Parse as: `<interface-input> [--framework <name>] [--heuristics <custom>] [--spe
   Mode B unless `--assume-defaults` is used.
 - `--heuristics <custom>` — User-defined heuristics (overrides framework).
 - `--specialists <areas>` — Add specialist evaluators beyond the core
-  three (e.g., `accessibility,information-architecture`).
+  three (e.g., `information-architecture,content-ux-writing`).
+  Accessibility is not a valid specialist — see Guardrails.
 - `--project <slug>` — Project directory for saving output. If not
   specified, save to current working directory.
 - `--review chat|none` — Controls the researcher review gate.
@@ -113,36 +115,7 @@ Mode B never simulates researcher decisions. It either defers them
 
 ### Pipeline integration
 
-If you are building an automated pipeline (CI, SDLC agent, eval
-harness) that invokes this skill, you **must** pass `--assume-defaults`
-or explicit `--framework`/`--review` flags in every invocation. The
-skill cannot auto-detect that it is running in an automated context —
-if arguments are missing, it stops with an error rather than silently
-skipping researcher gates.
-
-**Recommended invocation for fully automated pipelines:**
-
-```
-<interface-input> --assume-defaults
-```
-
-This is equivalent to `--framework nielsen --review none` with no
-specialist passes. Reports are emitted with an **Unreviewed Draft**
-banner so a researcher can review findings later.
-
-**If you want a human in the loop at review time:**
-
-```
-<interface-input> --framework nielsen --review chat
-```
-
-The skill runs all evaluator passes autonomously, then pauses and
-presents consolidated findings for a human to confirm or override
-before writing final reports.
-
-**One-time setup:** Configure your pipeline to always pass the
-appropriate flags. Individual invocations do not require manual
-intervention once the pipeline is set up correctly.
+Automated callers must pass `--assume-defaults` (equivalent to `--framework nielsen --review none`) or explicit `--framework`/`--review` flags. The skill cannot auto-detect automation context — missing flags produce an error. See [human-vs-agent-operation.md](references/human-vs-agent-operation.md) for setup guidance.
 
 ---
 
@@ -156,10 +129,12 @@ Confirm what you're evaluating. The user may provide:
   primary inspection material.
 - **Text descriptions** — Screen-by-screen descriptions of the interface
   layout, elements, and interactions.
-- **URLs** — Use the Playwright MCP browser tools to inspect the live
-  interface (see "Browser inspection" below). If Playwright MCP is not
-  available, fall back to WebFetch for static content and ask the user
-  for screenshots of client-side rendered apps.
+- **URLs** — Inspect the live, rendered interface in a browser
+  (Playwright MCP or equivalent browser tools). See "Browser
+  inspection" below. Do **not** curl, wget, WebFetch, or otherwise
+  fetch HTML/markdown as a stand-in. A fetched document is not the
+  experience a user has. If no live browser is available, **stop and
+  ask for screenshots** — do not evaluate from page source.
 - **Figma exports** — Exported PNG/JPG files from Figma. Note to the
   user: "I can't access Figma directly, but exported screenshots work
   well. Export each key screen or flow step as an image."
@@ -187,27 +162,32 @@ Evaluation date: [YYYY-MM-DD]
   into `Source URL`. Do not omit it from later outputs.
 - If input is **screenshots or files**, list every file path in
   `Source files`.
-- If both URL and files are used (e.g., URL fetch plus saved
-  screenshots), include both.
+- If both URL and files are used (e.g., live browser inspection plus
+  saved screenshots), include both.
 
 ### Browser inspection (when input is a URL)
 
-When the user provides a URL and Playwright MCP tools are available,
-conduct a live browser inspection before the evaluation passes:
+When the user provides a URL, inspect it as a live page in a browser
+**before** evaluation passes. Use Playwright MCP or equivalent browser
+tools (navigate, screenshot, click, hover). The goal is the same
+experience a user would have — rendered layout, interaction, and
+state — not the document behind the page.
 
-1. **Navigate to the URL** using Playwright. Wait for full load.
+1. **Navigate to the URL** in the browser. Wait for full load.
 2. **Capture baseline screenshots** at desktop viewport (1440x900):
    full-page and above-the-fold. Navigate to each specified screen.
-3. **Read the accessibility tree** for roles, names, states, hierarchy.
+3. **Inspect page structure** — headings, labels, interactive controls,
+   and visible hierarchy — enough to understand what is on screen.
+   Do **not** run automated accessibility scanners (axe, pa11y,
+   Lighthouse a11y, WAVE, axe-core, or similar). Do not treat a
+   Playwright accessibility snapshot as an a11y audit.
 4. **Inspect interactive elements** — click/hover expandable sections,
    popovers, drawers, menus, toggles, modals. Capture each state.
 5. **Save screenshots** as `heuristic-eval-[date]-screenshot-[N]-[description].png`
-6. **Build an inspection summary** listing screenshots, accessibility
-   tree observations, and interactive states.
+6. **Build an inspection summary** listing screenshots, page-structure
+   observations, and interactive states.
 
-**If Playwright MCP is not available:** Fall back to WebFetch for static
-content. Note in Coverage Notes that the evaluation was conducted
-without visual inspection.
+**If no live browser is available:** Stop. Ask the researcher to provide screenshots. Do **not** fall back to curl, wget, or WebFetch — fetched markup omits layout, rendered UI, and interaction states. Do not invent findings from a URL alone.
 
 ### Heuristic framework(s)
 
@@ -274,17 +254,24 @@ mechanism is unavailable, ask in chat.
 > generalist passes?**
 >
 > 1. **None** — Proceed with Evaluators A/B/C only
-> 2. **Accessibility** (WCAG)
-> 3. **Information architecture** (navigation, labeling, findability)
-> 4. **Interaction design** (micro-interactions, state transitions)
-> 5. **Content/UX writing** (labels, instructions, error messages)
+> 2. **Information architecture** (navigation, labeling, findability)
+> 3. **Interaction design** (micro-interactions, state transitions)
+> 4. **Content/UX writing** (labels, instructions, error messages)
 
 Multi-select allowed. If declined or no answer, proceed with
 generalist evaluators only — specialists are additive, not required.
 
+**Do not offer accessibility as a specialist lens.** If the researcher
+asks for accessibility, WCAG, or axe, decline: this skill inspects
+usability heuristics, not correctness/conformance. Note that a
+dedicated accessibility skill is the right place for that work, then
+continue with generalist (and any other requested) passes.
+
 **In Mode B,** do not ask. Specialists are controlled by
 `--specialists` only. If `--specialists` is not provided, run
-generalist evaluators only.
+generalist evaluators only. If the list includes `accessibility`,
+skip that lens (see Step 2) and continue with any remaining valid
+specialists.
 
 ## Step 1: Independent Evaluation — Three Passes
 
@@ -305,9 +292,8 @@ likely workflow. Focus on transitions, feedback after actions, where
 users might lose context. Assess interaction feedback and state changes.
 
 **Evaluator C** — Skeptical eye. Edge cases and error states: empty
-states, long text, unexpected input, missing data. Look for what's
-NOT there. Use accessibility tree data to identify missing or
-misleading accessible names, roles, or states.
+states, long text, unexpected input, missing data, unlabeled
+controls, missing confirmation. Look for what's NOT there.
 
 Each evaluator produces **candidate violations**:
 
@@ -332,11 +318,15 @@ recommendation. If borderline, include as candidate and flag it.
 ## Step 2: Specialist Evaluation (Optional)
 
 If requested via `--specialists`, run additional passes. Available
-lenses: **Accessibility** (WCAG), **Information architecture**
-(navigation, labeling, findability), **Interaction design**
-(micro-interactions, state transitions), **Content/UX writing**
-(labels, instructions, error messages). Same violation format.
-Number as V-ACC1, V-IA1, etc.
+lenses: **Information architecture** (navigation, labeling,
+findability), **Interaction design** (micro-interactions, state
+transitions), **Content/UX writing** (labels, instructions, error
+messages). Same violation format. Number as V-IA1, V-IXD1, V-UXW1,
+etc.
+
+If `--specialists` includes `accessibility` (or WCAG/axe/a11y),
+**do not run that pass.** Tell the researcher it is out of scope for
+this skill, then run any remaining valid specialists.
 
 ## Step 3: Reconciliation
 
@@ -440,7 +430,7 @@ understand what each evaluator was focused on:
 |-----------|------|-------|
 | A | Visual inspection | Labels, layout, visual hierarchy, affordances, feedback indicators — screen by screen, element by element |
 | B | Task flow | Transitions, feedback after actions, where users might lose context — follows the user's likely workflow |
-| C | Edge cases | Empty states, long text, unexpected input, missing data, accessibility gaps — looks for what's NOT there |
+| C | Edge cases | Empty states, long text, unexpected input, missing data, unlabeled controls — looks for what's NOT there |
 
 Place this legend alongside the severity legend so researchers have a
 complete key for interpreting the findings.
@@ -475,15 +465,16 @@ from the plugin's `plugin.json` manifest and populate `[version]`.
   output: "Defaults assumed: framework=Nielsen's 10, review=none, no
   specialist passes." The reader must be able to see that defaults were
   used, not chosen.
-
----
-
-## What This Skill Does NOT Do
-
-- **Assign severity ratings.** The researcher assigns these in Step 4.
-- **Recommend design changes.** Surfaces violations only.
-- **Replace usability testing.** Complements it.
-- **Guarantee completeness.** Three evaluators won't catch everything.
+- **Not an accessibility audit.** Do not run axe, pa11y, Lighthouse
+  a11y, WAVE, axe-core, or any other automated accessibility scanner.
+  Do not inject scanning scripts. Do not score WCAG conformance. Do
+  not offer or run an accessibility specialist pass. Usability
+  heuristics are the scope; accessibility is a correctness check
+  that belongs in a dedicated skill.
+- **Live UI, not fetched documents.** Never curl, wget, WebFetch, or
+  raw-HTTP the page source as the inspection method. A fetched
+  document is not the user experience. URLs require a live browser;
+  if that is unavailable, stop and ask for screenshots.
 
 ## Reference Docs
 

@@ -1,0 +1,32 @@
+prompt: |
+  Audit this component for missing UI states:
+
+  ```tsx
+  import React from 'react';
+  import { Spinner, Bullseye, Alert, EmptyState, EmptyStateBody } from '@patternfly/react-core';
+  import SearchIcon from '@patternfly/react-icons/dist/dynamic/icons/search-icon';
+  import { useQuery } from '@tanstack/react-query';
+
+  const AdminPanel = ({ userRole }: { userRole: string }) => {
+    const { data, isLoading, error } = useQuery({ queryKey: ['admin-settings'], queryFn: fetchAdminSettings });
+
+    if (isLoading) return <Bullseye><Spinner /></Bullseye>;
+    if (error) return <Alert variant="danger" title="Failed to load settings" />;
+    if (!data?.length) {
+      return <EmptyState titleText="No settings configured" icon={SearchIcon}><EmptyStateBody>Add settings to get started.</EmptyStateBody></EmptyState>;
+    }
+
+    return (
+      <div>
+        {data.map(setting => (
+          <div key={setting.id}>
+            <span>{setting.name}</span>
+            <button onClick={() => updateSetting(setting.id)}>Edit</button>
+          </div>
+        ))}
+      </div>
+    );
+  };
+  ```
+
+  Note: this component receives a userRole prop but doesn't gate any UI based on it. Non-admin users can see and click Edit on all settings.

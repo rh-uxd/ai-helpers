@@ -1,0 +1,8 @@
+test_libraries:
+  - rtl
+  - cypress
+expect_aria_tests: true
+expect_keyboard_tests: true
+expect_focus_management_tests: true
+expect_two_files: true
+expect_gap_report: true

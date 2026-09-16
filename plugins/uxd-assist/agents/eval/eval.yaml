@@ -68,7 +68,7 @@ judges:
           return False, f"Non-UXD task got UXD skill invocations: {uxd_skills}"
       text = outputs.get("conversation", "").lower()
       uxd_subskills = [
-          "uxd-research-heuristic-eval", "uxd-figma-read",
+          "uxd-research-heuristic-eval", "uxd-discovery", "uxd-design-handoff", "uxd-figma-read",
           "uxd-evaluate-design-heuristics", "uxd-prototype-create",
           "uxd-prototype-evaluate", "uxd-prototype-export",
           "uxd-prototype-publish"

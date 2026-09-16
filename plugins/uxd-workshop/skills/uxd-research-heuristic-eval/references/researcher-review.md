@@ -81,7 +81,7 @@ Leave one blank row before the evaluator legend.
 |-----------|------|-------|
 | A | Visual inspection | Labels, layout, visual hierarchy, affordances, feedback indicators |
 | B | Task flow | Transitions, feedback after actions, where users might lose context |
-| C | Edge cases | Empty states, long text, unexpected input, missing data, accessibility gaps |
+| C | Edge cases | Empty states, long text, unexpected input, missing data, unlabeled controls |
 
 Leave one blank row before the column headers.
 

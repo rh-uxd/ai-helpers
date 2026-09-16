@@ -1,0 +1,182 @@
+name: pf-a11y-test-gen-eval
+description: Evaluate pf-a11y-test-gen's generation of a11y tests with correct library targeting, convention following, and coverage reporting
+
+skill: pf-a11y:pf-a11y-test-gen
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: expected test libraries, test categories, and behavior flags
+    - A .tsx fixture file the prompt references
+    - A package.json to simulate the dependency environment
+    - Optionally an existing .test.tsx file to test convention following
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces test file(s) with describe blocks covering ARIA attributes,
+      keyboard interaction, focus management, and/or axe-core checks, plus a gap report.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: generates_aria_tests
+    description: Generated tests include ARIA attribute checks using getByRole and toHaveAttribute
+    if: "annotations.get('expect_aria_tests') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      checks = {
+          "getByRole": r'getByRole\s*\(',
+          "toHaveAttribute-aria": r'toHaveAttribute\s*\(\s*[\'"]aria-',
+          "role-or-aria-test": r'(?i)(aria|role|accessible name|label)',
+      }
+      found = {k for k, p in checks.items() if re.search(p, text)}
+      if len(found) < 2:
+          missing = set(checks.keys()) - found
+          return False, f"Only found {len(found)}/3 ARIA test patterns. Missing: {', '.join(sorted(missing))}"
+      return True, f"Found {len(found)}/3 ARIA test patterns: {', '.join(sorted(found))}"
+
+  - name: generates_keyboard_tests
+    description: Generated tests include keyboard interaction checks using userEvent
+    if: "annotations.get('expect_keyboard_tests') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      patterns = [
+          r'userEvent\.setup\s*\(',
+          r'(?:user\.keyboard|user\.tab|userEvent\.keyboard|userEvent\.tab)',
+          r'(?i)(Enter|Space|Escape|Arrow|Tab).{0,40}(activ|press|key|focus|navig)',
+      ]
+      found = sum(1 for p in patterns if re.search(p, text))
+      if found < 2:
+          return False, f"Only found {found}/3 keyboard interaction patterns"
+      return True, f"Found {found}/3 keyboard interaction patterns"
+
+  - name: correct_library_targeting
+    description: When multiple libraries available, ARIA tests go to RTL and focus management to Cypress/Playwright
+    if: "annotations.get('expect_two_files') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_rtl_section = re.search(r'(?i)(RTL|testing.library|\.test\.tsx)', text)
+      has_cypress_section = re.search(r'(?i)(cypress|\.cy\.tsx|cy\.)', text)
+      has_focus_in_cypress = re.search(r'(?i)(cypress|\.cy).{0,500}(focus|trap|modal)', text, re.DOTALL)
+      if not has_rtl_section:
+          return False, "No RTL test output found"
+      if not has_cypress_section:
+          return False, "No Cypress test output found despite Cypress being available"
+      if not has_focus_in_cypress:
+          return False, "Focus management tests not assigned to Cypress"
+      return True, "Correctly split: ARIA/keyboard in RTL, focus management in Cypress"
+
+  - name: generates_axe_tests
+    description: When jest-axe is available, generates axe-core scan tests with multiple states
+    if: "annotations.get('expect_axe_tests') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_axe_import = re.search(r'(?:jest-axe|toHaveNoViolations|axe\()', text)
+      has_multiple_states = len(re.findall(r'(?:toHaveNoViolations|axe\(container\))', text)) >= 2
+      if not has_axe_import:
+          return False, "No jest-axe integration found (missing axe import or toHaveNoViolations)"
+      if not has_multiple_states:
+          return False, "Only found 1 axe scan — expected at least 2 (default + error/variant state)"
+      return True, "jest-axe tests generated with multiple state scans"
+
+  - name: has_gap_report
+    description: Output includes a gap/coverage report noting what could not be tested
+    if: "annotations.get('expect_gap_report') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_coverage_section = re.search(r'(?i)(coverage|gap|not covered|cannot test|limitation)', text)
+      has_table_or_list = re.search(r'(?:\|.*\|.*\||\-\s+\w)', text)
+      if not has_coverage_section:
+          return False, "No gap/coverage report section found"
+      if not has_table_or_list:
+          return False, "Gap report found but not in structured format (table or list)"
+      return True, "Gap report present with structured format"
+
+  - name: no_test_library_handled
+    description: When no test library is found, recommends installation rather than generating broken tests
+    if: "annotations.get('expect_install_recommendation') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_install = re.search(r'(?i)(npm install|yarn add|pnpm add)', text)
+      has_recommendation = re.search(r'(?i)(recommend|suggest|install|setup|configure)', text)
+      if not has_install:
+          return False, "No install command provided for missing test libraries"
+      if not has_recommendation:
+          return False, "No setup recommendation provided"
+      return True, "Correctly recommends library installation with commands"
+
+  - name: follows_conventions
+    description: Generated tests mirror existing test file conventions
+    if: "annotations.get('expect_convention_match') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      checks = {
+          "describe-it": r'describe\s*\(.+\)\s*\{[\s\S]*?\bit\s*\(',
+          "userEvent-setup": r'userEvent\.setup\s*\(',
+          "getByRole": r'getByRole\s*\(',
+      }
+      found = {k for k, p in checks.items() if re.search(p, text)}
+      if len(found) < 2:
+          missing = set(checks.keys()) - found
+          return False, f"Only matched {len(found)}/3 convention signals. Missing: {', '.join(sorted(missing))}"
+      return True, f"Matched {len(found)}/3 convention signals from existing test file: {', '.join(sorted(found))}"
+
+thresholds:
+  generates_aria_tests:
+    min_pass_rate: 0.67
+  generates_keyboard_tests:
+    min_pass_rate: 0.67
+  correct_library_targeting:
+    min_pass_rate: 0.67
+  generates_axe_tests:
+    min_pass_rate: 0.67
+  has_gap_report:
+    min_pass_rate: 0.67
+  no_test_library_handled:
+    min_pass_rate: 1.0
+  follows_conventions:
+    min_pass_rate: 0.67

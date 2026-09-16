@@ -7,6 +7,6 @@ Task context: Update display name and save.
 - Page title: "Settings"
 - Field: unlabeled text input (placeholder only: "Name")
 - Primary button: "Save" (no loading or success feedback described)
-- Icon-only trash button with no accessible name
+- Icon-only trash button with no visible label or tooltip
 - Trash deletes immediately with no confirmation
 - Failed save shows no error message

@@ -20,9 +20,24 @@
       "description": "UXD skill routing — discover the right skills for research, design review, and prototyping workflows"
     },
     {
+      "name": "uxd-design",
+      "source": "./plugins/uxd-design",
+      "description": "UX design workflow — Figma context, design evaluation, and implementation handoff"
+    },
+    {
+      "name": "uxd-research",
+      "source": "./plugins/uxd-research",
+      "description": "UX research pipeline — heuristic evaluation, usability testing, research methodology"
+    },
+    {
       "name": "uxd-workshop",
       "source": "./plugins/uxd-workshop",
       "description": "UXD team tools — prototyping, research, design review"
+    },
+    {
+      "name": "uxd-prototype",
+      "source": "./plugins/uxd-prototype",
+      "description": "Create UX prototypes from Jira tickets, Figma designs, or feature descriptions"
     },
     {
       "name": "pf-react",

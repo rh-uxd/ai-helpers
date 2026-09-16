@@ -16,6 +16,7 @@ body:
         - PatternFly — a11y
         - PatternFly — pf-workshop
         - PatternFly — patternfly-mcp
+        - UXD — uxd-prototype
         - UXD — uxd-workshop
         - Not sure
     validations:

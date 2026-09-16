@@ -1,0 +1,3 @@
+prompt: >-
+  Using the uxd-research-heuristic-eval skill with --framework nielsen
+  --review none: evaluate https://example.com/account-settings

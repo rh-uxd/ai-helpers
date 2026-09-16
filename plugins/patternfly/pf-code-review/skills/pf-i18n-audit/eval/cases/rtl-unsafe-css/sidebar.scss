@@ -1,0 +1,23 @@
+.sidebar {
+  width: 280px;
+  padding-left: 16px;
+  padding-right: 8px;
+  margin-top: 24px;
+  border-right: 1px solid var(--pf-t--global--border--color--default);
+  float: left;
+}
+
+.sidebar__nav {
+  text-align: left;
+  margin-left: 12px;
+}
+
+.sidebar__icon {
+  margin-right: 8px;
+  padding-bottom: 4px;
+}
+
+.sidebar__content {
+  left: 280px;
+  position: absolute;
+}

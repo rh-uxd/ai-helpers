@@ -1,0 +1,9 @@
+test_libraries:
+  - rtl
+expect_aria_tests: true
+expect_keyboard_tests: true
+expect_convention_match: true
+convention_signals:
+  - uses_describe_it_pattern
+  - uses_user_event_setup_in_before_each
+  - uses_get_by_role

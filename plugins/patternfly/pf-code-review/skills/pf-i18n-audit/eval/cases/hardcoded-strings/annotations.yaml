@@ -1,0 +1,8 @@
+expect_issues: true
+issue_types:
+  - hardcoded_strings
+notes: |
+  Should flag: "No users found", "Failed to load users", "Team Members",
+  "Name", "Role", "Status", "Active", "Inactive", "Refresh list",
+  "Click to view profile", EmptyStateBody text, Alert body text.
+  Should NOT flag: console.log string, data-testid value, CSS class names.
