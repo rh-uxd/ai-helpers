@@ -25,7 +25,7 @@ PatternFly skills live under `plugins/patternfly/` and use the `pf-` prefix. You
 5. Run `make validate` to check consistency
 6. Open a pull request
 
-PF PRs are reviewed by PF maintainers (`@rh-uxd/ai-helpers-maintainers`). See [GOVERNANCE.md](GOVERNANCE.md) for the review process.
+PRs are reviewed by the plugin's code owner (see [CODEOWNERS](.github/CODEOWNERS)). See [GOVERNANCE.md](GOVERNANCE.md) for the review process.
 
 Not sure what to build? Look for issues labeled [`good first issue`](../../labels/good%20first%20issue) + [`area/patternfly`](../../labels/area%2Fpatternfly).
 
