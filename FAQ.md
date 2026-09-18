@@ -53,10 +53,12 @@ Then add the plugin to both marketplace configs and open a PR. See [CONTRIBUTING
 ### How do I validate my changes before opening a PR?
 
 ```bash
-make check
+make validate
 ```
 
-This runs manifest validation (plugin-level `plugin.json` parity between `.claude-plugin/` and `.cursor-plugin/`, JSON validity, name consistency) and regenerates docs. Marketplace configs (`marketplace.json`) are validated independently — they can differ between platforms. If `make check` passes, your PR will pass CI.
+This runs manifest validation (plugin-level `plugin.json` parity between `.claude-plugin/` and `.cursor-plugin/`, JSON validity, name consistency) and skill integrity checks. Marketplace configs (`marketplace.json`) are validated independently — they can differ between platforms. If `make validate` passes, your PR will pass CI.
+
+Do not run `make docs` or `scripts/generate-plugins-md.sh` in a contribution PR. After merge to main, CI regenerates `PLUGINS.md`, the README plugin table and badge counts, the CONTRIBUTING-SKILLS plugin table, and per-plugin READMEs.
 
 ### My skill works in Claude Code but not in Cursor (or vice versa). Why?
 

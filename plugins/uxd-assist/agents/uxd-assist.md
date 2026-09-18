@@ -14,6 +14,15 @@ When the user asks about heuristic evaluation, usability assessment, or structur
 | Skill | What it does |
 |-------|-------------|
 | `/uxd-research-heuristic-eval` | Conduct a structured heuristic evaluation grounded in research methodology |
+| `/uxd-research:uxd-discovery` | Frame a design problem, user groups, strategic decisions, and constraints |
+
+## Design — handoff and design artifacts
+
+When the user is moving from a validated design into implementation, these skills are available:
+
+| Skill | What it does |
+|-------|-------------|
+| `/uxd-design:uxd-design-handoff` | Produce an implementation-ready handoff with component mappings, states, interactions, and acceptance criteria |
 
 ## Design Review — evaluating designs or Figma artifacts
 

@@ -10,7 +10,7 @@
 
 ## Checklist
 
-- [ ] Ran `make check` (validates manifests + regenerates docs)
+- [ ] Ran `make validate` (validates manifests and skills)
 - [ ] Skill name uses the correct prefix (`uxd-` for UXD skills, `pf-` for PF skills)
 - [ ] Frontmatter has `name` and `description` (`name` matches directory name)
 - [ ] Description follows the [formula](../CONTRIBUTING-SKILLS.md#writing-descriptions)

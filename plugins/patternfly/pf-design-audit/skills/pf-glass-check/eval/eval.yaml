@@ -1,0 +1,119 @@
+name: pf-glass-check-eval
+description: Evaluate pf-glass-check's detection of Glass Mode handbook violations
+
+skill: pf-design-audit:pf-glass-check
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-design-audit
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a user request to audit a component file
+    - annotations.yaml: expect_violation (true/false), violation_severity (CRITICAL/HIGH/MEDIUM/LOW or null)
+    - A TSX fixture file the prompt references
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces a Glass Mode Violations report listing violations
+      by severity with corrected code examples.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: detects_glass_on_glass
+    description: Flags isGlass inside a glass-enabled container as CRITICAL-1
+    if: "annotations.get('expect_violation') == True and annotations.get('violation_severity') == 'CRITICAL'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      critical_pattern = re.compile(r'CRITICAL', re.IGNORECASE)
+      glass_on_glass = re.compile(r'(glass.on.glass|isGlass.{0,80}(inside|within|descendant)|nested.{0,40}glass)', re.IGNORECASE | re.DOTALL)
+      has_critical = critical_pattern.search(text)
+      has_glass_on_glass = glass_on_glass.search(text)
+      if not has_critical:
+          return False, "Did not flag as CRITICAL severity"
+      if not has_glass_on_glass:
+          return False, "Did not identify glass-on-glass layering issue"
+      return True, "Detected glass-on-glass as CRITICAL violation"
+
+  - name: suggests_isPlain_fix
+    description: Suggests isPlain as the fix for glass-on-glass violations
+    if: "annotations.get('expect_violation') == True and annotations.get('violation_severity') == 'CRITICAL'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      isplain_pattern = re.compile(r'isPlain', re.IGNORECASE)
+      fix_pattern = re.compile(r'(fix|correct|after|should|instead)', re.IGNORECASE)
+      has_isplain = isplain_pattern.search(text)
+      has_fix = fix_pattern.search(text)
+      if not has_isplain:
+          return False, "Did not suggest isPlain as the solution"
+      if not has_fix:
+          return False, "Found isPlain but did not present it as a fix"
+      return True, "Suggests isPlain as the fix for glass-on-glass"
+
+  - name: no_false_positives_plain
+    description: Does not flag isPlain on glass surface as a violation
+    if: "annotations.get('expect_violation') == False and annotations.get('case_type') == 'plain-on-glass'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      violation_header = re.compile(r'(Violations Found:\s*[1-9]|CRITICAL|glass.on.glass)', re.IGNORECASE)
+      if violation_header.search(text):
+          return False, "False positive — flagged isPlain on glass surface as a violation"
+      pass_indicators = re.compile(r'(no.{0,20}violation|pass|correct|valid|properly)', re.IGNORECASE | re.DOTALL)
+      if not pass_indicators.search(text):
+          return False, "Did not clearly indicate the code passes"
+      return True, "Correctly identifies isPlain on glass surface as valid"
+
+  - name: no_false_positives_standalone
+    description: Does not flag standalone isGlass (not inside glass container) as a violation
+    if: "annotations.get('expect_violation') == False and annotations.get('case_type') == 'standalone-glass'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      critical_pattern = re.compile(r'CRITICAL', re.IGNORECASE)
+      glass_on_glass = re.compile(r'glass.on.glass', re.IGNORECASE)
+      if critical_pattern.search(text) and glass_on_glass.search(text):
+          return False, "False positive — flagged standalone isGlass as glass-on-glass"
+      return True, "Correctly allows standalone isGlass outside glass containers"
+
+thresholds:
+  detects_glass_on_glass:
+    min_pass_rate: 1.0
+  suggests_isPlain_fix:
+    min_pass_rate: 0.67
+  no_false_positives_plain:
+    min_pass_rate: 1.0
+  no_false_positives_standalone:
+    min_pass_rate: 1.0

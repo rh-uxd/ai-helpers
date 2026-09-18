@@ -1,0 +1,6 @@
+test_libraries:
+  - rtl
+expect_aria_tests: true
+expect_keyboard_tests: true
+expect_cypress_output: false
+expect_gap_report: true

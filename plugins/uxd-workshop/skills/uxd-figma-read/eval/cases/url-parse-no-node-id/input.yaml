@@ -1,0 +1,6 @@
+prompt: >-
+  Using the uxd-figma-read skill, parse this Figma URL only — do not call the
+  network, MCP, or REST API. Report the file key and how you would scope the
+  request when the URL has no node-id.
+
+  URL: https://www.figma.com/design/AbCdEfGhIjKlMnOp/Settings-Redesign

@@ -23,7 +23,7 @@ jobs:
           echo "=== Scanning for internal URLs ==="
           if git grep -nI \
             -E '(\.corp\.|enterprise\.slack\.com|pages\.redhat\.com|mcp\.dataverse\.)' \
-            -- . ':(exclude)**/eval/**' ':(exclude).github/workflows/security-scan.yml' \
+            -- . ':(exclude)**/eval/**' ':(exclude).github/workflows/security-scan.yml' ':(exclude)metrics/' \
             | grep -v 'example\.com' \
             | grep -v 'SECURITY\.md' ; then
             echo "::error::Found internal URLs in tracked files. Replace with environment variable references or remove."

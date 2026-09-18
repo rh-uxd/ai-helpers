@@ -1,0 +1,116 @@
+name: pf-catalog-interaction-patterns-eval
+description: Evaluate pf-catalog-interaction-patterns' interaction-to-component lookup and hover misconception handling
+
+# A/B delta: Without the skill, baseline models may incorrectly suggest Popover/Menu
+# as hover-triggered, miss component options for interaction patterns, or guess
+# components rather than providing accurate PatternFly mappings. The skill uniquely
+# contributes: correct hover rules (Tooltip only), interaction-indexed component
+# lookup, and multiple valid options for broad queries.
+
+skill: pf-design-guide:pf-catalog-interaction-patterns
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-design-guide
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request describing an interaction need
+    - annotations.yaml: scenario type, expected components, and flags for conditional judges
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces component recommendations based on interaction patterns.
+      Judges check conversation text for correct component suggestions.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: hover_not_popover
+    description: Hover queries return Tooltip, NOT Popover/Menu as hover-triggered
+    if: "annotations.get('scenario') == 'hover'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      tooltip_mentioned = re.search(r'\bTooltip\b', text, re.IGNORECASE)
+      if not tooltip_mentioned:
+          return False, "Did not mention Tooltip for hover interaction"
+      hover_popover = re.search(r'(Popover|Menu|Select|Dropdown).{0,30}hover', text, re.IGNORECASE)
+      popover_hover = re.search(r'hover.{0,30}(Popover|Menu|Select|Dropdown)', text, re.IGNORECASE)
+      if hover_popover or popover_hover:
+          return False, "Incorrectly suggested Popover/Menu/Select/Dropdown as hover-triggered"
+      return True, "Correctly identifies Tooltip for hover, does not claim Popover/Menu are hover-triggered"
+
+  - name: correct_components
+    description: Returns appropriate PF components for the interaction pattern
+    if: "annotations.get('expect_pf_components') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      expected = outputs.get("annotations", {}).get('expected_components', [])
+      found = []
+      for comp in expected:
+          if re.search(rf'\b{comp}\b', text, re.IGNORECASE):
+              found.append(comp)
+      if len(found) == 0:
+          return False, f"None of the expected components found: {expected}"
+      if len(found) < len(expected) / 2:
+          return False, f"Only found {len(found)}/{len(expected)} expected components: {found}"
+      return True, f"Found expected components: {found}"
+
+  - name: multiple_options
+    description: Broad queries return multiple valid component options
+    if: "annotations.get('expect_multiple') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      expected = outputs.get("annotations", {}).get('expected_components', [])
+      found = []
+      for comp in expected:
+          if re.search(rf'\b{comp}\b', text, re.IGNORECASE):
+              found.append(comp)
+      if len(found) < 2:
+          return False, f"Expected multiple components, only found: {found}"
+      return True, f"Returns multiple valid options: {found}"
+
+  - name: gate_non_pf
+    description: Non-PF context doesn't get PF component guidance
+    if: "annotations.get('expect_pf_components') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      pf_components = re.search(r'@patternfly|PatternFly\s+(component|React)', text, re.IGNORECASE)
+      if pf_components:
+          return False, "Suggested PatternFly components for a non-PF context"
+      return True, "Did not suggest PatternFly components for non-PF context"
+
+thresholds:
+  hover_not_popover:
+    min_pass_rate: 1.0
+  correct_components:
+    min_pass_rate: 0.8
+  multiple_options:
+    min_pass_rate: 0.8
+  gate_non_pf:
+    min_pass_rate: 1.0

@@ -44,8 +44,12 @@ Observed in local eval dry-runs (headless Claude Code):
    review language, or ask a different “accept all / skip to reports”
    question, then write final files without a real researcher pass.
 4. **Specialists never offered** — `--specialists` is opt-in only. Agents
-   do not ask “do you want accessibility / IA / …” unless prompted.
+   do not ask “do you want IA / IxD / content …” unless prompted.
    That is fine for human mode; easy to miss in agent mode.
+5. **Document fetch instead of live browser** — Given a URL, agents
+   may curl/WebFetch HTML instead of opening the page in a browser.
+   A fetched document is not the user experience; the skill must
+   refuse that path.
 
 None of that means A/B/C or the templates are broken. It means the
 **interactive contract** assumes a human answer that automation does
@@ -75,7 +79,7 @@ not provide.
 | Hard stop language | If framework or review format is unanswered, **stop**. Do not default. Do not write reports. |
 | Decline ≠ “Not sure” | A declined/cancelled question is not permission to use Nielsen and continue. |
 | Prefer structured ask | Use `AskUserQuestion` (or equivalent) for framework + review format when available. |
-| Optional specialist prompt | Once after framework: “Add specialist lenses? None / accessibility / IA / …” |
+| Optional specialist prompt | Once after framework: “Add specialist lenses? None / IA / IxD / content …” |
 
 Mode A should remain the documented default for researchers.
 
@@ -105,6 +109,8 @@ for a human mid-run.
 
 Specialists stay opt-in via `--specialists` in both modes unless we
 later add an interactive ask (Mode A) or a caller-supplied list (Mode B).
+Accessibility is not a specialist lens — it is out of scope for this
+skill (usability inspection, not correctness/conformance).
 
 ---
 
@@ -157,6 +163,7 @@ The offline eval suite should test **both** contracts:
 | Researcher review gate before report files | A |
 | Draft/unreviewed path when `--review none` | B (once implemented) |
 | Figma needs exports; no invented findings | Both |
+| URL needs live browser; no curl/WebFetch | Both |
 
 Until Mode B flags exist, agent-only runs should pass `--framework`
 explicitly and treat skipped review as a **skill bug**, not as success.

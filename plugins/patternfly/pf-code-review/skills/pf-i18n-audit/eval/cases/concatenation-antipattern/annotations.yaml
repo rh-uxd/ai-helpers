@@ -1,0 +1,11 @@
+expect_issues: true
+issue_types:
+  - concatenation
+  - hardcoded_strings
+notes: |
+  Concatenation issues: "Welcome back, " + userName (word order varies),
+  `${itemCount} items found` (pluralization), "Last login: " + date (date position),
+  "$" + price (hardcoded currency symbol), tags.join(", ") (list formatting),
+  "5 minutes ago" (relative time).
+  Should recommend: ICU MessageFormat/t(), Intl.NumberFormat, Intl.ListFormat,
+  Intl.RelativeTimeFormat, Intl.DateTimeFormat.

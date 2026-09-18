@@ -17,6 +17,14 @@
     ]
   },
   {
+    "name": "FlyingWHR/tashan",
+    "url": "https://github.com/FlyingWHR/tashan",
+    "description": "",
+    "files": [
+      "web/capability/pkg-patternfly-patternfly-mcp.html"
+    ]
+  },
+  {
     "name": "Gkrumbach07/openshell-dashboard",
     "url": "https://github.com/Gkrumbach07/openshell-dashboard",
     "description": "Standalone upstream web admin UI for OpenShell",
@@ -66,10 +74,10 @@
       "docs/presets/envs.md",
       "docs/presets/README.md",
       "presets/install-envs.sh",
-      "presets/workflows/onboarding/skills/detect-tech-stack/SKILL.md",
+      "presets/shared/skills/detect-tech-stack/SKILL.md",
       "docs/onboarding-new-instance.md",
-      "presets/workflows/onboarding/skills/detect-tech-stack/detect_tech_stack.py",
-      "presets/workflows/onboarding/skills/detect-tech-stack/tests/test_detect_tech_stack.py"
+      "presets/shared/skills/detect-tech-stack/detect_tech_stack.py",
+      "presets/shared/skills/detect-tech-stack/tests/test_detect_tech_stack.py"
     ]
   },
   {
@@ -200,6 +208,14 @@
     ]
   },
   {
+    "name": "gahingwoo/ezy_speech_translate",
+    "url": "https://github.com/gahingwoo/ezy_speech_translate",
+    "description": "A complete real-time speech-to-text and translation system, supporting administrator proofreading and audience display.",
+    "files": [
+      ".mcp.json"
+    ]
+  },
+  {
     "name": "guacsec/trustify-ui",
     "url": "https://github.com/guacsec/trustify-ui",
     "description": "Trustify UI component.",
@@ -318,19 +334,6 @@
     "description": "",
     "files": [
       "public/sitemap-2.xml"
-    ]
-  },
-  {
-    "name": "tomevault-io/tomes",
-    "url": "https://github.com/tomevault-io/tomes",
-    "description": "Complete Tome bundles (config + skills + manifest), graded against the public Tome Standard and kept current as the models change by TomeVault",
-    "files": [
-      "redhat-cop--babylon/formats/AGENTS.md",
-      "redhat-cop--babylon/formats/GEMINI.md",
-      "redhat-cop--babylon/formats/CLAUDE.md",
-      "redhat-cop--babylon/formats/project-config.md",
-      "redhat-cop--babylon/formats/copilot-instructions.md",
-      "redhat-cop--babylon/formats/project-config.mdc"
     ]
   }
 ]

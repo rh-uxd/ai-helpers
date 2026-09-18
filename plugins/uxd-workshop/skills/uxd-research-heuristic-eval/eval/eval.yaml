@@ -1,7 +1,8 @@
 name: uxd-research-heuristic-eval-eval
 description: >-
   Evaluate uxd-research-heuristic-eval framework gating, Figma input handling,
-  three-evaluator independence, researcher review gate, and no-recommendation guardrails
+  three-evaluator independence, researcher review gate, no-recommendation
+  guardrails, no accessibility/axe scans, and no curl/WebFetch of live URLs
 
 skill: uxd-workshop:uxd-research-heuristic-eval
 
@@ -205,6 +206,62 @@ judges:
           return False, "Invented evaluation findings without inspectable screenshots"
       return True, "Requested Figma exports instead of inventing findings"
 
+  - name: url_needs_live_browser
+    description: Given a URL, does not curl/WebFetch HTML; asks for a live browser or screenshots
+    if: "annotations.get('case_type') == 'url-needs-live-browser'"
+    check: |
+      import re, json
+
+      text = outputs.get("conversation", "")
+      tool_calls = outputs.get("tool_calls") or []
+
+      def _is_document_fetch(call):
+          if not isinstance(call, dict):
+              return False
+          name = str(call.get("name") or "")
+          payload = json.dumps(call.get("input") or call.get("arguments") or {})
+          blob = f"{name} {payload}"
+          if re.search(r"WebFetch|web_fetch|wget\b", blob, re.IGNORECASE):
+              return True
+          if re.search(r"\bcurl\b", blob, re.IGNORECASE) and re.search(
+              r"https?://", blob, re.IGNORECASE
+          ):
+              return True
+          return False
+
+      if any(_is_document_fetch(c) for c in tool_calls):
+          return False, "Fetched the URL as a document (curl/wget/WebFetch) instead of a live browser"
+      if re.search(
+          r"\b(curl|wget|WebFetch)\b.{0,80}https?://|"
+          r"(fetched|retrieved|downloaded).{0,40}(HTML|page source|markup)",
+          text,
+          re.IGNORECASE,
+      ) and re.search(
+          r"(Evaluator [ABC]\s*[—-]|V-[ABC]\d+|Candidate Violations)",
+          text,
+          re.IGNORECASE,
+      ):
+          return False, "Evaluated from fetched HTML/page source"
+
+      invented = re.search(
+          r"(Evaluator [ABC]\s*[—-]|V-[ABC]\d+|Candidate Violations)",
+          text,
+          re.IGNORECASE,
+      )
+      if invented:
+          return False, "Invented evaluation findings without a live browser or screenshots"
+
+      asks_alt = re.search(
+          r"(screenshot|live browser|browser tools?|Playwright|"
+          r"cannot inspect|can't inspect|enable .{0,30}browser|"
+          r"provide .{0,40}(screenshot|image))",
+          text,
+          re.IGNORECASE,
+      )
+      if not asks_alt:
+          return False, "Did not ask for a live browser or screenshots when browser tools were unavailable"
+      return True, "Refused document fetch and asked for live browser or screenshots"
+
   - name: runs_three_evaluator_passes
     description: Produces independent Evaluator A/B/C candidate violations
     if: "annotations.get('case_type') == 'three-evaluator-passes'"
@@ -238,7 +295,7 @@ judges:
           re.IGNORECASE,
       )
       lens_c = re.search(
-          r"(edge case|empty state|error|missing|accessible name|confirmation|"
+          r"(edge case|empty state|error|missing|unlabeled|confirmation|"
           r"unexpected|what's not|what is not)",
           text,
           re.IGNORECASE,
@@ -436,6 +493,56 @@ judges:
 
       return True, "Stopped correctly when --framework missing in Mode B"
 
+  - name: avoids_accessibility_audit
+    description: Does not run axe or other automated a11y scanners during heuristic eval
+    if: "annotations.get('case_type') in ['three-evaluator-passes', 'agent-mode-assume-defaults', 'no-recommendations', 'rejects-accessibility-specialist']"
+    check: |
+      import re, json
+
+      text = outputs.get("conversation", "")
+      tool_calls = outputs.get("tool_calls") or []
+      tools_blob = json.dumps(tool_calls)
+
+      tool_names = " ".join(str(c.get("name", "")) for c in tool_calls if isinstance(c, dict))
+      if re.search(r"\b(axe|pa11y|wave)\b", tool_names, re.IGNORECASE):
+          return False, "Invoked an accessibility-scanner tool"
+
+      ran_scanner = re.search(
+          r"(axe-core|\baxe\.run\b|npx\s+axe|npm i(nstall)?.{0,20}axe|"
+          r"(ran|running|executed?|injected?|launched?)\s+"
+          r"(an?\s+)?(axe|pa11y|WAVE|lighthouse))",
+          text + "\n" + tools_blob,
+          re.IGNORECASE,
+      )
+      if ran_scanner:
+          return False, "Attempted an automated accessibility scan (axe/pa11y/WAVE/Lighthouse a11y)"
+      return True, "Did not run an automated accessibility scan"
+
+  - name: rejects_accessibility_specialist
+    description: Declines --specialists accessibility instead of running a WCAG/axe pass
+    if: "annotations.get('case_type') == 'rejects-accessibility-specialist'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+
+      ran_acc_pass = re.search(r"\bV-ACC\d+\b", text)
+      if ran_acc_pass:
+          return False, "Ran an accessibility specialist pass (V-ACC findings)"
+
+      declined = re.search(
+          r"(out of scope|not (a |an )?(accessibility|WCAG)|"
+          r"do(es)? not (include|cover|audit) accessib|"
+          r"accessibility is (not|out)|dedicated accessibility|"
+          r"declin.{0,40}accessib)",
+          text,
+          re.IGNORECASE,
+      )
+      if not declined:
+          return False, "Did not decline the accessibility specialist lens"
+
+      return True, "Declined accessibility specialist and did not emit V-ACC findings"
+
 thresholds:
   asks_for_framework:
     min_pass_rate: 1.0
@@ -452,4 +559,10 @@ thresholds:
   agent_mode_assume_defaults:
     min_pass_rate: 1.0
   agent_mode_requires_framework:
+    min_pass_rate: 1.0
+  avoids_accessibility_audit:
+    min_pass_rate: 1.0
+  rejects_accessibility_specialist:
+    min_pass_rate: 1.0
+  url_needs_live_browser:
     min_pass_rate: 1.0

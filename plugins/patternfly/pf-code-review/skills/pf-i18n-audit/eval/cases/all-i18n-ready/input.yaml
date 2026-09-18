@@ -1,0 +1,1 @@
+prompt: "Audit I18nReady.tsx for i18n issues. This component uses react-i18next and Intl APIs — verify it follows best practices."

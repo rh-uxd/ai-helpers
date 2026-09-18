@@ -1,0 +1,7 @@
+expect_issues: false
+issue_types: []
+notes: |
+  Negative control case — this component is fully i18n-ready.
+  Uses react-i18next t() for all user-facing strings.
+  Uses Intl.DateTimeFormat, Intl.NumberFormat, and Intl.ListFormat correctly.
+  Should NOT flag any issues. Should report as i18n-compliant.

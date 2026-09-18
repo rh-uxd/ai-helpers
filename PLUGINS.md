@@ -7,6 +7,9 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 - [patternfly](#patternfly) — Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
 - [pf-assist](#pf-assist) — PatternFly skill routing — maps project signals to the right PF sub-skills for compliance, migration, and design audits
 - [uxd-assist](#uxd-assist) — UXD skill routing — discover the right skills for research, design review, and prototyping workflows
+- [uxd-design](#uxd-design) — UX design workflow — Figma context, design evaluation, and implementation handoff
+- [uxd-prototype](#uxd-prototype) — Create UX prototypes from Jira tickets, Figma designs, or feature descriptions
+- [uxd-research](#uxd-research) — UX research pipeline — heuristic evaluation, usability testing, research methodology
 - [uxd-workshop](#uxd-workshop) — UXD team tools and skill incubator — prototyping, research, design review, team workflows
 - [pf-a11y](#pf-a11y) — Accessibility auditing, reporting, and documentation
 - [pf-code-review](#pf-code-review) — Code review and quality — adversarial review, security patterns
@@ -52,17 +55,50 @@ UXD skill routing — discover the right skills for research, design review, and
 
 <br>
 
+### uxd-design
+
+UX design workflow — Figma context, design evaluation, and implementation handoff
+
+<table>
+<tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
+<tr><td nowrap><code>uxd-design-handoff</code></td><td>Produce an implementation-ready design handoff spec from a validated design.</td><td>stable</td></tr>
+</table>
+
+
+<br>
+
+### uxd-prototype
+
+Create UX prototypes from Jira tickets, Figma designs, or feature descriptions
+
+<table>
+<tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
+<tr><td nowrap><code>uxd-prototype-create</code></td><td>Create or refine a UX prototype from a Jira ticket, Figma design, feature description, or rough idea.</td><td>stable</td></tr>
+</table>
+
+
+<br>
+
+### uxd-research
+
+UX research pipeline — heuristic evaluation, usability testing, research methodology
+
+<table>
+<tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
+<tr><td nowrap><code>uxd-discovery</code></td><td>Produce a structured UX discovery brief from a feature request, Jira issue, or problem statement.</td><td>stable</td></tr>
+</table>
+
+
+<br>
+
 ### uxd-workshop
 
 UXD team tools and skill incubator — prototyping, research, design review, team workflows
 
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
-<tr><td nowrap><code>uxd-design-handoff</code></td><td>Produce an implementation-ready design handoff spec from a validated design.</td><td>stable</td></tr>
-<tr><td nowrap><code>uxd-discovery</code></td><td>Produce a structured UX discovery brief from a feature request, Jira issue, or problem statement.</td><td>stable</td></tr>
 <tr><td nowrap><code>uxd-evaluate-design-heuristics</code></td><td>Score a design against accessibility, visual hierarchy, content, and state coverage heuristics.</td><td>—</td></tr>
-<tr><td nowrap><code>uxd-figma-read</code></td><td>Retrieve design context from a Figma file.</td><td>—</td></tr>
-<tr><td nowrap><code>uxd-prototype-create</code></td><td>Create or refine a UX prototype from a Jira ticket, Figma design, feature description, or rough idea.</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-figma-read</code></td><td>Retrieve design context from a Figma file.</td><td>stable</td></tr>
 <tr><td nowrap><code>uxd-prototype-evaluate</code></td><td>Evaluate a running prototype against a Jira ticket's acceptance criteria, automatically fix what fails, then run persona-based usability walkthroughs.</td><td>stable</td></tr>
 <tr><td nowrap><code>uxd-prototype-export</code></td><td>Export a prototype page or journey step as static HTML, a React component tree, or a PatternFly implementation spec, and install the Prototype Bar (Sources, Prototype|Eval, Scenario, Export).</td><td>—</td></tr>
 <tr><td nowrap><code>uxd-prototype-publish</code></td><td>Publish a prototype to a git merge request, GitHub Pages, GitLab Pages, or Vercel.</td><td>stable</td></tr>
@@ -80,6 +116,7 @@ Accessibility auditing, reporting, and documentation
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
 <tr><td nowrap><code>pf-a11y-audit</code></td><td>Audit PatternFly components and pages against WCAG and ARIA best practices.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-a11y-keyboard</code></td><td>Test keyboard accessibility of PatternFly UIs via live browser interaction.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-a11y-test-gen</code></td><td>Generate accessibility test files for any frontend framework covering ARIA attributes, keyboard interaction, and focus management.</td><td>stable</td></tr>
 </table>
 
 
@@ -91,8 +128,10 @@ Code review and quality — adversarial review, security patterns
 
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
+<tr><td nowrap><code>pf-i18n-audit</code></td><td>Audit PatternFly React code for i18n readiness — hardcoded user-facing strings, concatenation anti-patterns, locale-dependent formatting, and RTL-unsafe CSS.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-review</code></td><td>Run all PatternFly compliance checks on a project — imports, components, colors, legacy CSS, and security.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-security-scan</code></td><td>Scan PatternFly React code for security anti-patterns — XSS via dangerouslySetInnerHTML, unsanitized user input in tooltips/labels, and insecure href patterns.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-state-audit</code></td><td>Audit PatternFly React components for missing UI states — loading, error, empty, and unauthorized.</td><td>stable</td></tr>
 </table>
 
 
@@ -109,7 +148,13 @@ Design audit — validate existing code and designs against PatternFly standards
 <tr><td nowrap><code>pf-css-token-check</code></td><td>Detect hardcoded color, spacing, typography, border radius and shadow values that have PF token equivalents and suggest the correct design token replacements.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-figma-check</code></td><td>Check Figma designs against PatternFly v6 standards for colors, typography, spacing, and component usage.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-figma-token-check</code></td><td>Audit designs against the PatternFly 6 token architecture and bridge Figma styles to PF semantic tokens.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-glass-check</code></td><td>Audit PatternFly prototypes for Glass Mode handbook violations — glass-on-glass layering, missing isPlain, accessibility overrides, and background image rules.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-icon-finder</code></td><td>Identify PatternFly icons in design mockups and provide the correct React import statements.</td><td>stable</td></tr>
+</table>
+
+<table>
+<tr><th>Agent</th><th>Description</th><th>Eval</th></tr>
+<tr><td nowrap><code>pf-glass-standards</code></td><td>PatternFly Glass Mode standards — glass-on-glass prevention, isPlain vs default styling, Drawer variant rules, accessibility overrides, and background image rules.</td><td>—</td></tr>
 </table>
 
 
@@ -121,6 +166,7 @@ Design guide — component selection, interaction patterns, AI experience patter
 
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
+<tr><td nowrap><code>pf-catalog-interaction-patterns</code></td><td>Catalog interaction patterns (click, hover, keyboard, drag) across PatternFly components.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-figma-design-mode</code></td><td>Create and edit Figma design files using PatternFly-approved component libraries.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-screenshot-mapping</code></td><td>Maps screenshots and UI mockups (any fidelity) to PatternFly 6 layout and building-block components.</td><td>stable</td></tr>
 </table>
@@ -218,5 +264,5 @@ PatternFly team tools and skill incubation — issue triage, release management,
 
 **Eval coverage**
 
-- Consumer: 25/25 (100%)
-- Workshop: 6/26 (23%)
+- Consumer: 33/33 (100%)
+- Workshop: 4/23 (17%)

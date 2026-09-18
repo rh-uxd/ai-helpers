@@ -1,0 +1,1 @@
+prompt: "Audit this PatternFly component for i18n readiness. Check UserList.tsx for hardcoded strings that need externalization."

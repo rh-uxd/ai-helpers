@@ -1,0 +1,5 @@
+scenario: hover
+expect_pf_components: true
+expected_components:
+  - Tooltip
+  - Truncate

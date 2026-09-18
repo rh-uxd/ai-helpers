@@ -1,0 +1,3 @@
+expect_violation: true
+violation_severity: CRITICAL
+case_type: glass-on-glass

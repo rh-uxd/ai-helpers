@@ -34,6 +34,10 @@ area/pf-mcp:
   - changed-files:
       - any-glob-to-any-file: plugins/patternfly/pf-mcp/**
 
+area/uxd-prototype:
+  - changed-files:
+      - any-glob-to-any-file: plugins/uxd-prototype/**
+
 area/uxd-workshop:
   - changed-files:
       - any-glob-to-any-file: plugins/uxd-workshop/**

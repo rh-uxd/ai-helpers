@@ -1,0 +1,11 @@
+expect_issues: true
+issue_types:
+  - rtl_css
+notes: |
+  Should flag: padding-left, padding-right, border-right, float: left,
+  text-align: left, margin-left, margin-right, left: 280px.
+  Should NOT flag: width (not directional), margin-top (vertical axis),
+  padding-bottom (vertical axis), PF design token usage.
+  Should suggest: padding-inline-start/end, border-inline-end,
+  float: inline-start, text-align: start, margin-inline-start/end,
+  inset-inline-start.

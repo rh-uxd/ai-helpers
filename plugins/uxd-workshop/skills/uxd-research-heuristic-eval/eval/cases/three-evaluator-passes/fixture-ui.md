@@ -7,7 +7,7 @@ Task context: Update display name and save.
 - Page title: "Settings"
 - Field: unlabeled text input (placeholder only: "Name")
 - Primary button: "Save" (no loading or success feedback described)
-- Icon-only button top-right with no accessible name (trash glyph)
+- Icon-only button top-right with no visible label or tooltip (trash glyph)
 - Clicking trash immediately deletes the account with no confirmation dialog
 - If save fails, no error message is shown
 - Help link is absent

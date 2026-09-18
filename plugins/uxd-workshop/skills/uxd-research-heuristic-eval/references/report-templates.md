@@ -45,7 +45,7 @@ Save to: `[project-dir]/heuristic-eval-[date].md`
 |-----------|------|-------|
 | A | Visual inspection | Labels, layout, visual hierarchy, affordances, feedback indicators — screen by screen, element by element |
 | B | Task flow | Transitions, feedback after actions, where users might lose context — follows the user's likely workflow |
-| C | Edge cases | Empty states, long text, unexpected input, missing data, accessibility gaps — looks for what's NOT there |
+| C | Edge cases | Empty states, long text, unexpected input, missing data, unlabeled controls — looks for what's NOT there |
 
 ---
 
@@ -174,8 +174,10 @@ researcher to decide whether they are violations or preferences.]
   included"]
 - **Inspection method:** [How the interface was inspected — e.g.,
   "Live browser inspection via Playwright MCP (screenshots,
-  accessibility tree, and interactive states captured)" or
-  "Static bundle analysis only — no visual inspection available"]
+  page structure, and interactive states captured)" or
+  "Researcher-provided screenshots (browser tools were not available)"]
+- **Out of scope:** Accessibility / WCAG conformance was not evaluated.
+  This is a usability heuristic inspection, not an accessibility audit.
 - **Input limitations:** [any constraints on the evaluation — e.g.,
   "Evaluated from static screenshots; interactive behaviors like
   hover states and transitions could not be assessed"]
@@ -251,6 +253,9 @@ Generate a self-contained HTML file (all CSS/JS inline) with:
   prominent callout box (blue/info-toned) near the end of the report,
   before Coverage Notes. Lists testable questions generated from the
   actual findings.
+- **Coverage Notes** — Include what was and was not evaluated, inspection
+  method, and a fixed **Out of scope** line: accessibility / WCAG
+  conformance was not evaluated (usability inspection, not an a11y audit).
 - **User testing signal indicators** — Violations with a testing
   signal flag get a small "needs user testing" badge (blue, distinct
   from severity badges) and the signal text displayed as an inset

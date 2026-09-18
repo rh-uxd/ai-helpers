@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Generates PLUGINS.md, updates README.md plugin table, updates CONTRIBUTING-SKILLS.md
-# plugin table and good names section, and generates all plugin READMEs from plugin.json.
+# Generates PLUGINS.md, updates README.md plugin table and badge counts, updates
+# CONTRIBUTING-SKILLS.md plugin table and good names section, and generates all
+# plugin READMEs from plugin.json.
 #
 # Run: bash scripts/generate-plugins-md.sh
 

@@ -1,0 +1,7 @@
+{
+  "name": "uxd-design",
+  "description": "UX design workflow — Figma context, design evaluation, and implementation handoff",
+  "author": { "name": "UXD Team" },
+  "repository": "https://github.com/rh-uxd/ai-helpers",
+  "license": "Apache-2.0"
+}

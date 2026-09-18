@@ -10,3 +10,4 @@ Accessibility auditing, reporting, and documentation.
 
 - **PF Accessibility Audit** (`/pf-a11y:pf-a11y-audit`) — Audit PatternFly components and pages against WCAG and ARIA best practices.
 - **PF Accessibility Keyboard** (`/pf-a11y:pf-a11y-keyboard`) — Test keyboard accessibility of PatternFly UIs via live browser interaction.
+- **PF Accessibility Test Gen** (`/pf-a11y:pf-a11y-test-gen`) — Generate accessibility test files for any frontend framework covering ARIA attributes, keyboard interaction, and focus management.

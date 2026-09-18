@@ -1,0 +1,37 @@
+prompt: |
+  Audit this component for missing UI states:
+
+  ```tsx
+  import React, { useEffect, useState } from 'react';
+  import { Table, Thead, Tr, Th, Tbody, Td } from '@patternfly/react-table';
+  import { Alert } from '@patternfly/react-core';
+
+  interface User { id: number; name: string; email: string; }
+
+  const UserTable = () => {
+    const [users, setUsers] = useState<User[]>([]);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+      fetch('/api/users')
+        .then(res => res.json())
+        .then(data => setUsers(data))
+        .catch(err => setError(err.message));
+    }, []);
+
+    if (error) {
+      return <Alert variant="danger" title="Failed to load users">{error}</Alert>;
+    }
+
+    return (
+      <Table aria-label="Users">
+        <Thead><Tr><Th>Name</Th><Th>Email</Th></Tr></Thead>
+        <Tbody>
+          {users.map(u => (
+            <Tr key={u.id}><Td>{u.name}</Td><Td>{u.email}</Td></Tr>
+          ))}
+        </Tbody>
+      </Table>
+    );
+  };
+  ```

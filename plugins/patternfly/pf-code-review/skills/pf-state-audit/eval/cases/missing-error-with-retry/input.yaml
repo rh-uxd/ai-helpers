@@ -1,0 +1,33 @@
+prompt: |
+  Audit this component for missing UI states:
+
+  ```tsx
+  import React, { useState, useEffect } from 'react';
+  import { Card, CardBody, CardTitle, Spinner, Bullseye } from '@patternfly/react-core';
+
+  const MetricsCard = () => {
+    const [metrics, setMetrics] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+      fetch('/api/metrics')
+        .then(res => res.json())
+        .then(data => { setMetrics(data); setLoading(false); })
+        .catch(() => setLoading(false));
+    }, []);
+
+    if (loading) {
+      return <Bullseye><Spinner /></Bullseye>;
+    }
+
+    return (
+      <Card>
+        <CardTitle>System Metrics</CardTitle>
+        <CardBody>
+          <p>CPU: {metrics?.cpu}%</p>
+          <p>Memory: {metrics?.memory}%</p>
+        </CardBody>
+      </Card>
+    );
+  };
+  ```
