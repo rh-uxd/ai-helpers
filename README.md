@@ -107,6 +107,8 @@ See [PLUGINS.md](PLUGINS.md) for the full list of skills, agents, and usage deta
 ```
 ├── .claude-plugin/         # Claude Code marketplace config
 ├── .cursor-plugin/         # Cursor marketplace config
+├── .agents/                # Unpublished contributor skills
+│   └── skills/uxd-skill-quality-check/  # Check changed skills before a PR
 ├── plugins/
 │   ├── uxd-prototype/      # Create UX prototypes from Jira, Figma, or feature descriptions
 │   │   └── skills/
@@ -135,11 +137,15 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and [CONTRI
 
 ## CI/CD
 
-Every pull request runs through automated quality gates:
+Pull requests run through the relevant automated quality gates (some are path-filtered):
 
 | Gate | What it checks |
 |------|---------------|
-| **Validate** | Manifest consistency, generated docs freshness, skill frontmatter integrity |
+| **Validate** | Manifest consistency and skill frontmatter/integrity checks; it does not regenerate documentation |
+| **Skillsaw** | Skill content quality — structure, clarity, completeness, and repository conventions |
+| **Eval lint** | Eval config correctness — schema validation, judge quality |
+| **Eval required** | Consumer-facing skills must include an eval suite |
+| **AI Guardian** | Security scanning for prompt injection, unsafe patterns |
 | **Secret scan** | Internal URLs and potential credentials in tracked files |
 | **Link check** | Broken internal markdown links |
 | **Boundary check** | PF skills don't reference UXD internals and vice versa |

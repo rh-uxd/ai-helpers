@@ -7,7 +7,11 @@ on:
       - '.claude-plugin/**'
       - '.cursor-plugin/**'
       - '*.md'
+      - '.skillsaw-baseline.json'
+      - '.skillsaw.yaml'
       - '.coderabbit.yaml'
+      - 'scripts/**'
+      - 'Makefile'
 
 jobs:
   lint:

@@ -216,6 +216,22 @@ graph LR
 7. A maintainer reviews for intent and quality
 8. On merge, CI regenerates `PLUGINS.md`, the README plugin table and badge counts, the CONTRIBUTING-SKILLS plugin table, and per-plugin READMEs — do not include those changes in the PR
 
+### Pre-PR quality gate
+
+Before opening a PR that adds or changes a skill, ask your coding assistant to
+run the project-local `uxd-skill-quality-check` skill from `.agents/skills/`.
+It explains the quality requirements, runs the same Skillsaw configuration and
+custom rules used by CI against only the changed skills, and can help fix new
+findings. If your assistant does not support project-local skills, run the
+repository checks directly:
+
+```bash
+make validate
+make lint
+```
+
+Skillsaw checks built-in structure, description quality, context budgets, eval formats, secrets, and repository integrity. The repository's custom Skillsaw rule also checks skill prefixes, required metadata, examples, line limits, and consumer eval coverage. Existing findings are tracked in `.skillsaw-baseline.json`; new findings introduced by a PR are reported in CI. Also run `make security` when changing bundled scripts or skill content.
+
 ### Quality checklist
 
 Before opening your PR, verify:
@@ -223,13 +239,15 @@ Before opening your PR, verify:
 - [ ] Skill name uses the correct prefix (`uxd-` for UXD skills, `pf-` for PF skills)
 - [ ] Frontmatter has `name` and `description` (`name` matches the directory name)
 - [ ] Description follows the [formula](CONTRIBUTING-SKILLS.md#writing-descriptions): `[Action verb] [what it does]. [Use when + triggers.]`
+- [ ] Frontmatter includes `audience`, `inputs`, and `outputs` metadata
 - [ ] Tool-agnostic — no Claude-specific or Cursor-specific references
 - [ ] Under 500 lines (shorter is better)
+- [ ] Includes an example or output section with a fenced output example
 - [ ] Tested locally on a real scenario
 - [ ] If new plugin: `.claude-plugin/` and `.cursor-plugin/` manifests are identical
-- [ ] Consumer-facing skills have an eval colocated at `skills/<skill-name>/eval/`
+- [ ] Consumer-facing skills have an eval with `dataset:` and at least one case under `skills/<skill-name>/eval/`
 - [ ] Did not edit auto-generated docs (`PLUGINS.md`, README plugin table/badges, CONTRIBUTING-SKILLS plugin table, per-plugin READMEs)
-- [ ] `make lint` passes locally (optional — CI runs it automatically)
+- [ ] `make lint` passes locally
 
 ## Your first contribution
 
