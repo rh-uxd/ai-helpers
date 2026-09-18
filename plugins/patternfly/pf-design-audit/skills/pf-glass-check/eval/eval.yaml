@@ -60,23 +60,21 @@ judges:
           return False, "Did not identify glass-on-glass layering issue"
       return True, "Detected glass-on-glass as CRITICAL violation"
 
-  - name: suggests_isPlain_fix
-    description: Suggests isPlain as the fix for glass-on-glass violations
+  - name: preserves_default_styling_fix
+    description: Removes nested isGlass while preserving default styling; isPlain is optional
     if: "annotations.get('expect_violation') == True and annotations.get('violation_severity') == 'CRITICAL'"
     check: |
       import re
       text = outputs.get("conversation", "")
       for path, content in outputs.get("files", {}).items():
           text += "\n" + content
-      isplain_pattern = re.compile(r'isPlain', re.IGNORECASE)
-      fix_pattern = re.compile(r'(fix|correct|after|should|instead)', re.IGNORECASE)
-      has_isplain = isplain_pattern.search(text)
-      has_fix = fix_pattern.search(text)
-      if not has_isplain:
-          return False, "Did not suggest isPlain as the solution"
-      if not has_fix:
-          return False, "Found isPlain but did not present it as a fix"
-      return True, "Suggests isPlain as the fix for glass-on-glass"
+      removes_glass = re.search(r'(remove|drop|omit).{0,80}isGlass', text, re.IGNORECASE)
+      default_cards = re.findall(r'<Card(?:\s[^>]*)?>', text)
+      if not removes_glass:
+          return False, "Did not explain removing nested isGlass"
+      if not any(not re.search(r'isGlass|isPlain', card) for card in default_cards):
+          return False, "Did not demonstrate the default Card fix"
+      return True, "Removes nested glass and demonstrates default card styling"
 
   - name: no_false_positives_plain
     description: Does not flag isPlain on glass surface as a violation
@@ -111,7 +109,7 @@ judges:
 thresholds:
   detects_glass_on_glass:
     min_pass_rate: 1.0
-  suggests_isPlain_fix:
+  preserves_default_styling_fix:
     min_pass_rate: 0.67
   no_false_positives_plain:
     min_pass_rate: 1.0

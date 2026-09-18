@@ -2,6 +2,19 @@
 
 Source: https://www.patternfly.org/foundations-and-styles/theming/glass-mode-handbook/
 
+## Contents
+
+- [Components and glass](#components-and-glass)
+- [Decision table](#decision-table)
+- [Background images](#background-images)
+- [Glass design tokens](#glass-design-tokens)
+- [Technical constraints](#technical-constraints)
+- [Accessibility requirements](#accessibility-requirements)
+- [Audit scope](#audit-scope)
+- [Audit rules](#audit-rules)
+
+For finding layout and summaries, read [the audit report format](audit-report.md).
+
 ## What is glass mode
 
 Glass mode is a contrast mode option that can be manually enabled in both Default and Project Felt themes. It adds transparency, blurring, and depth to the UI so that brand-approved background images and layered UI elements subtly show through.
@@ -26,22 +39,22 @@ These components receive glass treatment automatically when `.pf-v6-theme-glass`
 These components accept an `isGlass` prop for manual glass enablement:
 
 - Card
-- Drawer
+- DrawerPanelContent (subject to the drawer variant rules below)
 - Hero
 - Panel
 
 **`isGlass` is only valid when the component is NOT inside an auto-glass or manually-glass container.** Using `isGlass` inside a glass container creates glass-on-glass layering.
 
-### Plain variant (`isPlain` prop)
+### Default styling and optional plain variant (`isPlain` prop)
 
-The `isPlain` prop removes default borders and solid background colors so components can sit directly on a glass-enabled surface without obscuring the depth effect. Use `isPlain` on components inside glass containers.
+Children on glass surfaces can use default styling or the optional plain variant. Prefer default card styling: it retains background color at reduced opacity and borders for visible definition and hierarchy. `isPlain` removes the background and borders for a seamless appearance on components that support it. Apply it when the user requests plain styling; preserve existing explicit choices. Missing `isPlain` on cards is not a violation, and no confirmation is required before using default styling. Drawer backgrounds follow the variant-specific rules below.
 
 ### Drawer variants in glass
 
-Drawers on glass surfaces must use the correct variant for their display mode:
+Drawer styling must follow the display mode. Overlay drawers never use `isGlass`, regardless of parent. Inline drawers inside glass parents must use the plain panel variant. In React, `isInline` belongs on `Drawer`; `isPlain` and `isGlass` belong on `DrawerPanelContent` (see [Drawer API](https://www.patternfly.org/components/drawer/)).
 
-- **Overlay drawer** (default — no `isInline` prop): Covers page content. Uses the floating background token (`--pf-t--global--background--color--floating--default`) by default, providing a solid-enough surface to remain readable over glass. No additional glass styling needed.
-- **Inline drawer** (`isInline`): Pushes page content aside when expanded. In glass mode, the inline panel must not have a background color — the glass surface shows through the panel area. Do not apply custom `background-color` to inline drawer panels in glass mode.
+- **Overlay drawer** (default — no `isInline` prop): Covers page content. Uses the floating background token (`--pf-t--global--background--color--floating--default`) by default, providing a solid-enough surface to remain readable over glass. Never pass `isGlass` to the overlay panel, including when it is outside a glass parent.
+- **Inline drawer** (`isInline`): Pushes page content aside when expanded. Inside a glass parent, use `<DrawerPanelContent isPlain>` without `isGlass` so the parent surface shows through. Do not disable plain styling with `isNoPlainOnGlass`. Do not apply custom `background-color` to inline drawer panels in glass mode.
 
 ### Glass-specific component variants
 
@@ -49,6 +62,25 @@ When glass is enabled, two variants replace their standard counterparts:
 
 1. **Banded masthead** — Adds transparency, blur, and a shadowed border to the masthead, setting it apart as a persistent dock above the rest of the page.
 2. **Floating side navigation** — Adds transparency, blur, and a shadowed border to the side navigation, insetting it to make it visually elevated and clearly readable within the glass context.
+
+## Decision table
+
+Quick-reference for component prop scanning. For drawer rows, `isGlass` and `isPlain` refer to `DrawerPanelContent`; determine overlay versus inline from the enclosing `Drawer`. Report nested overlay glass as CRITICAL-1, otherwise as HIGH-2, without duplicating the same finding.
+
+| Component | On glass surface? | Has `isGlass`? | Has `isPlain`? | Result |
+|-----------|-------------------|----------------|----------------|--------|
+| Card, Hero, Panel | Yes | Yes | — | Violation: CRITICAL-1 |
+| Card, Hero, Panel | Yes | No | No | Pass (preferred default styling; no prompt needed) |
+| Card, Hero, Panel | Yes | No | Yes | Pass |
+| Card, Hero, Panel | No | Yes | — | Pass (valid standalone use) |
+| Card, Hero, Panel | No | No | — | Pass |
+| Drawer (overlay) | Yes | Yes | — | Violation: CRITICAL-1 |
+| Drawer (overlay) | No | Yes | — | Violation: HIGH-2 |
+| Drawer (overlay) | — | No | — | Pass if floating background is preserved |
+| Drawer (inline) | Yes | Yes | — | Violation: CRITICAL-1 |
+| Drawer (inline) | Yes | No | No | Violation: HIGH-2 (plain panel required) |
+| Drawer (inline) | Yes | No | Yes | Pass if no custom background or plain-disabling override |
+| Drawer (inline) | No | — | — | Check standalone theme and styling context |
 
 ## Background images
 
@@ -145,6 +177,20 @@ Products must:
 
 ---
 
+## Audit scope
+
+Inspect React/JSX/TSX component props and nesting, HTML theme classes and inline styles, and CSS/SCSS token use, media queries, and background overrides. Establish the application-level glass context and trace glass surfaces through the component tree before reporting findings. Check CRITICAL and HIGH component rules first, then MEDIUM and LOW theme and styling rules.
+
+
+**Do NOT flag:**
+1. Standalone `isGlass` outside a glass-enabled container is not nested glass; overlay drawers are still prohibited from using it (HIGH-2)
+2. Components in test files or mock data (unless explicitly requested)
+3. Glass tokens referenced via `var(--pf-t--...)` syntax
+4. Default PatternFly background images (only flag custom overrides)
+5. Code inside comments
+6. Cards, Hero, and Panel without `isPlain` — default styling is valid and preferred for new cards; this exception does not apply to inline drawer panels inside glass parents
+7. Children with `isPlain` — explicitly chosen plain styling is also valid
+
 ## Audit Rules
 
 The following rules define violations to detect when auditing glass mode implementations. Check in severity order: CRITICAL first, then HIGH, MEDIUM, LOW.
@@ -175,11 +221,11 @@ The following rules define violations to detect when auditing glass mode impleme
 ```
 
 ```tsx
-// RIGHT — Card with isPlain inside a glass-enabled Page
-// isPlain removes the solid background so the Page's glass effect shows through.
+// RIGHT — default Card inside a glass-enabled Page
+// Remove isGlass; retain default styling unless plain styling is requested.
 <Page>
   <PageSection>
-    <Card isPlain>
+    <Card>
       <CardBody>Content is clear and readable</CardBody>
     </Card>
   </PageSection>
@@ -196,32 +242,23 @@ The following rules define violations to detect when auditing glass mode impleme
 ```
 
 ```tsx
-// RIGHT — plain children on a glass surface
+// RIGHT — default child styling on a glass surface
 <Panel isGlass>
-  <Card isPlain>
+  <Card>
     <CardBody>Clear content</CardBody>
   </Card>
 </Panel>
 ```
 
-**When is `isGlass` valid?** Only when the component sits on a non-glass surface and needs its own independent glass treatment — for example, a standalone Card on a solid-background page that does not have `.pf-v6-theme-glass` enabled.
+**When is `isGlass` valid?** Never for an overlay drawer. For other eligible components, only when the component sits on a non-glass surface and needs its own independent glass treatment — for example, a standalone Card on a solid-background page that does not have `.pf-v6-theme-glass` enabled.
 
 ---
 
-### HIGH-1: Confirm styling intent on glass surfaces
+### Styling guidance (not a violation): Default with optional plain
 
-Components inside a glass-enabled container can use either default or plain styling. In glass mode, default styling keeps the background color and borders but at reduced opacity — the glass effect still passes through. Plain styling removes the background and borders entirely for a seamless blend into the glass surface. Both are valid; the user should choose intentionally.
+Follow [default styling and the optional plain variant](#default-styling-and-optional-plain-variant-isplain-prop). When fixing nested glass on a card, remove `isGlass` without automatically adding `isPlain`. Plain styling may be offered without blocking implementation or adding a UI toggle unless requested. Inline drawer panels follow HIGH-2 instead.
 
-**Detect:** Card, Panel, Drawer, or other container components inside a glass-enabled parent that do not have `isPlain`. Prompt the user to confirm their styling intent rather than assuming one is correct.
-
-**Prompt the user with:**
-
-> This `{Component}` is inside a glass-enabled container. Which styling do you want?
->
-> 1. **Default** — Keeps the background color (at reduced opacity) and borders. The glass effect still shows through, but the component has visible definition and hierarchy on the surface.
-> 2. **Plain** (`isPlain`) — Removes the background and borders entirely. The component blends seamlessly into the glass surface.
-
-Apply whichever option the user selects. If the user chooses default, no change is needed.
+HIGH-1 is retired; missing `isPlain` on cards does not count as a violation.
 
 ```tsx
 // Option 1: Default — reduced-opacity background with borders, glass shows through
@@ -249,14 +286,12 @@ Apply whichever option the user selects. If the user chooses default, no change 
 
 ### HIGH-2: Drawer variant must match glass context
 
-Drawers on glass surfaces must use the correct variant for their display mode:
+Apply [drawer variants in glass](#drawer-variants-in-glass).
 
-- **Overlay drawers** (default — no `isInline` prop) cover page content. They use the floating background token by default, which provides a solid-enough surface to remain readable over glass.
-- **Inline drawers** (`isInline`) push page content aside. In glass mode they must not have a background color — the glass surface shows through the inline panel.
-
-**Detect:** `<Drawer>` or `<DrawerPanelContent>` inside a glass-enabled container. Check whether the drawer is overlay or inline, then verify:
-- Overlay: confirm the drawer is not overriding the floating background token with a transparent or glass value
-- Inline: confirm no custom `background-color` is applied to the drawer panel
+**Detect:** Inspect every `Drawer` and its `DrawerPanelContent`. Determine whether the drawer overlays content or is inline, including conditional/responsive modes. Check the active mode rather than merely the presence of a prop.
+- Overlay, with any parent: flag `isGlass` on the panel (or incorrectly on `Drawer`), and transparent/glass overrides of the floating background.
+- Inline inside a glass parent: require `isPlain` on `DrawerPanelContent`; flag missing/false `isPlain`, enabled `isNoPlainOnGlass`, and custom panel background colors. Remove any `isGlass`.
+- If `isGlass` also creates nested glass, report CRITICAL-1 first and do not duplicate the same issue under HIGH-2. Missing plain styling remains a separate HIGH-2 finding.
 
 ```tsx
 // CORRECT — overlay drawer on a glass surface (default variant)
@@ -278,12 +313,12 @@ Drawers on glass surfaces must use the correct variant for their display mode:
 
 ```tsx
 // CORRECT — inline drawer on a glass surface
-// No background color — glass shows through the inline panel
+// Plain panel required inside a glass parent; no isGlass
 <Page>
   <PageSection>
     <Drawer isExpanded={isExpanded} isInline>
       <DrawerContent panelContent={
-        <DrawerPanelContent>
+        <DrawerPanelContent isPlain>
           <DrawerHead>Inline detail — glass shows through</DrawerHead>
         </DrawerPanelContent>
       }>
@@ -354,13 +389,7 @@ Glass components require `.pf-v6-theme-glass` on the `<html>` tag. Using `isGlas
 
 Glass-specific styling should use the designated glass design tokens rather than hardcoded values.
 
-| Token | Usage |
-|-------|-------|
-| `--pf-t--global--background--color--glass--primary--default` | Base fill for glass containers |
-| `--pf-t--global--background--filter--glass--default` | Blur amount on glass elements |
-| `--pf-t--global--border--color--glass--default` | Boundary highlight for glass surfaces |
-| `--pf-t--global--border--radius--glass--default` | Rounded border for glass elements |
-| `--pf-t--global--box-shadow--glass--default` | Elevation shadow for glass elements |
+Use the [glass design tokens](#glass-design-tokens) listed above.
 
 **Detect:** Hardcoded `backdrop-filter`, `opacity`, `background-color` with alpha values, `box-shadow`, or `border-radius` values in glass-context CSS that should use the tokens above.
 
