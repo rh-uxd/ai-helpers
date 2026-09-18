@@ -70,6 +70,111 @@ get_description() {
   echo "$desc"
 }
 
+# Read a simple single-line metadata field from skill frontmatter.
+get_frontmatter_field() {
+  local file="$1"
+  local field="$2"
+  sed -n '/^---$/,/^---$/p' "$file" | sed -n "s/^${field}: *//p" | head -1 | sed 's/^"//;s/"$//'
+}
+
+# Return a short summary from a markdown section when explicit metadata is absent.
+# The optional trailing s supports legacy singular headings too.
+get_section_summary() {
+  local file="$1"
+  local heading="$2"
+  python3 - "$file" "$heading" <<'PY'
+import pathlib
+import re
+import sys
+
+path = pathlib.Path(sys.argv[1])
+heading = re.escape(sys.argv[2])
+section = re.compile(rf"^##+ {heading}s?(?:\s|$)")
+next_section = re.compile(r"^##+ ")
+parts = []
+found = False
+
+for raw_line in path.read_text(encoding="utf-8").splitlines():
+    if section.match(raw_line):
+        found = True
+        continue
+    if found and next_section.match(raw_line):
+        break
+    if found and raw_line.strip():
+        line = re.sub(r"[|`*_]", "", raw_line)
+        line = re.sub(r"^[-# ]+", "", line)
+        if not line.startswith("---"):
+            parts.append(line)
+
+summary = re.sub(r"\s+", " ", " ".join(parts)).strip()
+if len(summary) > 96:
+    summary = summary[:93] + "..."
+print(summary)
+PY
+}
+
+get_skill_audience() {
+  local skill_file="$1"
+  local plugin_dir="$2"
+  local category="$3"
+  local value
+  value=$(get_frontmatter_field "$skill_file" "audience")
+  if [ -n "$value" ]; then
+    echo "$value"
+  elif [ "$category" = "workshop" ]; then
+    echo "Contributors and maintainers"
+  elif [[ "$plugin_dir" == *"patternfly"* ]]; then
+    echo "PatternFly designers and developers"
+  else
+    echo "UXD practitioners"
+  fi
+}
+
+get_skill_inputs() {
+  local skill_file="$1"
+  local value
+  value=$(get_frontmatter_field "$skill_file" "inputs")
+  [ -n "$value" ] || value=$(get_section_summary "$skill_file" "Input")
+  [ -n "$value" ] || value="Task context"
+  echo "$value" | tr '|' ' '
+}
+
+get_skill_outputs() {
+  local skill_file="$1"
+  local value
+  value=$(get_frontmatter_field "$skill_file" "outputs")
+  [ -n "$value" ] || value=$(get_section_summary "$skill_file" "Output")
+  [ -n "$value" ] || value="Structured result"
+  echo "$value" | tr '|' ' '
+}
+
+# Classifies prompt footprint from words in the skill and its colocated references.
+# This is a relative comparison metric, not a model billing estimate.
+get_skill_token_cost() {
+  local skill_dir="$1"
+  local words tokens size
+  words=$(python3 - "$skill_dir" <<'PY'
+import pathlib
+import re
+import sys
+
+root = pathlib.Path(sys.argv[1])
+count = 0
+for path in sorted(root.rglob("*")):
+    if path.is_file() and path.suffix in {".md", ".yaml", ".yml"}:
+        count += len(re.findall(r"\S+", path.read_text(encoding="utf-8")))
+print(count)
+PY
+  )
+  words=${words:-0}
+  tokens=$(( (words * 13 + 9) / 10 ))
+  if [ "$tokens" -le 1000 ]; then size="S";
+  elif [ "$tokens" -le 3000 ]; then size="M";
+  elif [ "$tokens" -le 10000 ]; then size="L";
+  else size="XL"; fi
+  echo "$size"
+}
+
 # First sentence only for table display
 get_desc_first_sentence() {
   local desc="$1"
@@ -327,6 +432,32 @@ HEADER
       echo "- Workshop: ${workshop_eval}/${workshop_total} (${workshop_pct}%)"
     fi
   fi
+
+  echo ""
+  echo "---"
+  echo ""
+  echo "## Skill discovery matrix"
+  echo ""
+  echo "Generated from skill frontmatter and section headings. Token cost is a relative prompt-footprint size, not runtime usage or a model billing estimate. See contributor guidance for size ranges and methodology."
+  echo ""
+  echo "| Skill | Audience | Inputs | Outputs | Token cost |"
+  echo "|---|---|---|---|---|"
+  for plugin_dir in plugins/*/ plugins/*/*/; do
+    [ -f "${plugin_dir}.claude-plugin/plugin.json" ] || continue
+    plugin=$(basename "$plugin_dir")
+    is_listed "$plugin" || continue
+    plugin_category=$(get_plugin_json_field "$plugin_dir" "category")
+    [ -d "${plugin_dir}skills" ] || continue
+    for skill_dir in "${plugin_dir}skills"/*/; do
+      [ -f "${skill_dir}SKILL.md" ] || continue
+      skill_name=$(basename "$skill_dir")
+      audience=$(get_skill_audience "${skill_dir}SKILL.md" "$plugin_dir" "$plugin_category")
+      inputs=$(get_skill_inputs "${skill_dir}SKILL.md")
+      outputs=$(get_skill_outputs "${skill_dir}SKILL.md")
+      token_cost=$(get_skill_token_cost "$skill_dir")
+      echo "| \`${skill_name}\` | ${audience} | ${inputs} | ${outputs} | ${token_cost} |"
+    done
+  done
 } > "$OUTPUT"
 
 echo "Generated $OUTPUT"
