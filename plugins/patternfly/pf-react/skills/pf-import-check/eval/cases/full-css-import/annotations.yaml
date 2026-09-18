@@ -1,0 +1,5 @@
+expect_violations: true
+violation_type: full-css-import
+invalid_import: "patternfly/patternfly.css"
+correct_import: "@patternfly/react-core/dist/styles/base.css"
+bundle_issue: true

@@ -1,0 +1,14 @@
+import React from 'react';
+import '@patternfly/patternfly/patternfly.css';
+import { Page, PageSection } from '@patternfly/react-core';
+import { ChartDonut } from '@patternfly/react-charts/victory';
+
+const App = () => (
+  <Page>
+    <PageSection>
+      <ChartDonut data={[]} />
+    </PageSection>
+  </Page>
+);
+
+export default App;
