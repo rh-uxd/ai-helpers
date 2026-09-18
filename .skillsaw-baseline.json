@@ -1,8 +1,22 @@
 {
   "version": "1",
-  "generated_by": "skillsaw 0.16.0",
-  "generated_at": "2026-07-15T14:54:33.559979+00:00",
+  "generated_by": "skillsaw 0.20.0",
+  "generated_at": "2026-09-18T18:50:49.473113+00:00",
   "violations": [
+    {
+      "fingerprint": "43d787e626653fb4",
+      "rule_id": "agentskill-unreferenced-files",
+      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-export/package-lock.json",
+      "message": "'package-lock.json' is never referenced from SKILL.md (directly or transitively) \u2014 unreferenced files are dead weight and can hide unreviewed behavior",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "cc2b16a0872a80f1",
+      "rule_id": "claude-marketplace-registration",
+      "file_path": ".claude-plugin/marketplace.json",
+      "message": "Plugin 'uxd-research' not registered in marketplace.json",
+      "severity": "error"
+    },
     {
       "fingerprint": "34d9d2f90ed49481",
       "rule_id": "content-broken-internal-reference",
@@ -36,6 +50,14 @@
       "severity": "warning"
     },
     {
+      "fingerprint": "39a0dc67c58d754d",
+      "rule_id": "content-negative-only",
+      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-evaluate/references/playwright-rules.md",
+      "line": 148,
+      "message": "Negative-only instruction without alternative: 'NEVER use                       alone as proof that a feature works. Elements ca'",
+      "severity": "warning"
+    },
+    {
       "fingerprint": "fb697ca3ac739977",
       "rule_id": "content-placeholder-text",
       "file_path": "plugins/patternfly/pf-workshop/skills/pf-figma-diff/references/template-detailed-report.md",
@@ -60,12 +82,101 @@
       "severity": "warning"
     },
     {
+      "fingerprint": "27dde9a8b36094a2",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/uxd-workshop/skills/uxd-discovery/SKILL.md",
+      "line": 110,
+      "message": "Weak language (non-actionable): 'note that' \u2014 Restructure \u2014 state the constraint directly",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "9b528a6eced6410e",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/uxd-workshop/skills/uxd-discovery/SKILL.md",
+      "line": 202,
+      "message": "Weak language (non-actionable): 'Note that' \u2014 Restructure \u2014 state the constraint directly",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "2cd3ba3d20182916",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/uxd-workshop/skills/uxd-research-heuristic-eval/SKILL.md",
+      "line": 266,
+      "message": "Weak language (non-actionable): 'Note that' \u2014 Restructure \u2014 state the constraint directly",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "eb86a8becc1fe874",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/uxd-workshop/skills/uxd-design-handoff/SKILL.md",
+      "line": 202,
+      "message": "Weak language (non-actionable): 'Note that' \u2014 Restructure \u2014 state the constraint directly",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "2aecdf250f888fd4",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-component-reuse-check/SKILL.md",
+      "line": 65,
+      "message": "Weak language (vagueness): 'correctly' \u2014 Remove 'correctly' \u2014 describe what correct behavior looks like",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "33d0edc0545a3d26",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-screenshot-mapping/SKILL.md",
+      "line": 106,
+      "message": "Weak language (non-actionable): 'note that' \u2014 Restructure \u2014 state the constraint directly",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "f1f84008d08caff6",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-audit/SKILL.md",
+      "line": 27,
+      "message": "Weak language (vagueness): 'correctly' \u2014 Remove 'correctly' \u2014 describe what correct behavior looks like",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "79bd09a62102c442",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-audit/SKILL.md",
+      "line": 30,
+      "message": "Weak language (vagueness): 'correctly' \u2014 Remove 'correctly' \u2014 describe what correct behavior looks like",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "fb744686a2788ae4",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-audit/SKILL.md",
+      "line": 37,
+      "message": "Weak language (vagueness): 'correctly' \u2014 Remove 'correctly' \u2014 describe what correct behavior looks like",
+      "severity": "warning"
+    },
+    {
+      "fingerprint": "9d4f5775458d0723",
+      "rule_id": "content-weak-language",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-test-gen/SKILL.md",
+      "line": 27,
+      "message": "Weak language (vagueness): 'correctly' \u2014 Remove 'correctly' \u2014 describe what correct behavior looks like",
+      "severity": "warning"
+    },
+    {
       "fingerprint": "895e14a1f6d9b680",
       "rule_id": "context-budget",
       "file_path": "plugins/uxd-workshop/skills/uxd-research-heuristic-eval/SKILL.md",
-      "message": "Estimated 3,459 tokens exceeds skill warn limit of 3,000",
+      "message": "Estimated 5,738 tokens exceeds skill warn limit of 3,000",
       "severity": "warning",
-      "value": 3459,
+      "value": 5738,
+      "baseline_mode": "ceiling"
+    },
+    {
+      "fingerprint": "f3a098eddc588df6",
+      "rule_id": "context-budget",
+      "file_path": "plugins/uxd-prototype/skills/uxd-prototype-create/SKILL.md",
+      "message": "Estimated 4,090 tokens exceeds skill warn limit of 3,000",
+      "severity": "warning",
+      "value": 4090,
       "baseline_mode": "ceiling"
     },
     {
@@ -87,10 +198,19 @@
       "baseline_mode": "ceiling"
     },
     {
-      "fingerprint": "3beaa578f28be07a",
+      "fingerprint": "718e14d13d4a3ba1",
+      "rule_id": "context-budget",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-screenshot-mapping/SKILL.md",
+      "message": "Estimated 3,124 tokens exceeds skill warn limit of 3,000",
+      "severity": "warning",
+      "value": 3124,
+      "baseline_mode": "ceiling"
+    },
+    {
+      "fingerprint": "3d34cfe4eee58730",
       "rule_id": "context-budget",
       "file_path": "plugins/patternfly/pf-design-audit/skills/pf-css-token-check/SKILL.md",
-      "message": "Estimated 3,030 tokens exceeds skill warn limit of 3,000",
+      "message": "Estimated 3,003 tokens exceeds skill warn limit of 3,000",
       "severity": "warning",
       "value": 3003,
       "baseline_mode": "ceiling"
@@ -121,6 +241,1630 @@
       "severity": "warning",
       "value": 3906,
       "baseline_mode": "ceiling"
+    },
+    {
+      "fingerprint": "b7b7b41e46a5ce2e",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-export/SKILL.md",
+      "line": 4,
+      "message": "description should start with an action verb",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "2f6e0ba0edf238de",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-export/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "7623e93de38443eb",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-export/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "ef239aada5d8bcf8",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-export/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "da3a085f7bce1191",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-discovery/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e6b8f19670106285",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-discovery/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "5002e986caa86a0b",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-discovery/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "bfd7ed1861ffccb6",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-evaluate-design-heuristics/SKILL.md",
+      "line": 3,
+      "message": "description should start with an action verb",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "6e86955aa7ac8118",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-evaluate-design-heuristics/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "1e258c636998e474",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-evaluate-design-heuristics/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "b84f74429bd8326b",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-evaluate-design-heuristics/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "a8975b9c33b021ce",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-publish/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "cdd32d26bb35ce9a",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-publish/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "7ec02d27a47f1227",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-publish/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "75f28e10ec9fddc3",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-research-heuristic-eval/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "61dd16d735ca9361",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-research-heuristic-eval/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "26436710f676a88f",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-research-heuristic-eval/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "9f5fc804144efecd",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-figma-read/SKILL.md",
+      "line": 3,
+      "message": "description should start with an action verb",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "28412976dc888c3d",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-figma-read/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "357b47ff7a7cc788",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-figma-read/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "ee83024f4d8b2262",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-figma-read/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "475a1926fe1d68fe",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-figma-read/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "43bcc0dd043f53fa",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-evaluate/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "80604d1537c9c18c",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-evaluate/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "4e4e485568548ab3",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-prototype-evaluate/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "830f18432dbfb7fc",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-design-handoff/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "c5564cfc178af07c",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-design-handoff/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e6794dd12b3d12e4",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-workshop/skills/uxd-design-handoff/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "53fed2d0e037b350",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-prototype/skills/uxd-prototype-create/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "8671c47d376d6db6",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-prototype/skills/uxd-prototype-create/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "078fd16421fbd481",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/uxd-prototype/skills/uxd-prototype-create/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "fecf7e76c635ddb5",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-deploy/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "43d67ee564a6e8b9",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-deploy/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "c6a3e47481ffc6f4",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-deploy/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "34c005768472892e",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-deploy/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "51b99d0e6daab15c",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "42360f76cc4fc1d8",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "428d8c0fc8d3d0ba",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-test-gen/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "db51c739821662be",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-project-gen/SKILL.md",
+      "line": 3,
+      "message": "description should start with an action verb",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "bded240f9cd06313",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-project-gen/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "41344121ac5ebc01",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-project-gen/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "2562285db282ee33",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-project-gen/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "228c68486281219b",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-project-gen/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e73271a9afaeea35",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "87b535e08e56628e",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "58011aee3cac47be",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-import-check/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "ba6ef83e635b6169",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-form-gen/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "afae20ff7e9ce26a",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-form-gen/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "6467fc6281615d47",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-form-gen/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "4d0fe49fd8e454ef",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-table-gen/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "76d0804ee04f0a91",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-table-gen/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "3ddb7686bddc07cc",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-table-gen/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "536c77b17c27e787",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-design-comments-setup/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "509d86a40dd115b5",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-design-comments-setup/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "ca036d375709764d",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-design-comments-setup/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e82b18d67c445608",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-design-comments-setup/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "dbba4c9887a57703",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-component-reuse-check/SKILL.md",
+      "line": 3,
+      "message": "description should start with an action verb",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "6b159a83984c5320",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-component-reuse-check/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "cdffe361ff8c46d1",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-component-reuse-check/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "9cbc1613b8f996c5",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-component-reuse-check/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "f3687f05f5a7e989",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-component-reuse-check/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e51673afa57ef80e",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-component-check/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e4fd4e480c381613",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-component-check/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "2876ae6dcceea5ef",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-component-check/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "a165e1bb341e1c4c",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-component-check/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "c9d9ea730cbea578",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-chart-gen/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "d194c89812773ebf",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-chart-gen/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "6f35c1985e537336",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-react/skills/pf-chart-gen/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "7ba5728c22149bd0",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-screenshot-mapping/SKILL.md",
+      "line": 3,
+      "message": "description should start with an action verb",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "340eea739ff1a61d",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-screenshot-mapping/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "c21513f4edf09026",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-screenshot-mapping/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "a3c9928fc7c825f8",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-screenshot-mapping/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "ebd704c8a14ad350",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-screenshot-mapping/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "063b5543aca090a5",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-screenshot-mapping/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "54653864d5be9165",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-figma-design-mode/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "6ae78c2004e0c341",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-figma-design-mode/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "362e337ad97c73e1",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-figma-design-mode/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "741ce8ee614d57ba",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-figma-design-mode/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "5228417f21006eb0",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-guide/skills/pf-figma-design-mode/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "320e4d446983e43e",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-ai-audit/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "63be01f626c1d551",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-ai-audit/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "beda2a4d519c3051",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-ai-audit/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "54a1e9cb0b1bfa88",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-ai-audit/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "991f921540146a30",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-ai-audit/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "bc82408033f62e12",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "f0074e9bfef2498b",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "0309938e4c477e84",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "474574ac19c7e6ac",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-color-scan/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "ddad06a23e5b9d9f",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-check/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "004e8b2a433b0652",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-check/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "8b1b7a948db62194",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-check/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "2ff389f12f0e947b",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-check/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "84a2b61107d074af",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-css-token-check/SKILL.md",
+      "line": 3,
+      "message": "description should start with an action verb",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "b9c11e07db97ab18",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-css-token-check/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "f6cd350d4d8a22f0",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-css-token-check/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "c5bdb0203351c8ed",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-css-token-check/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "61e9e557abb2a3f4",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-token-check/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "53a6f8c902910dc1",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-token-check/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "f04489609039e731",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-token-check/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "f4bfe19c0beea5fd",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-token-check/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "dac6d0fdaa35e2ce",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-figma-token-check/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "0d3651670b1ea891",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-icon-finder/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "5e7e9466dc5db971",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-icon-finder/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "60d9350b5a659a71",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-icon-finder/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "3aed7f9e2b9db23c",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-design-audit/skills/pf-icon-finder/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "7ff9cb00652e6598",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-keyboard/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "f9e893d53f988079",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-keyboard/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "287949d387c8a198",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-keyboard/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "fd38077001b413bb",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-keyboard/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "69932d063121c750",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-keyboard/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "a9676bfbcb2ae913",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-audit/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "3a240927e0b6f036",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-audit/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "a199026c5a9779e1",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-audit/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "0030c2ca76479dd3",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-test-gen/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "bc92f998d87fe2a6",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-test-gen/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e078a3bc7a80d186",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-test-gen/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "b7d7c7f380d5ef35",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-a11y/skills/pf-a11y-test-gen/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "d5d747c6d233d35f",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-migration/skills/pf-release-candidate-update/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "680e35634833de4e",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-migration/skills/pf-release-candidate-update/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "9e79b48c555c5c68",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-migration/skills/pf-release-candidate-update/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "55b0f7a8dce8b2f9",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-migration/skills/pf-release-candidate-update/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "1ee0d869ea2efbf2",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-migration/skills/pf-react-migration-scan/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "0f3378266a4c9f81",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-migration/skills/pf-react-migration-scan/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "322f8462481bfc1d",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-migration/skills/pf-react-migration-scan/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "ced4d65af8a111d2",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-migration/skills/pf-react-migration-scan/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "43c68ac5b225fb0b",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "732ef9b83f1735a7",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "0cfd9a65b84c049b",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-migration/skills/pf-css-migration-scan/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "13cbc119b4741e0e",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-code-review/skills/pf-security-scan/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "614ec6c59f931387",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-code-review/skills/pf-security-scan/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "440eabdfc6df1c75",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-code-review/skills/pf-security-scan/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "fd0c68e6849d7735",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-code-review/skills/pf-security-scan/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "c1a85743b19fdd3c",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-code-review/skills/pf-review/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "fad8cc6be614bff3",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-code-review/skills/pf-review/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e333b2ac383c262b",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-code-review/skills/pf-review/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e6eda0b486501aec",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-code-review/skills/pf-review/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "4876c5daf6c30291",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-org-version-update/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "0cb066b87b13a9ea",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-org-version-update/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "9a5974057b2f7f7a",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-org-version-update/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "87c9e7e63117b02f",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-org-version-update/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "21f78855ed4e0db2",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-create-issue/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "8d9b144d6b804d05",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-create-issue/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "55ae6395f3fae04b",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-create-issue/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "17584f19e7eee54c",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-create-issue/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "a0a1e8aa10e6a356",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-create-issue/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "217c9fbd2f43f5a8",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-prototype-mode/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "91a7e46caf48bf33",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-prototype-mode/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "06450b7454325635",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-prototype-mode/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "6e228f9cec111105",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-prototype-mode/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "cc55c0cd7c35a529",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-prototype-mode/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e2c481dfd4012dd8",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-analytics-repo-pruning/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "6159108b6ae9fdba",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-analytics-repo-pruning/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "fb1b4a166a010a53",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-analytics-repo-pruning/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "a1b2fc9caf1d8d8e",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-analytics-repo-pruning/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e3cc7eac36a4ad9f",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-analytics-repo-pruning/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "50bccaeff270b2c4",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-semantic-release-debug/SKILL.md",
+      "line": 3,
+      "message": "description should start with an action verb",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "1541ea0c3e243c50",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-semantic-release-debug/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "065fb587e7c7edd7",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-semantic-release-debug/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "ae7782c8b323fb28",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-semantic-release-debug/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "9ad44f184ba53b13",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-semantic-release-debug/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "4f277d9e716dd3f2",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-semantic-release-debug/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "5d50009217006c6a",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-write-example-description/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "8b07d84d6623dea6",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-write-example-description/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "08a3a9d82a910160",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-write-example-description/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "2a6f870487f284c9",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-quarterly-report-gen/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "9088ef722cbacaea",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-quarterly-report-gen/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "a291a0b953eb0192",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-quarterly-report-gen/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "6350187f71fd3bfa",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-summarize-pr-reviews/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "19359cc83b6c879b",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-summarize-pr-reviews/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "558fa4c066099b3d",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-summarize-pr-reviews/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "26eb90feb8a82907",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-summarize-pr-reviews/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "9411673c94eedc32",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-summarize-pr-reviews/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "6447cd21d72152c3",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-token-build/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "7dc865d16acdf31d",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-token-build/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "76ee33b4a7e17042",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-token-build/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "c7c5b71bf86078de",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-token-build/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "3f86d5ef0c16f75f",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-token-build/SKILL.md",
+      "line": 1,
+      "message": "missing a fenced output example",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "81c97457071958ac",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-content-review/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "c767fc40d46e05c4",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-content-review/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "04c7fcdcb434e663",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-content-review/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "3e5108dfe1ab0fa8",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-content-review/SKILL.md",
+      "line": 1,
+      "message": "missing an example or output section",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "5ee459740bec6251",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-figma-diff/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e80dd0cf378e86d6",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-figma-diff/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "d4f249a2ca82f187",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-figma-diff/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "69dd767b52e4ca93",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-duplicate-epic/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "b1e24b24fd605899",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-duplicate-epic/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "1fbf470bd20fd014",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-duplicate-epic/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "68a158aa276cde82",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-bug-triage/SKILL.md",
+      "line": 3,
+      "message": "description should start with an action verb",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "4c987ba4e8503e73",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-bug-triage/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "b8b07f9713b5cefd",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-bug-triage/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "250ca536c88c3416",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-bug-triage/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "b48d535b17655ab9",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-modifier-scan/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "68059c408f27587e",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-modifier-scan/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "c710147b4bf54107",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-modifier-scan/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "b8eab1e45b336a18",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-summarize-jira-issues/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "5817c09d885325a2",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-summarize-jira-issues/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "8e2e0b4b3df67753",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-summarize-jira-issues/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "d3dfca725af081ad",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-css-var-scan/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "d6b2e3b48b1a6a96",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-css-var-scan/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "e0f6c66c49b92c74",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-css-var-scan/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "d1bc563831ec932d",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-rhds-icon-finder/SKILL.md",
+      "line": 1,
+      "message": "missing audience metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "b4e617a8e4fa3c59",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-rhds-icon-finder/SKILL.md",
+      "line": 1,
+      "message": "missing inputs metadata",
+      "severity": "error"
+    },
+    {
+      "fingerprint": "8334a0a7e9af1831",
+      "rule_id": "uxd-skill-quality",
+      "file_path": "plugins/patternfly/pf-workshop/skills/pf-rhds-icon-finder/SKILL.md",
+      "line": 1,
+      "message": "missing outputs metadata",
+      "severity": "error"
     }
   ]
 }

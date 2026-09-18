@@ -218,17 +218,19 @@ graph LR
 
 ### Pre-PR quality gate
 
-Before opening a PR that adds or changes a skill, run the contributor audit against the changed files:
+Before opening a PR that adds or changes a skill, ask your coding assistant to
+run the project-local `uxd-skill-quality-check` skill from `.agents/skills/`.
+It explains the quality requirements, runs the same Skillsaw configuration and
+custom rules used by CI against only the changed skills, and can help fix new
+findings. If your assistant does not support project-local skills, run the
+repository checks directly:
 
 ```bash
-make skill-audit
+make validate
+make lint
 ```
 
-The command automatically finds changed and untracked skill files. Pass `SKILLS="path/to/SKILL.md"` only when you want a targeted audit. The audit checks frontmatter, naming, description quality, metadata completeness, line count, concrete output examples, consumer eval coverage, and estimated token footprint. A passing run writes `.skill-audit.json` as a verifiable watermark. CI reruns the audit and checks the watermark against changed skill file hashes. Also run `make validate`; the audit does not replace repository validation, linting, or security checks.
-
-The audit requires Python 3 for deterministic token breakdowns and watermark verification.
-
-The audit reports core skill, reference, eval, and other supporting-content token estimates. It classifies total footprint as `S`, `M`, `L`, or `XL` and prints non-blocking recommendations when the core skill is too large, supporting content has no `references/` location, or the file is approaching the line limit. These recommendations help contributors optimize the default instructions without blocking otherwise valid work.
+Skillsaw checks built-in structure, description quality, context budgets, eval formats, secrets, and repository integrity. The repository's custom Skillsaw rule also checks skill prefixes, required metadata, examples, line limits, and consumer eval coverage. Existing findings are tracked in `.skillsaw-baseline.json`; new findings introduced by a PR are reported in CI. Also run `make security` when changing bundled scripts or skill content.
 
 ### Quality checklist
 
@@ -237,13 +239,15 @@ Before opening your PR, verify:
 - [ ] Skill name uses the correct prefix (`uxd-` for UXD skills, `pf-` for PF skills)
 - [ ] Frontmatter has `name` and `description` (`name` matches the directory name)
 - [ ] Description follows the [formula](CONTRIBUTING-SKILLS.md#writing-descriptions): `[Action verb] [what it does]. [Use when + triggers.]`
+- [ ] Frontmatter includes `audience`, `inputs`, and `outputs` metadata
 - [ ] Tool-agnostic — no Claude-specific or Cursor-specific references
 - [ ] Under 500 lines (shorter is better)
+- [ ] Includes an example or output section with a fenced output example
 - [ ] Tested locally on a real scenario
 - [ ] If new plugin: `.claude-plugin/` and `.cursor-plugin/` manifests are identical
-- [ ] Consumer-facing skills have an eval colocated at `skills/<skill-name>/eval/`
+- [ ] Consumer-facing skills have an eval with `dataset:` and at least one case under `skills/<skill-name>/eval/`
 - [ ] Did not edit auto-generated docs (`PLUGINS.md`, README plugin table/badges, CONTRIBUTING-SKILLS plugin table, per-plugin READMEs)
-- [ ] `make lint` passes locally (optional — CI runs it automatically)
+- [ ] `make lint` passes locally
 
 ## Your first contribution
 
