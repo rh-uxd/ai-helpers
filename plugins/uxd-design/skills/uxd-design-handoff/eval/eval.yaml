@@ -12,7 +12,7 @@ execution:
 runner:
   type: claude-code
   plugin_dirs:
-    - plugins/uxd-workshop
+    - plugins/uxd-design
 
 models:
   skill: claude-sonnet-4-6

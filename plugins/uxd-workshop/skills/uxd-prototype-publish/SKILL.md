@@ -207,7 +207,7 @@ Uses Atlassian MCP if available; otherwise skip silently.
 Set `.artifacts/{ID}/metadata.json` `status` to `submitted` with `submission.target`, `date`, and `url`. A git-URL `--target` stores `submission.target` as `"repo"`; the MR base lives in `workspace-analysis.json` as `upstream_url`.
 
 ```bash
-python3 "${CLAUDE_SKILL_DIR}/../uxd-prototype-create/scripts/frontmatter.py" set ".artifacts/{ID}/rfe-snapshot.md" \
+python3 "${CLAUDE_SKILL_DIR}/../../../uxd-prototype/skills/uxd-prototype-create/scripts/frontmatter.py" set ".artifacts/{ID}/rfe-snapshot.md" \
   status="submitted" updated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ```
 
