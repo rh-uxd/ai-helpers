@@ -1,0 +1,24 @@
+expect_issues: true
+issue_categories:
+  - conditional_render
+expected_findings:
+  - id: error-count
+    file: StatusPanel.tsx
+    line: 27
+    signals: ['errorCount', '&&', '0']
+  - id: warning-count
+    file: StatusPanel.tsx
+    line: 31
+    signals: ['warningCount', '&&', '0']
+  - id: empty-items
+    file: StatusPanel.tsx
+    line: 35
+    signals: ['items.length', '&&', '0']
+notes: |
+  Conditional rendering traps with && operator:
+  - errorCount && <Alert> renders 0 (the number) when errorCount is 0
+  - warningCount && <Label> renders 0 when warningCount is 0
+  - items.length && <ul> renders 0 when items is empty array
+  All three should use ternary or Boolean() or > 0 check.
+  The message && <p> is fine because message is a string (empty string
+  renders nothing, which is correct).

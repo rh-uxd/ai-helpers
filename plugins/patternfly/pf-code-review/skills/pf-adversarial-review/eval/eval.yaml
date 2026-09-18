@@ -1,0 +1,183 @@
+name: pf-adversarial-review-eval
+description: Evaluate pf-adversarial-review's detection of edge cases and missing defensive code in PF components
+
+skill: pf-code-review:pf-adversarial-review
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic review request
+    - annotations.yaml: expect_issues (true/false), issue_categories list, and expected_findings with fixture-specific evidence and locations
+    - A .tsx fixture file the prompt references
+
+outputs:
+  - path: artifacts
+    schema: |
+      The agent produces a severity-grouped report identifying edge cases,
+      missing defensive code, and PF component contract violations.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: flags_missing_defensive_code
+    description: Identifies missing optional chaining, default values, or type guards
+    if: "'missing_defensive' in annotations.get('issue_categories', [])"
+    check: |
+      import re
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      findings = ann.get("expected_findings", [])
+      if not findings:
+          return False, "Test case missing expected_findings annotations"
+      missing = []
+      for finding in findings:
+          location = re.compile(
+              re.escape(finding["file"]) + r".{0,80}(?:line\s*)?" + str(finding["line"]),
+              re.IGNORECASE | re.DOTALL,
+          )
+          evidence = all(re.search(signal, text, re.IGNORECASE) for signal in finding["signals"])
+          if not location.search(text) or not evidence:
+              missing.append(finding["id"])
+      if missing:
+          return False, f"Missing fixture-specific findings or locations: {', '.join(missing)}"
+      return True, f"Identified all {len(findings)} expected defensive-code findings with locations"
+
+  - name: flags_pf_contract_violation
+    description: Identifies PF-specific component misuse that fails silently
+    if: "'pf_contract' in annotations.get('issue_categories', [])"
+    check: |
+      import re
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      findings = ann.get("expected_findings", [])
+      if not findings:
+          return False, "Test case missing expected_findings annotations"
+      missing = []
+      for finding in findings:
+          location = re.compile(
+              re.escape(finding["file"]) + r".{0,80}(?:line\s*)?" + str(finding["line"]),
+              re.IGNORECASE | re.DOTALL,
+          )
+          evidence = all(re.search(signal, text, re.IGNORECASE) for signal in finding["signals"])
+          if not location.search(text) or not evidence:
+              missing.append(finding["id"])
+      if missing:
+          return False, f"Missing fixture-specific findings or locations: {', '.join(missing)}"
+      return True, f"Identified all {len(findings)} expected PatternFly contract findings with locations"
+
+  - name: flags_conditional_render_issue
+    description: Identifies unsafe conditional rendering with && operator
+    if: "'conditional_render' in annotations.get('issue_categories', [])"
+    check: |
+      import re
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      findings = ann.get("expected_findings", [])
+      if not findings:
+          return False, "Test case missing expected_findings annotations"
+      missing = []
+      for finding in findings:
+          location = re.compile(
+              re.escape(finding["file"]) + r".{0,80}(?:line\s*)?" + str(finding["line"]),
+              re.IGNORECASE | re.DOTALL,
+          )
+          evidence = all(re.search(signal, text, re.IGNORECASE) for signal in finding["signals"])
+          if not location.search(text) or not evidence:
+              missing.append(finding["id"])
+      if missing:
+          return False, f"Missing fixture-specific findings or locations: {', '.join(missing)}"
+      return True, f"Identified all {len(findings)} expected conditional-render findings with locations"
+
+  - name: has_severity_grouping
+    description: Output groups findings by severity level
+    if: "annotations.get('expect_issues') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      severity_patterns = [
+          re.compile(r'(critical|crash|data\s+loss)', re.IGNORECASE),
+          re.compile(r'(high[\s-]severity|high[\s-]impact|silent\s+fail|broken\s+ui)', re.IGNORECASE),
+          re.compile(r'(medium|degrade)', re.IGNORECASE),
+      ]
+      matches = sum(1 for p in severity_patterns if p.search(text))
+      if matches >= 2:
+          return True, f"Report groups findings by severity ({matches}/3 levels found)"
+      return False, f"Report missing severity grouping ({matches}/3 levels found)"
+
+  - name: suggests_pf6_fixes
+    description: Recommends PF6 components for fixes (Alert, Spinner, EmptyState, Truncate)
+    if: "annotations.get('expect_issues') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      pf6_fixes = re.compile(
+          r'(recommend|suggest|use|consider|add|replace|wrap)\b.*\b(Alert|Spinner|Skeleton|EmptyState|Truncate|ErrorBoundary|isTruncated)\b',
+          re.IGNORECASE
+      )
+      if pf6_fixes.search(text):
+          return True, "Recommends specific PF6 components for fixes"
+      return False, "Did not recommend PF6 components (Alert, Spinner, EmptyState, etc.) for fixes"
+
+  - name: no_false_positives
+    description: Does not flag well-defended code as having edge-case issues
+    if: "annotations.get('expect_issues') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      affirmative = re.compile(
+          r'\b(?:found|detected|identified|flagged|reported)\b.{0,80}\b(?:critical|high)\b.{0,30}\b(?:issue|finding|problem)s?\b'
+          r'|\b(?:critical|high)\b.{0,30}\b(?:issue|finding|problem)s?\b.{0,80}\b(?:found|detected|identified|flagged|reported)\b',
+          re.IGNORECASE,
+      )
+      negation = re.compile(r'\b(?:no|none|without|zero)\b', re.IGNORECASE)
+      for sentence in re.split(r'(?<=[.!?])\s+|\n+', text):
+          if not negation.search(sentence) and affirmative.search(sentence):
+              return False, "False positive — flagged well-defended code as having critical/high issues"
+      return True, "Correctly recognized well-defended component without false critical/high findings"
+
+thresholds:
+  flags_missing_defensive_code:
+    min_pass_rate: 0.67
+  flags_pf_contract_violation:
+    min_pass_rate: 0.67
+  flags_conditional_render_issue:
+    min_pass_rate: 0.67
+  has_severity_grouping:
+    min_pass_rate: 0.67
+  suggests_pf6_fixes:
+    min_pass_rate: 0.67
+  no_false_positives:
+    min_pass_rate: 1.0
