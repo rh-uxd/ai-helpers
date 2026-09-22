@@ -1,6 +1,7 @@
 ---
 name: pf-ai-audit
-description: Apply Red Hat's AI design language to AI-powered features — chatbots, assistants, generation UIs. Use when building AI experiences that should follow Red Hat brand and UX patterns.
+description: Apply Red Hat's AI design language to AI-powered features — chatbots, assistants, generation UIs. Use when reviewing or building new AI experiences such as chatbots, AI assistants, or generative UIs that should follow Red Hat's brand compliant UX patterns.
+
 ---
 
 # Red Hat AI Experience Design Patterns
@@ -48,7 +49,6 @@ Every AI experience must follow these three principles (from `content/ai-design-
 **For AI-generated content**: Must include a label AND icon indicating content was created using AI.
 
 **Reference images:**
-- `assets/images/transparency-components.png` — Transparency component patterns
 - `assets/images/info-inline-alert-ai-related-features.png` — Inline alert info variant
 - `assets/images/warning-inline-alert-ai-related-features.png` — Inline alert warning variant
 - `assets/images/info-modal-alert-ai-related-features.png` — Toast alert info variant
@@ -106,7 +106,6 @@ All chatbots must use **Red Hat's robot icon** as their avatar (from `content/ch
 
 **Reference images:**
 - `assets/images/chatbot-avatar-robot.png` — Robot icon standard
-- `assets/images/patternfly-chatbot-ui-with-avatars.png` — PatternFly chatbot UI
 - `assets/images/avatar-color-variants-light-theme.png` — Light theme color variants
 - `assets/images/avatar-color-variants-dark-theme.png` — Dark theme color variants
 - `assets/images/chatbot-launch-buttons.png` — Launch button patterns
@@ -136,7 +135,6 @@ Don't use color coding or gradients to indicate AI (from `content/color.md` and 
 - `assets/images/do-not-color-code-ai-or-vary-from-rest-of-ui.png` — Don't vary styling
 - `assets/images/do-not-change-styling-or-use-gradients.png` — Don't change styling
 - `assets/images/do-not-change-color-based-on-emotion.png` — Don't use emotion colors
-- `assets/images/chat-message-dont-gradients.png` — Don't use gradients in chat
 
 ## Review Workflow
 
