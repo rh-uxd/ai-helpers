@@ -38,9 +38,6 @@ rules:
   content-weak-language:
     enabled: auto
     severity: warning
-  content-critical-position:
-    enabled: auto
-    severity: warning
   content-negative-only:
     enabled: auto
     severity: warning
@@ -53,9 +50,12 @@ rules:
   context-budget:
     enabled: auto
     severity: warning
+  uxd-skill-quality:
+    enabled: true
+    severity: error
 
-# No custom rules — use the built-in set
-custom-rules: []
+custom-rules:
+  - ./scripts/skillsaw_rules.py
 
 # CI: warn on new violations, don't block merge
 strict: false
