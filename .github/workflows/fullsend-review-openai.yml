@@ -1,0 +1,57 @@
+name: Fullsend Manual OpenAI PR Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to review"
+        required: true
+        type: number
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Install openshell
+        run: |
+          OPENSHELL_VERSION=0.0.116
+          OPENSHELL_SHA=d1155aa70042d3e2ee49dbfa15346b108b7c1d92
+          curl -LsSf --retry 3 --retry-delay 5 \
+            "https://raw.githubusercontent.com/NVIDIA/OpenShell/${OPENSHELL_SHA}/install.sh" \
+          | OPENSHELL_VERSION="v${OPENSHELL_VERSION}" sh
+
+      - name: Set up Fullsend
+        run: |
+          mkdir -p ~/fullsend-bin
+          cd ~/fullsend-bin
+          curl -fsSL -L https://github.com/fullsend-ai/fullsend/releases/download/v0.43.0/fullsend_0.43.0_linux_amd64.tar.gz | tar xz
+          echo "$PWD" >> "$GITHUB_PATH"
+
+      - name: Run Fullsend OpenAI review
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REVIEW_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.FULLSEND_OPENAI_API_KEY }}
+          REPO_FULL_NAME: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.inputs.pr_number }}
+          GITHUB_PR_URL: https://github.com/${{ github.repository }}/pull/${{ github.event.inputs.pr_number }}
+          PR_URL: https://github.com/${{ github.repository }}/pull/${{ github.event.inputs.pr_number }}
+          PRIOR_REVIEW_SHA: ""
+          PRIOR_REVIEW_PROVENANCE: ""
+          REVIEW_FINDING_SEVERITY_THRESHOLD: medium
+        run: |
+          fullsend run review \
+            --fullsend-dir .fullsend-openai \
+            --target-repo . \
+            --forge github \
+            --runtime pi \
+            --model openai/gpt-5.6-luna \
+            --output-dir "$GITHUB_WORKSPACE/fullsend-openai-output"
