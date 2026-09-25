@@ -51,7 +51,6 @@ jobs:
           GITHUB_PR_URL: https://github.com/${{ github.repository }}/pull/${{ github.event.inputs.pr_number }}
           PRIOR_REVIEW_SHA: ""
           PRIOR_REVIEW_PROVENANCE: ""
-          GOOGLE_APPLICATION_CREDENTIALS: /dev/null
         run: |
           fullsend run review \
             --fullsend-dir .fullsend \
