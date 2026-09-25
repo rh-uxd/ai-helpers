@@ -50,7 +50,7 @@ jobs:
           export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.gcp-credentials.json"
           echo "${{ secrets.GCP_CREDENTIALS }}" | base64 -d > "$GOOGLE_APPLICATION_CREDENTIALS"
           fullsend run review \
-            --fullsend-dir .fullsend \
+            --fullsend-dir .fullsend/claude \
             --target-repo . \
             --forge github \
             --model haiku \
