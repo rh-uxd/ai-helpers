@@ -1,4 +1,4 @@
-base: https://raw.githubusercontent.com/fullsend-ai/agents/main/harness/review.yaml#sha256=c259d94e7c50e5e01cb0fa38df2b70765f8e35beb7ad8bf006c9193a05589917
+base: https://raw.githubusercontent.com/fullsend-ai/agents/main/harness/review.yaml#sha256=6d55d6480cae1eb7d9b1e7fb1a58afe4c9e59ee24583bcee128a59958e8bca98
 
 description: "Fullsend review agent with Claude/Vertex"
 
