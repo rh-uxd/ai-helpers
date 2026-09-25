@@ -2,7 +2,6 @@ base: https://raw.githubusercontent.com/fullsend-ai/agents/main/harness/review.y
 agent: agents/review.md
 
 description: "Fullsend review agent with OpenAI Luna"
-policy: policies/base.yaml
 providers:
   - openai
 
