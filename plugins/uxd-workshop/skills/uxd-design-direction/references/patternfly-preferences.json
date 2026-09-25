@@ -1,0 +1,26 @@
+{
+  "version": "2",
+  "weightModel": {
+    "driftWeight": {
+      "1": "Close to the PatternFly target",
+      "2": "Small pattern drift",
+      "3": "Moderate structural or interaction drift",
+      "4": "Major mismatch",
+      "5": "Wrong surface or interaction model"
+    },
+    "overrideWeight": {
+      "1": "One-off exception",
+      "2": "Weak signal or manual stage only",
+      "3": "Candidate local preference",
+      "4": "Strong local default",
+      "5": "Explicit site standard"
+    }
+  },
+  "scopeModel": {
+    "project": "Evidence from one product only",
+    "multi-project": "Evidence confirmed across two or more products",
+    "org-candidate": "Cross-project pattern that may be promoted more broadly",
+    "org-standard": "Explicitly approved org-wide default"
+  },
+  "preferences": []
+}
