@@ -55,5 +55,5 @@ jobs:
             --target-repo . \
             --forge github \
             --runtime pi \
-            --model openai/gpt-5-nano \
+            --model openai/gpt-5.6-luna \
             --output-dir "$GITHUB_WORKSPACE/fullsend-openai-output"
