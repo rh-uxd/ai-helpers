@@ -51,9 +51,9 @@ jobs:
           GITHUB_PR_URL: https://github.com/${{ github.repository }}/pull/${{ github.event.inputs.pr_number }}
           PRIOR_REVIEW_SHA: ""
           PRIOR_REVIEW_PROVENANCE: ""
-          GOOGLE_APPLICATION_CREDENTIALS: $HOME/.gcp-credentials.json
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.home }}/.gcp-credentials.json
         run: |
-          touch $HOME/.gcp-credentials.json
+          touch $GOOGLE_APPLICATION_CREDENTIALS
           fullsend run review \
             --fullsend-dir .fullsend \
             --target-repo . \
