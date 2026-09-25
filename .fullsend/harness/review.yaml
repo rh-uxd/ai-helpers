@@ -1,0 +1,9 @@
+base: https://raw.githubusercontent.com/fullsend-ai/agents/main/harness/review.yaml#sha256=c259d94e7c50e5e01cb0fa38df2b70765f8e35beb7ad8bf006c9193a05589917
+
+description: "Fullsend review agent with Claude/Vertex"
+
+env:
+  sandbox:
+    PR_URL: ${{ PR_URL }}
+    REPO_FULL_NAME: ${{ REPO_FULL_NAME }}
+    REVIEW_FINDING_SEVERITY_THRESHOLD: ${{ REVIEW_FINDING_SEVERITY_THRESHOLD }}
