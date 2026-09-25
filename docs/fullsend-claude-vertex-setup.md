@@ -30,5 +30,5 @@ workflow for Fullsend PR reviews.
   validated.
 - The Vertex credential is personal and temporary; it must be replaced with a
   team-owned credential before broad adoption.
-- The OpenAI experiment is separate under `.fullsend-openai/` and does not change
+- The OpenAI experiment is separate under `.fullsend/openai/` and does not change
   this Claude/Vertex configuration.

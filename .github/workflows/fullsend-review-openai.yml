@@ -49,7 +49,7 @@ jobs:
           REVIEW_FINDING_SEVERITY_THRESHOLD: medium
         run: |
           fullsend run review \
-            --fullsend-dir .fullsend-openai \
+            --fullsend-dir .fullsend/openai \
             --target-repo . \
             --forge github \
             --runtime pi \
