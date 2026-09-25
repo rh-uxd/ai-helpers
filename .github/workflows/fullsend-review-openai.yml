@@ -48,6 +48,8 @@ jobs:
           PRIOR_REVIEW_PROVENANCE: ""
           REVIEW_FINDING_SEVERITY_THRESHOLD: medium
         run: |
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/fullsend-unused-gcp-credentials.json"
+          : > "$GOOGLE_APPLICATION_CREDENTIALS"
           fullsend run review \
             --fullsend-dir .fullsend/openai \
             --target-repo . \
