@@ -58,5 +58,5 @@ jobs:
             --target-repo . \
             --forge github \
             --model haiku \
-            --dangerously-skip-permissions \
+            --output-dir fullsend-output \
             --model haiku
