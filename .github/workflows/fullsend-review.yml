@@ -28,7 +28,11 @@ jobs:
 
       - name: Install openshell
         run: |
-          apt-get update && apt-get install -y openshell
+          OPENSHELL_VERSION=0.0.116
+          OPENSHELL_SHA=d1155aa70042d3e2ee49dbfa15346b108b7c1d92
+          curl -LsSf --retry 3 --retry-delay 5 \
+            "https://raw.githubusercontent.com/NVIDIA/OpenShell/${OPENSHELL_SHA}/install.sh" \
+          | OPENSHELL_VERSION="v${OPENSHELL_VERSION}" sh
 
       - name: Set up Fullsend
         run: |
