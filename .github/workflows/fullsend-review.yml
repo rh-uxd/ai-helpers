@@ -50,10 +50,12 @@ jobs:
           GITHUB_PR_URL: https://github.com/${{ github.repository }}/pull/${{ github.event.inputs.pr_number }}
           PRIOR_REVIEW_SHA: ""
           PRIOR_REVIEW_PROVENANCE: ""
-          GOOGLE_APPLICATION_CREDENTIALS: $HOME/.gcp-credentials.json
         run: |
-          echo "${{ secrets.GCP_CREDENTIALS }}" | base64 -d > $GOOGLE_APPLICATION_CREDENTIALS
+          export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.gcp-credentials.json"
+          echo "${{ secrets.GCP_CREDENTIALS }}" | base64 -d > "$GOOGLE_APPLICATION_CREDENTIALS"
           fullsend run review \
             --fullsend-dir .fullsend \
             --target-repo . \
-            --forge github
+            --forge github \
+            --model haiku \
+            --model haiku
