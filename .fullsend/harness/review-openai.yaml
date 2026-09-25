@@ -7,6 +7,9 @@ providers:
 
 policy: policies/base.yaml
 
+env:
+  host_files: []
+
 agents:
   - name: review
     model: openai/gpt-5.6-luna
