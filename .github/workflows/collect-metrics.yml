@@ -143,6 +143,7 @@ jobs:
 
           PLUGINS=$(find plugins -name 'plugin.json' -path '*/.claude-plugin/*' | wc -l | tr -d ' ')
           SKILLS=$(find plugins -name 'SKILL.md' | wc -l | tr -d ' ')
+          WORKSHOP_SKILLS=$(($(find plugins/uxd-workshop -name 'SKILL.md' 2>/dev/null | wc -l | tr -d ' ') + $(find plugins/patternfly/pf-workshop -name 'SKILL.md' 2>/dev/null | wc -l | tr -d ' ')))
           AGENTS=$(find plugins -path '*/agents/*.md' -not -path '*/agents/*/*.md' | wc -l | tr -d ' ')
 
           REFERRERS=$(gh api "repos/${REPO}/traffic/popular/referrers")
@@ -198,7 +199,7 @@ jobs:
           fi
 
           sed -i "/^${DATE},/d" metrics/adoption-metrics.csv
-          echo "${DATE},${VISITORS},${TOTAL_VIEWS},${REPO_REFS},${EXTERNAL_ISSUES},${EXTERNAL_PRS},${PLUGINS},${SKILLS},${AGENTS}" >> metrics/adoption-metrics.csv
+          echo "${DATE},${VISITORS},${TOTAL_VIEWS},${REPO_REFS},${EXTERNAL_ISSUES},${EXTERNAL_PRS},${PLUGINS},${SKILLS},${WORKSHOP_SKILLS},${AGENTS}" >> metrics/adoption-metrics.csv
 
       - name: Commit updated metrics
         env:

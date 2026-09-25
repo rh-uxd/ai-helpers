@@ -214,9 +214,9 @@
 
       const container = document.getElementById('marketplace-stats');
       const REPO_BASE = 'https://github.com/rh-uxd/ai-helpers';
-      const workshopSkills = 26;
-      const consumerSkills = latest.skills - workshopSkills;
-      const prevConsumer = prev ? prev.skills - workshopSkills : null;
+      const workshopSkills = parseInt(latest.workshop_skills) || 0;
+      const consumerSkills = parseInt(latest.skills) - workshopSkills;
+      const prevConsumer = prev ? parseInt(prev.skills) - parseInt(prev.workshop_skills || 0) : null;
       [
         { label: 'Consumer Skills', value: consumerSkills, prev: prevConsumer, showDelta, subtitle: 'Production-ready, eval-gated', link: `${REPO_BASE}/search?q=path%3A**/SKILL.md+NOT+path%3A*workshop/**/SKILL.md` },
         { label: 'Workshop Skills', value: workshopSkills, showDelta: false, subtitle: 'Internal tools & skill incubation', link: `${REPO_BASE}/search?q=path%3A*workshop/**/SKILL.md` },
