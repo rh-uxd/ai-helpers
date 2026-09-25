@@ -1,5 +1,2 @@
 version: "1"
 runtime: claude
-agents:
-  - name: review
-    source: harness/review.yaml

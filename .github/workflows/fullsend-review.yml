@@ -48,6 +48,7 @@ jobs:
           REPO_FULL_NAME: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.inputs.pr_number }}
           GITHUB_PR_URL: https://github.com/${{ github.repository }}/pull/${{ github.event.inputs.pr_number }}
+          PR_URL: https://github.com/${{ github.repository }}/pull/${{ github.event.inputs.pr_number }}
           PRIOR_REVIEW_SHA: ""
           PRIOR_REVIEW_PROVENANCE: ""
           REVIEW_FINDING_SEVERITY_THRESHOLD: medium
