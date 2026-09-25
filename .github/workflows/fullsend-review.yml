@@ -50,6 +50,7 @@ jobs:
           GITHUB_PR_URL: https://github.com/${{ github.repository }}/pull/${{ github.event.inputs.pr_number }}
           PRIOR_REVIEW_SHA: ""
           PRIOR_REVIEW_PROVENANCE: ""
+          REVIEW_FINDING_SEVERITY_THRESHOLD: medium
         run: |
           export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.gcp-credentials.json"
           echo "${{ secrets.GCP_CREDENTIALS }}" | base64 -d > "$GOOGLE_APPLICATION_CREDENTIALS"
