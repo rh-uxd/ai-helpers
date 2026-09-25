@@ -41,6 +41,10 @@ jobs:
           curl -fsSL -L https://github.com/fullsend-ai/fullsend/releases/download/v0.43.0/fullsend_0.43.0_linux_amd64.tar.gz | tar xz
           echo "$PWD" >> $GITHUB_PATH
 
+          # Create dummy GCP credentials file for harness validation
+          # Codex runtime (OpenAI) doesn't use it, but base harness declares it
+          touch ~/.gcp-credentials.json
+
       - name: Run Fullsend review
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -51,6 +55,7 @@ jobs:
           GITHUB_PR_URL: https://github.com/${{ github.repository }}/pull/${{ github.event.inputs.pr_number }}
           PRIOR_REVIEW_SHA: ""
           PRIOR_REVIEW_PROVENANCE: ""
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/.gcp-credentials.json
         run: |
           fullsend run review \
             --fullsend-dir .fullsend \
