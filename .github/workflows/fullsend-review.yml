@@ -60,5 +60,4 @@ jobs:
             --target-repo . \
             --forge github \
             --model haiku \
-            --output-dir fullsend-output \
-            --model haiku
+            --output-dir "$GITHUB_WORKSPACE/fullsend-output"
