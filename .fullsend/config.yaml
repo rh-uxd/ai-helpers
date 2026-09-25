@@ -1,5 +1,5 @@
 version: "1"
-runtime: codex
+runtime: claude
 agents:
   - name: review
-    source: harness/review-openai.yaml
+    source: harness/review.yaml

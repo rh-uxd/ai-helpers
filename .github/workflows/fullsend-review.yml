@@ -43,7 +43,6 @@ jobs:
 
       - name: Run Fullsend review
         env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REVIEW_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO_FULL_NAME: ${{ github.repository }}
@@ -51,12 +50,9 @@ jobs:
           GITHUB_PR_URL: https://github.com/${{ github.repository }}/pull/${{ github.event.inputs.pr_number }}
           PRIOR_REVIEW_SHA: ""
           PRIOR_REVIEW_PROVENANCE: ""
+          CLOUD_ML_REGION: global
         run: |
-          export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.gcp-credentials.json"
-          touch "$GOOGLE_APPLICATION_CREDENTIALS"
           fullsend run review \
             --fullsend-dir .fullsend \
             --target-repo . \
-            --forge github \
-            --runtime codex \
-            --model openai/gpt-5.6-luna
+            --forge github
