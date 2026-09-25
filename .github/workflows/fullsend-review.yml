@@ -58,4 +58,5 @@ jobs:
             --target-repo . \
             --forge github \
             --model haiku \
+            --dangerously-skip-permissions \
             --model haiku
