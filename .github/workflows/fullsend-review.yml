@@ -1,4 +1,4 @@
-name: Fullsend Manual PR Review
+name: Fullsend Manual Claude PR Review
 
 on:
   workflow_dispatch:

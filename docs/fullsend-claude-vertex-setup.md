@@ -16,11 +16,14 @@ workflow for Fullsend PR reviews.
   service-account credential for Vertex AI.
 - The primary review uses Haiku. The adversarial challenger is configured to use
   Haiku as well.
+- Fullsend identifies potential issues; humans decide which issues must be fixed.
+  A `REQUEST_CHANGES` review is an advisory assessment during this proof of
+  concept, not confirmation that every comment is mandatory.
 
 ## Running it
 
 1. Open the repository's **Actions** tab.
-2. Select **Fullsend Manual PR Review**.
+2. Select **Fullsend Manual Claude PR Review**.
 3. Select **Run workflow** and enter the PR number.
 4. Fullsend runs the review and posts the structured result to the PR.
 
