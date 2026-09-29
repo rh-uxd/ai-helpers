@@ -1,0 +1,4 @@
+case_type: unknown-evidence
+expected_evidence_mode: partial
+expected_fit: unknown
+max_drift_weight: 2

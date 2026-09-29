@@ -1,0 +1,175 @@
+name: pf-design-direction-eval
+description: >-
+  Evaluate pf-design-direction intent routing, evidence separation,
+  conservative scoring, and unknown-evidence behavior
+
+# A/B delta: A generic model often jumps directly to a component, treats a
+# repeated local pattern as PatternFly guidance, or forces a correction from
+# incomplete evidence. This skill uniquely contributes target-first routing,
+# separate drift/override scores, and conservative unknown/no-evidence modes.
+
+skill: pf-design-guide:pf-design-direction
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  workspace:
+    files:
+      - fixture-ticket.md
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt requesting a PatternFly design direction
+    - annotations.yaml: expected evidence mode, fit, host, and score bounds
+    - fixture-ticket.md: ticket and implementation evidence for the case
+
+outputs:
+  - path: artifacts
+    schema: |
+      Judges inspect the conversation for a Recommendation block, the selected
+      PatternFly target, rejected alternatives, evidence-aware fit, separate
+      drift_weight and override_weight values, and open design questions.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: follows_recommendation_contract
+    description: Returns the skill's short Recommendation block
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      required = [
+          r"Recommendation",
+          r"PatternFly check",
+          r"Recommended delta",
+          r"Next step",
+      ]
+      missing = [label for label in required if not re.search(label, text, re.I)]
+      if missing:
+          return False, f"Missing recommendation fields: {missing}"
+      return True, "Recommendation block follows the short output contract"
+
+  - name: routes_risky_workflow_before_naming_components
+    description: Selects the blocking host and explains why contextual hosts lose
+    if: "annotations.get('case_type') == 'intent-routing'"
+    check: |
+      import re
+
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      host = ann.get("expected_host", "modal")
+      selected = re.search(
+          rf"(recommend|target|host|use|choose).{{0,80}}\b{re.escape(host)}\b|"
+          rf"\b{re.escape(host)}\b.{{0,80}}(recommend|target|host|appropriate)",
+          text,
+          re.I | re.S,
+      )
+      if not selected:
+          return False, f"Did not select the expected host: {host}"
+      if not re.search(r"(irreversible|destructive|must block|hard stop|critical)", text, re.I):
+          return False, "Did not connect the host choice to the workflow risk"
+      for alternative in ann.get("rejected_hosts", []):
+          rejected = re.search(
+              rf"\b{re.escape(alternative)}\b.{{0,140}}(reject|not|instead|because|too|doesn.t)|"
+              rf"(reject|not|instead|because|too|doesn.t).{{0,140}}\b{re.escape(alternative)}\b",
+              text,
+              re.I | re.S,
+          )
+          if not rejected:
+              return False, f"Did not explain why {alternative} was rejected"
+      return True, "Selected the risk-appropriate host and rejected alternatives"
+
+  - name: separates_patternfly_fit_from_local_override
+    description: Scores PF drift independently from repeated local preference
+    if: "annotations.get('case_type') == 'evidence-mode'"
+    check: |
+      import re
+
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      fit = ann.get("expected_fit", "drift")
+      drift = ann.get("expected_drift_weight")
+      override = ann.get("expected_override_weight")
+      if not re.search(rf"PatternFly\s+fit[^\n]{{0,80}}\b{re.escape(fit)}\b", text, re.I):
+          return False, f"PatternFly fit was not explicitly classified as {fit}"
+      if not re.search(rf"drift[_\s-]*weight[^\d]{{0,20}}{drift}\b", text, re.I):
+          return False, f"Expected drift_weight {drift}"
+      if not re.search(rf"override[_\s-]*weight[^\d]{{0,20}}{override}\b", text, re.I):
+          return False, f"Expected override_weight {override}"
+      if not re.search(r"(local|project).{0,80}(pattern|preference|override|convention)", text, re.I | re.S):
+          return False, "Repeated evidence was not framed as a project-local override"
+      if not re.search(r"(inline|drawer).{0,120}(PatternFly|PF|target)|"
+                       r"(PatternFly|PF|target).{0,120}(inline|drawer)", text, re.I | re.S):
+          return False, "Did not preserve the PatternFly target separately from the modal convention"
+      return True, "PF fit and local override strength are scored separately"
+
+  - name: stays_conservative_without_evidence
+    description: Uses the tree without inventing a project convention
+    if: "annotations.get('case_type') == 'no-evidence'"
+    check: |
+      import re
+
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      if not re.search(r"(no (implementation )?evidence|evidence (mode\s*[:=-]?\s*)?none)", text, re.I):
+          return False, "Did not identify the no-evidence mode"
+      weights = [int(value) for value in re.findall(
+          r"override[_\s-]*weight[^\d]{0,20}([1-5])\b", text, re.I
+      )]
+      if any(value > ann.get("max_override_weight", 2) for value in weights):
+          return False, f"Invented override strength from no evidence: {weights}"
+      if not re.search(r"\binline\b", text, re.I):
+          return False, "Did not apply the low-risk settings default from the decision tree"
+      return True, "No-evidence recommendation stays tree-based and conservative"
+
+  - name: preserves_unknown_and_raises_question
+    description: Keeps conflicting evidence unknown instead of forcing a correction
+    if: "annotations.get('case_type') == 'unknown-evidence'"
+    check: |
+      import re
+
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      if not re.search(r"PatternFly\s+fit[^\n]{0,80}\bunknown\b", text, re.I):
+          return False, "Did not classify PatternFly fit as unknown"
+      if not re.search(r"(open design question|need to confirm|clarif|unknown whether|question:)", text, re.I):
+          return False, "Did not raise an open design question"
+      weights = [int(value) for value in re.findall(
+          r"drift[_\s-]*weight[^\d]{0,20}([1-5])\b", text, re.I
+      )]
+      if any(value > ann.get("max_drift_weight", 2) for value in weights):
+          return False, f"Over-scored drift despite conflicting evidence: {weights}"
+      if re.search(r"\b(must|definitely)\s+(replace|redesign|remove|change)\b", text, re.I):
+          return False, "Forced a correction despite unknown fit"
+      return True, "Conflicting evidence remains unknown with an open question"
+
+thresholds:
+  follows_recommendation_contract:
+    min_pass_rate: 1.0
+  routes_risky_workflow_before_naming_components:
+    min_pass_rate: 1.0
+  separates_patternfly_fit_from_local_override:
+    min_pass_rate: 1.0
+  stays_conservative_without_evidence:
+    min_pass_rate: 1.0
+  preserves_unknown_and_raises_question:
+    min_pass_rate: 1.0

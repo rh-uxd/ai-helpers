@@ -1,0 +1,141 @@
+{
+  "version": "1.1.0",
+  "patternflyVersion": "6",
+  "profiles": {
+    "sequential-data-collection": {
+      "id": "sequential-data-collection",
+      "label": "Sequential data collection",
+      "description": "Collect structured input across multiple steps before submit.",
+      "interaction": "multi-step",
+      "purposes": ["form-container"],
+      "validation": "submit-gate",
+      "exit": ["save", "cancel"]
+    },
+    "single-page-data-collection": {
+      "id": "single-page-data-collection",
+      "label": "Single-page data collection",
+      "description": "Collect structured input on one screen before submit.",
+      "interaction": "single-page",
+      "purposes": ["form-container"],
+      "validation": "submit-gate",
+      "exit": ["save", "cancel"]
+    },
+    "confirm-destructive": {
+      "id": "confirm-destructive",
+      "label": "Confirm destructive action",
+      "description": "User must explicitly confirm an irreversible or dangerous action.",
+      "interaction": "overlay",
+      "purposes": ["guidance"],
+      "validation": "none",
+      "exit": ["save", "cancel"]
+    },
+    "display-details": {
+      "id": "display-details",
+      "label": "Display details",
+      "description": "Read-only presentation of entity or record details.",
+      "interaction": "passive",
+      "purposes": ["display"],
+      "validation": "none",
+      "exit": []
+    },
+    "select-one": {
+      "id": "select-one",
+      "label": "Select one option",
+      "description": "User picks exactly one item from a set.",
+      "interaction": "inline",
+      "purposes": ["selection"],
+      "validation": "field-level",
+      "exit": ["save", "cancel"]
+    },
+    "select-many": {
+      "id": "select-many",
+      "label": "Select many options",
+      "description": "User picks one or more items from a set.",
+      "interaction": "inline",
+      "purposes": ["selection"],
+      "validation": "field-level",
+      "exit": ["save", "cancel"]
+    },
+    "primary-action": {
+      "id": "primary-action",
+      "label": "Primary action",
+      "description": "Main call to action for the current view.",
+      "interaction": "inline",
+      "purposes": ["action"],
+      "validation": "none",
+      "exit": []
+    },
+    "secondary-action": {
+      "id": "secondary-action",
+      "label": "Secondary action",
+      "description": "Meaningful but non-primary action for the current view.",
+      "interaction": "inline",
+      "purposes": ["action"],
+      "validation": "none",
+      "exit": []
+    },
+    "filter-list": {
+      "id": "filter-list",
+      "label": "Filter a list",
+      "description": "Narrow visible items without leaving the page.",
+      "interaction": "inline",
+      "purposes": ["input"],
+      "validation": "field-level",
+      "exit": ["cancel"]
+    },
+    "compare-metrics": {
+      "id": "compare-metrics",
+      "label": "Compare metrics",
+      "description": "Compare two or more entities across structured metrics, often on an existing detail surface.",
+      "interaction": "comparison",
+      "purposes": ["display", "analysis"],
+      "validation": "none",
+      "exit": []
+    },
+    "navigate-hierarchy": {
+      "id": "navigate-hierarchy",
+      "label": "Navigate hierarchy",
+      "description": "Move between sections, pages, or tree levels.",
+      "interaction": "inline",
+      "purposes": ["navigation"],
+      "validation": "none",
+      "exit": []
+    },
+    "workflow-overlay": {
+      "id": "workflow-overlay",
+      "label": "Workflow in overlay",
+      "description": "Focused task in a modal or drawer without changing page context.",
+      "interaction": "overlay",
+      "purposes": ["form-container", "guidance"],
+      "validation": "submit-gate",
+      "exit": ["save", "cancel", "discard"]
+    },
+    "status-feedback": {
+      "id": "status-feedback",
+      "label": "Status feedback",
+      "description": "Communicate progress, success, warning, or error state.",
+      "interaction": "passive",
+      "purposes": ["status-tracking"],
+      "validation": "none",
+      "exit": []
+    },
+    "settings-edit": {
+      "id": "settings-edit",
+      "label": "Edit settings",
+      "description": "Update preferences or configuration values.",
+      "interaction": "single-page",
+      "purposes": ["form-container", "input"],
+      "validation": "field-level",
+      "exit": ["save", "cancel"]
+    },
+    "allow-remove": {
+      "id": "allow-remove",
+      "label": "Allow remove",
+      "description": "Designs where the user can remove filter/category components; track removable chips or labels in PatternFly.",
+      "interaction": "inline",
+      "purposes": ["filtering"],
+      "validation": "none",
+      "exit": ["cancel"]
+    }
+  }
+}

@@ -1,0 +1,4 @@
+case_type: no-evidence
+expected_evidence_mode: none
+expected_host: inline
+max_override_weight: 2

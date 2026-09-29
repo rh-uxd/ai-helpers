@@ -1,0 +1,6 @@
+prompt: >-
+  Use the pf-design-direction skill to recommend a PatternFly direction for
+  the ticket in fixture-ticket.md. Identify the host pattern, explain the
+  decision, and say why the plausible alternatives should not be used. Do not
+  create a mock or call network or MCP tools.
+fixture: fixture-ticket.md

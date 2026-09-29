@@ -1,0 +1,6 @@
+case_type: evidence-mode
+expected_evidence_mode: partial
+expected_fit: drift
+expected_drift_weight: 5
+expected_override_weight: 4
+expected_scope: project
