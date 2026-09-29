@@ -268,8 +268,6 @@ PatternFly team tools and skill incubation — issue triage, release management,
 - Consumer: 42/42 (100%)
 - Workshop: 0/17 (0%)
 
----
-
 ## Skill discovery matrix
 
 Generated from skill frontmatter and section headings. Token cost is a relative prompt-footprint size, not runtime usage or a model billing estimate. See contributor guidance for size ranges and methodology.
@@ -277,18 +275,17 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 | Skill | Audience | Inputs | Outputs | Token cost |
 |---|---|---|---|---|
 | `uxd-design-handoff` | UXD practitioners | Input Required Source Design artifact (prototype files, Figma screenshots, text description) ... | The handoff spec is written to a local file (markdown by default, JSON when --format=json). I... | M |
-| `uxd-figma-read` | UXD practitioners | Task context | Structured result | M |
 | `uxd-prototype-create` | UXD practitioners | Input Required Source What to prototype (Jira URL/key, Figma link, description, or idea) Yes ... | Written under .artifacts/{ID}/ in the consumer project (never ${CLAUDESKILLDIR}): Output Loca... | XL |
-| `uxd-prototype-evaluate` | UXD practitioners | Input Example Required Jira story key PROJ-298 Yes Prototype URL http://localhost:3000 Condit... | Per-key eval files under ${UXDPROJECTROOT}/.artifacts/<KEY>/eval/ (ARTIFACTSDIR): File Descri... | XL |
-| `uxd-prototype-export` | UXD practitioners | Input Required Source What to export (current page, journey batch, or install bar) Yes User; ... | Under .artifacts/{ID}/exports/ unless --out is set: Output Description index.html + export-ma... | L |
-| `uxd-prototype-publish` | UXD practitioners | Input Source Required Prototype files .artifacts/{ID}/prototype/ or workspace files Yes metad... | Output Description Published prototype GitLab MR, GitHub Pages, GitLab Pages, or Vercel URL U... | L |
 | `uxd-discovery` | UXD practitioners | Input Type Required Default Problem source Jira issue key/URL, feature description, or proble... | Output Format Description Discovery brief Structured markdown Problem statement, user groups,... | M |
-| `uxd-evaluate-design-heuristics` | UXD practitioners | The skill expects one or more of the following, provided by the user or by an upstream skill:... | Given the required inputs, this skill produces: Verdict — Pass or Fail. Any dimension scoring... | L |
-| `uxd-research-heuristic-eval` | UXD practitioners | Input Type Required Default Interface to evaluate Screenshots, image files, text descriptions... | Output Format Location Evaluation report .md and .html [project-dir]/heuristic-eval-[date].[ext] | XL |
+| `uxd-evaluate-design-heuristics` | Contributors and maintainers | The skill expects one or more of the following, provided by the user or by an upstream skill:... | Given the required inputs, this skill produces: Verdict — Pass or Fail. Any dimension scoring... | L |
+| `uxd-figma-read` | Contributors and maintainers | Task context | Structured result | M |
+| `uxd-prototype-evaluate` | Contributors and maintainers | Input Example Required Jira story key PROJ-298 Yes Prototype URL http://localhost:3000 Condit... | Per-key eval files under ${UXDPROJECTROOT}/.artifacts/<KEY>/eval/ (ARTIFACTSDIR): File Descri... | XL |
+| `uxd-prototype-export` | Contributors and maintainers | Input Required Source What to export (current page, journey batch, or install bar) Yes User; ... | Under .artifacts/{ID}/exports/ unless --out is set: Output Description index.html + export-ma... | L |
+| `uxd-prototype-publish` | Contributors and maintainers | Input Source Required Prototype files .artifacts/{ID}/prototype/ or workspace files Yes metad... | Output Description Published prototype GitLab MR, GitHub Pages, GitLab Pages, or Vercel URL U... | L |
+| `uxd-research-heuristic-eval` | Contributors and maintainers | Input Type Required Default Interface to evaluate Screenshots, image files, text descriptions... | Output Format Location Evaluation report .md and .html [project-dir]/heuristic-eval-[date].[ext] | XL |
 | `pf-a11y-audit` | PatternFly designers and developers | Task context | Per finding: [ERRORWARNINFO] file/path.tsx:42 — description (WCAG X.X.X) Found: what was dete... | L |
 | `pf-a11y-keyboard` | PatternFly designers and developers | Source Required Description URL Yes URL to a running application (localhost or deployed) Focu... | Structured result | L |
 | `pf-a11y-test-gen` | PatternFly designers and developers | Source Required Description Component/module file Yes Path to the component or UI module to g... | Structured result | L |
-| `pf-adversarial-review` | PatternFly designers and developers | The user provides a file path, directory, or component to review. Default to the current work... | Structured result | M |
 | `pf-i18n-audit` | PatternFly designers and developers | The user provides a directory, file path, or set of components to audit. Default to the curre... | Structured result | M |
 | `pf-review` | PatternFly designers and developers | Task context | Structured result | S |
 | `pf-security-scan` | PatternFly designers and developers | Task context | Structured result | M |
@@ -298,7 +295,7 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 | `pf-css-token-check` | PatternFly designers and developers | Task context | For every violation found, provide: Header: | L |
 | `pf-figma-check` | PatternFly designers and developers | Task context | Structured result | S |
 | `pf-figma-token-check` | PatternFly designers and developers | Theme: Infer default vs Red Hat from brand accent when present: #ee0000 → Red Hat; #0066cc → ... | Structured result | L |
-| `pf-glass-check` | PatternFly designers and developers | Task context | Structured result | L |
+| `pf-glass-check` | PatternFly designers and developers | Task context | For every violation found, provide: Header: | L |
 | `pf-icon-finder` | PatternFly designers and developers | Task context | Structured result | M |
 | `pf-catalog-interaction-patterns` | PatternFly designers and developers | Task context | When returning matches: | M |
 | `pf-design-direction` | PatternFly designers and developers | Task context | Default to a short user-facing report. Do not dump the full field list unless the user asks f... | L |
@@ -313,9 +310,8 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 | `pf-deploy` | PatternFly designers and developers | Task context | Structured result | S |
 | `pf-design-comments-setup` | PatternFly designers and developers | Task context | Structured result | S |
 | `pf-form-gen` | PatternFly designers and developers | The user provides one of: A description of the form's purpose and fields (e.g., "create a use... | Output the complete form component ready to save. Include the import block, component functio... | S |
-| `pf-import-check` | PatternFly designers and developers | The user provides a file path, directory, or component to check. Default to scanning the proj... | For each finding, provide: Severity: high medium low File path and line number Current import... | S |
+| `pf-import-check` | PatternFly designers and developers | Task context | Provide: offending file paths exact import lines to replace corrected import lines any CSS im... | S |
 | `pf-project-gen` | PatternFly designers and developers | Task context | Structured result | S |
-| `pf-reproduce-issue` | PatternFly designers and developers | The user provides one of: A GitHub issue URL (e.g., https://github.com/patternfly/patternfly-... | Produce a reproduction report: | S |
 | `pf-table-gen` | PatternFly designers and developers | The user provides one of: A description of the data and desired table features (e.g., "sortab... | Output the complete table component ready to save. Include the import block, type definitions... | S |
 | `pf-test-gen` | PatternFly designers and developers | The user will provide a component file path or component code. Read the component source befo... | Output the complete test file ready to save. Name it ComponentName.test.tsx matching the sour... | S |
 | `pf-analytics-repo-pruning` | Contributors and maintainers | File: repos.json (project root or path the user supplies). Expect a top-level repos array; ea... | Structured result | S |
