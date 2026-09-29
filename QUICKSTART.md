@@ -93,7 +93,7 @@ Once you're happy with it:
 
 1. Fork and clone this repo
 2. Copy your `SKILL.md` into the right directory:
-   - **UXD skills** → `plugins/uxd-workshop/skills/uxd-your-skill-name/SKILL.md`
+   - **UXD skills** → `plugins/uxd-workshop/skills/uxd-your-skill-name/SKILL.md` (incubator — graduates to `uxd-research`, `uxd-design`, or `uxd-prototype`)
    - **PatternFly skills** → `plugins/patternfly/pf-workshop/skills/pf-your-skill-name/SKILL.md`
 3. Make sure the directory name matches the `name` in your frontmatter
 4. Open a pull request against `main`

@@ -1,0 +1,2 @@
+scenario: non-pf
+expect_pf_components: false

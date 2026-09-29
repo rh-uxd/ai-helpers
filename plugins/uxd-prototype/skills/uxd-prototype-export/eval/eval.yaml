@@ -1,0 +1,203 @@
+name: uxd-prototype-export-eval
+description: Evaluate uxd-prototype-export's path selection, capture formats, batch export contract, and Prototype Bar installation guidance
+
+skill: uxd-prototype:uxd-prototype-export
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/uxd-prototype
+
+models:
+  skill: claude-opus-4-6
+  judge: claude-sonnet-5
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+mlflow:
+  experiment: uxd-prototype-export
+  tags:
+    team: uxd
+    pipeline: prototype-evaluator
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: case_type for conditional judges
+
+outputs:
+  - path: artifacts
+    schema: |
+      Judges check the conversation for export-path selection, format-specific
+      output contracts, batch journey/scenario rules, and install-bar/Pages
+      guidance. Cases request planning or explanation and must not publish or
+      contact external services.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: asks_export_path
+    description: Asks which export path the user wants when export details are missing
+    if: "annotations.get('case_type') == 'asks-export-path'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      paths = re.search(
+          r"current page|journey.{0,30}scenario|batch|install.{0,20}(bar|prototype bar)|prototype bar",
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      asks = re.search(
+          r"what (would you like|should I)|which (path|option|export)|choose|tell me (whether|what)|need to know",
+          text,
+          re.IGNORECASE,
+      )
+      launched = re.search(
+          r"export-current|export-journey|install-prototype-bar|npx playwright|npm install",
+          text,
+          re.IGNORECASE,
+      )
+      if not paths:
+          return False, "Did not distinguish current-page, batch, and install-bar paths"
+      if not asks:
+          return False, "Did not ask the user to choose an export path"
+      if launched:
+          return False, "Started or proposed a concrete export command before path selection"
+      return True, "Asked the user to choose among the supported export paths"
+
+  - name: current_capture_contract
+    description: Explains current-page capture formats and static snapshot limitations
+    if: "annotations.get('case_type') == 'current-page-capture'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      current = re.search(
+          r"export-current|current (page|view)|capture whatever is on screen|--url",
+          text,
+          re.IGNORECASE,
+      )
+      has_html = re.search(r"\bhtml\b|static HTML", text, re.IGNORECASE)
+      has_tree = re.search(r"component tree|\btree\b|\.tree\.", text, re.IGNORECASE)
+      has_pf_spec = re.search(r"pf.?spec|PatternFly implementation", text, re.IGNORECASE)
+      static = re.search(
+          r"static.{0,30}(snapshot|HTML)|does not rehydrate|not a live|not interactive|not a live React",
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      manifest = re.search(
+          r"export-manifest|manifest|exports/",
+          text,
+          re.IGNORECASE,
+      )
+      if not current:
+          return False, "Did not describe current-page capture or the URL-based export path"
+      if not (has_html and has_tree and has_pf_spec):
+          return False, "Did not describe all supported html, tree, and PF spec formats"
+      if not static:
+          return False, "Did not warn that static HTML is a snapshot rather than a live app"
+      if not manifest:
+          return False, "Did not mention the export manifest or exports output"
+      return True, "Described current-page capture, formats, outputs, and snapshot behavior"
+
+  - name: batch_export_contract
+    description: Explains journey and scenario batch export rules
+    if: "annotations.get('case_type') == 'batch-export'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      batch = re.search(
+          r"export-journey|batch|journey.{0,40}scenario|--journeys|--scenarios",
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      live_url = re.search(
+          r"live (prototype )?URL|base.?url|running app|localhost|Playwright",
+          text,
+          re.IGNORECASE,
+      )
+      export_true = re.search(
+          r"export\s*:\s*true|export.?true|marked for export|exported steps",
+          text,
+          re.IGNORECASE,
+      )
+      all_scenarios = re.search(
+          r"every scenario|all scenarios|each scenario|scenario.{0,30}(route|step)|\?scenario",
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      if not batch:
+          return False, "Did not describe the journey/scenario batch export path"
+      if not live_url:
+          return False, "Did not state that batch export needs a live URL or running app"
+      if not export_true:
+          return False, "Did not state that export:true steps are selected for batch capture"
+      if not all_scenarios:
+          return False, "Did not explain that scenarios are captured for each matching route"
+      return True, "Described the batch export inputs and journey/scenario selection rules"
+
+  - name: install_bar_pages_contract
+    description: Distinguishes install-bar requirements from static Pages eval handling
+    if: "annotations.get('case_type') == 'install-bar-pages'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      install = re.search(
+          r"install-prototype-bar|install.{0,20}(Prototype )?Bar|--install-bar|--source",
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      no_live_url = re.search(
+          r"does not need|no live URL|without.{0,20}(live|running)|install-bar.{0,40}(not|without).{0,20}(URL|Playwright)",
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      pages_copy = re.search(
+          r"copy-eval-for-pages|public/evals|copy.{0,30}eval|Pages.{0,40}eval",
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      config = re.search(
+          r"prototype-bar\.json|config|sync-prototype-bar-config|--artifacts",
+          text,
+          re.IGNORECASE,
+      )
+      if not install:
+          return False, "Did not describe the install-bar path or its source input"
+      if not no_live_url:
+          return False, "Did not distinguish install-bar from live URL capture requirements"
+      if not pages_copy:
+          return False, "Did not explain that Pages eval requires copying the report separately"
+      if not config:
+          return False, "Did not mention artifact/config synchronization for the bar"
+      return True, "Correctly separated bar installation, config sync, and Pages eval copying"
+
+thresholds:
+  asks_export_path:
+    min_pass_rate: 1.0
+  current_capture_contract:
+    min_pass_rate: 0.67
+  batch_export_contract:
+    min_pass_rate: 0.67
+  install_bar_pages_contract:
+    min_pass_rate: 0.67

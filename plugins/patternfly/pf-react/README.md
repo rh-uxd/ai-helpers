@@ -14,8 +14,9 @@ React component development — coding standards, testing, and structure.
 - **PF Deploy** (`/pf-react:pf-deploy`) — Deploy a PatternFly React project to GitHub Pages using pfcli deploy.
 - **PF Design Comments Setup** (`/pf-react:pf-design-comments-setup`) — Integrate @patternfly/design-comments into React apps for on-page design feedback, pinned comment threads, GitHub Issues sync, and Jira linking.
 - **PF Form Gen** (`/pf-react:pf-form-gen`) — Generate PatternFly form components with validation, layout, and accessibility.
-- **PF Import Check** (`/pf-react:pf-import-check`) — Audit and fix invalid PatternFly import paths across packages.
+- **PF Import Check** (`/pf-react:pf-import-check`) — Audit PatternFly imports for correctness and bundle-size anti-patterns.
 - **PF Project Gen** (`/pf-react:pf-project-gen`) — Scaffolds PatternFly React projects with PF6-safe dependencies, imports, and starter layout.
+- **PF Reproduce Issue** (`/pf-react:pf-reproduce-issue`) — Reproduce a PatternFly bug from a GitHub issue description.
 - **PF Table Gen** (`/pf-react:pf-table-gen`) — Generate PatternFly table components with sorting, filtering, pagination, and expandable rows.
 - **PF Test Gen** (`/pf-react:pf-test-gen`) — Generate a unit test file for a React component using Testing Library.
 

@@ -1,0 +1,5 @@
+instruction: >
+  If asked about evaluation criteria, answer "use all default dimensions."
+  If asked to confirm these are two alternatives, answer "yes, Option A and
+  Option B are alternative directions for the same settings page."
+  If asked about success criteria, answer "no specific criteria, use the defaults."

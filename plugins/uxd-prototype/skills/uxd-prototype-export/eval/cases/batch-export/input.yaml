@@ -1,0 +1,6 @@
+prompt: >-
+  Using uxd-prototype-export, explain how to batch-export a prototype from
+  .artifacts/DEMO/journeys.json and .artifacts/DEMO/scenarios.json against a
+  running app at http://localhost:3000. I want HTML and PF specs. Do not run
+  Playwright or write files. Explain which journey steps and scenarios are
+  captured.

@@ -1,0 +1,4 @@
+has_steps: true
+has_version: true
+expect_verdict: true
+import_issue: true

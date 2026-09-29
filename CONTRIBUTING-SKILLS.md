@@ -72,14 +72,14 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 <tr><td nowrap><b>patternfly</b></td><td>Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs</td><td></td></tr>
 <tr><td nowrap><b>pf-assist</b></td><td>PatternFly skill routing — maps project signals to the right PF sub-skills for compliance, migration, and design audits</td><td></td></tr>
 <tr><td nowrap><b>uxd-assist</b></td><td>UXD skill routing — discover the right skills for research, design review, and prototyping workflows</td><td></td></tr>
-<tr><td nowrap><b>uxd-design</b></td><td>UX design workflow — Figma context, design evaluation, and implementation handoff</td><td>`uxd-design-handoff`</td></tr>
-<tr><td nowrap><b>uxd-prototype</b></td><td>Create UX prototypes from Jira tickets, Figma designs, or feature descriptions</td><td>`uxd-prototype-create`</td></tr>
-<tr><td nowrap><b>uxd-research</b></td><td>UX research pipeline — heuristic evaluation, usability testing, research methodology</td><td>`uxd-discovery`</td></tr>
-<tr><td nowrap><b>uxd-workshop</b></td><td>UXD team tools and skill incubator — prototyping, research, design review, team workflows</td><td>`uxd-evaluate-design-heuristics`, `uxd-figma-read`, `uxd-prototype-evaluate`</td></tr>
+<tr><td nowrap><b>uxd-design</b></td><td>UX design workflow — Figma context, design evaluation, and implementation handoff</td><td>`uxd-design-handoff`, `uxd-figma-read`</td></tr>
+<tr><td nowrap><b>uxd-prototype</b></td><td>Create UX prototypes from Jira tickets, Figma designs, or feature descriptions</td><td>`uxd-prototype-create`, `uxd-prototype-evaluate`, `uxd-prototype-export`</td></tr>
+<tr><td nowrap><b>uxd-research</b></td><td>UX research pipeline — heuristic evaluation, usability testing, research methodology</td><td>`uxd-discovery`, `uxd-evaluate-design-heuristics`, `uxd-research-heuristic-eval`</td></tr>
+<tr><td nowrap><b>uxd-workshop</b></td><td>UXD skill incubator — new skills start here before graduating to consumer plugins</td><td></td></tr>
 <tr><td nowrap><b>pf-a11y</b></td><td>Accessibility auditing, reporting, and documentation</td><td>`pf-a11y-audit`, `pf-a11y-keyboard`, `pf-a11y-test-gen`</td></tr>
-<tr><td nowrap><b>pf-code-review</b></td><td>Code review and quality — adversarial review, security patterns</td><td>`pf-i18n-audit`, `pf-review`, `pf-security-scan`</td></tr>
+<tr><td nowrap><b>pf-code-review</b></td><td>Code review and quality — adversarial review, security patterns</td><td>`pf-adversarial-review`, `pf-i18n-audit`, `pf-review`</td></tr>
 <tr><td nowrap><b>pf-design-audit</b></td><td>Design audit — validate existing code and designs against PatternFly standards</td><td>`pf-ai-audit`, `pf-color-scan`, `pf-css-token-check`</td></tr>
-<tr><td nowrap><b>pf-design-guide</b></td><td>Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation</td><td>`pf-design-direction`, `pf-figma-design-mode`, `pf-screenshot-mapping`</td></tr>
+<tr><td nowrap><b>pf-design-guide</b></td><td>Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation</td><td>`pf-catalog-interaction-patterns`, `pf-design-direction`, `pf-figma-design-mode`</td></tr>
 <tr><td nowrap><b>pf-migration</b></td><td>PF version migration — breaking change detection, class scanning, upgrade planning</td><td>`pf-css-migration-scan`, `pf-react-migration-scan`, `pf-release-candidate-update`</td></tr>
 <tr><td nowrap><b>pf-react</b></td><td>React component development — coding standards, testing, and structure</td><td>`pf-chart-gen`, `pf-component-check`, `pf-component-reuse-check`</td></tr>
 <tr><td nowrap><b>pf-workshop</b></td><td>PatternFly team tools and skill incubation — issue triage, release management, codebase auditing, new skill development</td><td>`pf-analytics-repo-pruning`, `pf-bug-triage`, `pf-content-review`</td></tr>
@@ -145,15 +145,28 @@ All skills use a domain prefix — `pf-` for PatternFly, `uxd-` for UXD — rega
 | Skill | PF — PF design token auditing | `design-audit` | `pf-figma-token-check` |
 | Skill | PF — summarizes PR reviews | `pf-workshop` | `pf-summarize-pr-reviews` |
 | Skill | UXD — creates prototypes | `uxd-prototype` | `uxd-prototype-create` |
-| Skill | UXD — retrieves research insights | `uxd-workshop` | `uxd-research-insights` |
+| Skill | UXD — reads Figma context | `uxd-design` | `uxd-figma-read` |
+| Skill | UXD — evaluates prototypes | `uxd-prototype` | `uxd-prototype-evaluate` |
 | Agent | PF — PF React coding standards | `react` | `pf-coding-standards` |
-| Agent | UXD — workflow routing | `uxd-workshop` | `uxd-assist` |
+| Agent | UXD — workflow routing | `uxd-assist` | `uxd-assist` |
 
 **Why this matters:** When slash commands appear in a flat list, the prefix tells you at a glance which domain a skill serves. In Claude Code, skills show the plugin namespace (`/react:pf-test-gen`), but the prefix is still valuable for cross-tool consistency.
 
 **The directory name, file name, and frontmatter `name` must all match.** A mismatch causes confusing behavior when invoking the skill.
 - Skill directory: `skills/pf-test-gen/SKILL.md` with `name: pf-test-gen`
 - Agent file: `agents/pf-coding-standards.md` with `name: pf-coding-standards`
+
+## Discovery metadata
+
+New skills should keep these optional frontmatter fields current so the generated [skill discovery matrix](PLUGINS.md#skill-discovery-matrix) can describe them accurately:
+
+```yaml
+audience: "PatternFly developers"
+inputs: "React component source and test requirements"
+outputs: "A complete Testing Library test file"
+```
+
+If a legacy skill does not include these fields, the generator derives audience from its plugin and summarizes its `Inputs` and `Output` sections. Token cost is a relative prompt-footprint comparison: all colocated Markdown/YAML words multiplied by 1.3, then grouped into ranges. `S` is up to 1,000 estimated tokens, `M` is 1,001–3,000, `L` is 3,001–10,000, and `XL` is more than 10,000. This is not runtime usage or a model billing estimate.
 
 ### Verb suffixes
 
@@ -325,6 +338,7 @@ Write test cases that target what the skill **uniquely contributes** — don't t
 Evals use [agent-eval-harness](https://github.com/opendatahub-io/agent-eval-harness) and are colocated with their skill at `skills/<skill-name>/eval/eval.yaml`. See `plugins/patternfly/react/skills/pf-test-gen/eval/eval.yaml` for a working example. To run evals locally, install the harness plugin:
 
 ```bash
+claude plugin marketplace add https://github.com/opendatahub-io/agent-eval-harness.git
 claude plugin install agent-eval-harness@agent-eval-harness-dev
 ```
 

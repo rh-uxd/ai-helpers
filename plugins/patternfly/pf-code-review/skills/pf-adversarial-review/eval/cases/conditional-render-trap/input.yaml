@@ -1,0 +1,1 @@
+prompt: "Adversarially review StatusPanel.tsx. What happens when errorCount is 0? When items is an empty array? Probe each conditional render for edge cases."

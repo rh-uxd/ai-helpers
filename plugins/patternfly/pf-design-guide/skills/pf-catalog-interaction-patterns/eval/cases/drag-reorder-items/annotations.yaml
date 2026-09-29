@@ -1,0 +1,8 @@
+scenario: drag
+expect_pf_components: true
+expect_multiple: true
+expected_components:
+  - DragDrop
+  - DualListSelector
+  - Table
+  - DataList

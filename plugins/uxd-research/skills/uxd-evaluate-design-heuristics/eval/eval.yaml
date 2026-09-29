@@ -1,0 +1,258 @@
+name: uxd-evaluate-design-heuristics-eval
+description: >-
+  Evaluate heuristic scoring, output format handling, input validation, and
+  comparison flow for the uxd-evaluate-design-heuristics skill
+
+skill: uxd-research:uxd-evaluate-design-heuristics
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/uxd-research
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+  hook: claude-haiku-4-5-20251001
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+inputs:
+  tools:
+    - match: Questions asked to the user via AskUserQuestion.
+      prompt: |
+        Answer based on the test case context in input.yaml and answers.yaml.
+        Default: pick the first option or answer "yes" for confirmations.
+
+dataset:
+  path: cases
+  workspace:
+    files:
+      - fixture-ui.md
+      - fixture-comparison.md
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: case_type for conditional judges
+    - Optional answers.yaml for AskUserQuestion auto-answer guidance
+    - Optional fixture-ui.md describing a dashboard UI for evaluation
+    - Optional fixture-comparison.md describing two design alternatives
+
+outputs:
+  - tool: AskUserQuestion
+    schema: Clarifying questions about design context, screenshots, or evaluation criteria.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: scores_across_dimensions
+    description: >-
+      Produces scores (1-5) across visual hierarchy, accessibility, content, and
+      state coverage dimensions with a verdict and critical issues section
+    if: "annotations.get('case_type') == 'screenshot-evaluation'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+
+      # Check for scores in range 1-5
+      score_pattern = re.findall(r"[1-5]\s*/\s*5|:\s*[1-5]\b|\bscore[:\s]+[1-5]\b|\|\s*[1-5]\s*\|", text, re.IGNORECASE)
+      if len(score_pattern) < 4:
+          return False, f"Expected scores across at least 4 dimensions, found {len(score_pattern)} score-like patterns"
+
+      # Check for required dimensions
+      dimensions = {
+          "visual hierarchy": re.search(r"visual\s+hierarchy|scannability", text, re.IGNORECASE),
+          "accessibility": re.search(r"accessibility", text, re.IGNORECASE),
+          "content": re.search(r"content|microcopy", text, re.IGNORECASE),
+          "state coverage": re.search(r"state\s+coverage", text, re.IGNORECASE),
+      }
+      missing = [d for d, m in dimensions.items() if not m]
+      if missing:
+          return False, f"Missing evaluation dimensions: {', '.join(missing)}"
+
+      # Check for verdict
+      has_verdict = re.search(r"\b(pass|fail)\b", text, re.IGNORECASE)
+      if not has_verdict:
+          return False, "No Pass/Fail verdict found"
+
+      # Check for critical issues section
+      has_critical = re.search(r"critical\s+(issues?|findings?|blockers?)", text, re.IGNORECASE)
+      if not has_critical:
+          return False, "No critical issues section found"
+
+      return True, "Evaluation includes scores across all dimensions, verdict, and critical issues"
+
+  - name: valid_json_format
+    description: >-
+      Produces valid JSON output with designs, scores, verdict, and average_score
+      fields when format=json is requested
+    if: "annotations.get('case_type') == 'json-format'"
+    check: |
+      import re, json
+
+      text = outputs.get("conversation", "")
+
+      # Extract JSON block from the output (may be in a code fence)
+      json_match = re.search(r"```(?:json)?\s*\n(\{.*?\})\s*\n```", text, re.DOTALL)
+      if not json_match:
+          # Try finding raw JSON object
+          json_match = re.search(r"(\{[^{}]*\"designs\"[^{}]*\{.*?\}.*?\})", text, re.DOTALL)
+      if not json_match:
+          # Fallback: check if key fields are present as JSON-like tokens
+          has_designs = re.search(r"\"designs\"\s*:", text)
+          has_scores = re.search(r"\"scores\"\s*:", text)
+          has_verdict = re.search(r"\"verdict\"\s*:", text)
+          has_avg = re.search(r"\"average_score\"\s*:", text)
+          missing = []
+          if not has_designs:
+              missing.append("designs")
+          if not has_scores:
+              missing.append("scores")
+          if not has_verdict:
+              missing.append("verdict")
+          if not has_avg:
+              missing.append("average_score")
+          if missing:
+              return False, f"JSON output missing required fields: {', '.join(missing)}"
+          return True, "JSON output contains all required fields (designs, scores, verdict, average_score)"
+
+      try:
+          data = json.loads(json_match.group(1))
+      except json.JSONDecodeError:
+          # If parsing fails, fall back to field presence check
+          has_designs = "\"designs\"" in text
+          has_scores = "\"scores\"" in text
+          has_verdict = "\"verdict\"" in text
+          has_avg = "\"average_score\"" in text
+          if not all([has_designs, has_scores, has_verdict, has_avg]):
+              return False, "JSON block found but could not parse and missing required fields"
+          return True, "JSON output contains required field names (parse failed but fields present)"
+
+      required = ["designs", "scores", "verdict", "average_score"]
+      # Check top-level or nested inside designs
+      top_missing = [f for f in required if f not in data]
+      if "designs" in data and isinstance(data["designs"], list) and len(data["designs"]) > 0:
+          design = data["designs"][0]
+          nested_missing = [f for f in ["scores", "verdict", "average_score"] if f not in design]
+          if not nested_missing:
+              return True, "Valid JSON with designs containing scores, verdict, and average_score"
+      if top_missing:
+          return False, f"Parsed JSON missing top-level fields: {', '.join(top_missing)}"
+      return True, "Valid JSON output with all required fields"
+
+  - name: asks_for_visual_context
+    description: >-
+      Asks the user for screenshots or visual context rather than fabricating an
+      evaluation when no design input is provided
+    if: "annotations.get('case_type') == 'asks-for-input'"
+    check: |
+      import re, json
+
+      text = outputs.get("conversation", "")
+      tool_calls = outputs.get("tool_calls") or []
+
+      # Check if it asked via AskUserQuestion tool
+      asked_via_tool = any(
+          c.get("name") == "AskUserQuestion"
+          and re.search(
+              r"(screenshot|image|visual|design|figma|screen|mockup|provide|share|upload)",
+              json.dumps(c.get("input", {})),
+              re.IGNORECASE,
+          )
+          for c in tool_calls
+      )
+
+      # Check if it asked in conversation text
+      asks_in_text = re.search(
+          r"(provide.*(screenshot|image|design|visual|mockup)|"
+          r"share.*(screenshot|image|design|visual|mockup)|"
+          r"upload.*(screenshot|image|design)|"
+          r"need.*(screenshot|image|visual|design)|"
+          r"could you.*(share|provide|upload)|"
+          r"please.*(share|provide|upload).*design|"
+          r"(screenshot|image|visual context|design).*(required|needed|necessary))",
+          text,
+          re.IGNORECASE,
+      )
+
+      if not asked_via_tool and not asks_in_text:
+          return False, "Did not ask the user for screenshots or visual context"
+
+      # Check it didn't fabricate scores anyway
+      fabricated = re.search(
+          r"(Verdict\s*:\s*(Pass|Fail)|average.score\s*:\s*\d)",
+          text,
+          re.IGNORECASE,
+      )
+      if fabricated and not asked_via_tool and not asks_in_text:
+          return False, "Fabricated an evaluation without visual context"
+
+      return True, "Asked for screenshots/visual context when none was provided"
+
+  - name: compares_multiple_designs
+    description: >-
+      Produces scores for multiple designs, a side-by-side summary, and a
+      recommendation when comparing two design options
+    if: "annotations.get('case_type') == 'comparison'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+
+      # Check for references to both options
+      has_option_a = re.search(r"option\s*a|single.page|accordion", text, re.IGNORECASE)
+      has_option_b = re.search(r"option\s*b|side.nav|tabbed", text, re.IGNORECASE)
+      if not has_option_a or not has_option_b:
+          missing = []
+          if not has_option_a:
+              missing.append("Option A")
+          if not has_option_b:
+              missing.append("Option B")
+          return False, f"Missing evaluation of: {', '.join(missing)}"
+
+      # Check for scores for multiple designs (at least 2 sets of scores)
+      score_blocks = re.findall(r"[1-5]\s*/\s*5|:\s*[1-5]\b|\bscore[:\s]+[1-5]\b|\|\s*[1-5]\s*\|", text, re.IGNORECASE)
+      if len(score_blocks) < 8:
+          return False, f"Expected scores for 2 designs (8+ score entries), found {len(score_blocks)}"
+
+      # Check for side-by-side or comparison summary
+      has_comparison = re.search(
+          r"(side.by.side|comparison|summary\s+table|compared|versus|vs\.?(\s|$))",
+          text,
+          re.IGNORECASE,
+      )
+      if not has_comparison:
+          return False, "No side-by-side comparison or summary found"
+
+      # Check for recommendation
+      has_recommendation = re.search(
+          r"(recommend|suggestion|preferred|winner|better\s+option|stronger\s+direction)",
+          text,
+          re.IGNORECASE,
+      )
+      if not has_recommendation:
+          return False, "No recommendation found"
+
+      return True, "Compared both designs with scores, side-by-side summary, and recommendation"
+
+thresholds:
+  scores_across_dimensions:
+    min_pass_rate: 1.0
+  valid_json_format:
+    min_pass_rate: 1.0
+  asks_for_visual_context:
+    min_pass_rate: 1.0
+  compares_multiple_designs:
+    min_pass_rate: 1.0

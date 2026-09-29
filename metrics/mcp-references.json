@@ -71,12 +71,14 @@
     "files": [
       "presets/envs/patternfly-mcp/install.sh",
       "presets/envs/patternfly-mcp/manifest.yaml",
-      "docs/presets/envs.md",
       "docs/presets/README.md",
+      "docs/presets/envs.md",
       "presets/install-envs.sh",
+      "scripts/verify-python-preset-e2e.sh",
       "presets/shared/skills/detect-tech-stack/SKILL.md",
       "docs/onboarding-new-instance.md",
       "presets/shared/skills/detect-tech-stack/detect_tech_stack.py",
+      "coordinator/test/opencode-config.test.ts",
       "presets/shared/skills/detect-tech-stack/tests/test_detect_tech_stack.py"
     ]
   },
@@ -116,6 +118,14 @@
     "description": "Custom bot runner instance built on platform-frontend-ai-dev bot for framework development",
     "files": [
       "instance/framework-config/agent/instance.yaml"
+    ]
+  },
+  {
+    "name": "RedHatInsights/hcc-orchestrator-agent-dev",
+    "url": "https://github.com/RedHatInsights/hcc-orchestrator-agent-dev",
+    "description": "",
+    "files": [
+      "instance/hcc-orchestrator-config/agent/instance.yaml"
     ]
   },
   {
@@ -165,6 +175,17 @@
     "files": [
       "instance/ocmui-config/agent/CLAUDE.md",
       "instance/ocmui-config/agent/instance.yaml"
+    ]
+  },
+  {
+    "name": "ansible/ansible-ui",
+    "url": "https://github.com/ansible/ansible-ui",
+    "description": "The UIs for Ansible Projects such as AWX, EDA, and HUB.",
+    "files": [
+      ".claude/skills/library_references.md",
+      ".mcp.json",
+      ".claude/skills/frontend-overlay/SKILL.md",
+      ".claude/skills/coding_standards.md"
     ]
   },
   {
@@ -318,6 +339,14 @@
     "files": [
       "README.md",
       "src/helpers.js"
+    ]
+  },
+  {
+    "name": "rhpds/rhdp-flow",
+    "url": "https://github.com/rhpds/rhdp-flow",
+    "description": "RHDP-Flow Workshop Automation - OpenShift workshop deployment from CSV files",
+    "files": [
+      ".mcp.json"
     ]
   },
   {

@@ -1,0 +1,5 @@
+expect_violations: true
+violation_type: barrel-icon-import
+invalid_import: "from '@patternfly/react-icons'"
+correct_import: "@patternfly/react-icons/dist/dynamic/icons/cog-icon"
+bundle_issue: true

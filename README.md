@@ -3,7 +3,7 @@
 [![License](https://img.shields.io/github/license/rh-uxd/ai-helpers)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 [![Plugins](https://img.shields.io/badge/plugins-14-blueviolet)](./PLUGINS.md)
-[![Skills](https://img.shields.io/badge/skills-56-blue)](./PLUGINS.md)
+[![Skills](https://img.shields.io/badge/skills-59-blue)](./PLUGINS.md)
 [![Agents](https://img.shields.io/badge/agents-8-teal)](./PLUGINS.md)
 [![skillsaw grade](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Frh-uxd%2Fai-helpers%2Fmain%2F.skillsaw-badge.json)](https://github.com/rh-uxd/ai-helpers/blob/main/.skillsaw-baseline.json)
 
@@ -83,7 +83,7 @@ After installing, skills work the same way — slash commands in any project:
 <tr><td nowrap><b>uxd-design</b></td><td>UX design workflow — Figma context, design evaluation, and implementation handoff</td></tr>
 <tr><td nowrap><b>uxd-prototype</b></td><td>Create UX prototypes from Jira tickets, Figma designs, or feature descriptions</td></tr>
 <tr><td nowrap><b>uxd-research</b></td><td>UX research pipeline — heuristic evaluation, usability testing, research methodology</td></tr>
-<tr><td nowrap><b>uxd-workshop</b></td><td>UXD team tools and skill incubator — prototyping, research, design review, team workflows</td></tr>
+<tr><td nowrap><b>uxd-workshop</b></td><td>UXD skill incubator — new skills start here before graduating to consumer plugins</td></tr>
 <tr><td nowrap><b>pf-a11y</b></td><td>Accessibility auditing, reporting, and documentation</td></tr>
 <tr><td nowrap><b>pf-code-review</b></td><td>Code review and quality — adversarial review, security patterns</td></tr>
 <tr><td nowrap><b>pf-design-audit</b></td><td>Design audit — validate existing code and designs against PatternFly standards</td></tr>
@@ -95,6 +95,22 @@ After installing, skills work the same way — slash commands in any project:
 <!-- END PLUGIN TABLE -->
 
 See [PLUGINS.md](PLUGINS.md) for the full list of skills, agents, and usage details.
+
+## Recommended Workflows
+
+Start with the skill that matches the artifact or decision in front of you:
+
+| If you need to... | Start with | What it delivers |
+|---|---|---|
+| Frame a feature before design or development | `uxd-discovery` | A focused brief with the problem, users, decisions, constraints, and success measures. |
+| Explore a design, screenshot, or mockup | `uxd-evaluate-design-heuristics` | A structured critique of accessibility, hierarchy, content, and state coverage. |
+| Build an interactive concept | `uxd-prototype-create` | A runnable prototype with user journeys, scenarios, and reusable artifacts. |
+| Validate a prototype against a ticket | `uxd-prototype-evaluate` | Acceptance-criteria results and persona-based usability evidence. |
+| Prepare a design for implementation | `uxd-design-handoff` | Components, interaction states, decisions, and testable acceptance criteria. |
+| Review PatternFly code before merging | `pf-review` | A consolidated check for PatternFly structure, imports, tokens, migration, and security issues. |
+| Check accessibility in a PatternFly interface | `pf-a11y-audit` | WCAG and ARIA findings with evidence and remediation guidance. |
+
+Use the [skill discovery matrix](PLUGINS.md#skill-discovery-matrix) to compare audience, inputs, outputs, and relative prompt footprint. These skills support judgment, not judgment replacement: use them to prepare or extend human review when the work involves product decisions, sensitive research, or high-impact user experiences.
 
 ## How It Works
 
@@ -111,7 +127,7 @@ See [PLUGINS.md](PLUGINS.md) for the full list of skills, agents, and usage deta
 │   ├── uxd-prototype/      # Create UX prototypes from Jira, Figma, or feature descriptions
 │   │   └── skills/
 │   │       └── uxd-prototype-create/  # Create or refine a prototype from a ticket, design, or idea
-│   ├── uxd-workshop/       # UXD incubator — research, design review, remaining prototype skills + uxd-assist
+│   ├── uxd-workshop/       # UXD incubator — new and experimental UXD skills
 │   └── patternfly/         # PatternFly meta-plugin + sub-plugins
 │       ├── agents/            # pf-assist routing agent
 │       ├── pf-react/          # React development — testing, structure, coding standards
@@ -139,7 +155,7 @@ Every pull request runs through automated quality gates:
 
 | Gate | What it checks |
 |------|---------------|
-| **Validate** | Manifest consistency, generated docs freshness, skill frontmatter integrity |
+| **Validate** | Manifest consistency and skill frontmatter integrity |
 | **Secret scan** | Internal URLs and potential credentials in tracked files |
 | **Link check** | Broken internal markdown links |
 | **Boundary check** | PF skills don't reference UXD internals and vice versa |

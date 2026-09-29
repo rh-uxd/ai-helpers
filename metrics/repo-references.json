@@ -1,5 +1,13 @@
 [
   {
+    "name": "0xmortuex/claude-code-skills",
+    "url": "https://github.com/0xmortuex/claude-code-skills",
+    "description": "A curated pack of 16 Claude Code skills for the unglamorous work that ships software - ship-it, readme-forge, security-sweep, git-rescue, devlog, and more. Each one researched first: only problems no prominent existing skill solves. No 40-skill kitchen sink.",
+    "files": [
+      "BACKLOG.md"
+    ]
+  },
+  {
     "name": "FlyingWHR/tashan",
     "url": "https://github.com/FlyingWHR/tashan",
     "description": "",
@@ -68,16 +76,8 @@
     "description": "Home of patternfly.org",
     "files": [
       "packages/documentation-site/patternfly-docs/content/AI/marketplace/marketplace.md",
-      "packages/documentation-site/patternfly-docs/content/AI/rapid-prototyping/new-prototypes.md",
-      "packages/documentation-site/patternfly-docs/content/AI/rapid-prototyping/enhancing-existing-projects.md"
-    ]
-  },
-  {
-    "name": "sudosubin/nix-skills",
-    "url": "https://github.com/sudosubin/nix-skills",
-    "description": "Nixpkgs overlay for AI agent skills from skills.sh and skillsdirectory.com",
-    "files": [
-      "data/source-skillsdirectory-com.json"
+      "packages/documentation-site/patternfly-docs/content/AI/rapid-prototyping/enhancing-existing-projects.md",
+      "packages/documentation-site/patternfly-docs/content/AI/rapid-prototyping/new-prototypes.md"
     ]
   }
 ]

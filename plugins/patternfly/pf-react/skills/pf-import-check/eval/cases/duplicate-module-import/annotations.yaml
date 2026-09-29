@@ -1,0 +1,5 @@
+expect_violations: true
+violation_type: duplicate-module-import
+invalid_import: "@patternfly/react-core/dist/esm"
+correct_import: "@patternfly/react-core"
+bundle_issue: true

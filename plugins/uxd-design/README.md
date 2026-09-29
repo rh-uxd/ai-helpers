@@ -9,3 +9,4 @@ UX design workflow — Figma context, design evaluation, and implementation hand
 ### Skills
 
 - **UXD Design Handoff** (`/uxd-design:uxd-design-handoff`) — Produce an implementation-ready design handoff spec from a validated design.
+- **UXD Figma Read** (`/uxd-design:uxd-figma-read`) — Retrieve design context from a Figma file.

@@ -1,0 +1,11 @@
+import React from 'react';
+import { Button } from '@patternfly/react-core';
+import { CogIcon, BellIcon, UserIcon } from '@patternfly/react-icons';
+
+export const SettingsToolbar = () => (
+  <div>
+    <Button variant="plain" icon={<CogIcon />} />
+    <Button variant="plain" icon={<BellIcon />} />
+    <Button variant="plain" icon={<UserIcon />} />
+  </div>
+);

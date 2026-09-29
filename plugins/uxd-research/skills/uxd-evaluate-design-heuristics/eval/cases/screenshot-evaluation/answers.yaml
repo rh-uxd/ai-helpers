@@ -1,0 +1,4 @@
+instruction: >
+  If asked about evaluation criteria, answer "use all default dimensions."
+  If asked to confirm the design scope, answer "yes, evaluate the full dashboard."
+  If asked about success criteria, answer "no specific criteria, use the defaults."

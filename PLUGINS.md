@@ -10,7 +10,7 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 - [uxd-design](#uxd-design) — UX design workflow — Figma context, design evaluation, and implementation handoff
 - [uxd-prototype](#uxd-prototype) — Create UX prototypes from Jira tickets, Figma designs, or feature descriptions
 - [uxd-research](#uxd-research) — UX research pipeline — heuristic evaluation, usability testing, research methodology
-- [uxd-workshop](#uxd-workshop) — UXD team tools and skill incubator — prototyping, research, design review, team workflows
+- [uxd-workshop](#uxd-workshop) — UXD skill incubator — new skills start here before graduating to consumer plugins
 - [pf-a11y](#pf-a11y) — Accessibility auditing, reporting, and documentation
 - [pf-code-review](#pf-code-review) — Code review and quality — adversarial review, security patterns
 - [pf-design-audit](#pf-design-audit) — Design audit — validate existing code and designs against PatternFly standards
@@ -62,6 +62,7 @@ UX design workflow — Figma context, design evaluation, and implementation hand
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
 <tr><td nowrap><code>uxd-design-handoff</code></td><td>Produce an implementation-ready design handoff spec from a validated design.</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-figma-read</code></td><td>Retrieve design context from a Figma file.</td><td>stable</td></tr>
 </table>
 
 
@@ -74,6 +75,9 @@ Create UX prototypes from Jira tickets, Figma designs, or feature descriptions
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
 <tr><td nowrap><code>uxd-prototype-create</code></td><td>Create or refine a UX prototype from a Jira ticket, Figma design, feature description, or rough idea.</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-prototype-evaluate</code></td><td>Evaluate a running prototype against a Jira ticket's acceptance criteria, automatically fix what fails, then run persona-based usability walkthroughs.</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-prototype-export</code></td><td>Export a prototype page or journey step as static HTML, a React component tree, or a PatternFly implementation spec, and install the Prototype Bar (Sources, Prototype|Eval, Scenario, Export).</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-prototype-publish</code></td><td>Publish a prototype to a git merge request, GitHub Pages, GitLab Pages, or Vercel.</td><td>stable</td></tr>
 </table>
 
 
@@ -86,6 +90,8 @@ UX research pipeline — heuristic evaluation, usability testing, research metho
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
 <tr><td nowrap><code>uxd-discovery</code></td><td>Produce a structured UX discovery brief from a feature request, Jira issue, or problem statement.</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-evaluate-design-heuristics</code></td><td>Score a design against accessibility, visual hierarchy, content, and state coverage heuristics.</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-research-heuristic-eval</code></td><td>Conduct a heuristic evaluation of a prototype or interface using three independent expert evaluators.</td><td>stable</td></tr>
 </table>
 
 
@@ -93,17 +99,9 @@ UX research pipeline — heuristic evaluation, usability testing, research metho
 
 ### uxd-workshop
 
-UXD team tools and skill incubator — prototyping, research, design review, team workflows
+UXD skill incubator — new skills start here before graduating to consumer plugins
 
-<table>
-<tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
-<tr><td nowrap><code>uxd-evaluate-design-heuristics</code></td><td>Score a design against accessibility, visual hierarchy, content, and state coverage heuristics.</td><td>—</td></tr>
-<tr><td nowrap><code>uxd-figma-read</code></td><td>Retrieve design context from a Figma file.</td><td>stable</td></tr>
-<tr><td nowrap><code>uxd-prototype-evaluate</code></td><td>Evaluate a running prototype against a Jira ticket's acceptance criteria, automatically fix what fails, then run persona-based usability walkthroughs.</td><td>stable</td></tr>
-<tr><td nowrap><code>uxd-prototype-export</code></td><td>Export a prototype page or journey step as static HTML, a React component tree, or a PatternFly implementation spec, and install the Prototype Bar (Sources, Prototype|Eval, Scenario, Export).</td><td>—</td></tr>
-<tr><td nowrap><code>uxd-prototype-publish</code></td><td>Publish a prototype to a git merge request, GitHub Pages, GitLab Pages, or Vercel.</td><td>stable</td></tr>
-<tr><td nowrap><code>uxd-research-heuristic-eval</code></td><td>Conduct a heuristic evaluation of a prototype or interface using three independent expert evaluators.</td><td>stable</td></tr>
-</table>
+No skills or agents yet.
 
 
 <br>
@@ -128,6 +126,7 @@ Code review and quality — adversarial review, security patterns
 
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
+<tr><td nowrap><code>pf-adversarial-review</code></td><td>Review PatternFly React components for unhandled edge cases and missing defensive code.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-i18n-audit</code></td><td>Audit PatternFly React code for i18n readiness — hardcoded user-facing strings, concatenation anti-patterns, locale-dependent formatting, and RTL-unsafe CSS.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-review</code></td><td>Run all PatternFly compliance checks on a project — imports, components, colors, legacy CSS, and security.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-security-scan</code></td><td>Scan PatternFly React code for security anti-patterns — XSS via dangerouslySetInnerHTML, unsanitized user input in tooltips/labels, and insecure href patterns.</td><td>stable</td></tr>
@@ -148,13 +147,13 @@ Design audit — validate existing code and designs against PatternFly standards
 <tr><td nowrap><code>pf-css-token-check</code></td><td>Detect hardcoded color, spacing, typography, border radius and shadow values that have PF token equivalents and suggest the correct design token replacements.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-figma-check</code></td><td>Check Figma designs against PatternFly v6 standards for colors, typography, spacing, and component usage.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-figma-token-check</code></td><td>Audit designs against the PatternFly 6 token architecture and bridge Figma styles to PF semantic tokens.</td><td>stable</td></tr>
-<tr><td nowrap><code>pf-glass-check</code></td><td>Audit PatternFly prototypes for Glass Mode handbook violations — glass-on-glass layering, missing isPlain, accessibility overrides, and background image rules.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-glass-check</code></td><td>Implement and audit PatternFly Glass Mode screens using the Glass Mode handbook.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-icon-finder</code></td><td>Identify PatternFly icons in design mockups and provide the correct React import statements.</td><td>stable</td></tr>
 </table>
 
 <table>
 <tr><th>Agent</th><th>Description</th><th>Eval</th></tr>
-<tr><td nowrap><code>pf-glass-standards</code></td><td>PatternFly Glass Mode standards — glass-on-glass prevention, isPlain vs default styling, Drawer variant rules, accessibility overrides, and background image rules.</td><td>—</td></tr>
+<tr><td nowrap><code>pf-glass-standards</code></td><td>PatternFly Glass Mode standards — glass-on-glass prevention, default card styling with optional isPlain, Drawer variant rules, accessibility overrides, and background image rules.</td><td>—</td></tr>
 </table>
 
 
@@ -166,6 +165,7 @@ Design guide — component selection, interaction patterns, AI experience patter
 
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
+<tr><td nowrap><code>pf-catalog-interaction-patterns</code></td><td>Catalog interaction patterns (click, hover, keyboard, drag) across PatternFly components.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-design-direction</code></td><td>Recommend a PatternFly UI direction by mapping user intent to the right host pattern, comparing implementation evidence to the PatternFly target, and scoring local drift.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-figma-design-mode</code></td><td>Create and edit Figma design files using PatternFly-approved component libraries.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-screenshot-mapping</code></td><td>Maps screenshots and UI mockups (any fidelity) to PatternFly 6 layout and building-block components.</td><td>stable</td></tr>
@@ -214,8 +214,9 @@ React component development — coding standards, testing, and structure
 <tr><td nowrap><code>pf-deploy</code></td><td>Deploy a PatternFly React project to GitHub Pages using pfcli deploy.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-design-comments-setup</code></td><td>Integrate @patternfly/design-comments into React apps for on-page design feedback, pinned comment threads, GitHub Issues sync, and Jira linking.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-form-gen</code></td><td>Generate PatternFly form components with validation, layout, and accessibility.</td><td>stable</td></tr>
-<tr><td nowrap><code>pf-import-check</code></td><td>Audit and fix invalid PatternFly import paths across packages.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-import-check</code></td><td>Audit PatternFly imports for correctness and bundle-size anti-patterns.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-project-gen</code></td><td>Scaffolds PatternFly React projects with PF6-safe dependencies, imports, and starter layout.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-reproduce-issue</code></td><td>Reproduce a PatternFly bug from a GitHub issue description.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-table-gen</code></td><td>Generate PatternFly table components with sorting, filtering, pagination, and expandable rows.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-test-gen</code></td><td>Generate a unit test file for a React component using Testing Library.</td><td>stable</td></tr>
 </table>
@@ -264,5 +265,73 @@ PatternFly team tools and skill incubation — issue triage, release management,
 
 **Eval coverage**
 
-- Consumer: 33/33 (100%)
-- Workshop: 4/23 (17%)
+- Consumer: 42/42 (100%)
+- Workshop: 0/17 (0%)
+
+---
+
+## Skill discovery matrix
+
+Generated from skill frontmatter and section headings. Token cost is a relative prompt-footprint size, not runtime usage or a model billing estimate. See contributor guidance for size ranges and methodology.
+
+| Skill | Audience | Inputs | Outputs | Token cost |
+|---|---|---|---|---|
+| `uxd-design-handoff` | UXD practitioners | Input Required Source Design artifact (prototype files, Figma screenshots, text description) ... | The handoff spec is written to a local file (markdown by default, JSON when --format=json). I... | M |
+| `uxd-figma-read` | UXD practitioners | Task context | Structured result | M |
+| `uxd-prototype-create` | UXD practitioners | Input Required Source What to prototype (Jira URL/key, Figma link, description, or idea) Yes ... | Written under .artifacts/{ID}/ in the consumer project (never ${CLAUDESKILLDIR}): Output Loca... | XL |
+| `uxd-prototype-evaluate` | UXD practitioners | Input Example Required Jira story key PROJ-298 Yes Prototype URL http://localhost:3000 Condit... | Per-key eval files under ${UXDPROJECTROOT}/.artifacts/<KEY>/eval/ (ARTIFACTSDIR): File Descri... | XL |
+| `uxd-prototype-export` | UXD practitioners | Input Required Source What to export (current page, journey batch, or install bar) Yes User; ... | Under .artifacts/{ID}/exports/ unless --out is set: Output Description index.html + export-ma... | L |
+| `uxd-prototype-publish` | UXD practitioners | Input Source Required Prototype files .artifacts/{ID}/prototype/ or workspace files Yes metad... | Output Description Published prototype GitLab MR, GitHub Pages, GitLab Pages, or Vercel URL U... | L |
+| `uxd-discovery` | UXD practitioners | Input Type Required Default Problem source Jira issue key/URL, feature description, or proble... | Output Format Description Discovery brief Structured markdown Problem statement, user groups,... | M |
+| `uxd-evaluate-design-heuristics` | UXD practitioners | The skill expects one or more of the following, provided by the user or by an upstream skill:... | Given the required inputs, this skill produces: Verdict — Pass or Fail. Any dimension scoring... | L |
+| `uxd-research-heuristic-eval` | UXD practitioners | Input Type Required Default Interface to evaluate Screenshots, image files, text descriptions... | Output Format Location Evaluation report .md and .html [project-dir]/heuristic-eval-[date].[ext] | XL |
+| `pf-a11y-audit` | PatternFly designers and developers | Task context | Per finding: [ERRORWARNINFO] file/path.tsx:42 — description (WCAG X.X.X) Found: what was dete... | L |
+| `pf-a11y-keyboard` | PatternFly designers and developers | Source Required Description URL Yes URL to a running application (localhost or deployed) Focu... | Structured result | L |
+| `pf-a11y-test-gen` | PatternFly designers and developers | Source Required Description Component/module file Yes Path to the component or UI module to g... | Structured result | L |
+| `pf-adversarial-review` | PatternFly designers and developers | The user provides a file path, directory, or component to review. Default to the current work... | Structured result | M |
+| `pf-i18n-audit` | PatternFly designers and developers | The user provides a directory, file path, or set of components to audit. Default to the curre... | Structured result | M |
+| `pf-review` | PatternFly designers and developers | Task context | Structured result | S |
+| `pf-security-scan` | PatternFly designers and developers | Task context | Structured result | M |
+| `pf-state-audit` | PatternFly designers and developers | The user provides a directory, file path, or set of components to audit. Default to the curre... | Structured result | M |
+| `pf-ai-audit` | PatternFly designers and developers | Task context | Structured result | L |
+| `pf-color-scan` | PatternFly designers and developers | Task context | For every violation found, provide: File Name: [Name] File Path: [Path] Line Number: [Number]... | S |
+| `pf-css-token-check` | PatternFly designers and developers | Task context | For every violation found, provide: Header: | L |
+| `pf-figma-check` | PatternFly designers and developers | Task context | Structured result | S |
+| `pf-figma-token-check` | PatternFly designers and developers | Theme: Infer default vs Red Hat from brand accent when present: #ee0000 → Red Hat; #0066cc → ... | Structured result | L |
+| `pf-glass-check` | PatternFly designers and developers | Task context | Structured result | L |
+| `pf-icon-finder` | PatternFly designers and developers | Task context | Structured result | M |
+| `pf-catalog-interaction-patterns` | PatternFly designers and developers | Task context | When returning matches: | M |
+| `pf-design-direction` | PatternFly designers and developers | Task context | Default to a short user-facing report. Do not dump the full field list unless the user asks f... | L |
+| `pf-figma-design-mode` | PatternFly designers and developers | Task context | Structured result | S |
+| `pf-screenshot-mapping` | PatternFly designers and developers | Task context | Structured result | M |
+| `pf-css-migration-scan` | PatternFly designers and developers | Task context | For each finding include: file path current class/token recommended PF6 replacement confidenc... | S |
+| `pf-react-migration-scan` | PatternFly designers and developers | Task context | Structured result | M |
+| `pf-release-candidate-update` | PatternFly designers and developers | Task context | Structured result | M |
+| `pf-chart-gen` | PatternFly designers and developers | The user provides one of: A description of the chart type and data (e.g., "bar chart showing ... | Output the complete chart component ready to save. Include the import block, data transformat... | S |
+| `pf-component-check` | PatternFly designers and developers | Task context | Structured result | L |
+| `pf-component-reuse-check` | PatternFly designers and developers | Task context | Structured result | M |
+| `pf-deploy` | PatternFly designers and developers | Task context | Structured result | S |
+| `pf-design-comments-setup` | PatternFly designers and developers | Task context | Structured result | S |
+| `pf-form-gen` | PatternFly designers and developers | The user provides one of: A description of the form's purpose and fields (e.g., "create a use... | Output the complete form component ready to save. Include the import block, component functio... | S |
+| `pf-import-check` | PatternFly designers and developers | The user provides a file path, directory, or component to check. Default to scanning the proj... | For each finding, provide: Severity: high medium low File path and line number Current import... | S |
+| `pf-project-gen` | PatternFly designers and developers | Task context | Structured result | S |
+| `pf-reproduce-issue` | PatternFly designers and developers | The user provides one of: A GitHub issue URL (e.g., https://github.com/patternfly/patternfly-... | Produce a reproduction report: | S |
+| `pf-table-gen` | PatternFly designers and developers | The user provides one of: A description of the data and desired table features (e.g., "sortab... | Output the complete table component ready to save. Include the import block, type definitions... | S |
+| `pf-test-gen` | PatternFly designers and developers | The user will provide a component file path or component code. Read the component source befo... | Output the complete test file ready to save. Name it ComponentName.test.tsx matching the sour... | S |
+| `pf-analytics-repo-pruning` | Contributors and maintainers | File: repos.json (project root or path the user supplies). Expect a top-level repos array; ea... | Structured result | S |
+| `pf-bug-triage` | Contributors and maintainers | The user provides an issue (title, body, labels, and optionally linked files or component nam... | Produce a triage comment or summary using this template: markdown | S |
+| `pf-content-review` | Contributors and maintainers | Task context | Structured result | S |
+| `pf-create-issue` | Contributors and maintainers | Task context | Structured result | M |
+| `pf-css-var-scan` | Contributors and maintainers | Task context | A Markdown report with: Summary statistics (total vars, redefined count/%, undefined, unused,... | S |
+| `pf-duplicate-epic` | Contributors and maintainers | The command takes exactly two positional arguments: Position Name Description $1 issue Any Ji... | After a successful run, display these URLs to the user: Feature: https://redhat.atlassian.net... | S |
+| `pf-figma-diff` | Contributors and maintainers | Task context | FIGMACHANGELOG.md - Internal design team changelog with all updates RELEASENOTES.md - Consume... | L |
+| `pf-modifier-scan` | Contributors and maintainers | The user will specify a scope: all components (default), a specific component, a specific mod... | Write a Markdown file with: | S |
+| `pf-org-version-update` | Contributors and maintainers | Task context | Structured result | M |
+| `pf-prototype-mode` | Contributors and maintainers | Task context | Structured result | S |
+| `pf-quarterly-report-gen` | Contributors and maintainers | Task context | Structured result | M |
+| `pf-rhds-icon-finder` | Contributors and maintainers | Task context | Structured result | M |
+| `pf-semantic-release-debug` | Contributors and maintainers | Task context | Structured result | S |
+| `pf-summarize-jira-issues` | Contributors and maintainers | Task context | Structured result | M |
+| `pf-summarize-pr-reviews` | Contributors and maintainers | Task context | Structured result | M |
+| `pf-token-build` | Contributors and maintainers | Task context | Structured result | S |
+| `pf-write-example-description` | Contributors and maintainers | Task context | Structured result | M |

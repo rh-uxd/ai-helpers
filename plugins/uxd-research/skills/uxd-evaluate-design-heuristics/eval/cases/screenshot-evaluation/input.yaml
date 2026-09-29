@@ -1,0 +1,4 @@
+prompt: >-
+  Using the uxd-evaluate-design-heuristics skill: evaluate the design described
+  in fixture-ui.md in this case directory. Do not call network or MCP.
+fixture: fixture-ui.md

@@ -1,0 +1,6 @@
+prompt: >-
+  Using uxd-prototype-export, I have a running prototype at
+  http://localhost:3000/settings?scenario=empty. Explain how you would capture
+  the current page as HTML, a component tree, and a PatternFly implementation
+  spec. Do not run the command or contact any external service. Be explicit
+  about what the HTML output is and is not.

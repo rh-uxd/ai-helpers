@@ -1,0 +1,1 @@
+prompt: "Run an adversarial review on OrderTable.tsx. Look for PF component misuse, silent failures, and edge cases with the Select, Table, Tabs, and Pagination components."

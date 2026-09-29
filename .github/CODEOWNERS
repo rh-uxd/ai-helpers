@@ -20,5 +20,6 @@ CONTRIBUTING-SKILLS.md              @rh-uxd/ai-helpers-maintainers
 .coderabbit.yaml                    @rh-uxd/ai-helpers-maintainers
 
 # Repo-level config
+AGENTS.md                            @rh-uxd/ai-helpers-maintainers
 CLAUDE.md                           @rh-uxd/ai-helpers-maintainers
 .agents/                            @rh-uxd/ai-helpers-maintainers

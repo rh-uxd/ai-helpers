@@ -1,0 +1,6 @@
+prompt: >-
+  Using uxd-prototype-export, explain how to install the Prototype Bar into
+  /tmp/demo from its workspace source and prepare the prototype for static
+  Pages hosting. There is already an artifact directory at
+  .artifacts/DEMO/. Do not run commands or deploy anything. Explain whether a
+  live URL is required and how the eval report becomes available on Pages.

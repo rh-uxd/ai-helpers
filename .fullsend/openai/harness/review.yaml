@@ -1,0 +1,12 @@
+base: https://raw.githubusercontent.com/fullsend-ai/agents/main/harness/review.yaml#sha256=9e861368a30eaf326c95fc0bd37cf438e9931048807f40c4bc6afad01c7aea18
+agent: agents/review.md
+
+description: "Fullsend review agent with OpenAI Luna"
+providers:
+  - openai
+
+env:
+  sandbox:
+    PR_URL: "${PR_URL}"
+    REPO_FULL_NAME: "${REPO_FULL_NAME}"
+    REVIEW_FINDING_SEVERITY_THRESHOLD: "${REVIEW_FINDING_SEVERITY_THRESHOLD}"

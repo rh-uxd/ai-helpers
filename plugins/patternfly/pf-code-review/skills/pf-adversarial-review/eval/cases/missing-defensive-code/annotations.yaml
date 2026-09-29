@@ -1,0 +1,31 @@
+expect_issues: true
+issue_categories:
+  - missing_defensive
+expected_findings:
+  - id: undefined-users
+    file: UserTable.tsx
+    line: 28
+    signals: ['users', 'undefined', 'slice']
+  - id: empty-users
+    file: UserTable.tsx
+    line: 29
+    signals: ['users[0]', 'empty']
+  - id: optional-select-handler
+    file: UserTable.tsx
+    line: 45
+    signals: ['onSelect', 'undefined']
+  - id: nullable-role
+    file: UserTable.tsx
+    line: 49
+    signals: ['user.role', 'null']
+  - id: missing-permissions
+    file: UserTable.tsx
+    line: 49
+    signals: ['permissions', 'undefined']
+notes: |
+  Should flag: users.slice() crashes when users is undefined (optional prop),
+  users[0] crashes on empty array, onSelect(user) crashes when onSelect
+  is undefined (optional prop), user.role.name crashes if role is null,
+  user.role.permissions.join() crashes if permissions is undefined.
+  Missing: default value for users prop, optional chaining on onSelect,
+  null checks on nested role properties, bounds check on users[0].
