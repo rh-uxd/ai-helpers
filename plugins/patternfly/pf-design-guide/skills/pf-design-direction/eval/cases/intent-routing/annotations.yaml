@@ -1,0 +1,6 @@
+case_type: intent-routing
+expected_host: modal
+expected_profile: confirm-destructive
+rejected_hosts:
+  - drawer
+  - inline

@@ -1,0 +1,7 @@
+prompt: >-
+  Use the pf-design-direction skill to assess the ticket and incomplete evidence
+  in fixture-ticket.md. The stakeholder wants to know whether the current design
+  is PatternFly drift and what should replace it. Stay within what the evidence
+  supports, include PatternFly fit and drift_weight if justified, and identify
+  any open design question. Do not create a mock or call network or MCP tools.
+fixture: fixture-ticket.md

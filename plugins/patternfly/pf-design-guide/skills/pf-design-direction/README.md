@@ -1,6 +1,6 @@
-# UXD Design Direction
+# PatternFly Design Direction
 
-Workshop-ready PatternFly decision engine for UXD teams. The skill turns
+PatternFly decision engine for product teams. The skill turns
 PatternFly guidance, implementation evidence, and staged local preferences into
 a recommendation and a screenshot-mock plan.
 

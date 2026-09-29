@@ -1,6 +1,7 @@
 ---
-name: uxd-design-direction
+name: pf-design-direction
 version: 0.1.0
+disable-model-invocation: true
 description: >-
   Recommend a PatternFly UI direction by mapping user intent to the right host
   pattern, comparing implementation evidence to the PatternFly target, and
@@ -9,7 +10,7 @@ description: >-
   first-pass ticket UI recommendation.
 ---
 
-# UX Design Direction
+# PatternFly Design Direction
 
 Orchestrator skill. Do not jump straight to components. Inspect the current
 implementation when evidence exists, walk the decision tree, then compare the
@@ -17,8 +18,7 @@ implementation to the PatternFly target.
 
 ## Scope
 
-This skill decides **what users should see** for UXD and PatternFly-adjacent
-product work:
+This skill decides **what users should see** for PatternFly product work:
 
 - UI direction for a ticket, brief, or design review
 - PatternFly fit for a current implementation
@@ -29,7 +29,7 @@ product work:
 This skill does **not** decide file structure, naming conventions, runtime
 architecture, or implementation workflow.
 
-This workshop copy keeps the design engine self-contained:
+The design engine is self-contained:
 
 - [references/decision-tree.md](references/decision-tree.md) chooses the
   PatternFly target

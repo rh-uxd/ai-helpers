@@ -1,0 +1,7 @@
+prompt: >-
+  Use the pf-design-direction skill to recommend a first-pass PatternFly
+  direction for the feature request in fixture-ticket.md. State the evidence
+  mode and any override_weight you can justify. Do not assume access to a repo,
+  screenshots, or an existing product convention. Do not create a mock or call
+  network or MCP tools.
+fixture: fixture-ticket.md

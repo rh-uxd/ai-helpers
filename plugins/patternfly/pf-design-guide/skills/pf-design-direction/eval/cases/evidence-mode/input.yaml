@@ -1,0 +1,7 @@
+prompt: >-
+  Use the pf-design-direction skill to review the ticket and implementation
+  evidence in fixture-ticket.md. Report the PatternFly target and PatternFly
+  fit separately from the local convention. Include explicit drift_weight and
+  override_weight values and the evidence scope. Do not create a mock or call
+  network or MCP tools.
+fixture: fixture-ticket.md
