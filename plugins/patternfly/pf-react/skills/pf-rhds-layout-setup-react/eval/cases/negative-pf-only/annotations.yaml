@@ -1,0 +1,4 @@
+expect_rhds: false
+pattern: standard
+has_header: false
+has_footer: false

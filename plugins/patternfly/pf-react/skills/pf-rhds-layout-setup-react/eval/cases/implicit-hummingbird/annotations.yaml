@@ -1,0 +1,4 @@
+expect_rhds: true
+pattern: combined
+has_header: true
+has_footer: true
