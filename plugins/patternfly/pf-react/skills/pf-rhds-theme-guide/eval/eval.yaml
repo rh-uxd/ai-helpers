@@ -1,0 +1,253 @@
+name: pf-rhds-theme-guide-eval
+description: Evaluate PF and RHDS theme audits, targeted fixes, preservation of intentional overrides, and tailored usage guidance
+skill: pf-react:pf-rhds-theme-guide
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - ../../../
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains input.yaml, annotations.yaml, package.json,
+    and source fixtures for a mixed PatternFly and RHDS React project.
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill audits source files, applies targeted theme fixes, and returns
+      an audit summary, changes made, and a four-section usage guide.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: fixes_root_theme_toggle
+    description: Fixes a broken toggle by applying pf-v6-theme-dark to document.documentElement
+    if: "annotations.get('has_broken_root_toggle') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str):
+              text += "\n" + content
+      fixed = re.search(
+          r'document\.documentElement\.classList\.(?:toggle|add)\([^)]*pf-v6-theme-dark',
+          text,
+          re.DOTALL,
+      )
+      if not fixed:
+          return False, "Did not apply pf-v6-theme-dark to document.documentElement"
+      return True, "Synchronizes PF and RHDS from the document root"
+
+  - name: removes_redundant_palette
+    description: Removes theme-derived RHDS color-palette mappings
+    if: "annotations.get('has_redundant_palette') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      removal = re.search(
+          r'(remove|removed|delete|deleted)[^.]*(colorPalette|color-palette)|'
+          r'(colorPalette|color-palette)[^.]*(redundant|remove|removed)',
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      if not removal:
+          return False, "Did not identify and remove the theme-derived color palette"
+      return True, "Removes redundant dynamic color-palette mapping"
+
+  - name: preserves_intentional_palette
+    description: Preserves static RHDS color-palette overrides
+    if: "annotations.get('has_intentional_palette') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str) and "_modified/" in path:
+              text += "\n" + content
+      preserved = re.search(
+          r'(keep|kept|preserv|intentional|leave)[^.]*(colorPalette|color-palette)|'
+          r'(colorPalette|color-palette)[^.]*(keep|kept|preserv|intentional|leave)',
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      if not preserved:
+          return False, "Did not recognize static color-palette values as intentional"
+      return True, "Preserves intentional static color-palette overrides"
+
+  - name: fixes_code_editor
+    description: Adds isDarkTheme to CodeEditor using current theme state
+    if: "annotations.get('has_code_editor') == True and annotations.get('expect_no_changes') != True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str):
+              text += "\n" + content
+      if not re.search(r'<CodeEditor[^>]*\bisDarkTheme\s*=', text, re.DOTALL):
+          return False, "CodeEditor is missing isDarkTheme"
+      return True, "Wires CodeEditor to the current theme"
+
+  - name: fixes_chart
+    description: Adds nodeSelector html to ECharts Chart
+    if: "annotations.get('has_chart') == True and annotations.get('expect_no_changes') != True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str):
+              text += "\n" + content
+      if not re.search(r'<Chart[^>]*\bnodeSelector=["\']html["\']', text, re.DOTALL):
+          return False, "ECharts Chart is missing nodeSelector=html"
+      return True, "Points ECharts theme detection at the html element"
+
+  - name: fixes_hero_images
+    description: Supplies separate light and dark Hero background sources
+    if: "annotations.get('has_hero') == True and annotations.get('expect_no_changes') != True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str):
+              text += "\n" + content
+      light = re.search(r'backgroundSrcLight\s*=', text)
+      dark = re.search(r'backgroundSrcDark\s*=', text)
+      if not light or not dark:
+          return False, "Hero does not have both light and dark background sources"
+      return True, "Adds both Hero theme image sources"
+
+  - name: resolves_dual_switchers
+    description: Detects competing custom and RHDS theme controls and consolidates them
+    if: "annotations.get('has_dual_switch') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      conflict = re.search(
+          r'(conflict|competing|duplicate|two|both|dual)[^.]*(toggle|switch)|'
+          r'(toggle|switch)[^.]*(conflict|competing|duplicate|consolidat|remove)',
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      if not conflict:
+          return False, "Did not identify or resolve the dual-switching conflict"
+      return True, "Identifies and consolidates competing theme controls"
+
+  - name: preserves_intentional_rhds_switcher
+    description: Keeps an intentional RHDS-only switcher and its PF synchronization listener
+    if: "annotations.get('intentional_rhds_switcher') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str) and "_modified/" in path:
+              text += "\n" + content
+      keep = re.search(r'(keep|kept|preserv|intentional|valid)[^.]*(rh-scheme-toggle|RHDS)', text, re.I | re.DOTALL)
+      listener = re.search(r'scheme-changed', text)
+      pf_class = re.search(r'pf-v6-theme-dark', text)
+      if not keep or not listener or not pf_class:
+          return False, "Did not preserve the intentional RHDS switcher synchronization approach"
+      return True, "Preserves the intentional RHDS switcher and PF class listener"
+
+  - name: no_unnecessary_source_changes
+    description: Leaves already-correct projects unchanged
+    if: "annotations.get('expect_no_changes') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      modified_source = [
+          path for path in outputs.get("files", {})
+          if "_modified/" in path and re.search(r'/src/.*\.(?:js|jsx|ts|tsx)$', path)
+      ]
+      if modified_source:
+          return False, f"Changed already-correct source files: {modified_source}"
+      clean = re.search(r'(no (?:source )?changes|no fixes|already correct|correctly configured|no issues)', text, re.I)
+      if not clean:
+          return False, "Did not clearly report that the existing setup needs no changes"
+      return True, "Leaves the valid setup unchanged"
+
+  - name: reports_audit_before_changes
+    description: Reports audit findings before listing changes
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      audit = re.search(r'(audit summary|audit findings|what (?:I )?found)', text, re.I)
+      changes = re.search(r'(changes (?:made|needed|applied|required)|files? changed|what (?:I )?changed)', text, re.I)
+      if not audit:
+          return False, "Missing audit summary"
+      if not changes:
+          return False, "Missing changes-made summary"
+      if audit.start() > changes.start():
+          return False, "Reported changes before audit findings"
+      return True, "Reports audit findings before changes"
+
+  - name: outputs_four_section_guide
+    description: Returns the required four tailored guide sections
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      required = [
+          r'how theming works',
+          r'theme switching methods',
+          r'components with theme caveats',
+          r'component-level theme overrides',
+      ]
+      missing = [heading for heading in required if not re.search(heading, text, re.I)]
+      if missing:
+          return False, f"Missing guide sections: {missing}"
+      return True, "Includes all four guide sections"
+
+  - name: guide_stays_in_response
+    description: Does not write the usage guide to a file
+    check: |
+      import re
+      guide_files = []
+      for path in outputs.get("files", {}):
+          name = path.rsplit('/', 1)[-1]
+          if "_modified/" in path and re.search(r'(theme|usage)[-_ ]?guide.*\.md$', name, re.I):
+              guide_files.append(path)
+      if guide_files:
+          return False, f"Wrote guide file(s): {guide_files}"
+      return True, "Keeps the guide in the response"
+
+thresholds:
+  fixes_root_theme_toggle:
+    min_pass_rate: 1.0
+  removes_redundant_palette:
+    min_pass_rate: 1.0
+  preserves_intentional_palette:
+    min_pass_rate: 1.0
+  fixes_code_editor:
+    min_pass_rate: 1.0
+  fixes_chart:
+    min_pass_rate: 1.0
+  fixes_hero_images:
+    min_pass_rate: 1.0
+  resolves_dual_switchers:
+    min_pass_rate: 1.0
+  preserves_intentional_rhds_switcher:
+    min_pass_rate: 1.0
+  no_unnecessary_source_changes:
+    min_pass_rate: 1.0
+  reports_audit_before_changes:
+    min_pass_rate: 1.0
+  outputs_four_section_guide:
+    min_pass_rate: 1.0
+  guide_stays_in_response:
+    min_pass_rate: 1.0
