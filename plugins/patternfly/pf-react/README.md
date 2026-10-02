@@ -9,6 +9,7 @@ React component development — coding standards, testing, and structure.
 ### Skills
 
 - **PF Chart Gen** (`/pf-react:pf-chart-gen`) — Generate PatternFly chart components with theming, responsive sizing, and accessibility.
+- **PF Chatbot Bundle Check** (`/pf-react:pf-chatbot-bundle-check`) — Audit PatternFly ChatBot imports for tree-shaking opportunities.
 - **PF Component Check** (`/pf-react:pf-component-check`) — Audit PatternFly React component nesting, wrapper hierarchies, and layout structure.
 - **PF Component Reuse Check** (`/pf-react:pf-component-reuse-check`) — Detects custom React components in newly created or modified (uncommitted) code that overlap with PatternFly React components, suggests the PatternFly equivalent, and can replace the custom component then build to verify.
 - **PF Deploy** (`/pf-react:pf-deploy`) — Deploy a PatternFly React project to GitHub Pages using pfcli deploy.

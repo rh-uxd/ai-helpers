@@ -1,0 +1,6 @@
+applies: true
+version: "6.8.0-prerelease.9"
+scanned_files: 2
+issue: excluded-code-modal
+finding_file: src/CodeViewer.tsx
+expect_preload: false

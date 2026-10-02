@@ -216,6 +216,7 @@ React component development — coding standards, testing, and structure
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
 <tr><td nowrap><code>pf-chart-gen</code></td><td>Generate PatternFly chart components with theming, responsive sizing, and accessibility.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-chatbot-bundle-check</code></td><td>Audit PatternFly ChatBot imports for tree-shaking opportunities.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-component-check</code></td><td>Audit PatternFly React component nesting, wrapper hierarchies, and layout structure.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-component-reuse-check</code></td><td>Detects custom React components in newly created or modified (uncommitted) code that overlap with PatternFly React components, suggests the PatternFly equivalent, and can replace the custom component then build to verify.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-deploy</code></td><td>Deploy a PatternFly React project to GitHub Pages using pfcli deploy.</td><td>stable</td></tr>
@@ -273,7 +274,7 @@ PatternFly team tools and skill incubation — issue triage, release management,
 
 **Eval coverage**
 
-- Consumer: 44/44 (100%)
+- Consumer: 45/45 (100%)
 - Workshop: 0/21 (0%)
 
 ---
@@ -321,6 +322,7 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 | `pf-react-migration-scan` | PatternFly designers and developers | Task context | Structured result | M |
 | `pf-release-candidate-update` | PatternFly designers and developers | Task context | Structured result | M |
 | `pf-chart-gen` | PatternFly designers and developers | The user provides one of: A description of the chart type and data (e.g., "bar chart showing ... | Output the complete chart component ready to save. Include the import block, data transformat... | S |
+| `pf-chatbot-bundle-check` | PatternFly designers and developers | Task context | Structured result | M |
 | `pf-component-check` | PatternFly designers and developers | Task context | Structured result | L |
 | `pf-component-reuse-check` | PatternFly designers and developers | Task context | Structured result | M |
 | `pf-deploy` | PatternFly designers and developers | Task context | Structured result | S |

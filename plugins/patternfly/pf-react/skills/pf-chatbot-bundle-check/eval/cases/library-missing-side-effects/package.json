@@ -1,0 +1,16 @@
+{
+  "name": "company-chatbot-components",
+  "version": "2.0.0",
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "dependencies": {
+    "@patternfly/chatbot": "6.8.1",
+    "react": "^18.3.0"
+  }
+}

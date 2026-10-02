@@ -1,0 +1,10 @@
+{
+  "name": "legacy-assistant",
+  "version": "1.0.0",
+  "dependencies": {
+    "@patternfly/chatbot": "6.7.2",
+    "@patternfly/react-core": "^6.2.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0"
+  }
+}

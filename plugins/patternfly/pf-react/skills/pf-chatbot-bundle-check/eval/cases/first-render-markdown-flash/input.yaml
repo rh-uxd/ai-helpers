@@ -1,0 +1,1 @@
+prompt: "Audit this ChatBot bundle. Users consistently see unformatted welcome-message markdown flash on first render; recommend the targeted fix without editing files. The project is in the current directory."
