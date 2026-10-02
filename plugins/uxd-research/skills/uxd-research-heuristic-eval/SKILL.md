@@ -2,7 +2,7 @@
 name: uxd-research-heuristic-eval
 slug: uxd-research-heuristic-eval
 type: crossover
-phase: evaluative
+phase: validated
 status: stable
 description: "Conduct a heuristic evaluation of a prototype or interface using three independent expert evaluators. Use when running a usability audit, evaluating a UI against Nielsen's heuristics or other frameworks, or preparing for user testing. Do not use for accessibility audits, WCAG checks, or axe scans."
 ---
