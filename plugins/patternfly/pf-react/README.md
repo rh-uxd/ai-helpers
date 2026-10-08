@@ -17,6 +17,7 @@ React component development — coding standards, testing, and structure.
 - **PF Import Check** (`/pf-react:pf-import-check`) — Audit PatternFly imports for correctness and bundle-size anti-patterns.
 - **PF Project Gen** (`/pf-react:pf-project-gen`) — Scaffolds PatternFly React projects with PF6-safe dependencies, imports, and starter layout.
 - **PF Reproduce Issue** (`/pf-react:pf-reproduce-issue`) — Reproduce a PatternFly bug from a GitHub issue description.
+- **PF Rhds Theme Guide** (`/pf-react:pf-rhds-theme-guide`) — Audit and fix theme synchronization between PatternFly React and Red Hat Design System web components, then generate a usage guide.
 - **PF Table Gen** (`/pf-react:pf-table-gen`) — Generate PatternFly table components with sorting, filtering, pagination, and expandable rows.
 - **PF Test Gen** (`/pf-react:pf-test-gen`) — Generate a unit test file for a React component using Testing Library.
 

@@ -224,6 +224,7 @@ React component development — coding standards, testing, and structure
 <tr><td nowrap><code>pf-import-check</code></td><td>Audit PatternFly imports for correctness and bundle-size anti-patterns.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-project-gen</code></td><td>Scaffolds PatternFly React projects with PF6-safe dependencies, imports, and starter layout.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-reproduce-issue</code></td><td>Reproduce a PatternFly bug from a GitHub issue description.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-rhds-theme-guide</code></td><td>Audit and fix theme synchronization between PatternFly React and Red Hat Design System web components, then generate a usage guide.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-table-gen</code></td><td>Generate PatternFly table components with sorting, filtering, pagination, and expandable rows.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-test-gen</code></td><td>Generate a unit test file for a React component using Testing Library.</td><td>stable</td></tr>
 </table>
@@ -273,7 +274,7 @@ PatternFly team tools and skill incubation — issue triage, release management,
 
 **Eval coverage**
 
-- Consumer: 44/44 (100%)
+- Consumer: 45/45 (100%)
 - Workshop: 0/21 (0%)
 
 ---
@@ -329,6 +330,7 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 | `pf-import-check` | PatternFly designers and developers | The user provides a file path, directory, or component to check. Default to scanning the proj... | For each finding, provide: Severity: high medium low File path and line number Current import... | S |
 | `pf-project-gen` | PatternFly designers and developers | Task context | Structured result | S |
 | `pf-reproduce-issue` | PatternFly designers and developers | The user provides one of: A GitHub issue URL (e.g., https://github.com/patternfly/patternfly-... | Produce a reproduction report: | S |
+| `pf-rhds-theme-guide` | PatternFly designers and developers | Task context | 1. Audit summary — report what was found (theme toggle method, redundant mappings, missing pr... | M |
 | `pf-table-gen` | PatternFly designers and developers | The user provides one of: A description of the data and desired table features (e.g., "sortab... | Output the complete table component ready to save. Include the import block, type definitions... | S |
 | `pf-test-gen` | PatternFly designers and developers | The user will provide a component file path or component code. Read the component source befo... | Output the complete test file ready to save. Name it ComponentName.test.tsx matching the sour... | S |
 | `pf-analytics-repo-pruning` | Contributors and maintainers | File: repos.json (project root or path the user supplies). Expect a top-level repos array; ea... | Structured result | S |

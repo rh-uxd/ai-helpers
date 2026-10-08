@@ -1,0 +1,1 @@
+prompt: "Our PatternFly components stay light when dark mode is enabled, but the RHDS components change. Audit and fix the theme synchronization. The project is in the current directory."
