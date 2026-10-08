@@ -1,0 +1,1 @@
+prompt: "I want to build a layout like the Red Hat Hardened Images app — RHDS header and footer wrapping PatternFly content sections, no PF sidebar. My project has @patternfly/react-core 6 and @rhds/elements. Can you generate the app shell component?"

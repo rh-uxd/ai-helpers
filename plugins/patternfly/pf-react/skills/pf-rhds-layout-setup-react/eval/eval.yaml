@@ -1,0 +1,161 @@
+name: pf-rhds-layout-setup-react-eval
+description: Evaluate pf-rhds-layout-setup-react's PF+RHDS layout scaffolding — PageHeader/PageFooter wrappers, masthead prop, isPlain, isViewport, and RHDS side-effect imports
+skill: pf-react:pf-rhds-layout-setup-react
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-react
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: expect_rhds (true/false), pattern type, and conditional flags
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces a React layout component. Judges check conversation
+      text and file artifacts for PF6 wrapper components, correct prop names,
+      RHDS side-effect imports, and layout-specific props.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: uses_page_header_wrapper
+    description: Uses PageHeader wrapper component (not Masthead or bare element) for RHDS header
+    if: "annotations.get('has_header') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      if not re.search(r'PageHeader', text):
+          return False, "Missing PageHeader wrapper — used Masthead or bare element instead"
+      masthead_wrap = re.search(r'<Masthead[^>]*>\s*<rh-navigation', text, re.DOTALL)
+      if masthead_wrap:
+          return False, "Wrapped RHDS header in Masthead instead of PageHeader"
+      return True, "Uses PageHeader wrapper for RHDS header"
+
+  - name: uses_page_footer_wrapper
+    description: Uses PageFooter wrapper component for RHDS footer
+    if: "annotations.get('has_footer') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      if not re.search(r'PageFooter', text):
+          return False, "Missing PageFooter wrapper for RHDS footer"
+      return True, "Uses PageFooter wrapper for RHDS footer"
+
+  - name: correct_masthead_prop
+    description: Passes custom header via Page's `masthead` prop, not `header`
+    if: "annotations.get('has_header') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      masthead_prop = re.search(r'<Page[^>]*\bmasthead\s*[={]', text)
+      header_prop = re.search(r'<Page[^>]*\bheader\s*[={]', text)
+      if not masthead_prop:
+          if header_prop:
+              return False, "Used header= prop instead of masthead= on Page"
+          return False, "Missing masthead prop on Page for custom header"
+      return True, "Correctly uses masthead prop on Page"
+
+  - name: rhds_side_effect_imports
+    description: Includes RHDS element side-effect imports (not bare @rhds/elements)
+    if: "annotations.get('expect_rhds') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      specific_import = re.search(
+          r"import\s+['\"]@rhds/elements/rh-[\w-]+/rh-[\w-]+\.js['\"]",
+          text,
+      )
+      if not specific_import:
+          bare_import = re.search(r"import\s+['\"]@rhds/elements['\"]", text)
+          if bare_import:
+              return False, "Uses bare @rhds/elements import instead of specific element side-effect import"
+          return False, "Missing RHDS element side-effect import"
+      return True, "Includes specific RHDS element side-effect imports"
+
+  - name: uses_is_plain
+    description: Uses isPlain prop on Page for chrome-free plain page layout
+    if: "annotations.get('pattern') == 'plain' or annotations.get('pattern') == 'combined'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      if not re.search(r'isPlain', text):
+          return False, "Missing isPlain prop on Page for plain layout"
+      return True, "Uses isPlain prop on Page"
+
+  - name: uses_is_viewport
+    description: Uses isViewport prop on Drawer for full-height viewport drawer
+    if: "annotations.get('pattern') == 'drawer'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      if not re.search(r'isViewport', text):
+          return False, "Missing isViewport prop on Drawer for full-height layout"
+      return True, "Uses isViewport prop on Drawer"
+
+  - name: gate_no_rhds
+    description: Does not generate RHDS patterns when project has no RHDS packages
+    if: "annotations.get('expect_rhds') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          if path.startswith("_modified/"):
+              continue
+          if not isinstance(content, str):
+              continue
+          text += "\n" + content
+      rhds_ref = re.search(r'(rh-navigation-primary|rh-footer|@rhds/|PageHeader|PageFooter)', text)
+      if rhds_ref:
+          return False, f"Generated RHDS patterns for a project without RHDS packages: {rhds_ref.group()}"
+      return True, "Did not generate RHDS patterns for PF-only project"
+
+thresholds:
+  uses_page_header_wrapper:
+    min_pass_rate: 1.0
+  uses_page_footer_wrapper:
+    min_pass_rate: 1.0
+  correct_masthead_prop:
+    min_pass_rate: 1.0
+  rhds_side_effect_imports:
+    min_pass_rate: 0.67
+  uses_is_plain:
+    min_pass_rate: 1.0
+  uses_is_viewport:
+    min_pass_rate: 1.0
+  gate_no_rhds:
+    min_pass_rate: 1.0

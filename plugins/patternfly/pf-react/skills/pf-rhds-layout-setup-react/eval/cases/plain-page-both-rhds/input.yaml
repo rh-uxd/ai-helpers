@@ -1,0 +1,1 @@
+prompt: "Set up a plain page layout for my React app using RHDS rh-navigation-primary as the header and rh-footer as the footer. I don't want any PatternFly sidebar or default chrome — just PF managing the content area. Project uses @patternfly/react-core 6 and @rhds/elements."
