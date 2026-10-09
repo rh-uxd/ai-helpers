@@ -1,0 +1,309 @@
+name: pf-chatbot-bundle-check-eval
+description: Evaluate ChatBot bundle and audit for applicability, import safety, runtime setup, CSS ordering, and library metadata.
+skill: pf-react:pf-chatbot-bundle-check
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-react
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case contains input.yaml, annotations.yaml, package.json, and source
+    fixtures. Annotations identify applicability, installed version, expected
+    scanned-file count, primary issue, and whether early markdown preload is warranted.
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill returns a ChatBot bundle audit and may edit source when explicitly
+      requested. Judges target the final report's case-specific findings and fixes.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: gates_without_chatbot
+    description: Stops when @patternfly/chatbot is not a dependency
+    if: "annotations.get('applies') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      gates = list(re.finditer(
+          r'@patternfly/chatbot.{0,120}(not (?:a )?dependency|not installed|does not apply)|'
+          r'(not (?:a )?dependency|not installed|does not apply).{0,120}@patternfly/chatbot',
+          text,
+          re.IGNORECASE | re.DOTALL,
+      ))
+      if not gates:
+          return False, "Did not stop after finding no @patternfly/chatbot dependency"
+      gate = gates[-1]
+      if re.search(r'## ChatBot Bundle Audit', text[gate.end():], re.IGNORECASE):
+          return False, "Continued into a bundle audit after the applicability gate"
+      return True, "Correctly reports that the skill does not apply"
+
+  - name: reports_audit_scope
+    description: Reports the installed version and number of files importing ChatBot
+    if: "annotations.get('applies') == True"
+    check: |
+      import re
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      reports = [match.start() for match in re.finditer(r'## ChatBot Bundle Audit', text, re.I)]
+      report = text[reports[-1]:] if reports else text
+      version = re.escape(str(ann.get("version", "")))
+      count = re.escape(str(ann.get("scanned_files", "")))
+      if not re.search(r'ChatBot version[^\n]*' + version, report, re.I):
+          return False, f"Missing installed ChatBot version {ann.get('version')}"
+      if not re.search(r'Scanned[^\n]*\b' + count + r'\b[^\n]*files?', report, re.I):
+          return False, f"Missing scanned-file count {ann.get('scanned_files')}"
+      return True, "Reports the audit scope and installed version"
+
+  - name: handles_legacy_version
+    description: Recommends the tree-shaking release while offering dynamic imports as the fallback
+    if: "annotations.get('issue') == 'legacy-version'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      reports = [match.start() for match in re.finditer(r'## ChatBot Bundle Audit', text, re.I)]
+      report = text[reports[-1]:] if reports else ""
+      upgrade = re.search(r'(upgrade|update).{0,100}6\.8\.0-prerelease\.9', report, re.I | re.DOTALL)
+      fallback = re.search(
+          r'(cannot|unable|until|meanwhile|fallback).{0,160}(dynamic|subpath) import|'
+          r'(already|currently).{0,100}(uses?|using).{0,80}(dynamic|subpath) import',
+          report,
+          re.I | re.DOTALL,
+      )
+      if not upgrade:
+          return False, "Did not recommend 6.8.0-prerelease.9 or later"
+      if not fallback:
+          return False, "Did not offer dynamic subpath imports as the no-upgrade fallback"
+      return True, "Gives version-aware upgrade and fallback guidance"
+
+  - name: fixes_excluded_code_modal_import
+    description: Flags CodeModal's root import and gives the required default dynamic import
+    if: "annotations.get('issue') == 'excluded-code-modal'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      reports = [match.start() for match in re.finditer(r'## ChatBot Bundle Audit', text, re.I)]
+      report = text[reports[-1]:] if reports else ""
+      finding = re.search(
+          r'src/CodeViewer\.tsx.{0,500}(CodeModal.{0,120}(excluded|broken|not exported)|'
+          r'(excluded|broken|not exported).{0,120}CodeModal)',
+          report,
+          re.I | re.DOTALL,
+      )
+      correct = re.search(
+          r"import\s+CodeModal\s+from\s+['\"]@patternfly/chatbot/dist/dynamic/CodeModal['\"]",
+          report,
+      )
+      named = re.search(
+          r"import\s*\{\s*CodeModal\s*\}\s*from\s*['\"]@patternfly/chatbot/dist/dynamic/CodeModal['\"]",
+          report,
+      )
+      if not finding:
+          return False, "Did not tie the excluded CodeModal import to src/CodeViewer.tsx"
+      if not correct or named:
+          return False, "Did not provide CodeModal's default dynamic subpath import"
+      return True, "Correctly fixes the barrel-excluded CodeModal import"
+
+  - name: reports_missing_monaco_setup
+    description: Requires the startup worker helper and both Monaco dependencies
+    if: "annotations.get('issue') == 'excluded-code-modal'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      reports = [match.start() for match in re.finditer(r'## ChatBot Bundle Audit', text, re.I)]
+      report = text[reports[-1]:] if reports else ""
+      worker = re.search(r"import\s+['\"]@patternfly/chatbot/monaco-environment['\"]", report)
+      deps = all(name in report for name in ["monaco-editor", "@monaco-editor/react"])
+      missing = re.search(r'(missing|required|add|install).{0,180}(monaco-environment|monaco-editor)', report, re.I | re.DOTALL)
+      if not worker:
+          return False, "Missing exact Monaco worker helper import"
+      if not deps:
+          return False, "Did not require both Monaco dependencies"
+      if not missing:
+          return False, "Did not report the Monaco setup as missing"
+      return True, "Reports all missing Monaco runtime requirements"
+
+  - name: fixes_wildcard_import
+    description: Flags the wildcard import in its file and replaces it with a focused import
+    if: "annotations.get('issue') == 'wildcard-wrong-css-order'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      reports = [match.start() for match in re.finditer(r'## ChatBot Bundle Audit', text, re.I)]
+      report = text[reports[-1]:] if reports else ""
+      finding = re.search(r'src/Assistant\.tsx.{0,400}(wildcard|namespace|tree.shak|entire)', report, re.I | re.DOTALL)
+      fix = re.search(
+          r"import\s+(?:\{\s*ChatbotToggle\s*\}\s+from\s+['\"]@patternfly/chatbot['\"]|"
+          r"ChatbotToggle\s+from\s+['\"]@patternfly/chatbot/dist/dynamic/ChatbotToggle['\"])",
+          report,
+      )
+      if not finding:
+          return False, "Did not report the wildcard import in src/Assistant.tsx"
+      if not fix:
+          return False, "Did not provide a focused ChatbotToggle import"
+      return True, "Replaces the wildcard with a tree-shakable import"
+
+  - name: fixes_css_order
+    description: Reports that ChatBot CSS must follow PatternFly CSS
+    if: "annotations.get('issue') == 'wildcard-wrong-css-order'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      reports = [match.start() for match in re.finditer(r'## ChatBot Bundle Audit', text, re.I)]
+      report = text[reports[-1]:] if reports else ""
+      finding = re.search(r'src/main\.tsx.{0,500}(wrong.order|before|after|reorder|override)', report, re.I | re.DOTALL)
+      order = re.search(
+          r"@patternfly/react-core/dist/styles/base\.css['\"].{0,200}"
+          r"@patternfly/chatbot/dist/css/main\.css['\"]",
+          report,
+          re.DOTALL,
+      )
+      if not finding:
+          return False, "Did not report the CSS ordering issue in src/main.tsx"
+      if not order:
+          return False, "Did not show PatternFly CSS before ChatBot CSS"
+      return True, "Correctly fixes ChatBot CSS ordering"
+
+  - name: reports_library_side_effects
+    description: Adds a CSS-only sideEffects allowlist for a consumer library
+    if: "annotations.get('issue') == 'library-side-effects'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      reports = [match.start() for match in re.finditer(r'## ChatBot Bundle Audit', text, re.I)]
+      report = text[reports[-1]:] if reports else ""
+      library = re.search(r'(library|package|downstream).{0,180}(sideEffects|tree.shak)', report, re.I | re.DOTALL)
+      missing = re.search(
+          r'(missing|not configured|no\s+["\']?sideEffects|add).{0,120}sideEffects|'
+          r'sideEffects.{0,120}(missing|not configured|required|add)',
+          report,
+          re.I | re.DOTALL,
+      )
+      css = re.search(r'["\']sideEffects["\']\s*:\s*\[[^\]]*\*\*/\*\.css[^\]]*\*\*/\*\.scss', report, re.DOTALL)
+      if not library:
+          return False, "Did not connect sideEffects metadata to downstream library tree-shaking"
+      if not missing:
+          return False, "Did not identify sideEffects metadata as missing"
+      if not css:
+          return False, "Did not provide the CSS/SCSS sideEffects allowlist"
+      return True, "Provides appropriate consumer-library sideEffects metadata"
+
+  - name: suggests_markdown_preload_when_observed
+    description: Suggests the exact preload only when first-render flashing is reported
+    if: "annotations.get('expect_preload') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      reports = [match.start() for match in re.finditer(r'## ChatBot Bundle Audit', text, re.I)]
+      report = text[reports[-1]:] if reports else ""
+      exact = re.search(
+          r"import\s*\{\s*preloadMarkdownRenderer\s*\}\s*from\s*['\"]"
+          r"@patternfly/chatbot/dist/dynamic/MarkdownContent['\"]",
+          report,
+      )
+      call = re.search(r'preloadMarkdownRenderer\s*\(\s*\)', report)
+      reason = re.search(r'(flash|first render|welcome message|earlier|entry point|startup)', report, re.I)
+      if not exact or not call or not reason:
+          return False, "Did not provide the targeted markdown preload with its observed rationale"
+      return True, "Suggests the exact preload for the reported first-render flash"
+
+  - name: avoids_unneeded_markdown_preload
+    description: Does not recommend manual preload without an observed first-render flash
+    if: "annotations.get('applies') == True and annotations.get('expect_preload') == False"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      sections = re.findall(
+          r'### Markdown preloading\s*(.*?)(?=\n###|\Z)',
+          text,
+          re.I | re.DOTALL,
+      )
+      if not sections:
+          return False, "Missing Markdown preloading status section"
+      final = sections[-1]
+      if re.search(r'\bSUGGESTED\b|recommend.{0,100}preloadMarkdownRenderer', final, re.I | re.DOTALL):
+          return False, "Recommended optional markdown preloading without evidence of flashing"
+      if not re.search(r'\b(OK|NOT_NEEDED|not needed|no change)\b', final, re.I):
+          return False, "Did not clearly mark manual markdown preloading as unnecessary"
+      return True, "Avoids speculative markdown preload advice"
+
+  - name: clean_app_has_no_false_positives
+    description: Reports all audited categories clean for a valid modern application
+    if: "annotations.get('issue') == 'none' and annotations.get('applies') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      reports = [match.start() for match in re.finditer(r'## ChatBot Bundle Audit', text, re.I)]
+      report = text[reports[-1]:] if reports else text
+      def section(title):
+          match = re.search(
+              r'### ' + re.escape(title) + r'\s*(.*?)(?=\n###|\Z)',
+              report,
+              re.I | re.DOTALL,
+          )
+          return match.group(1) if match else ""
+      required = {
+          "barrel": ("Barrel-excluded components", r'\b(OK|NONE|no issues|no findings)\b'),
+          "wildcard": ("Wildcard imports", r'\b(OK|NONE|no issues|no findings)\b'),
+          "monaco": ("Monaco worker setup", r'\bOK\b'),
+          "css": ("CSS import", r'\bOK\b'),
+          "sideEffects": ("Consumer sideEffects", r'\b(NOT_APPLICABLE|not applicable|OK)\b'),
+      }
+      missing = [
+          name for name, (title, pattern) in required.items()
+          if not re.search(pattern, section(title), re.I)
+      ]
+      if missing:
+          return False, f"Valid app was not clearly clean in sections: {missing}"
+      false_findings = [
+          title for title, _ in required.values()
+          if re.search(r'\b(broken|wrong(?:_ORDER| order)?|violation|must replace|must fix)\b', section(title), re.I)
+      ]
+      if false_findings:
+          return False, f"Valid app contains false-positive findings in: {false_findings}"
+      return True, "Reports the valid modern setup without false positives"
+
+thresholds:
+  gates_without_chatbot:
+    min_pass_rate: 1.0
+  reports_audit_scope:
+    min_pass_rate: 1.0
+  handles_legacy_version:
+    min_pass_rate: 1.0
+  fixes_excluded_code_modal_import:
+    min_pass_rate: 1.0
+  reports_missing_monaco_setup:
+    min_pass_rate: 1.0
+  fixes_wildcard_import:
+    min_pass_rate: 1.0
+  fixes_css_order:
+    min_pass_rate: 1.0
+  reports_library_side_effects:
+    min_pass_rate: 1.0
+  suggests_markdown_preload_when_observed:
+    min_pass_rate: 1.0
+  avoids_unneeded_markdown_preload:
+    min_pass_rate: 1.0
+  clean_app_has_no_false_positives:
+    min_pass_rate: 1.0

@@ -1,0 +1,1 @@
+prompt: "Audit our ChatBot bundle setup. We cannot change dependencies yet, so report safe optimization options without editing files. The project is in the current directory."

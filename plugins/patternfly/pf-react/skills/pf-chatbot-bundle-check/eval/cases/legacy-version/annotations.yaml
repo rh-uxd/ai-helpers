@@ -1,0 +1,5 @@
+applies: true
+version: "6.7.2"
+scanned_files: 2
+issue: legacy-version
+expect_preload: false
