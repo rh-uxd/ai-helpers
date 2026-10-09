@@ -1,0 +1,1 @@
+prompt: "Prepare an accessibility review status for a PatternFly settings form. We can inspect its source and have an existing clean axe unit-test result, but this environment has no live browser interaction, keyboard control, accessibility-tree snapshot, viewport emulation, or screen reader. Be explicit about what can and cannot be concluded."

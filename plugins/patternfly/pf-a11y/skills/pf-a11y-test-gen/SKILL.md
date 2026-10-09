@@ -58,6 +58,8 @@ Load sibling reference files from `$CLAUDE_SKILL_DIR` selectively based on what 
 
 Load `$CLAUDE_SKILL_DIR/references/a11y-test-patterns.md` for canonical test code patterns.
 
+When generating axe coverage, also load `../pf-a11y-review/references/axe-methodology.md` so state selection, evidence, suppressions, and limitations follow the shared audit methodology.
+
 ### Category 1 — ARIA Attributes (always generate)
 
 Cross-reference `aria-attributes.md`. Test that semantic roles are correct, interactive elements have accessible names, state attributes (`aria-expanded`, `aria-selected`, `aria-checked`, `aria-pressed`) have correct values and toggle on interaction, required/invalid states are set on form fields, relationship attributes point to existing IDs, decorative elements are hidden, and live regions are used for dynamic content.
@@ -107,3 +109,4 @@ After the test file(s), output a coverage gap report listing what was generated 
 - `pf-test-gen` — General unit tests (rendering, interactions, props, async)
 - `pf-a11y-audit` — Static code analysis for WCAG/ARIA violations
 - `pf-a11y-keyboard` — Live browser keyboard accessibility testing
+- `pf-a11y-review` — End-to-end axe, keyboard, viewport/media, semantic-tree, and reporting methodology
