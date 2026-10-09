@@ -1,9 +1,3 @@
-<!-- Auto-generated — do not edit manually. -->
-
-# UXD Prototype Plugin
-
-Create UX prototypes from Jira tickets, Figma designs, or feature descriptions.
-
 The prototyping skills are created by the **UX RHAI First team**. See the [working document](https://docs.google.com/document/d/14eVN5kyDNWaS1M8cR-p8DQ9BDQOn73fcq8PZvy_WQAo/edit?tab=t.0#heading=h.7bxejv31jp0w) for ongoing guidance.
 
 ## Codex

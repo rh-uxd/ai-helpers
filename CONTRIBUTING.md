@@ -2,7 +2,11 @@
 
 We welcome contributions of new skills, agents, plugins, and documentation.
 
-Plugins work in **Claude Code** and **Cursor**. Each plugin has identical manifests in `.claude-plugin/` and `.cursor-plugin/` so each tool discovers it natively.
+Skills work in **Codex**, **Claude Code**, and **Cursor**. Plugins have identical manifests in `.claude-plugin/` and `.cursor-plugin/` for those tools; Codex plugin availability depends on your workspace.
+
+### Codex
+
+Open your skill-development workspace in Codex and select the installed skill, or type `$skill-name` when supported. See [Codex setup](docs/codex-setup.md) for plugin access and installing complete skill folders locally. Follow the contribution steps below to scaffold, validate, and submit your changes.
 
 ## Choose Your Path
 
@@ -94,7 +98,8 @@ plugins/<plugin-name>/
 ├── .cursor-plugin/
 │   └── plugin.json
 ├── skills/
-└── agents/
+├── agents/
+└── knowledge/
 ```
 
 2. Write identical `plugin.json` files for both `.claude-plugin/` and `.cursor-plugin/`:

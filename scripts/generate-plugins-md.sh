@@ -186,13 +186,14 @@ get_desc_first_sentence() {
   echo "$desc" | sed 's/\([.]\) .*/\1/'
 }
 
-# Read a string field from plugin.json (returns empty string if field missing)
+# Read a string field from plugin.json (returns empty string if field missing).
+# Parse JSON so fields such as crossRef can contain escaped newlines and quotes.
 get_plugin_json_field() {
   local plugin_dir="${1%/}"
   local field="$2"
   local json="$plugin_dir/.claude-plugin/plugin.json"
   [ -f "$json" ] || return 0
-  grep "\"$field\"" "$json" 2>/dev/null | head -1 | sed "s/.*\"$field\": *\"//;s/\"[,]*//" || true
+  python3 -c 'import json, sys; value = json.load(open(sys.argv[1])).get(sys.argv[2], ""); print(value if isinstance(value, str) else "")' "$json" "$field" 2>/dev/null || true
 }
 
 get_plugin_desc() {
@@ -376,7 +377,9 @@ HEADER
         [ "$plugin_category" = "workshop" ] && workshop_total=$((workshop_total + 1)) || consumer_total=$((consumer_total + 1))
         echo "<tr><td nowrap><code>${skill_name}</code></td><td>${short_desc}</td><td>${eval_status}</td></tr>"
       done
-      echo "</table>"
+      if [ "$has_skills" = true ]; then
+        echo "</table>"
+      fi
     fi
 
     has_agents=false
@@ -574,6 +577,17 @@ for plugin_dir in plugins/*/ plugins/*/*/; do
   desc=$(get_plugin_desc "$plugin_dir")
   title=$(to_display_name "$plugin")
   cross_ref=$(get_plugin_json_field "$plugin_dir" "crossRef")
+  cross_ref_file=$(get_plugin_json_field "$plugin_dir" "crossRefFile")
+  if [ -n "$cross_ref_file" ]; then
+    case "$cross_ref_file" in
+      /*|*..*) echo "Invalid crossRefFile for ${plugin}: ${cross_ref_file}" >&2; exit 1 ;;
+    esac
+    if [ ! -f "${plugin_dir}/${cross_ref_file}" ] || [ -L "${plugin_dir}/${cross_ref_file}" ]; then
+      echo "Missing or symlinked documentation source: ${plugin_dir}/${cross_ref_file}" >&2
+      exit 1
+    fi
+    cross_ref="$(cat "${plugin_dir}/${cross_ref_file}")"
+  fi
 
   readme_file="${plugin_dir}README.md"
 
@@ -588,6 +602,7 @@ for plugin_dir in plugins/*/ plugins/*/*/; do
       echo ""
       echo "$cross_ref"
     fi
+
 
     # Skills
     has_skills=false
@@ -629,21 +644,23 @@ for plugin_dir in plugins/*/ plugins/*/*/; do
     fi
 
     if [ "$has_skills" = true ] || [ "$has_agents" = true ]; then
-      echo ""
-      echo "## What's Included"
+      if [ "$plugin" != "uxd-prototype" ] || [ -z "$cross_ref" ]; then
+        echo ""
+        echo "## What's Included"
 
-      if [ "$has_skills" = true ]; then
-        echo ""
-        echo "### Skills"
-        echo ""
-        printf "%s" "$skill_content"
-      fi
+        if [ "$has_skills" = true ]; then
+          echo ""
+          echo "### Skills"
+          echo ""
+          printf "%s" "$skill_content"
+        fi
 
-      if [ "$has_agents" = true ]; then
-        echo ""
-        echo "### Agents"
-        echo ""
-        printf "%s" "$agent_content"
+        if [ "$has_agents" = true ]; then
+          echo ""
+          echo "### Agents"
+          echo ""
+          printf "%s" "$agent_content"
+        fi
       fi
     else
       has_mcp=$(python3 -c "import json; d=json.load(open('${plugin_dir}.claude-plugin/plugin.json')); print('yes' if d.get('mcpServers') else 'no')" 2>/dev/null)

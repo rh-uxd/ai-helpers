@@ -7,15 +7,21 @@
 [![Agents](https://img.shields.io/badge/agents-8-teal)](./PLUGINS.md)
 [![skillsaw grade](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Frh-uxd%2Fai-helpers%2Fmain%2F.skillsaw-badge.json)](https://github.com/rh-uxd/ai-helpers/blob/main/.skillsaw-baseline.json)
 
-AI skills for PatternFly and UXD teams — component development, design, accessibility, and migration. Skills work in both **Claude Code** and **Cursor**; the `patternfly` meta-plugin is Claude Code-only.
+AI skills for PatternFly and UXD teams — component development, design, accessibility, and migration. Start with **Codex** for UX prototyping. Skills also work in **Claude Code** and **Cursor**; the `patternfly` meta-plugin is Claude Code-only.
+
+## Quick Start
+
+### Codex
+
+Sign into the Codex app through your organization's approved route, including SSO when offered. Enable the available UXD prototype plugin, check its app connections, then select `$uxd-prototype-create` to build a prototype.
+
+Start with the [Codex setup guide](docs/codex-setup.md) for plugin access and the manual installation fallback. For the workflow and individual skill guides, see [UXD prototyping](plugins/uxd-prototype/README.md). These prototyping skills are created by the **UX RHAI First team**; see the [working document](https://docs.google.com/document/d/14eVN5kyDNWaS1M8cR-p8DQ9BDQOn73fcq8PZvy_WQAo/edit?tab=t.0#heading=h.7bxejv31jp0w) for ongoing guidance.
+
+### Claude Code
 
 <p align="center">
   <img src="assets/install-plugins-terminal.gif" alt="Browsing and installing plugins interactively in Claude Code" width="600">
 </p>
-
-## Quick Start
-
-### Claude Code
 
 Add the marketplace and install the `patternfly` meta-plugin — it auto-installs all PatternFly sub-plugins in one step:
 
@@ -104,8 +110,8 @@ Start with the skill that matches the artifact or decision in front of you:
 |---|---|---|
 | Frame a feature before design or development | `uxd-discovery` | A focused brief with the problem, users, decisions, constraints, and success measures. |
 | Explore a design, screenshot, or mockup | `uxd-evaluate-design-heuristics` | A structured critique of accessibility, hierarchy, content, and state coverage. |
-| Build an interactive concept | `uxd-prototype-create` | A runnable prototype with user journeys, scenarios, and reusable artifacts. |
-| Validate a prototype against a ticket | `uxd-prototype-evaluate` | Acceptance-criteria results and persona-based usability evidence. |
+| Build an interactive concept | [uxd-prototype-create](plugins/uxd-prototype/skills/uxd-prototype-create/README.md) | A runnable prototype with user journeys, scenarios, and reusable artifacts. |
+| Validate a prototype against a ticket | [uxd-prototype-evaluate](plugins/uxd-prototype/skills/uxd-prototype-evaluate/README.md) | Acceptance-criteria results and persona-based usability evidence. |
 | Prepare a design for implementation | `uxd-design-handoff` | Components, interaction states, decisions, and testable acceptance criteria. |
 | Review PatternFly code before merging | `pf-review` | A consolidated check for PatternFly structure, imports, tokens, migration, and security issues. |
 | Check accessibility in a PatternFly interface | `pf-a11y-audit` | WCAG and ARIA findings with evidence and remediation guidance. |
@@ -114,9 +120,9 @@ Use the [skill discovery matrix](PLUGINS.md#skill-discovery-matrix) to compare a
 
 ## How It Works
 
-1. You add this repo as a **marketplace** in Claude Code or Cursor
-2. You install plugins — on Claude Code, `patternfly` auto-installs all PF sub-plugins; on Cursor, install them individually
-3. Skills become available as `/<plugin>:<skill>` slash commands in any project
+1. Enable the available plugins in Codex, or install this marketplace in Claude Code or Cursor.
+2. Verify the skills and required app connections are available; see [Codex setup](docs/codex-setup.md) for fallback installation.
+3. Invoke a skill in the assistant's picker. Codex supports `$skill-name`; Claude Code and Cursor use plugin-qualified slash commands.
 
 ## Repository Structure
 
@@ -144,6 +150,10 @@ Use the [skill discovery matrix](PLUGINS.md#skill-discovery-matrix) to compare a
 ## PatternFly MCP Server
 
 The [PatternFly MCP server](https://github.com/patternfly/patternfly-mcp) gives AI tools access to component documentation, prop schemas, and design guidelines. On Claude Code, `pf-mcp` is included automatically when you install `patternfly`. On Cursor, the MCP server requires [separate setup](FAQ.md#how-do-i-test-a-skill-without-the-patternfly-mcp-server).
+
+## Cost Savings & Best Practices
+
+For model selection, focused context, acceptance criteria, and spend tracking, see [Cost Savings & Best Practices](docs/prototype-cost-best-practices.md).
 
 ## Contributing
 
