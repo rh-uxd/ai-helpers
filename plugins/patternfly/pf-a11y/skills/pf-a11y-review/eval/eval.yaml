@@ -1,0 +1,123 @@
+name: pf-a11y-review-eval
+description: Evaluate pf-a11y-review's phased coverage, honest capability handling, product layering, and normalized reporting
+
+skill: pf-a11y:pf-a11y-review
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt requesting an accessibility review plan or report structure
+    - annotations.yaml: expected phases, capability limitations, and product-overlay behavior
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces a phased accessibility review or plan covering axe, keyboard/focus,
+      viewport/media conditions, rendered semantics, normalized findings, and coverage gaps.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: covers_shared_methodology
+    description: Covers the automated, keyboard, media, semantic, and reporting phases
+    if: "annotations.get('expect_full_methodology') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      checks = {
+          "axe": r'(?i)axe|automated baseline',
+          "keyboard": r'(?i)keyboard|focus (?:order|management|return|trap)',
+          "media": r'(?i)(viewport|reflow).{0,80}(reduced.motion|forced.colors|high.contrast)|media matrix',
+          "semantic": r'(?i)(accessibility|semantic).{0,20}tree|headings.{0,80}landmarks',
+          "reporting": r'(?i)coverage matrix|normalized finding|evidence.{0,60}(impact|confidence)',
+      }
+      found = {name for name, pattern in checks.items() if re.search(pattern, text, re.DOTALL)}
+      if len(found) < 5:
+          return False, f"Covered {len(found)}/5 phases. Missing: {', '.join(sorted(set(checks) - found))}"
+      return True, "Covered all shared accessibility review phases"
+
+  - name: distinguishes_media_conditions
+    description: Does not substitute device pixel ratio or a mobile layout for zoom, text resize, or reflow
+    if: "annotations.get('expect_full_methodology') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_text_resize = re.search(r'(?i)(text.{0,20}200%|200%.{0,20}text)', text)
+      has_reflow = re.search(r'(?i)reflow|320\s*(?:CSS\s*)?(?:px|pixels)', text)
+      has_distinction = re.search(r'(?i)(device pixel ratio|deviceScaleFactor).{0,100}(not|different|separate|isn.t).{0,80}(zoom|resize)', text)
+      if not has_text_resize or not has_reflow:
+          return False, "Missing distinct text-resize or reflow coverage"
+      if not has_distinction:
+          return False, "Did not distinguish device pixel ratio from zoom/text resizing"
+      return True, "Correctly distinguishes text resize, reflow, and device pixel ratio"
+
+  - name: reports_missing_capabilities_honestly
+    description: Marks unsupported live checks Not tested instead of inferring a pass
+    if: "annotations.get('expect_missing_capabilities') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      not_tested = re.search(r'(?i)not tested|unable to test|coverage gap', text)
+      limitation = re.search(r'(?i)(browser|keyboard|focus|accessibility tree).{0,100}(unavailable|missing|cannot|not available|not tested)', text)
+      false_pass = re.search(r'(?i)(fully accessible|overall pass|passes accessibility).{0,80}(axe|source|static)', text)
+      if not not_tested or not limitation:
+          return False, "Missing explicit Not tested results and capability limitation"
+      if false_pass:
+          return False, "Incorrectly inferred overall accessibility from limited coverage"
+      return True, "Reports unsupported checks as Not tested without inferring a pass"
+
+  - name: preserves_product_overlay_boundary
+    description: Keeps product commands and tracker conventions downstream while retaining shared methodology
+    if: "annotations.get('expect_product_overlay') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      keeps_product_details = re.search(r'(?i)(page registry|npm run e2e:a11y-audit|mock data|tracker).{0,120}(product|downstream|overlay|local|repository)', text)
+      shared_core = re.search(r'(?i)(axe|automated).{0,120}keyboard.{0,160}(media|viewport).{0,160}(semantic|accessibility tree)', text, re.DOTALL)
+      approval = re.search(r'(?i)(do not|without).{0,50}(create|file|modify).{0,40}(issue|tracker).{0,80}(approval|confirm|explicit)', text)
+      if not keeps_product_details:
+          return False, "Did not preserve repository-specific details as a downstream overlay"
+      if not shared_core:
+          return False, "Did not retain the shared phased methodology"
+      if not approval:
+          return False, "Did not require approval before filing tracker issues"
+      return True, "Separates shared methodology from product execution and tracker details"
+
+thresholds:
+  covers_shared_methodology:
+    min_pass_rate: 1.0
+  distinguishes_media_conditions:
+    min_pass_rate: 1.0
+  reports_missing_capabilities_honestly:
+    min_pass_rate: 1.0
+  preserves_product_overlay_boundary:
+    min_pass_rate: 1.0

@@ -1,0 +1,1 @@
+prompt: "Create an accessibility review plan and report structure for a PatternFly administration page with a navigation sidebar, data table, filter menu, delete confirmation modal, dark theme, loading state, and validation errors. The team has axe-core and live browser automation. Cover the shared methodology rather than product-specific commands."
