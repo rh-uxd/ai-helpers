@@ -6,6 +6,8 @@ End-to-end orchestration: create → evaluate → optional refine → publish.
 
 User asks for a full pipeline, "speedrun", "create and evaluate and publish", or passes `--pipeline` / `--speedrun`.
 
+Create itself performs source checks and ends at the user handoff. An explicit pipeline request additionally authorizes the separate serving/evaluation stages below; do not add a browser smoke test inside the Create stage.
+
 ## Onboarding extras (pipeline only)
 
 After normal create questions, also ask:
@@ -47,7 +49,7 @@ pipeline:
   workspace: https://gitlab.example.com/user/fork.git
   workspace_branch: main          # optional; clone branch for --workspace
   decisions: skip
-  # depth: normal          # only when decisions is auto or human
+  # depth: normal          # optional explicit exploration effort, not a count
   url: http://localhost:3000
   target: repo
   target_repo_url: https://gitlab.example.com/org/canonical.git
@@ -66,7 +68,7 @@ When `--target` is a git URL, normalize `target` to `repo` and store the URL in 
 | Flag | Default |
 |------|---------|
 | `--decisions` | `skip` |
-| `--depth` | `normal` (ignored when `--decisions=skip`) |
+| `--depth` | `normal` exploration effort; no count quota or onboarding question (ignored with `skip`) |
 | `--target` | `none` |
 | `--max-refine-cycles` | `3` |
 | `--headless` | off |

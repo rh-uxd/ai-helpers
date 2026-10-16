@@ -1,6 +1,6 @@
 # Refinement Procedure
 
-Full procedure for iterative prototype improvement after `uxd-prototype-evaluate`. Load this when the user asks to refine a prototype or when running the automated refine→eval loop.
+Refine a prototype from user feedback or existing evaluation findings. Ordinary refinement uses code-level checks and hands the result back for user review. The refine→evaluate loop runs only when explicitly requested with `--headless` or pipeline mode.
 
 ## Refinement Steps
 
@@ -15,9 +15,9 @@ Find the existing prototype artifacts:
 
 If none exist, stop: "I can't find prototype artifacts for {ID}. Run uxd-prototype-create first."
 
-### Step 2: Read Eval Feedback
+### Step 2: Read Available Feedback
 
-Prefer Playwright eval outputs from `uxd-prototype-evaluate`:
+Use the user’s requested changes and any existing `uxd-prototype-evaluate` outputs:
 
 | Artifact | Use |
 |----------|-----|
@@ -26,15 +26,15 @@ Prefer Playwright eval outputs from `uxd-prototype-evaluate`:
 | `.artifacts/{ID}/eval/iteration-log.json` | Prior fix-loop history |
 | `.artifacts/{ID}/eval/usability-thinkaloud-*.md` | Phase B persona findings (optional) |
 
-**Pass condition for stopping refinement:** zero `FAIL` verdicts in Section 1 of `evaluation-report.csv`. `FLAGGED` items need human review but do not block the loop by themselves.
+**For the explicit evaluation loop only, pass condition for stopping refinement:** zero `FAIL` verdicts in Section 1 of `evaluation-report.csv`. `FLAGGED` items need human review but do not block the loop by themselves.
 
-If those files are missing but `.artifacts/{ID}/reviews/summary.md` exists (legacy rubric), use its findings as a fallback and tell the user to re-run `uxd-prototype-evaluate` with a live prototype URL for AC-level feedback.
+If those files are missing but `.artifacts/{ID}/reviews/summary.md` exists (legacy rubric), use its findings as a fallback. A fresh AC-level evaluation is optional and separate from ordinary refinement.
 
-If no eval exists at all, ask: "I don't see evaluation feedback. Start the prototype and run `uxd-prototype-evaluate {ID} <URL> [--workspace=…]` first, or tell me what to change."
+An evaluation is not a prerequisite for applying user feedback. If neither findings nor a requested change are available, ask what the user would like to change; do not require them to start a server or run Evaluate first.
 
 ### Step 3: Check Iteration Count
 
-Read `iteration` from `metadata.json`. If it equals or exceeds `--max-cycles`:
+Read `iteration` from `metadata.json` for history. Apply `--max-cycles` only in an explicitly requested automated evaluation loop; ordinary feedback edits are not gated by old evaluation counts. If the loop reaches its cycle limit:
 
 ```
 Refinement limit reached (iteration {N} of {max}).
@@ -44,7 +44,7 @@ To continue, re-run with --max-cycles {max+2}.
 
 ### Step 4: Plan Refinements
 
-Prioritize from eval artifacts:
+Start with the user’s requested changes. When applying eval artifacts, prioritize:
 
 1. **FAIL acceptance criteria** — from CSV + matching entries in `refinement-suggestions.json`
 2. **Consistency / source violations** — high-confidence suggestions
@@ -53,6 +53,8 @@ Prioritize from eval artifacts:
 For each item determine severity (critical/major/minor), effort (small/medium/large), and specific code changes.
 
 Plan 3–7 refinements per iteration: critical FAILs first, then major usability, then minor.
+
+For UI changes, follow [patternfly-compliance.md](patternfly-compliance.md): look up new or changed interactions in `pf-catalog-interaction-patterns`, and verify the target version's APIs and wrappers before editing.
 
 ### Step 5: Handle Decision Level
 
@@ -73,7 +75,7 @@ Apply targeted edits (not full rewrites):
 - **Workspace mode**: Edit files in the workspace with precise string replacements/insertions.
 - **Standalone mode**: Edit HTML files in `.artifacts/{ID}/prototype/`.
 
-For each refinement: read target file, make the specific change, verify it doesn't break other parts.
+For each refinement, read the target file, make the specific change, and review the affected source and call sites.
 
 ### Step 7: Update Metadata
 
@@ -100,17 +102,17 @@ Append a refinement section to `.artifacts/{ID}/changeset.md`:
 - `src/pages/ApiKeys/ApiKeyDetail.tsx` — Fixed drawer close, added keyboard nav
 ```
 
-For workspace mode, re-run post-change verification (lint + build).
+Re-run the PatternFly structure, reuse, and CSS source checks from [patternfly-compliance.md](patternfly-compliance.md) in both modes. In workspace mode, also run applicable lint/build/type checks after fixes. Do not launch or browse the prototype to test journeys, scenarios, or keyboard behavior during ordinary refinement.
 
 ### Step 9: Report
 
-Print a summary showing previous FAIL count, findings fixed, remaining FAILs/FLAGGED, and applied changes.
+Summarize the applied changes, code checks, and any unresolved findings. Distinguish findings addressed in code from freshly evaluated PASS/FAIL verdicts; existing eval counts are historical until Evaluate is run again. Follow Create’s final handoff: start or reuse the server and open the entry page for the user to review, without walking through the prototype yourself.
 
 ---
 
 ## Auto-Refinement Loop (Headless)
 
-With `--headless`, run an automated loop (requires a live prototype URL and workspace for evaluate):
+Only with an explicit `--headless` or pipeline request, run an automated loop (requires a live prototype URL and workspace for evaluate):
 
 ```
 refine → uxd-prototype-evaluate → check FAIL count → refine again → ...
@@ -144,4 +146,4 @@ Progress output:
 | **Conflicting feedback** | Flag conflict to user. Prefer fixing FAILs over FLAGGED. |
 | **Large prototypes (5+ screens)** | Batch refinements by screen. |
 | **No workspace analysis** | Re-run codebase analysis before refining. |
-| **Standalone HTML (no server)** | Tell user to serve `.artifacts/{ID}/prototype/` (e.g. `npx serve`) before re-eval. |
+| **Standalone HTML (no server)** | Complete code checks first; launch for final user handoff. A live URL is needed only for a separately requested re-evaluation. |
