@@ -1,0 +1,7 @@
+prompt: |
+  Offline simulation: do not execute anything or query live services. Read only the skill/reference if needed.
+  Promote React 6.7.0. The normal public React packages are prereleases, charts is 8.7.0-prerelease.4,
+  docs is 7.7.0-prerelease.8, and eslint-plugin-patternfly-react is 6.6.0-prerelease.0.
+  I have not decided whether the ESLint plugin belongs in this release.
+  The script uses bare --conventional-graduate. Will it publish only my intended React packages?
+  Can a scoped graduation flag be treated as the publish allowlist?

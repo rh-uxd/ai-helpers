@@ -1,0 +1,7 @@
+required_concepts:
+  - ['ignored', 'no effect', 'does nothing', 'unused', 'not sufficient', 'not.{0,40}(applied|consumed|effective)']
+  - ['lockfile', 'yarn.lock']
+  - ['before.{0,100}(build|immutable)', '(build|immutable).{0,100}after']
+  - ['\^6\.7\.0']
+forbidden_claims:
+  - '\bI (have )?(published|dispatched|triggered)\b'
