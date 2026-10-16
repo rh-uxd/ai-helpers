@@ -1,6 +1,6 @@
 ---
 name: uxd-assist
-description: UXD skill routing — maps task context to the right UXD sub-skills for research, design review, and prototyping. Active when working on UXD research, design review, or prototyping tasks.
+description: UXD skill routing — maps task context to the most appropriate UXD sub-skills.
 ---
 
 # UXD assist
@@ -32,6 +32,18 @@ When Figma URLs are in the conversation, or the user requests design critique, c
 |-------|-------------|
 | `/uxd-design:uxd-figma-read` | Retrieve screenshots, structure, and design tokens from a Figma file |
 | `/uxd-research:uxd-evaluate-design-heuristics` | Score a design against accessibility, visual hierarchy, content, and state coverage heuristics |
+
+## Slides — local decks and shared copies
+
+When the user asks for a slide deck, a readout presentation, a design-review deck, or a user-journey deck, these skills are available:
+
+| Skill | What it does |
+|-------|-------------|
+| `/uxd-general:uxd-slides-create` | Author a local deck from a briefing, research-readout, design-review, user-journey, or vision deck template. When the user wants Google Slides or Figma Slides, continue into publish in the same session |
+| `/uxd-general:uxd-slides-export` | Build the local HTML, CSS, and JavaScript viewer |
+| `/uxd-general:uxd-slides-publish` | Publish the shared copy to Google Slides or Figma Slides |
+
+Create writes the local deck first. When the user already wants Google Slides or Figma Slides, create continues into publish in that same session. Export stays local. Publish writes `canonical` and marks the deck published.
 
 ## Prototyping — building, refining, exporting, or publishing prototypes
 
