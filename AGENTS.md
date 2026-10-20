@@ -18,6 +18,7 @@ plugins/uxd-workshop/              — UXD tools and skill incubator
 plugins/patternfly/                — PatternFly meta-plugin and sub-plugins
   ├── .claude-plugin/plugin.json   — Meta-plugin manifest
   └── pf-*/                        — PatternFly sub-plugins
+specifications/                    — Versioned formats for artifacts skills produce
 .claude-plugin/marketplace.json   — Claude marketplace config
 .cursor-plugin/marketplace.json   — Cursor marketplace config
 scripts/                           — Automation and validation
@@ -32,6 +33,22 @@ The `patternfly` plugin at `plugins/patternfly/` is a **meta-plugin** — it use
 ## Versioning
 
 No `version` field in plugin.json — Claude Code falls back to git commit SHA, so every merge to main automatically invalidates the cache. No manual bumping needed.
+
+A skill's frontmatter `version` is maturity (`CONTRIBUTING-SKILLS.md`). It is separate from an artifact's `specVersion`.
+
+## Artifact specifications
+
+`specifications/` is the contract for artifacts skills create and read (slide decks, and later prototypes, canvases, and docs). Each artifact type has its own directory: the current version in `current.json`, one document per version, and `upgrades/` for migration scripts. The artifact records the version it was built against as `specVersion`.
+
+Before changing a skill, template, validator, or viewer that reads or writes an artifact, read that type's specification. If the change alters the artifact contract — folders, files, required or optional fields, allowed values, or ordering rules — the current specification document cannot be edited to describe the new shape. Tell the user which artifact structure will change and which version bump that requires, then land the spec update in the same change as the skill.
+
+Bump `specVersion` with semantic versioning:
+
+- **Major** — a file or field is removed or renamed, a required field's meaning changes, or an existing artifact is no longer valid without a rewrite.
+- **Minor** — an optional file, field, or allowed value is added that an older reader can ignore.
+- **Patch** — the specification text is clarified and a valid artifact's files and fields stay the same.
+
+Every bump needs an upgrade script in the same change. Add `specifications/<type>/<version>.md`, set `current.json`, update that type's README, and add `specifications/<type>/upgrades/{from}-to-{to}.mjs`. The script rewrites one artifact directory from the previous version in place and sets `specVersion` to the new version. A major or minor script also applies the structural change. A patch script updates `specVersion` only. Chain one step at a time (`0.1.0-to-0.2.0`, then `0.2.0-to-0.3.0`). Do not hand-edit an artifact to skip a version. Update every skill, template, and validator that writes or checks `specVersion`. Copy, theme, and instruction edits that leave the contract alone stay on the current spec and do not get a new version or a script. A new shared artifact type gets a `specifications/<type>/` directory before skills start writing that layout.
 
 ## Code style
 

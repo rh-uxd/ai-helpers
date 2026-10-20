@@ -31,7 +31,7 @@ Not sure what to build? Look for issues labeled [`good first issue`](../../label
 
 ### UXD contributions
 
-New UXD skills start in `plugins/uxd-workshop/` and use the `uxd-` prefix. Once validated, they graduate to a consumer plugin (`uxd-research`, `uxd-design`, or `uxd-prototype`). UXD PRs are reviewed by UXD maintainers.
+New UXD skills start in `plugins/uxd-workshop/` and use the `uxd-` prefix. Once validated, they graduate to a consumer plugin. UXD PRs are reviewed by UXD maintainers.
 
 **Quick start:**
 
@@ -45,7 +45,7 @@ New UXD skills start in `plugins/uxd-workshop/` and use the `uxd-` prefix. Once 
 Plugins organize skills by domain. See the [full plugin table](CONTRIBUTING-SKILLS.md#step-5-pick-the-right-plugin) for what each plugin does and example skills.
 
 - **PatternFly skills** → `plugins/patternfly/<plugin>/` — use the `pf-` prefix
-- **UXD skills** → `plugins/uxd-research/`, `plugins/uxd-design/`, `plugins/uxd-prototype/` — use the `uxd-` prefix
+- **UXD skills** → `plugins/uxd-research/`, `plugins/uxd-design/`, `plugins/uxd-prototype/`, `plugins/uxd-general/` — use the `uxd-` prefix
 - Not sure where your skill belongs? Start in a workshop plugin (`pf-workshop` or `uxd-workshop`). Skills graduate to consumer plugins once validated.
 
 ## Adding a skill

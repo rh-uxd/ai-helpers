@@ -1,0 +1,5 @@
+prompt: >-
+  Using the uxd-slides-publish skill, publish .artifacts/slides-missing
+  to Google Slides. That directory does not exist and there is no metadata.json
+  or slides/ folder.
+  Do not invent a deck and do not run commands. Say what you will do.
