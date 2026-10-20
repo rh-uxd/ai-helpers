@@ -1,6 +1,7 @@
 {
   "name": "uxd-prototype",
   "description": "Create UX prototypes from Jira tickets, Figma designs, or feature descriptions",
+  "crossRefFile": "README-content.md",
   "author": { "name": "UXD Team" },
   "repository": "https://github.com/rh-uxd/ai-helpers",
   "license": "Apache-2.0"
