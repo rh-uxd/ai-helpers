@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UXD consistency checker report v1",
+  "type": "object",
+  "required": ["schema_version", "run_id", "source", "degraded", "checked_at", "workspace", "artifact", "design_system", "guidelines_version", "guideline_manifest", "guideline_context", "guideline_consistency", "internal_consistency", "inputs", "coverage", "source_mode", "visual_mode", "summary"],
+  "properties": {
+    "schema_version": {"const": "1.0.0"},
+    "source": {"const": "uxd-consistency-check"},
+    "degraded": {"type": "boolean"},
+    "run_id": {"type": "string", "minLength": 1},
+    "checked_at": {"type": "string", "format": "date-time"},
+    "workspace": {"type": "string", "minLength": 1},
+    "artifact": {"type": "string", "pattern": "^\\.artifacts/.*\\.json$"},
+    "guideline_manifest": {"type": "string", "pattern": "^\\.artifacts/.*\\.json$"},
+    "design_system": {"type": "object", "required": ["id", "version"], "properties": {"id": {"type": "string", "minLength": 1}, "version": {"type": "string", "minLength": 1}}},
+    "guidelines_version": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "guideline_context": {"type": "object", "required": ["sources", "documents"], "properties": {"sources": {"type": "array"}, "documents": {"type": "array"}}},
+    "guideline_consistency": {"type": "object", "required": ["status", "baseline", "workspace"], "properties": {"status": {"$ref": "#/$defs/coverageStatus"}, "baseline": {"$ref": "#/$defs/coverageGroup"}, "workspace": {"$ref": "#/$defs/coverageGroup"}}},
+    "coverage": {"type": "object", "required": ["evaluated_rules", "unevaluated_rules"], "properties": {"evaluated_rules": {"$ref": "#/$defs/ids"}, "unevaluated_rules": {"$ref": "#/$defs/ids"}}},
+    "internal_consistency": {"type": "object", "required": ["status", "reason", "comparisons", "findings", "uncompared_targets"], "properties": {"status": {"enum": ["evaluated", "partially_evaluated", "insufficient_comparators"]}, "reason": {"type": "string"}, "comparisons": {"type": "array"}, "findings": {"type": "array"}, "uncompared_targets": {"type": "array"}}},
+    "inputs": {"type": "object", "required": ["scope", "head", "base", "source_sha256", "files", "target_files"], "properties": {"scope": {"enum": ["workspace", "changed", "committed"]}, "head": {"type": ["string", "null"]}, "base": {"type": ["string", "null"]}, "source_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}, "files": {"type": "object"}, "target_files": {"type": "array", "items": {"type": "string"}}}},
+    "source_mode": {"type": "object", "required": ["ran", "violations"], "properties": {"ran": {"type": "boolean"}, "violations": {"type": "array", "items": {"$ref": "#/$defs/sourceFinding"}}}},
+    "visual_mode": {"type": "object", "required": ["ran", "screenshots_checked", "findings"], "properties": {"ran": {"type": "boolean"}, "screenshots_checked": {"type": "integer", "minimum": 0}, "findings": {"type": "array"}}},
+    "summary": {"type": "object", "required": ["total_guidelines_checked", "violations", "warnings", "passes"], "additionalProperties": false, "properties": {"total_guidelines_checked": {"type": "integer", "minimum": 0}, "violations": {"type": "integer", "minimum": 0}, "warnings": {"type": "integer", "minimum": 0}, "passes": {"type": "integer", "minimum": 0}}}
+  },
+  "$defs": {
+    "coverageStatus": {"enum": ["evaluated", "partially_evaluated", "not_evaluated"]},
+    "ids": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "coverageGroup": {"type": "object", "required": ["status", "selected_rules", "evaluated_rules"], "properties": {"status": {"$ref": "#/$defs/coverageStatus"}, "selected_rules": {"$ref": "#/$defs/ids"}, "evaluated_rules": {"$ref": "#/$defs/ids"}}},
+    "sourceFinding": {
+      "type": "object",
+      "required": ["guideline_id", "guideline_title", "category", "severity", "verdict", "confidence", "review_candidate", "file", "line", "property", "value", "description", "suggestion", "check_method"],
+      "properties": {"guideline_id": {"type": "string"}, "guideline_title": {"type": "string"}, "category": {"type": "string"}, "severity": {"enum": ["error", "warning"]}, "verdict": {"enum": ["VIOLATION", "FLAGGED"]}, "confidence": {"enum": ["high", "medium", "low"]}, "review_candidate": {"type": "boolean"}, "file": {"type": "string", "minLength": 1}, "line": {"type": ["integer", "null"], "minimum": 1}, "property": {"type": "string"}, "value": {"type": "string"}, "description": {"type": "string"}, "suggestion": {"type": "string"}, "check_method": {"enum": ["automated", "automated_candidate"]}, "pf_doc_url": {"type": ["string", "null"]}},
+      "allOf": [{"if": {"properties": {"review_candidate": {"const": true}}}, "then": {"properties": {"severity": {"const": "warning"}, "verdict": {"const": "FLAGGED"}, "confidence": {"const": "low"}, "check_method": {"const": "automated_candidate"}}}}]
+    }
+  }
+}

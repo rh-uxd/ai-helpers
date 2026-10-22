@@ -1,0 +1,103 @@
+name: uxd-consistency-check-eval
+description: Evaluate explicit source selection, collision policy, offline execution, and honest coverage in uxd-consistency-check
+
+skill: uxd-prototype:uxd-consistency-check
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/uxd-prototype
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains input.yaml with a realistic user prompt and
+    annotations.yaml with the expected case_type. Cases ask for guidance only;
+    no source files, network access, analyzer execution, model calls, or external
+    retrieval is required.
+
+outputs:
+  - path: artifacts
+    schema: |
+      Judges inspect conversation output for explicit custom-source selection,
+      collision-safe namespacing, offline constraints, and honest unevaluated
+      coverage. No project source or remote content should be modified/retrieved.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: selects_custom_local_guidelines
+    description: Gives a local Carbon-guidance invocation without inferring PatternFly or fetching remote rules
+    if: "annotations.get('case_type') == 'custom-local-guidelines'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      local = re.search(r"--guidelines.{0,100}(carbon=|/carbon-guidelines)", text, re.I | re.S)
+      system = re.search(r"--design-system\s+[\"']?carbon", text, re.I)
+      offline = re.search(r"offline|local(ly)?|no network|does not fetch|never fetch", text, re.I)
+      optional_pf = re.search(r"PatternFly.{0,80}(optional|opt.in|explicit|not default|not automatic)|(?:optional|opt.in|explicit|not default|not automatic).{0,80}PatternFly", text, re.I | re.S)
+      if not local or not system:
+          return False, "Did not select the local Carbon corpus and explicit Carbon system label"
+      if not offline:
+          return False, "Did not state that analyzer guidance is local/offline"
+      if not optional_pf:
+          return False, "Did not make clear PatternFly is not inferred or mandatory"
+      return True, "Selected the user-owned Carbon source explicitly and kept analysis offline"
+
+  - name: preserves_both_conflicting_sources
+    description: Keeps distinct same-ID rules through explicit namespaces instead of choosing a winner
+    if: "annotations.get('case_type') == 'source-id-collision'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      patternfly = re.search(r"patternfly:patternfly-component-usage", text, re.I)
+      product = re.search(r"rhoai:patternfly-component-usage", text, re.I)
+      collision = re.search(r"namespace|qualif|conflict|both|distinct source", text, re.I)
+      no_winner = re.search(r"(not|never|don't|do not).{0,30}(override|replace|prefer|drop|discard)|(no|without).{0,20}(silent|source).{0,20}(override|winner|conflict)", text, re.I | re.S)
+      if not (patternfly and product):
+          return False, "Did not preserve both sources using qualified rule IDs"
+      if not collision or not no_winner:
+          return False, "Did not explain namespacing and reject silent source precedence"
+      return True, "Preserved both same-ID sources without silent precedence"
+
+  - name: keeps_unsupported_rules_unevaluated
+    description: Does not turn prose-only rules into deterministic passes or merge supplemental review
+    if: "annotations.get('case_type') == 'unsupported-prose-rule'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      unevaluated = re.search(r"unevaluat|unsupported.{0,30}(check|deterministic)|not.{0,20}(a )?pass", text, re.I | re.S)
+      separate = re.search(r"separate|supplemental|manual|model.assisted", text, re.I)
+      counts = re.search(r"summary.{0,60}(aggregate|group.count|count).{0,60}(finding|array)|(?:aggregate|group.count|not.{0,30}finding.array).{0,80}summary", text, re.I | re.S)
+      if not unevaluated:
+          return False, "Treated prose-only policy as a deterministic pass instead of unevaluated"
+      if not separate:
+          return False, "Did not keep optional manual/model review separate"
+      if not counts:
+          return False, "Did not distinguish aggregate summary counts from finding objects"
+      return True, "Kept unsupported rules and supplemental evidence separate from deterministic coverage"
+
+thresholds:
+  selects_custom_local_guidelines:
+    min_pass_rate: 1.0
+  preserves_both_conflicting_sources:
+    min_pass_rate: 1.0
+  keeps_unsupported_rules_unevaluated:
+    min_pass_rate: 1.0

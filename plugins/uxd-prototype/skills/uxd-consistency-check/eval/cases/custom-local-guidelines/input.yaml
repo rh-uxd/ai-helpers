@@ -1,0 +1,5 @@
+prompt: >-
+  Using uxd-consistency-check, explain the exact way to check my existing
+  application in /workspace/app against our local Carbon design rules in
+  /workspace/carbon-guidelines. We do not want any remote documentation fetched,
+  and PatternFly is not our design system. Do not run commands or change files.

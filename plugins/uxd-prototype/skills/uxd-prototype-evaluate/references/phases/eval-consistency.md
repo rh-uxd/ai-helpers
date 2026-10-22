@@ -1,209 +1,85 @@
 # eval-consistency
 
-Runs PatternFly design consistency checks against the prototype using vendored guidelines from `.context/consistency-checker/` (cloned automatically by `bootstrap-consistency-checker.sh`).
+Run deterministic source checks using the installed sibling `uxd-consistency-check` skill. It supports internal consistency and configured guideline checks, not just PatternFly. Source-only operation requires no network, browser, provider, or model calls. Do not apply fixes automatically.
 
-**Before skipping — verify the checker is truly unavailable:**
+## Availability and degraded mode
 
-1. Resolve the project root: `PROJECT_ROOT="${UXD_PROJECT_ROOT:-$(node -e "console.log(require('${CLAUDE_SKILL_DIR}/scripts/resolve-root').resolveProjectRoot())" 2>/dev/null || git rev-parse --show-toplevel 2>/dev/null || pwd)}"`
-2. Check: `ls ${PROJECT_ROOT}/.context/consistency-checker/guidelines/*.md 2>/dev/null | wc -l`
-3. If count > 0: the checker IS bootstrapped. Proceed to Step 1. Do NOT write a skip report.
-4. If count == 0: run `bash "${CLAUDE_SKILL_DIR}/scripts/bootstrap-consistency-checker.sh"`, then re-check.
-5. Only write `{"skipped": true, "reason": "consistency-checker not bootstrapped"}` if the re-check STILL finds zero guideline `.md` files.
+Let `EVALUATOR_SKILL_DIR` be the resolved directory of this evaluator skill (independent of the agent tool). The sibling is `$EVALUATOR_SKILL_DIR/../uxd-consistency-check`.
 
-"Network unreachable" is NOT a valid skip reason when guideline files already exist on disk from a prior clone.
+1. Run `bash "$EVALUATOR_SKILL_DIR/scripts/bootstrap-consistency-checker.sh"` to check local availability. This compatibility entry point only checks for `SKILL.md` and `scripts/analyze.py`; it does not install or clone anything.
+2. Both files present means the checker is available. Do not require a bundled guideline count: alternative guidelines and no-guideline/internal-only operation are valid. Follow the sibling skill's configuration and provenance rules.
+3. If either file is absent, a workspace is available, and PatternFly guidance was explicitly selected, retain the existing `pf-css-token-check` fallback from the separately installed `pf-design-audit` plugin. Check new + modified CSS/SCSS/TSX files in the MR delta only. Write `"source": "pf-css-token-check-fallback"`, `"degraded": true`, the actual source findings, and `visual_mode.ran = false`. This is limited PatternFly token checking, not a full consistency pass. Do not substitute it for another system's guidance.
+4. If neither checker nor an applicable fallback is available, write a skipped report with the actual reason to the normal `consistency-report.json` path. Do not invent a passing result.
 
-### Degraded Mode (no consistency-checker, workspace available)
+A checker execution/configuration error is not absence: surface the error instead of silently substituting a passing or fallback report.
 
-If `.context/consistency-checker/` is missing after the bootstrap retry BUT `--workspace` is provided, run a lightweight fallback before writing the skipped report:
+## Execution modes and inputs
 
-1. Check if the `pf-css-token-check` skill is available (skill invocation does not return "unknown skill"). If unavailable, skip to step 5. **Note:** `pf-css-token-check` is part of the `pf-design-audit` plugin (`plugins/patternfly/pf-design-audit/`), which must be installed separately.
-2. Invoke `pf-css-token-check` against the workspace MR delta files (new + modified CSS/SCSS/TSX files only).
-3. Capture its output as `consistency-report.json` with `"source": "pf-css-token-check-fallback"` and `"degraded": true`.
-4. This provides basic PatternFly token compliance (hardcoded colors, spacing, typography) without the full guideline set. Do NOT run visual mode in degraded mode — only source-level token checks.
-5. If `pf-css-token-check` is not available, write `{"skipped": true, "reason": "consistency-checker not bootstrapped, pf-css-token-check plugin unavailable"}` to `consistency-report.json` and exit.
+These are evaluator phase modes, not options to `analyze.py`:
 
-This ensures that eval-fix still receives actionable suggestions for the most common violations (hardcoded hex values, missing design tokens) even when the full checker is unavailable.
-
-## Execution Modes
-
-eval-consistency runs in two modes, invoked separately by the orchestrator:
-
-- **`--mode=source`** (Phase A setup): Runs deterministic source-code checks against MR delta files. Fast, no screenshots needed. Produces initial `consistency-report.json` and appends to `refinement-suggestions.json`. Called before eval-classify.
-- **`--mode=visual`** (post-journey): Runs AI-powered visual checks against journey screenshots. Appends visual findings to the existing `consistency-report.json`. Called after eval-journey captures screenshots.
-- **`--mode=both`** (legacy): Runs source then visual sequentially. Use when both inputs are available.
-
-When called without `--mode`, defaults to `both` (legacy behavior).
-
-## Inputs
+- **`--mode=source`** (default): deterministic source checks before eval-classify. No screenshots or model calls.
+- **`--mode=visual`**: only an explicitly requested visual review after eval-journey. Preserve the prior source report; write supplemental findings separately. Screenshots alone do not authorize a model/provider call.
+- **`--mode=both`**: explicitly requested source plus visual review, subject to the same visual authorization. Never select this mode automatically.
 
 | Input | Description | Required |
 |-------|-------------|----------|
-| `.context/consistency-checker/guidelines/` | Vendored PatternFly guideline markdown files | Yes |
-| `.artifacts/<KEY>/eval/mr-delta.json` | Changed files list (scopes source-mode checks) | For source mode |
-| `.artifacts/<KEY>/eval/journey-log.json` | Screenshots for visual-mode checks | For visual mode |
-| `.artifacts/<KEY>/eval/screenshots/` | Journey screenshots | For visual mode |
-| `--workspace` | Path to prototype source | For source mode |
-| `--mode` | `source`, `visual`, or `both` | No (default: both) |
+| Installed sibling skill | `SKILL.md` and `scripts/analyze.py` | Unless degraded fallback |
+| `--workspace` | Prototype source workspace | For source mode |
+| Base ref | Explicit MR target/base revision | For changed-file source scope |
+| `.artifacts/<KEY>/eval/mr-delta.json` | New + modified files for cross-checking MR scope and suggestions | For source mode |
+| `.artifacts/<KEY>/eval/journey-log.json` and `screenshots/` | Existing journey/persona screenshots | For visual mode |
+| `--mode` | `source`, `visual`, or `both` | No (default: source) |
 
-## Outputs
+## Step 1: Source checks
 
-| File | Description |
-|------|-------------|
-| `.artifacts/<KEY>/eval/consistency-report.json` | Full consistency report (source + visual findings) |
-| `.artifacts/<KEY>/eval/refinement-suggestions.json` | Appended with consistency suggestions |
+Run for source/both modes only. Resolve `WORKSPACE`, `KEY`, and `BASE_REF` from the evaluation inputs; do not guess a base or silently expand to all files. Resolve `CHECKER_DIR` to the installed sibling directory.
 
-## Procedure
-
-### Step 1: Source Code Mode (when `--workspace` available)
-
-**Mode gate:** Runs with `--mode=source` or `--mode=both`. Skip when `--mode=visual`.
-
-**REQUIRED: Actually read the guideline files.** Do not produce placeholder results.
-
-#### 1a: Detect applicable guideline categories and load only matching guidelines
-
-Pre-filter guidelines based on what component types are actually used in the MR delta files. This avoids loading and checking guidelines for component categories not present in the prototype changes.
+Select guidance from the request and target workspace context, not from unrelated checkouts. The command below selects no guideline corpus: it runs internal comparisons only. Add `--design-system patternfly` only when that baseline is requested, and/or repeated `--guidelines "NAMESPACE=/absolute/local/path"` for selected team, product, or other design-system guidance. Local workspace directories are not loaded automatically. Retrieve requested remote sources in the assistant layer, pin and stage them locally, then pass those paths; the analyzer remains offline. For replay, pass only `--guideline-manifest` instead of fresh source selections. See the sibling skill for selection, applicability, and conflict rules.
 
 ```bash
-cd <workspace>
-# Scan MR delta files for component type markers
-DELTA_CONTENT=$(cat <new_files + modified_files from mr-delta.json> 2>/dev/null)
-
-# Detect which categories are present
-HAS_TABLES=$(echo "$DELTA_CONTENT" | grep -l '<Table\|<Tr\|<Td\|<Th\|<Thead\|<Tbody' | head -1)
-HAS_BUTTONS=$(echo "$DELTA_CONTENT" | grep -l '<Button\|variant="primary"\|variant="secondary"' | head -1)
-HAS_ICONS=$(echo "$DELTA_CONTENT" | grep -l 'Icon\b\|from.*icons' | head -1)
-HAS_LABELS=$(echo "$DELTA_CONTENT" | grep -l '<Label\|<Badge' | head -1)
-HAS_MENUS=$(echo "$DELTA_CONTENT" | grep -l '<Menu\|<Dropdown\|<Select' | head -1)
-HAS_NAV=$(echo "$DELTA_CONTENT" | grep -l '<Nav\|<Sidebar\|NavItem\|nav__link' | head -1)
-HAS_LAYOUTS=$(echo "$DELTA_CONTENT" | grep -l '<Page\|<PageSection\|<Stack\|<Split' | head -1)
+python3 "$CHECKER_DIR/scripts/analyze.py" \
+  --workspace "$WORKSPACE" --changed --base-ref "$BASE_REF" \
+  --json-file "$WORKSPACE/.artifacts/$KEY/eval/consistency-report.json"
 ```
 
-**Only load guideline `.md` files from categories that matched.** For example, if `HAS_TABLES` and `HAS_BUTTONS` matched but nothing else, only read files from `guidelines/tables/` and `guidelines/buttons/`.
+`--src` is a supported alias for `--workspace`. For committed MR scope, add `--merge-base` to select the branch delta from the merge base, rather than a direct comparison to a potentially advanced target. Check the selected scope against `mr-delta.json`; do not attribute unchanged-file debt to this MR. Do not discard error output or treat a failed run as clean.
 
-If NO categories match (rare — usually at least buttons or layouts), fall back to loading ALL guidelines.
+Use the checker's structured JSON directly. Do not extract or execute shell commands from guideline prose. Do not perform automatic LLM-assisted interpretation. Source provenance identifies where a guideline came from; it does not prove the rule was evaluated. Arbitrary prose without a supported deterministic check remains **unevaluated** and must not count as a pass. Missing guidelines do not prevent internal consistency checks, but internal-only findings are not evidence of guideline compliance.
 
-The directory structure is organized by category:
-- `tables/` — table-cell-content, table-column-headers, table-pagination, table-style-selection, table-toolbar-layout
-- `icons/` — icon style patterns
-- `labels/` — label usage patterns
-- `layouts/` — page layout patterns
-- `menus/` — menu patterns
-- `navigation/` — nav patterns
-- `buttons/` — button patterns
+The checker emits report schema version `1.0.0` with the legacy source/visual/summary fields plus additive `internal_consistency` and `guideline_consistency` sections. New guideline manifests use `1.1.0`; legacy `1.0.0` snapshots replay without renaming their raw IDs. New finding and coverage identities are qualified `namespace:original-id`; preserve them when grouping or making suggestions so distinct sources are not conflated. Preserve original IDs and provenance from `guideline_context` and the frozen manifest.
 
-For each guideline file in the **matched categories**, extract:
-- **Frontmatter:** `id`, `title`, `category`, `severity` (from YAML between `---` markers)
-- **Rule:** The content under the `## Rule` heading (the actual check to perform)
+Read finding objects from `source_mode.violations[]`, inspecting `severity`, `verdict`, `confidence`, `review_candidate`, and `check_method`. Summary fields are aggregate guideline-group counts, not finding arrays. For humans, summarize actionable findings with file/line evidence, evaluated versus unevaluated coverage, warning confidence, and artifact paths; there is no separate human-output CLI mode.
 
-#### 1b: Scope to MR delta files
+## Step 2: Explicit visual review
 
-Read `.artifacts/<KEY>/eval/mr-delta.json`. Collect `new_files` + `modified_files`. Only check these files — pre-existing violations in unchanged files are not this prototype's responsibility.
+Run only for an explicitly requested visual/both mode with existing screenshots and authorization for any model-assisted review. The local source checker does not run visual analysis. Do not start a browser, capture new screenshots, or call a provider automatically. In degraded fallback mode, do not run visual checks.
 
-#### 1c: Run deterministic checks via analyze.py bash commands
+1. Read the existing source report and its frozen guideline manifest. Preserve that report unchanged, including `source_mode`, `internal_consistency`, `guideline_consistency`, source provenance, and version fields.
+2. Collect unique screenshot paths from `journey-log.json` (`journeys[].steps[].screenshot`), plus existing persona screenshots if relevant.
+3. Review only applicable visual rules with actual evidence. Follow the sibling skill's supplemental JSON contract and validate with `validate_ai_review.py --mode visual`, the frozen manifest, and the actual screenshot paths. Use exact qualified `guideline_id` values for new manifests; do not infer deterministic coverage from manual/model review.
+4. Collapse duplicate findings into one entry with a `seen_on` array. Set `screenshots_checked` to the number actually reviewed, not the number merely available.
+5. Save the validated supplemental artifact separately and link it as non-deterministic evidence in the human summary. The existing aggregate renderer does not automatically consume these separate supplements; do not imply that it displayed them. Do not merge supplemental findings or counts into the deterministic checker report. If review could not execute, record the reason; leave the deterministic `visual_mode` unrun. No source report plus no review means no passing claim.
 
-The consistency-checker guidelines include `## Automated Checks` sections with literal bash commands (grep/find patterns) that can be extracted and executed. Use these for fast, deterministic, reproducible checking instead of LLM interpretation.
+## Step 3: Preserve the report contract
 
-**Step 1c-i: Extract and run bash commands from guidelines**
+Write `.artifacts/<KEY>/eval/consistency-report.json` in the workspace. Source mode creates the deterministic report with `visual_mode.ran = false`. Visual/manual/model review supplements this in a separate artifact; both mode produces both artifacts without rewriting deterministic findings or coverage. Legacy combined reports remain readable, but do not present their visual judgments as deterministic output.
 
-For each guideline loaded in 1a, check if it has an `## Automated Checks` section with bash commands. If the guideline frontmatter has `automatable: true`, its bash commands are reliable.
+Keep these fields for existing validators, golden fixtures, and report consumers:
 
-```bash
-# Option A: Use analyze.py directly (preferred if available)
-# Run in check-only mode scoped to MR delta files. Capture violation data, skip report.
-cd .context/consistency-checker/
-python3 scripts/analyze.py --src=<workspace> --changed --json-output 2>/dev/null
+- `schema_version`: `"1.0.0"` for new checker reports (legacy/fallback reports remain supported).
+- `source`, `degraded`, `checked_at`, `guidelines_version`: retain actual checker/fallback provenance and timestamp; do not fabricate a version.
+- `source_mode`: `ran` boolean and `violations` array. Findings retain `file`, `line`, `property`, `value`, `suggestion`, plus guideline identity, severity, title, and description when supplied. Source-only mode never claims visual coverage.
+- `visual_mode`: `ran` boolean, `screenshots_checked` integer, and `findings` array.
+- `summary`: integers `total_guidelines_checked`, `violations`, `warnings`, `passes`.
+- `internal_consistency` and `guideline_consistency`: preserve the new additive checker evidence; do not flatten these into invented compliance passes.
 
-# Option B: If analyze.py is not available or fails, extract bash commands manually:
-# For each guideline .md file, parse the ## Automated Checks section,
-# extract the grep/find commands, and run them against MR delta files only.
-```
+Summary values are **guideline-group counts**, not raw finding counts. Count each evaluated applicable guideline group once: error if it has any error finding, otherwise warning if it has any warning finding, otherwise pass only when evaluated with no findings. Unevaluated/provenance-only rules are excluded from checked/passing counts. Keep `violations + warnings + passes = total_guidelines_checked`; multiple findings for one group do not inflate the total. Preserve the checker's deterministic summary; supplemental review has its own counts and must not turn unevaluated rules into deterministic passes.
 
-**Step 1c-ii: Parse violation output**
+Do not generate a separate checker HTML or markdown report. The evaluator owns the **aggregate HTML** via its existing report renderer; keep the legacy report shape for that consumer.
 
-From the analyze.py output (or manual bash command results), extract each violation:
-- `guideline_id` — from the guideline that defined the check
-- `file`, `line` — from the grep/find output
-- `description` — from the guideline's rule text
-- `suggestion` — from the guideline's fix recommendation
-- `severity` — from the guideline frontmatter
+## Step 4: Append suggestions, not fixes
 
-**Do NOT generate the analyze.py HTML/markdown report.** Only capture the structured violation data.
-
-**Step 1c-iii: LLM-assisted judgment (edge cases only)**
-
-For guidelines that have `automatable: false` or no `## Automated Checks` section, apply LLM-based analysis as a fallback. These are typically nuanced checks (e.g., "is the button order semantically correct in this context?") that grep cannot determine.
-
-Record each violation with: `guideline_id`, `guideline_title`, `category`, `severity`, `file`, `line`, `description`, `suggestion`, `pf_doc_url`, `check_method` (`automated` or `llm_assisted`).
-
-#### 1d: Compute summary
-
-```
-total_guidelines_checked = number of guidelines where the rule was applicable to at least one file
-violations = count of severity:error findings
-warnings = count of severity:warning findings
-passes = total_guidelines_checked - violations - warnings
-```
-
-### Step 2: Visual Mode (when screenshots exist)
-
-**Mode gate:** Runs with `--mode=visual` or `--mode=both`. Skip when `--mode=source`.
-
-**When `--mode=visual`:** Read the existing `consistency-report.json` (from the prior source-mode pass) and append visual findings to it. Do not overwrite source-mode results.
-
-Cross-reference captured screenshots against PatternFly guidelines for visual violations (icon style, layout patterns, empty states, CTA placement) that source-mode cannot detect.
-
-**Structured extraction (preferred):** If `.context/consistency-checker/scripts/visual_analyze.py` exists, use it to extract DOM structure with bounding boxes from key pages. This gives the LLM structured visual input instead of raw PNGs:
-
-```bash
-cd .context/consistency-checker/
-python3 scripts/visual_analyze.py --url=<prototype-url> --pages=<key-routes-from-journey-log>
-```
-
-The script captures screenshot + DOM with bounding boxes. Feed this structured data to the LLM for guideline analysis.
-
-**Fallback:** If visual_analyze.py is not available, analyze the raw journey screenshots directly.
-
-1. Collect unique screenshots from `journey-log.json` (`journeys[].steps[].screenshot`). Also include Phase B persona screenshots if available (`screenshots/persona-*.png`).
-2. For each screenshot, check against applicable visual guidelines (from matched categories in Step 1a).
-3. Each finding records: `screenshot`, `journey`, `step`, `guideline_id`, `guideline_title`, `category`, `severity`, `verdict` (`VIOLATION`), `description`, `suggestion`.
-4. **Deduplicate:** If the same violation appears on multiple screenshots, collapse to one finding with a `seen_on` array.
-
-### Step 3: Write consistency-report.json
-
-**Write behavior by mode:**
-- `--mode=source`: Create a new `consistency-report.json` with `source_mode` populated and `visual_mode.ran = false`.
-- `--mode=visual`: Read existing `consistency-report.json`, update `visual_mode` section, recompute `summary` to include both source + visual findings.
-- `--mode=both`: Write complete file with both sections.
-
-```json
-{
-  "source": "consistency-checker",
-  "checked_at": "<ISO timestamp>",
-  "guidelines_version": "<git short hash from .context/consistency-checker/>",
-  "source_mode": {
-    "ran": true,
-    "violations": []
-  },
-  "visual_mode": {
-    "ran": true,
-    "screenshots_checked": 12,
-    "findings": []
-  },
-  "summary": {
-    "total_guidelines_checked": 8,
-    "violations": 3,
-    "warnings": 1,
-    "passes": 4
-  }
-}
-```
-
-Set `"ran": false` for any mode that could not execute (no workspace = no source mode; no screenshots = no visual mode).
-
-### Step 4: Append to refinement-suggestions.json
-
-For each violation, add a consistency suggestion entry:
+Append actionable MR-delta findings to `.artifacts/<KEY>/eval/refinement-suggestions.json` without overwriting other phases' suggestions. Preserve actual evidence and deduplicate repeated findings. Use the existing suggestion shape:
 
 ```json
 {
@@ -211,12 +87,11 @@ For each violation, add a consistency suggestion entry:
   "guideline_id": "<id>",
   "severity": "<error|warning>",
   "file": "<path>",
-  "line": "<number>",
-  "current": "<what's there now>",
-  "fix": "<what it should be>",
-  "pf_doc_url": "<url>",
+  "line": 1,
+  "current": "<observed value>",
+  "fix": "<suggestion>",
   "source": "<source_mode|visual_mode>"
 }
 ```
 
-Only include violations from MR delta files. Consistency fixes are applied FIRST by eval-fix (deterministic, high confidence).
+Retain `pf_doc_url` when supplied, but do not require or invent a PatternFly URL for non-PatternFly rules. Suggestions are inputs to the separately authorized eval-fix phase; this phase does not apply them.

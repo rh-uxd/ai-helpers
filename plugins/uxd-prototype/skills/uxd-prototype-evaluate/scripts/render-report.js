@@ -2336,6 +2336,19 @@ function buildConsistencyHtml() {
       : (Array.isArray(report.findings) ? report.findings : []);
   let html = '';
 
+  // Additive checker coverage is independent of legacy guideline-group counts.
+  if (report.guideline_consistency) {
+    const coverage = report.guideline_consistency;
+    html += `<h3>Guideline consistency</h3><p class="small">${escapeHtml(coverage.status || 'not_evaluated')}</p>`;
+    html += `<p class="small muted">Design-system baseline: ${escapeHtml(coverage.baseline?.status || 'not_evaluated')}; workspace/product guidance: ${escapeHtml(coverage.workspace?.status || 'not_evaluated')}.</p>`;
+  }
+  if (report.internal_consistency) {
+    const internal = report.internal_consistency;
+    const candidates = Array.isArray(internal.findings) ? internal.findings.length : 0;
+    html += `<h3>Internal consistency</h3><p class="small">${escapeHtml(internal.status || 'not_evaluated')}; ${candidates} review candidates.</p>`;
+    html += `<p class="small muted">${escapeHtml(internal.reason || '')}</p>`;
+  }
+
   // Summary stats
   html += `<div class="consistency-summary">`;
   html += `<div class="consistency-stat"><span class="consistency-stat-n">${summary.total_guidelines_checked || 0}</span><span class="consistency-stat-l">Checked</span></div>`;
@@ -2345,7 +2358,9 @@ function buildConsistencyHtml() {
   html += `</div>`;
 
   if (!violations.length) {
-    html += `<p class="muted small">No violations found in MR-scoped files.</p>`;
+    html += report.guideline_consistency?.status === 'not_evaluated'
+      ? `<p class="muted small">Guideline consistency was not evaluated; no compliance pass is claimed.</p>`
+      : `<p class="muted small">No violations found in scoped files for the evaluated checks.</p>`;
     return html;
   }
 

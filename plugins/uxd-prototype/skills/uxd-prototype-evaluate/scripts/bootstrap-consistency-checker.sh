@@ -1,55 +1,16 @@
 #!/bin/bash
-# Bootstrap design consistency guidelines into .context/.
-# Sparse-clones guidelines/, scripts/, and requirements files from the
-# consistency-checker git remote.
-#
-# Repo URL resolution (first non-empty wins):
-#   CONSISTENCY_CHECKER_REPO env
-#   overlay context_repos.consistency_checker
-#
-# Writes into the consumer project (UXD_PROJECT_ROOT), never into the skill install.
-
+# Compatibility entry point: discover the installed sibling checker only.
+# No project context, remote repository, or guideline bundle is required.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="${UXD_PROJECT_ROOT:-}"
-if [ -z "$PROJECT_ROOT" ]; then
-  PROJECT_ROOT="$(node -e "console.log(require('${SCRIPT_DIR}/resolve-root').resolveProjectRoot())" 2>/dev/null || pwd)"
+CHECKER_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")/uxd-consistency-check"
+
+if [ -f "$CHECKER_DIR/SKILL.md" ] && [ -f "$CHECKER_DIR/scripts/analyze.py" ]; then
+  echo "CONSISTENCY_AVAILABLE=true"
+  echo "Consistency checker available: $CHECKER_DIR"
+else
+  echo "CONSISTENCY_AVAILABLE=false"
+  echo "Consistency checker unavailable: $CHECKER_DIR (requires SKILL.md and scripts/analyze.py)"
+  echo "Use the pf-css-token-check fallback when available; otherwise record a skipped report."
 fi
-
-OVERLAY_REPO="$(node "${SCRIPT_DIR}/overlay-get.js" context_repos.consistency_checker 2>/dev/null || true)"
-CHECKER_REPO="${CONSISTENCY_CHECKER_REPO:-${OVERLAY_REPO:-}}"
-
-CONTEXT_DIR="${PROJECT_ROOT}/.context/consistency-checker"
-
-echo "Bootstrapping consistency-checker into ${CONTEXT_DIR}..."
-
-if [ -z "$CHECKER_REPO" ]; then
-    echo "Skipping: set CONSISTENCY_CHECKER_REPO or overlay context_repos.consistency_checker"
-    echo "  to a git URL with guidelines/ and scripts/. Design consistency checks will be unavailable."
-    exit 0
-fi
-
-mkdir -p "$CONTEXT_DIR"
-
-if [ ! -d "$CONTEXT_DIR/.git" ]; then
-    git clone --depth 1 --filter=blob:none --no-checkout "$CHECKER_REPO" "$CONTEXT_DIR" || {
-        echo "ERROR: Could not clone consistency-checker from ${CHECKER_REPO}."
-        echo "  Design consistency checks will be unavailable."
-        exit 1
-    }
-fi
-
-cd "$CONTEXT_DIR"
-git sparse-checkout init --cone || true
-git sparse-checkout set guidelines scripts requirements.txt requirements-visual.txt || true
-git checkout || true
-
-if [ ! -d "$CONTEXT_DIR/guidelines" ] || [ -z "$(ls "$CONTEXT_DIR/guidelines/"*.md 2>/dev/null)" ]; then
-  echo "ERROR: consistency-checker bootstrapped but guidelines/ is empty"
-  exit 1
-fi
-
-echo "Consistency-checker bootstrapped to $CONTEXT_DIR"
-echo "  Guidelines: $CONTEXT_DIR/guidelines/"
-echo "  Scripts:    $CONTEXT_DIR/scripts/"
