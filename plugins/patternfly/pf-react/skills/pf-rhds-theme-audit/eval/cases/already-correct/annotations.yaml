@@ -1,0 +1,9 @@
+has_redundant_palette: false
+has_intentional_palette: true
+has_code_editor: true
+has_chart: true
+has_dual_switch: false
+has_broken_root_toggle: false
+has_hero: true
+expect_no_changes: true
+intentional_rhds_switcher: false
