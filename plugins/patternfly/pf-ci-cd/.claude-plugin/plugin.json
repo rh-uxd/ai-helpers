@@ -1,0 +1,11 @@
+{
+  "name": "pf-ci-cd",
+  "description": "PatternFly CI/CD workflows — release promotion, publishing verification, and deployment operations",
+  "keywords": ["patternfly", "ci-cd", "release", "deployment"],
+  "author": {
+    "name": "UXD Team",
+    "url": "https://www.patternfly.org"
+  },
+  "repository": "https://github.com/rh-uxd/ai-helpers",
+  "license": "MIT"
+}
