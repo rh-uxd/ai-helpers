@@ -1,0 +1,1 @@
+prompt: "Adapt the shared PatternFly accessibility review for a product repository that already has an npm run e2e:a11y-audit command, a page registry, mock seed data, a known skip-link backlog item, and Jira priority fields. Explain what remains product-specific and what comes from pf-a11y. Draft findings for review but do not file issues."

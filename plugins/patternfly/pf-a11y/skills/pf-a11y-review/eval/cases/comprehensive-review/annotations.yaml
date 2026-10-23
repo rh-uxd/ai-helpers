@@ -1,0 +1,3 @@
+expect_full_methodology: true
+expect_missing_capabilities: false
+expect_product_overlay: false

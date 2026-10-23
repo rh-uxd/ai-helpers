@@ -15,6 +15,8 @@ This skill requires **Playwright MCP** for live browser interaction. If Playwrig
 > This skill tests keyboard interactions in a live browser and cannot operate without Playwright MCP.
 > See the Playwright MCP documentation for installation instructions.
 
+Use `pf-a11y-review` when the request also includes axe, viewport/media, or broader semantic evaluation.
+
 ## Input
 
 | Source | Required | Description |
@@ -36,12 +38,14 @@ Load these reference files from `$CLAUDE_SKILL_DIR`:
 - **`references/keyboard-criteria.md`** — General keyboard accessibility criteria with expected behaviors, test procedures, and common violations. All criteria apply unless explicitly not applicable to the page (e.g., no modals present means the focus trapping criterion is N/A).
 - **`references/component-specifics.md`** — Keyboard behavior expectations for specific PatternFly components (and similar custom implementations). Apply these when a matching component is identified on the page during baseline inspection.
 
+For a consolidated accessibility review, load `../pf-a11y-review/references/reporting-schema.md` and preserve this skill's criterion-level results in the shared finding model.
+
 ## Workflow
 
 ### Step 0 — Prerequisites and setup
 
 1. Verify Playwright MCP tools are available. If not, stop with the setup message above.
-2. Navigate to the provided URL using Playwright. Wait for full page load.
+2. Navigate to the provided URL using Playwright. Wait for meaningful page content to load.
 3. Set viewport to desktop dimensions (1440 x 900).
 4. Capture a baseline screenshot of the loaded page.
 
@@ -61,7 +65,7 @@ Work through each criterion in `references/keyboard-criteria.md` sequentially (t
 1. Perform the keyboard actions described in the criterion's "What to test" section.
 2. After each key press, read the focused element or accessibility tree to verify focus moved as expected.
 3. Capture a screenshot when a violation is found, showing the current state.
-4. Record the result: **Pass**, **Fail**, or **N/A** (with reason).
+4. Record the result: **Pass**, **Fail**, **N/A** (with reason), or **Not tested** (with limitation).
 
 Skip any criterion that does not apply to the page (e.g., no modals present, isolated component demo without page-level navigation).
 
@@ -71,15 +75,15 @@ Present findings in the following format.
 
 #### Summary
 
-| Total criteria tested | Pass | Fail | N/A |
-|---|---|---|---|
-| _count_ | _count_ | _count_ | _count_ |
+| Total criteria | Pass | Fail | N/A | Not tested |
+|---|---|---|---|---|
+| _count_ | _count_ | _count_ | _count_ | _count_ |
 
 #### Findings
 
 | Criterion | Element(s) | Status | Details |
 |---|---|---|---|
-| _criterion name_ | _element description and role_ | Pass / Fail / N/A | _what was observed; expected vs. actual behavior_ |
+| _criterion name_ | _element description and role_ | Pass / Fail / N/A / Not tested | _what was observed; expected vs. actual behavior or limitation_ |
 
 #### Violations
 
@@ -89,12 +93,13 @@ For each failure, provide:
 - **Element**: The element or interaction involved (include role and accessible name)
 - **Expected**: What should have happened
 - **Actual**: What did happen
-- **Severity**: Critical / Major / Minor (as defined in the criteria reference)
+- **Impact**: Critical / Serious / Moderate / Minor
 - **Screenshot**: Reference to the captured screenshot showing the issue
 
-Severity definitions:
+Impact definitions:
 - **Critical** — Blocks keyboard-only users entirely from completing a task or accessing content
-- **Major** — Significantly impairs keyboard use; workaround may exist but is not obvious
+- **Serious** — Creates a major barrier with no reliable or obvious workaround
+- **Moderate** — Degrades keyboard access but a reasonable workaround exists
 - **Minor** — Inconvenient but a reasonable workaround exists
 
 #### Recommendations

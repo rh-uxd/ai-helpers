@@ -9,6 +9,8 @@ Analyze PatternFly code for WCAG violations and PatternFly-specific accessibilit
 
 Works with PatternFly HTML/CSS, PatternFly React, downstream PatternFly org repos (Chatbot, component-groups, etc), and consumer codebases that import PatternFly.
 
+Use `pf-a11y-review` when the request covers a running experience, axe, keyboard behavior, viewport/media conditions, or rendered semantics in addition to source code. This skill's findings can be normalized with `../pf-a11y-review/references/reporting-schema.md` when they contribute to a broader review.
+
 > **WCAG reference: 2.2** (W3C Recommendation, October 2023). Use this reference version anytime WCAG is mentioned or used throughout this skill. Update this reference version and date when a new WCAG version becomes the W3C Recommendation.
 
 ### PatternFly MCP and component accessibility docs
@@ -91,3 +93,5 @@ Info: N (suggestions)
 ```
 
 Group findings by file, then by severity within each file.
+
+When consolidating with other accessibility methods, treat `ERROR`, `WARN`, and `INFO` as finding classifications rather than user-impact levels. Assess impact separately using the shared reporting schema.
