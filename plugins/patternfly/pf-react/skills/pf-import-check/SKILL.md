@@ -20,7 +20,7 @@ The user provides a file path, directory, or component to check. Default to scan
 ### Import correctness
 
 1. Charts imported from `@patternfly/react-charts` root (must use `/victory` subpath).
-2. Chatbot imports not using `@patternfly/chatbot/dist/dynamic/*`.
+2. Chatbot imports not using `@patternfly/chatbot/dist/dynamic/*` (barrel imports are acceptable for `@patternfly/chatbot` >= 6.8.0-prerelease.9, which added `exports` and `sideEffects` for tree-shaking; four modules — `CodeModal`, `PreviewAttachment`, `AttachmentEdit`, `tracking` — are excluded from the barrel and always require dynamic subpath imports).
 3. Component-group imports not using `@patternfly/react-component-groups/dist/dynamic/*`.
 4. Missing package CSS imports for features in use.
 
@@ -35,7 +35,7 @@ The user provides a file path, directory, or component to check. Default to scan
 ```bash
 # Import correctness
 rg "@patternfly/react-charts['\"]" <source-dir>
-rg "@patternfly/chatbot['\"]" <source-dir>
+rg "@patternfly/chatbot['\"]" <source-dir>  # only flag if chatbot < 6.8.0-prerelease.9; always flag CodeModal/PreviewAttachment/AttachmentEdit/tracking from barrel
 rg "@patternfly/react-component-groups['\"]" <source-dir>
 
 # Bundle-size anti-patterns
@@ -50,8 +50,11 @@ rg "@patternfly/react-core/dist/" <source-dir>
 // Charts — use /victory subpath
 import { ChartDonut } from "@patternfly/react-charts/victory";
 
-// Chatbot — use /dist/dynamic/ subpath
+// Chatbot — barrel import OK for >= 6.8.0-prerelease.9
+import { Chatbot } from "@patternfly/chatbot";
+// Chatbot — dynamic subpath (required for older versions or barrel-excluded modules)
 import { Chatbot } from "@patternfly/chatbot/dist/dynamic/Chatbot";
+import CodeModal from "@patternfly/chatbot/dist/dynamic/CodeModal";  // always subpath
 
 // Component groups — use /dist/dynamic/ subpath
 import { BulkSelect } from "@patternfly/react-component-groups/dist/dynamic/BulkSelect";

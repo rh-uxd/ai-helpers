@@ -40,6 +40,7 @@ These skills apply when specific signals are present:
 | `/pf-icon-finder` | pf-design-audit | Figma mockups contain icons to identify |
 | `/pf-project-gen` | pf-react | User is scaffolding a new project |
 | `/pf-ai-audit` | pf-design-audit | Feature involves AI-powered UX (chatbots, assistants, generation) |
+| `/pf-chatbot-bundle-audit` | pf-react | `@patternfly/chatbot` is in dependencies or ChatBot bundle size is a concern |
 
 ## Synthesis guidance
 

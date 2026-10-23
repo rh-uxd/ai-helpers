@@ -1,0 +1,5 @@
+applies: true
+version: "6.8.1"
+scanned_files: 2
+issue: markdown-preload
+expect_preload: true
