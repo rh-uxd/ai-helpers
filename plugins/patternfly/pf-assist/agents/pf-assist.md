@@ -35,6 +35,7 @@ These skills apply when specific signals are present:
 | `/pf-component-reuse-check` | pf-react | Uncommitted changes contain custom components that may overlap PatternFly APIs |
 | `/pf-css-token-check` | pf-design-audit | Inline styles with hardcoded spacing, font sizes, or border values |
 | `/pf-test-gen` | pf-react | Components exist without corresponding test files |
+| `/pf-test-from-spec-gen` | pf-react | User provides a spec, acceptance criteria, or requirements and the component may not exist yet |
 | `/pf-figma-check` | pf-design-audit | Figma URLs are in the conversation |
 | `/pf-figma-token-check` | pf-design-audit | Figma URLs are in the conversation |
 | `/pf-icon-finder` | pf-design-audit | Figma mockups contain icons to identify |

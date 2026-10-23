@@ -1,0 +1,17 @@
+prompt: |
+  Generate tests for a ConfirmDeleteModal component based on these acceptance criteria:
+
+  ## ConfirmDeleteModal
+
+  **Component:** A confirmation dialog shown before deleting a resource.
+  **Uses:** PatternFly Modal, Button
+
+  ### Acceptance Criteria
+
+  1. Modal displays the resource name in the confirmation message
+  2. Modal has a "Delete" button (danger variant) and a "Cancel" button
+  3. Clicking "Delete" calls the onConfirm callback and closes the modal
+  4. Clicking "Cancel" calls the onCancel callback without deleting
+  5. Pressing Escape closes the modal (same as Cancel)
+  6. The Delete button is disabled while a deletion is in progress
+  7. An error alert appears inside the modal if deletion fails

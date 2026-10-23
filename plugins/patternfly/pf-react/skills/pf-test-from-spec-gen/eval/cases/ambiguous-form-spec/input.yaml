@@ -1,0 +1,17 @@
+prompt: |
+  Write tests for a UserSettingsForm component from this spec:
+
+  ## UserSettingsForm
+
+  **Uses:** PatternFly Form, FormGroup, TextInput, Switch, ActionGroup, Button
+
+  ### Requirements
+
+  1. Form displays fields for display name, email, and notification preferences
+  2. Display name is required and must be at least 2 characters
+  3. Email must be a valid email format
+  4. Notification preferences is a toggle switch
+  5. Form validates on submit
+  6. The form should handle errors appropriately
+  7. Form state should be manageable
+  8. Submit button is in an ActionGroup at the bottom
