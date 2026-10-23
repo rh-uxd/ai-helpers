@@ -42,7 +42,7 @@ traces:
 judges:
   - name: flags_missing_defensive_code
     description: Identifies missing optional chaining, default values, or type guards
-    if: "'missing_defensive' in annotations.get('issue_categories', [])"
+    if: "'missing_defensive' in outputs.get('annotations', {}).get('issue_categories', [])"
     check: |
       import re
       ann = outputs.get("annotations", {})
@@ -51,7 +51,7 @@ judges:
           text += "\n" + content
       findings = ann.get("expected_findings", [])
       if not findings:
-          return False, "Test case missing expected_findings annotations"
+          return False, "Test case has no expected_findings in its annotation file"
       missing = []
       for finding in findings:
           location = re.compile(
@@ -67,7 +67,7 @@ judges:
 
   - name: flags_pf_contract_violation
     description: Identifies PF-specific component misuse that fails silently
-    if: "'pf_contract' in annotations.get('issue_categories', [])"
+    if: "'pf_contract' in outputs.get('annotations', {}).get('issue_categories', [])"
     check: |
       import re
       ann = outputs.get("annotations", {})
@@ -76,7 +76,7 @@ judges:
           text += "\n" + content
       findings = ann.get("expected_findings", [])
       if not findings:
-          return False, "Test case missing expected_findings annotations"
+          return False, "Test case has no expected_findings in its annotation file"
       missing = []
       for finding in findings:
           location = re.compile(
@@ -92,7 +92,7 @@ judges:
 
   - name: flags_conditional_render_issue
     description: Identifies unsafe conditional rendering with && operator
-    if: "'conditional_render' in annotations.get('issue_categories', [])"
+    if: "'conditional_render' in outputs.get('annotations', {}).get('issue_categories', [])"
     check: |
       import re
       ann = outputs.get("annotations", {})
@@ -101,7 +101,7 @@ judges:
           text += "\n" + content
       findings = ann.get("expected_findings", [])
       if not findings:
-          return False, "Test case missing expected_findings annotations"
+          return False, "Test case has no expected_findings in its annotation file"
       missing = []
       for finding in findings:
           location = re.compile(
@@ -117,7 +117,7 @@ judges:
 
   - name: has_severity_grouping
     description: Output groups findings by severity level
-    if: "annotations.get('expect_issues') == True"
+    if: "outputs.get('annotations', {}).get('expect_issues') == True"
     check: |
       import re
       text = outputs.get("conversation", "")
@@ -135,7 +135,7 @@ judges:
 
   - name: suggests_pf6_fixes
     description: Recommends PF6 components for fixes (Alert, Spinner, EmptyState, Truncate)
-    if: "annotations.get('expect_issues') == True"
+    if: "outputs.get('annotations', {}).get('expect_issues') == True"
     check: |
       import re
       text = outputs.get("conversation", "")
@@ -151,7 +151,7 @@ judges:
 
   - name: no_false_positives
     description: Does not flag well-defended code as having edge-case issues
-    if: "annotations.get('expect_issues') == False"
+    if: "outputs.get('annotations', {}).get('expect_issues') == False"
     check: |
       import re
       text = outputs.get("conversation", "")

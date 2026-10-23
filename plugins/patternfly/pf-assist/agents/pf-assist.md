@@ -39,6 +39,7 @@ These skills apply when specific signals are present:
 | `/pf-figma-token-check` | pf-design-audit | Figma URLs are in the conversation |
 | `/pf-icon-finder` | pf-design-audit | Figma mockups contain icons to identify |
 | `/pf-project-gen` | pf-react | User is scaffolding a new project |
+| `/pf-rhds-layout-gen` | pf-react | Project has `@patternfly/react-core` 6.7.0+ plus `@rhds/elements`, or user asks for an RHDS header/footer, a plain page layout, or a full-height viewport drawer |
 | `/pf-ai-audit` | pf-design-audit | Feature involves AI-powered UX (chatbots, assistants, generation) |
 
 ## Synthesis guidance

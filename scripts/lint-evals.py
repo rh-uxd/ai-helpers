@@ -26,7 +26,7 @@ except ImportError:
     print("pyyaml not installed — install with: pip install pyyaml", file=sys.stderr)
     sys.exit(1)
 
-BARE_ANNOTATIONS = re.compile(r'\bannotations\s*[\.\[\(]')
+BARE_ANNOTATIONS = re.compile(r'(?<!["\'])\bannotations\b')
 SKIP_DIRS = {"uxd-workshop", "pf-workshop"}
 
 
@@ -125,7 +125,9 @@ def main():
         loc = f"{err['file']}"
         if err["line"]:
             loc += f":{err['line']}"
-        print(f"::error file={err['file']},line={err['line'] or 0}::{err['message']}")
+        file_param = str(err['file']).replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A').replace(':', '%3A').replace(',', '%2C')
+        msg = str(err['message']).replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+        print(f"::error file={file_param},line={err['line'] or 0}::{msg}")
         print(f"  {loc}: {err['message']}", file=sys.stderr)
 
     print(f"\neval-lint: {len(all_errors)} error(s) found", file=sys.stderr)

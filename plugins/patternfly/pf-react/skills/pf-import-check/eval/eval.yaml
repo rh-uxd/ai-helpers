@@ -42,13 +42,13 @@ traces:
 judges:
   - name: flags_invalid_import
     description: Identifies the incorrect import path in the fixture
-    if: "annotations.get('expect_violations') == True"
+    if: "outputs.get('annotations', {}).get('expect_violations') == True"
     check: |
       import re
       text = outputs.get("conversation", "")
       for path, content in outputs.get("files", {}).items():
           text += "\n" + content
-      ann = outputs.get("annotations") or annotations
+      ann = outputs.get("annotations", {})
       invalid_path = ann.get("invalid_import", "")
       if not invalid_path:
           return False, "Test case missing invalid_import annotation"
@@ -58,13 +58,13 @@ judges:
 
   - name: suggests_correct_path
     description: Recommends the correct PF6 import subpath
-    if: "annotations.get('correct_import', '') != ''"
+    if: "outputs.get('annotations', {}).get('correct_import', '') != ''"
     check: |
       import re
       text = outputs.get("conversation", "")
       for path, content in outputs.get("files", {}).items():
           text += "\n" + content
-      ann = outputs.get("annotations") or annotations
+      ann = outputs.get("annotations", {})
       correct_path = ann.get("correct_import", "")
       if not correct_path:
           return False, "Test case missing correct_import annotation"
@@ -74,7 +74,7 @@ judges:
 
   - name: no_false_positives
     description: Does not flag valid PF6 imports as violations
-    if: "annotations.get('expect_violations') == False"
+    if: "outputs.get('annotations', {}).get('expect_violations') == False"
     check: |
       import re
       text = outputs.get("conversation", "")
@@ -98,7 +98,7 @@ judges:
 
   - name: flags_bundle_issue
     description: Identifies bundle-size anti-patterns (barrel icons, full CSS, duplicate modules)
-    if: "annotations.get('bundle_issue') == True"
+    if: "outputs.get('annotations', {}).get('bundle_issue') == True"
     check: |
       import re
       text = outputs.get("conversation", "")
@@ -123,7 +123,7 @@ judges:
 
   - name: suggests_deep_icon_import
     description: Suggests deep import path for barrel icon imports
-    if: "annotations.get('violation_type') == 'barrel-icon-import'"
+    if: "outputs.get('annotations', {}).get('violation_type') == 'barrel-icon-import'"
     check: |
       import re
       text = outputs.get("conversation", "")
