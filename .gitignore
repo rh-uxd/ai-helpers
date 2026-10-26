@@ -7,8 +7,9 @@
 # Node
 node_modules/
 
-# Generated output
-prototypes/
+# Generated artifacts
+/artifacts/
+/.artifacts/
 
 # Temporary files
 tmp/
