@@ -9,7 +9,6 @@ node_modules/
 
 # Generated artifacts
 /artifacts/
-/.artifacts/
 
 # Temporary files
 tmp/
