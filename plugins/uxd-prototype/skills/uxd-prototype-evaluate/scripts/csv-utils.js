@@ -20,4 +20,10 @@ function parseCSVLine(line) {
   return result;
 }
 
-module.exports = { parseCSVLine };
+function escapeCSVField(value) {
+  const text = value == null ? '' : String(value);
+  if (/[",\r\n]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
+  return text;
+}
+
+module.exports = { escapeCSVField, parseCSVLine };

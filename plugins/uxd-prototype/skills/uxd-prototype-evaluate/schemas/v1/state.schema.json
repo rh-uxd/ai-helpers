@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-helpers.uxd/schemas/v1/state.schema.json",
+  "title": "UXD Prototype Evaluation state v1",
+  "type": "object",
+  "allOf": [
+    { "$ref": "shared.schema.json#/$defs/envelope" },
+    {
+      "type": "object",
+      "properties": {
+        "artifact_type": { "const": "state" },
+        "lifecycle": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["initialized", "running", "completed", "failed", "cancelled"] },
+            "current_phase": { "type": "string", "enum": ["extract", "consistency", "classify", "journey", "usability", "report", "heuristic"] },
+            "iteration": { "type": "integer", "minimum": 0, "maximum": 20 },
+            "max_iterations": { "type": "integer", "minimum": 1, "maximum": 20 },
+            "exit_reason": { "type": "string", "enum": ["all-pass", "no-fix", "max-iterations", "cancelled", "failed", "pending"] },
+            "iterations": {
+              "type": "array",
+              "maxItems": 40,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "iteration": { "type": "integer", "minimum": 1, "maximum": 20 },
+                  "phase": { "type": "string", "enum": ["a", "b"] },
+                  "timestamp": { "$ref": "shared.schema.json#/$defs/timestamp" },
+                  "ac_results": {
+                    "type": "array",
+                    "maxItems": 200,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "ac_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                        "verdict": { "type": "string", "enum": ["PASS", "FAIL", "FLAGGED", "NOT_RUN"] }
+                      },
+                      "required": ["ac_id", "verdict"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "usability_score": { "type": "number", "minimum": 0 },
+                  "persona_ids": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/identifier" }, "uniqueItems": true, "maxItems": 32 }
+                },
+                "required": ["iteration", "phase", "timestamp", "ac_results"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["status", "current_phase", "iteration", "max_iterations", "exit_reason", "iterations"],
+          "additionalProperties": false
+        },
+        "identity": {
+          "type": "object",
+          "properties": {
+            "intent_key": { "$ref": "shared.schema.json#/$defs/sha256" },
+            "build_key": { "$ref": "shared.schema.json#/$defs/sha256" },
+            "evaluator_key": { "$ref": "shared.schema.json#/$defs/sha256" },
+            "compound_key": { "$ref": "shared.schema.json#/$defs/sha256" }
+          },
+          "required": ["intent_key", "build_key", "evaluator_key", "compound_key"],
+          "additionalProperties": false
+        },
+        "cache": {
+          "type": "object",
+          "properties": {
+            "decision": { "type": "string", "enum": ["hit", "miss", "bypass", "invalid"] },
+            "entry_key": { "$ref": "shared.schema.json#/$defs/sha256" },
+            "invalidated_by": { "type": "array", "items": { "type": "string", "enum": ["intent", "build", "evaluator", "schema", "cache_bypassed", "none"] }, "uniqueItems": true, "minItems": 1, "maxItems": 4 },
+            "restored_artifacts": { "type": "array", "items": { "type": "string", "enum": ["brief.json", "evaluation.json", "evidence.json", "actions.json", "state.json"] }, "uniqueItems": true, "maxItems": 5 },
+            "validated_at": { "$ref": "shared.schema.json#/$defs/timestamp" }
+          },
+          "required": ["decision", "entry_key", "invalidated_by", "restored_artifacts"],
+          "allOf": [
+            {
+              "if": { "type": "object", "properties": { "decision": { "const": "hit" } }, "required": ["decision"] },
+              "then": { "type": "object", "properties": { "restored_artifacts": { "type": "array", "minItems": 1 }, "validated_at": {} }, "required": ["validated_at"] }
+            }
+          ],
+          "additionalProperties": false
+        },
+        "phases": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string", "enum": ["extract", "consistency-source", "consistency-visual", "classify", "journey", "usability", "report", "heuristic", "heuristic-content", "heuristic-hierarchy", "heuristic-interaction", "heuristic-synthesis", "enrichment", "hint", "fix", "integrity-report"] },
+              "status": { "type": "string", "enum": ["completed", "skipped", "failed", "cached"] },
+              "model_invoked": { "type": "boolean" },
+              "provider": { "type": "string", "enum": ["none", "openai", "anthropic-compatible", "other"] },
+              "model": { "type": "string", "maxLength": 160 },
+              "started_at": { "$ref": "shared.schema.json#/$defs/timestamp" },
+              "ended_at": { "$ref": "shared.schema.json#/$defs/timestamp" },
+              "duration_ms": { "anyOf": [{"$ref": "shared.schema.json#/$defs/non_negative_integer"}, {"type": "null"}] },
+              "input_files": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+              "input_bytes": { "anyOf": [{"$ref": "shared.schema.json#/$defs/non_negative_integer"}, {"type": "null"}] },
+              "output_bytes": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+              "token_usage": {
+                "type": "object",
+                "properties": {
+                  "input": { "anyOf": [{"$ref": "shared.schema.json#/$defs/non_negative_integer"}, {"type": "null"}] },
+                  "cached_input": { "anyOf": [{"$ref": "shared.schema.json#/$defs/non_negative_integer"}, {"type": "null"}] },
+                  "output": { "anyOf": [{"$ref": "shared.schema.json#/$defs/non_negative_integer"}, {"type": "null"}] },
+                  "reasoning_tokens": { "anyOf": [{"$ref": "shared.schema.json#/$defs/non_negative_integer"}, {"type": "null"}] }
+                },
+                "required": ["input", "cached_input", "output", "reasoning_tokens"],
+                "additionalProperties": false
+              },
+              "llm_cost_usd": { "type": ["number", "null"], "minimum": 0 },
+              "checks": { "type": "array", "items": {"enum": ["heuristic", "consistency-visual"]}, "uniqueItems": true, "minItems": 1, "maxItems": 2 }
+            },
+            "required": ["name", "status", "model_invoked", "provider", "model", "started_at", "ended_at", "duration_ms", "input_files", "input_bytes", "output_bytes", "token_usage", "llm_cost_usd"],
+            "additionalProperties": false
+          }
+        },
+        "quick_checks": {
+          "type": "object",
+          "properties": {
+            "selected": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "classify",
+                  "consistency-source",
+                  "heuristic",
+                  "consistency-visual"
+                ]
+              },
+              "uniqueItems": true,
+              "minItems": 1,
+              "maxItems": 4
+            },
+            "context_path": {
+              "$ref": "shared.schema.json#/$defs/relative_path"
+            },
+            "context_sha256": {
+              "$ref": "shared.schema.json#/$defs/sha256"
+            },
+            "report_requested": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "selected",
+            "context_path",
+            "context_sha256",
+            "report_requested"
+          ],
+          "additionalProperties": false
+        },
+        "permissions": { "$ref": "split.schema.json#/$defs/permissions" },
+        "workflow": {
+          "type": "object",
+          "properties": {
+            "route": {
+              "enum": [
+                "quick",
+                "walkthroughs",
+                "full"
+              ]
+            },
+            "status": {
+              "enum": [
+                "awaiting-review",
+                "completed",
+                "needs-review"
+              ]
+            },
+            "pass": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 2
+            },
+            "parent_run_id": {
+              "anyOf": [
+                {
+                  "$ref": "shared.schema.json#/$defs/run_id"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "selected_pairs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "task_id": {
+                    "$ref": "shared.schema.json#/$defs/identifier"
+                  },
+                  "persona_id": {
+                    "$ref": "shared.schema.json#/$defs/identifier"
+                  }
+                },
+                "required": [
+                  "task_id",
+                  "persona_id"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 100
+            },
+            "receipt_path": {
+              "$ref": "shared.schema.json#/$defs/relative_path"
+            },
+            "receipt_sha256": {
+              "$ref": "shared.schema.json#/$defs/sha256"
+            }
+          },
+          "required": [
+            "route",
+            "status",
+            "pass",
+            "parent_run_id",
+            "selected_pairs",
+            "receipt_path",
+            "receipt_sha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": ["lifecycle", "identity", "cache", "phases"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

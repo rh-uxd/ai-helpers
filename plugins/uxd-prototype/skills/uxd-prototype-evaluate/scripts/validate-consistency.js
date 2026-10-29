@@ -51,9 +51,26 @@ if (!report) {
 } else {
   check('consistency-report exists', true, 'file found');
 
-  const hasSource = typeof report.source === 'string' && report.source.length > 0;
+  // Legacy names come from the upstream fixture and eval-consistency producer docs.
+  const isLegacy = ['pf-css-token-check', 'pf-css-token-check-fallback', 'consistency-checker'].includes(report.source);
+  const hasSource = report.source === 'uxd-consistency-check' || isLegacy;
+  const hasModernFields = ['schema_version', 'coverage', 'guideline_context', 'internal_consistency', 'guideline_consistency', 'guideline_manifest', 'evaluator_publication'].some(key => Object.hasOwn(report, key));
+  if (hasModernFields || report.source_analysis) {
+    try {
+      const publicationRoot = require('path').basename(abs) === 'checks' ? resolve(abs, '..') : abs;
+      if (hasModernFields) require('./consistency-contract').validatePublication(report, publicationRoot);
+      if (report.source_analysis) require('./consistency-contract').validatePublication(report.source_analysis, publicationRoot);
+      check('frozen source report contract and durable references', true, 'coverage, membership, candidates, manifest provenance and readback verified');
+    } catch (error) { check('frozen source report contract and durable references', false, error.message); }
+  }
   check('source field present', hasSource,
-    hasSource ? `source = "${report.source}"` : 'missing or empty source');
+    hasSource ? `source = "${report.source}"` : `unrecognized consistency producer: "${report.source}"`);
+
+  if (!isLegacy) {
+    const hasVersion = typeof report.guidelines_version === 'string' && report.guidelines_version.length > 0;
+    check('guidelines_version present', hasVersion,
+      hasVersion ? report.guidelines_version : 'missing or empty guidelines_version');
+  }
 
   const hasDegraded = typeof report.degraded === 'boolean';
   check('degraded is boolean', hasDegraded,
@@ -74,8 +91,15 @@ if (!report) {
       ranBool ? `ran = ${report.source_mode.ran}` : `got ${typeof report.source_mode.ran}`);
 
     const violations = report.source_mode.violations;
-    if (Array.isArray(violations) && violations.length > 0) {
-      const violationFields = ['file', 'line', 'property', 'value', 'suggestion'];
+    const violationsArray = Array.isArray(violations);
+    check('source_mode.violations is an array', violationsArray,
+      violationsArray ? `${violations.length} finding(s)` : `got ${typeof violations}`);
+    if (violationsArray && violations.length > 0) {
+      const violationFields = isLegacy ? ['file', 'line', 'property', 'value', 'suggestion'] : [
+        'guideline_id', 'guideline_title', 'category', 'severity', 'verdict',
+        'confidence', 'review_candidate', 'file', 'line', 'property', 'value',
+        'description', 'suggestion', 'check_method',
+      ];
       let allFieldsOk = true;
       for (const v of violations) {
         for (const f of violationFields) {
@@ -84,8 +108,29 @@ if (!report) {
       }
       check('violation entries have required fields', allFieldsOk,
         allFieldsOk
-          ? `all ${violations.length} have file, line, property, value, suggestion`
+          ? `all ${violations.length} satisfy the checker finding contract`
           : 'missing violation fields');
+
+      if (!isLegacy) {
+        const allowedValuesOk = violations.every(v =>
+          ['error', 'warning'].includes(v.severity)
+          && ['VIOLATION', 'FLAGGED'].includes(v.verdict)
+          && ['high', 'medium', 'low'].includes(v.confidence)
+          && typeof v.review_candidate === 'boolean'
+          && (Number.isInteger(v.line) || v.line === null)
+        );
+        check('violation values use supported enums and types', allowedValuesOk,
+          allowedValuesOk ? 'severity, verdict, confidence, review_candidate, and line are valid' : 'unsupported enum or field type');
+
+        const candidateSemanticsOk = violations.every(v => !v.review_candidate || (
+          v.verdict === 'FLAGGED'
+          && v.severity === 'warning'
+          && v.confidence === 'low'
+          && v.check_method === 'automated_candidate'
+        ));
+        check('review candidates cannot enter automatic fixes', candidateSemanticsOk,
+          candidateSemanticsOk ? 'all review candidates are low-confidence FLAGGED warnings' : 'candidate has blocking or high-confidence semantics');
+      }
     }
   } else {
     check('source_mode present', false, 'missing source_mode block');
@@ -95,6 +140,17 @@ if (!report) {
     const ranBool = typeof report.visual_mode.ran === 'boolean';
     check('visual_mode.ran is boolean', ranBool,
       ranBool ? `ran = ${report.visual_mode.ran}` : `got ${typeof report.visual_mode.ran}`);
+    if (report.visual_mode.input_metrics) {
+      const m = report.visual_mode.input_metrics;
+      const fields = ['screenshots_considered', 'screenshots_analyzed', 'guidelines_analyzed', 'input_bytes'];
+      const validMetrics = fields.every(f => Number.isInteger(m[f]) && m[f] >= 0)
+        && m.screenshots_analyzed <= m.screenshots_considered
+        && report.visual_mode.screenshots_checked === m.screenshots_analyzed;
+      check('visual input metrics are bounded and consistent', validMetrics,
+        validMetrics
+          ? `${m.screenshots_analyzed}/${m.screenshots_considered} screenshots, ${m.guidelines_analyzed} guidelines, ${m.input_bytes} bytes`
+          : 'metrics must be non-negative integers and match screenshots_checked');
+    }
   } else {
     check('visual_mode present', false, 'missing visual_mode block');
   }
@@ -114,6 +170,22 @@ if (!report) {
         matches
           ? `${s.violations} + ${s.warnings} + ${s.passes} = ${s.total_guidelines_checked}`
           : `${s.violations} + ${s.warnings} + ${s.passes} = ${sum}, expected ${s.total_guidelines_checked}`);
+
+      const sourceFindings = Array.isArray(report.source_mode?.violations)
+        ? report.source_mode.violations : [];
+      const visualFindings = Array.isArray(report.visual_mode?.findings)
+        ? report.visual_mode.findings : [];
+      // Only the bundled producer defines summary counts as unique guideline groups.
+      if (!isLegacy && visualFindings.length === 0 && sourceFindings.every(v => v.guideline_id && v.severity)) {
+        const errorGroups = new Set(sourceFindings.filter(v => v.severity === 'error').map(v => v.guideline_id)).size;
+        const errorIds = new Set(sourceFindings.filter(v => v.severity === 'error').map(v => v.guideline_id));
+        const warningGroups = new Set(sourceFindings.filter(v => v.severity === 'warning' && !errorIds.has(v.guideline_id)).map(v => v.guideline_id)).size;
+        const groupMath = errorGroups === s.violations && warningGroups === s.warnings;
+        check('summary finding groups correct', groupMath,
+          groupMath
+            ? `${errorGroups} violation group(s), ${warningGroups} warning group(s)`
+            : `findings imply ${errorGroups} violation and ${warningGroups} warning groups`);
+      }
     }
   } else {
     check('summary present', false, 'missing summary block');

@@ -1,0 +1,346 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-helpers.uxd/schemas/v1/split.schema.json",
+  "$defs": {
+    "environment": {
+      "type": "object",
+      "properties": {
+        "source_sections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 100
+        },
+        "screens": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "shared.schema.json#/$defs/identifier"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "route": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "source_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "maxItems": 100
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "route",
+              "source_ids"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 100
+        },
+        "states": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "shared.schema.json#/$defs/identifier"
+              },
+              "screen_id": {
+                "$ref": "shared.schema.json#/$defs/identifier"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "expected_outcome": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "source_ids": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "maxItems": 100
+              }
+            },
+            "required": [
+              "id",
+              "screen_id",
+              "description",
+              "expected_outcome",
+              "source_ids"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 100
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "shared.schema.json#/$defs/identifier"
+              },
+              "label": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "setup_only": {
+                "type": "boolean"
+              },
+              "permissions": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "maxItems": 100
+              },
+              "resource_scope": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              }
+            },
+            "required": [
+              "id",
+              "label",
+              "setup_only",
+              "permissions",
+              "resource_scope"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 100
+        },
+        "fixtures": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "shared.schema.json#/$defs/identifier"
+              },
+              "description": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "starting_state": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "reset": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "state_ids": {
+                "type": "array",
+                "items": {
+                  "$ref": "shared.schema.json#/$defs/identifier"
+                },
+                "maxItems": 100,
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "id",
+              "description",
+              "starting_state",
+              "reset",
+              "state_ids"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "source_sections",
+        "screens",
+        "states",
+        "roles",
+        "fixtures"
+      ],
+      "additionalProperties": false
+    },
+    "permissions": {
+      "type": "object",
+      "properties": {
+        "browser": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "enum": [
+                "not-requested",
+                "approved",
+                "denied"
+              ]
+            },
+            "scope": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "recorded_at": {
+              "$ref": "shared.schema.json#/$defs/timestamp"
+            }
+          },
+          "required": [
+            "status",
+            "scope",
+            "recorded_at"
+          ],
+          "additionalProperties": false
+        },
+        "provider": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "enum": [
+                "not-requested",
+                "approved",
+                "denied"
+              ]
+            },
+            "scope": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "recorded_at": {
+              "$ref": "shared.schema.json#/$defs/timestamp"
+            }
+          },
+          "required": [
+            "status",
+            "scope",
+            "recorded_at"
+          ],
+          "additionalProperties": false
+        },
+        "prototype_edits": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "enum": [
+                "not-requested",
+                "approved",
+                "denied"
+              ]
+            },
+            "scope": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "recorded_at": {
+              "$ref": "shared.schema.json#/$defs/timestamp"
+            }
+          },
+          "required": [
+            "status",
+            "scope",
+            "recorded_at"
+          ],
+          "additionalProperties": false
+        },
+        "report": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "enum": [
+                "not-requested",
+                "approved",
+                "denied"
+              ]
+            },
+            "scope": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "recorded_at": {
+              "$ref": "shared.schema.json#/$defs/timestamp"
+            }
+          },
+          "required": [
+            "status",
+            "scope",
+            "recorded_at"
+          ],
+          "additionalProperties": false
+        },
+        "sharing": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "enum": [
+                "not-requested",
+                "approved",
+                "denied"
+              ]
+            },
+            "scope": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "recorded_at": {
+              "$ref": "shared.schema.json#/$defs/timestamp"
+            }
+          },
+          "required": [
+            "status",
+            "scope",
+            "recorded_at"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "browser",
+        "provider",
+        "prototype_edits",
+        "report",
+        "sharing"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
