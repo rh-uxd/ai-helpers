@@ -1,0 +1,224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-helpers.uxd/schemas/v1/evidence.schema.json",
+  "title": "UXD Prototype Evaluation evidence v1",
+  "type": "object",
+  "allOf": [
+    { "$ref": "shared.schema.json#/$defs/envelope" },
+    {
+      "type": "object",
+      "properties": {
+        "artifact_type": { "const": "evidence" },
+        "captures": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "$ref": "shared.schema.json#/$defs/identifier" },
+              "url": { "$ref": "shared.schema.json#/$defs/url" },
+              "viewport": {
+                "type": "object",
+                "properties": {
+                  "width": { "type": "integer", "minimum": 1, "maximum": 10000 },
+                  "height": { "type": "integer", "minimum": 1, "maximum": 10000 },
+                  "device_scale_factor": { "type": "number", "minimum": 0.1, "maximum": 8 }
+                },
+                "required": ["width", "height", "device_scale_factor"],
+                "additionalProperties": false
+              },
+              "captured_at": { "$ref": "shared.schema.json#/$defs/timestamp" },
+              "dom_digest": { "$ref": "shared.schema.json#/$defs/sha256" },
+              "raw_image": {
+                "type": "object",
+                "properties": {
+                  "path": { "$ref": "shared.schema.json#/$defs/relative_path" },
+                  "width": { "type": "integer", "minimum": 1, "maximum": 10000 },
+                  "height": { "type": "integer", "minimum": 1, "maximum": 10000 },
+                  "sha256": { "$ref": "shared.schema.json#/$defs/sha256" }
+                },
+                "required": ["path", "width", "height", "sha256"],
+                "additionalProperties": false
+              },
+              "page": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string", "maxLength": 500 },
+                  "headings": {
+                    "type": "array",
+                    "maxItems": 40,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "level": { "type": "integer", "minimum": 1, "maximum": 6 },
+                        "text": { "$ref": "shared.schema.json#/$defs/bounded_text" }
+                      },
+                      "required": ["level", "text"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "controls": {
+                    "type": "array",
+                    "maxItems": 100,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "role": { "type": "string", "maxLength": 80 },
+                        "name": { "type": "string", "maxLength": 280 },
+                        "locator": { "type": "string", "maxLength": 500 }
+                      },
+                      "required": ["role", "name", "locator"],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": ["title", "headings", "controls"],
+                "additionalProperties": false
+              },
+              "source_ref": { "type": "string", "minLength": 1, "maxLength": 160 },
+              "screen_id": { "type": "string", "minLength": 1, "maxLength": 120 },
+              "state_id": { "type": "string", "minLength": 1, "maxLength": 120 }
+            },
+            "required": ["id", "url", "viewport", "captured_at", "dom_digest", "page"],
+            "additionalProperties": false
+          }
+        },
+        "items": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "$ref": "shared.schema.json#/$defs/identifier" },
+              "capture_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+              "kind": { "type": "string", "enum": ["full-page", "region", "component", "dom"] },
+              "purpose": { "type": "string", "enum": ["ac", "journey", "usability", "consistency", "heuristic"] },
+              "subject": {
+                "type": "object",
+                "properties": {
+                  "role": { "type": "string", "maxLength": 80 },
+                  "name": { "type": "string", "maxLength": 280 },
+                  "locator": { "type": "string", "maxLength": 500 }
+                },
+                "required": ["role", "name", "locator"],
+                "additionalProperties": false
+              },
+              "crop": {
+                "type": "object",
+                "properties": {
+                  "x": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+                  "y": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+                  "width": { "type": "integer", "minimum": 1 },
+                  "height": { "type": "integer", "minimum": 1 },
+                  "padding": { "$ref": "shared.schema.json#/$defs/non_negative_integer" }
+                },
+                "required": ["x", "y", "width", "height", "padding"],
+                "additionalProperties": false
+              },
+              "image": {
+                "type": "object",
+                "properties": {
+                  "path": { "$ref": "shared.schema.json#/$defs/relative_path" },
+                  "width": { "type": "integer", "minimum": 1, "maximum": 10000 },
+                  "height": { "type": "integer", "minimum": 1, "maximum": 10000 },
+                  "sha256": { "$ref": "shared.schema.json#/$defs/sha256" }
+                },
+                "required": ["path", "width", "height", "sha256"],
+                "additionalProperties": false
+              },
+              "dom": {
+                "type": "object",
+                "properties": {
+                  "text": { "type": "string", "maxLength": 1000 },
+                  "attributes": {
+                    "type": "object",
+                    "propertyNames": { "pattern": "^(aria-[a-z-]+|data-[a-z-]+|role|title|value|disabled|selected)$" },
+                    "additionalProperties": { "type": "string", "maxLength": 280 }
+                  }
+                },
+                "required": ["text", "attributes"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["id", "capture_id", "kind", "purpose", "subject"],
+            "allOf": [
+              {
+                "if": { "type": "object", "properties": { "kind": { "const": "dom" } }, "required": ["kind"] },
+                "then": { "type": "object", "properties": { "dom": {} }, "required": ["dom"], "not": { "anyOf": [{ "type": "object", "properties": { "crop": {} }, "required": ["crop"] }, { "type": "object", "properties": { "image": {} }, "required": ["image"] }] } }
+              },
+              {
+                "if": { "type": "object", "properties": { "kind": { "const": "full-page" } }, "required": ["kind"] },
+                "then": { "type": "object", "properties": { "image": {} }, "required": ["image"], "not": { "type": "object", "properties": { "crop": {} }, "required": ["crop"] } }
+              },
+              {
+                "if": { "type": "object", "properties": { "kind": { "enum": ["region", "component"] } }, "required": ["kind"] },
+                "then": { "type": "object", "properties": { "crop": {}, "image": {} }, "required": ["crop", "image"] }
+              }
+            ],
+            "additionalProperties": false
+          }
+        },
+        "source_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "$ref": "shared.schema.json#/$defs/identifier"
+              },
+              "path": {
+                "$ref": "shared.schema.json#/$defs/relative_path"
+              },
+              "line": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              },
+              "revision": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "sha256": {
+                "anyOf": [
+                  {
+                    "$ref": "shared.schema.json#/$defs/sha256"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "observation": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1000
+              },
+              "availability": {
+                "enum": [
+                  "present",
+                  "absent"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "path",
+              "line",
+              "revision",
+              "sha256",
+              "observation",
+              "availability"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 500
+        }
+      },
+      "required": ["captures", "items"]
+    }
+  ],
+  "unevaluatedProperties": false
+}
