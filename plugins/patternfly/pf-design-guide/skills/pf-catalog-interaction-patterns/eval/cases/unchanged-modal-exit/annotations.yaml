@@ -1,0 +1,15 @@
+scenario: unchanged-modal-wizard
+expect_pf_components: true
+expected_components:
+  - Wizard
+  - Modal
+expect_unsaved_work: true
+exit_state: unchanged
+supported_exits:
+  - cancel
+  - close
+  - escape
+guidance_scope: recommendation_text_only
+expected_guidance:
+  - An unchanged visit exits without an unsaved-work warning.
+  - Do not require dirty-only recovery guidance in this exception case.

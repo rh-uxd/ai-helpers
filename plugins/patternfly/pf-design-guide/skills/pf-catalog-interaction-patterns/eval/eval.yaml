@@ -1,11 +1,16 @@
 name: pf-catalog-interaction-patterns-eval
-description: Evaluate pf-catalog-interaction-patterns' interaction-to-component lookup and hover misconception handling
+description: Evaluate interaction-to-component lookup and form/wizard behavior guidance coverage
 
 # A/B delta: Without the skill, baseline models may incorrectly suggest Popover/Menu
 # as hover-triggered, miss component options for interaction patterns, or guess
 # components rather than providing accurate PatternFly mappings. The skill uniquely
 # contributes: correct hover rules (Tooltip only), interaction-indexed component
 # lookup, and multiple valid options for broad queries.
+# Form/wizard cases add PoC behavior recommendations. Code judges are lexical
+# guidance-coverage checks, not browser, DOM, network, or assistive-technology tests.
+# They use concept groups rather than exact reference prose. A pass cannot prove
+# implementation correctness or exhaustively detect contradictory advice.
+# MCP stays denied: all cases must work from bundled references alone.
 
 skill: pf-design-guide:pf-catalog-interaction-patterns
 
@@ -32,13 +37,17 @@ dataset:
   schema: |
     Each case directory contains:
     - input.yaml: prompt field with a realistic user request describing an interaction need
-    - annotations.yaml: scenario type, expected components, and flags for conditional judges
+    - annotations.yaml: scenario, expected components, conditional judge flags,
+      and (for form/wizard cases) explicit expected_guidance and recommendation-only scope.
+      These annotations are judge metadata, not acceptance checklists in user prompts.
 
 outputs:
   - path: artifacts
     schema: |
       The skill produces component recommendations based on interaction patterns.
-      Judges check conversation text for correct component suggestions.
+      Judges check conversation text for component suggestions and behavior guidance.
+      New behavior judges assess recommendation coverage only; they do not execute
+      a prototype or verify runtime navigation, accessibility, persistence, or requests.
 
 traces:
   stdout: true
@@ -105,6 +114,196 @@ judges:
           return False, "Suggested PatternFly components for a non-PF context"
       return True, "Did not suggest PatternFly components for non-PF context"
 
+  - name: wizard_all_navigation_paths
+    description: Guidance gates forward navigation beyond the Next button, including sidebar routes
+    if: "annotations.get('expect_validation_gates') == True"
+    check: |
+      import re
+      text = " ".join(outputs.get("conversation", "").lower().split())
+      def has(pattern, part=text):
+          return bool(re.search(pattern, part))
+      # Require sidebar gating in the same statement, not a list of components.
+      statements = re.split(r'[.!?;]', text)
+      sidebar_gate = any(
+          has(r'sidebar|step (?:link|nav)', s)
+          and has(r'block|guard|gat(?:e|ing)|prevent|disabl|disallow|validat|validity', s)
+          and not has(r'(?:only|just) (?:on )?next|stay.{0,15}available|remain.{0,15}available|bypass|unrestricted', s)
+          for s in statements
+      )
+      concepts = {
+          "Wizard navigation": has(r'\bwizard\b') and has(r'\bnext\b'),
+          "current prerequisite validation": has(r'validat|validity') and has(r'prerequisite|earlier|preceding|required'),
+          "sidebar gating, not Next alone": sidebar_gate,
+          "all forward routes": has(r'(?:all|every|each|any|both).{0,45}(?:forward|navigation|path|route|entry|next)'),
+      }
+      missing = [name for name, covered in concepts.items() if not covered]
+      return not missing, "Guidance coverage only; missing: " + (", ".join(missing) or "none")
+
+  - name: wizard_visited_is_not_valid
+    description: Guidance distinguishes visited history from validity after earlier input changes
+    if: "annotations.get('expect_validation_gates') == True"
+    check: |
+      import re
+      text = " ".join(outputs.get("conversation", "").lower().split())
+      def has(pattern):
+          return bool(re.search(pattern, text))
+      # Word boundaries avoid treating 'never need revalidation' as 'not valid'.
+      distinction = any(has(p) for p in [
+          r'(?:visit|complet)\w*.{0,55}(?:not|never|!=|≠|doesn.t|isn.t).{0,30}\bvalid(?:ity)?\b',
+          r'(?:visit|complet)\w*.{0,35}(?:separate|distinct|independent).{0,30}\bvalid(?:ity)?\b',
+          r'\bvalid\w*.{0,35}(?:not|never).{0,30}(?:visit|complet)',
+          r'visit\w* and validity.{0,15}(?:separate|distinct|independent)',
+      ])
+      concepts = {
+          "visited is not valid": distinction,
+          "earlier input becoming invalid": has(r'earlier|preceding|prerequisite|details') and has(r'invalid|no longer valid'),
+          "recheck visited destinations": has(r'revalid|recheck|re-check|recomput|current valid|current prerequisite') and not has(r'(?:never|no|not).{0,15}(?:need )?revalid|(?:recheck|revalidat\w*).{0,15}only.{0,10}next'),
+          "no visited-step exemption": not has(r'visit\w*.{0,30}(?:always available|remain available|bypass|exempt|unrestricted)'),
+          "backward correction remains possible": has(r'(?:allow|can|permit|keep).{0,45}(?:back|previous|earlier)'),
+      }
+      missing = [name for name, covered in concepts.items() if not covered]
+      return not missing, "Guidance coverage only; missing: " + (", ".join(missing) or "none")
+
+  - name: unsaved_shared_exit_policy
+    description: Guidance shares a dirty-work guard across all supported dismissal routes
+    if: "annotations.get('expect_unsaved_work') == True and annotations.get('exit_state') != 'unchanged'"
+    check: |
+      import re
+      text = " ".join(outputs.get("conversation", "").lower().split())
+      def has(pattern):
+          return bool(re.search(pattern, text))
+      exits = {
+          "cancel": r'\bcancel\b', "close": r'\bclose\b|\bx button\b',
+          "escape": r'\besc(?:ape)?\b', "backdrop": r'backdrop|outside.click',
+          "route": r'route|navigat(?:e|ion) away|page (?:change|navigation)',
+      }
+      supported = outputs.get("annotations", {}).get("supported_exits", [])
+      missing = [f"exit: {key}" for key in supported if not has(exits[key])]
+      if has(r'(?:only|just) cancel|dismiss directly|bypass.{0,25}(?:guard|confirm)|(?:escape|backdrop|close).{0,25}(?:unguarded|unprotected)'):
+          missing.append("an exit bypasses the guard")
+      if not has(r'shared|centraliz|same.{0,25}(?:guard|handler|policy|confirm)|single.{0,25}(?:guard|handler)'):
+          missing.append("shared exit guard")
+      if not (has(r'dirty|unsaved|modified') and has(r'confirm|warn|discard')):
+          missing.append("dirty-work confirmation")
+      return not missing, "Guidance coverage only; missing: " + (", ".join(missing) or "none")
+
+  - name: unsaved_exit_state_semantics
+    description: Guidance skips clean warnings, preserves continue-editing state, and never treats Cancel as Save
+    if: "annotations.get('expect_unsaved_work') == True"
+    check: |
+      import re
+      text = " ".join(outputs.get("conversation", "").lower().split()).replace("’", "'")
+      def has(pattern):
+          return bool(re.search(pattern, text))
+      clean_exit = any(has(p) for p in [
+          r'(?:unchanged|unmodified|not dirty|no changes|nothing was edited|clean).{0,75}(?:without|no|skip|do not|don.t).{0,25}(?:warn|confirm|prompt)',
+          r'(?:warn|confirm|prompt|ask).{0,25}(?:only|before discarding).{0,25}(?:dirty|unsaved|changed|modified|edits)',
+          r'(?:unchanged|nothing was edited|no changes).{0,40}(?:dismiss|exit|close) immediately',
+      ]) and not has(r'(?:unchanged|clean).{0,35}(?:must not|cannot|can.t).{0,20}(?:close|exit|dismiss)')
+      missing = [] if clean_exit else ["unchanged exit without warning"]
+      if outputs.get("annotations", {}).get("exit_state") != "unchanged":
+          continue_state = any(
+              re.search(r'continue editing|keep editing|stay', s)
+              and re.search(r'(?:preserv|retain|keep).{0,55}(?:data|input|values|entries)', s)
+              and re.search(r'(?:preserv|retain|keep).{0,85}(?:(?:current|same|active) step|wizard position)|step.{0,20}(?:intact|unchanged)', s)
+              and not re.search(r'reset|clear|lose', s)
+              for s in re.split(r'[.!?;]', text)
+          )
+          concepts = {
+              "continue editing preserves input and step": continue_state,
+              "Cancel does not save": any(has(p) for p in [
+                  r'(?:cancel|discard).{0,25}(?:does not|doesn.t|never|must not) (?:save|submit|persist)',
+                  r'(?:cancel|discard).{0,20}without (?:saving|submitting|persisting)',
+                  r'(?:do not|don.t|never) (?:save|submit|persist).{0,30}(?:cancel|discard)',
+              ]) and not has(r'(?:cancel|discard).{0,35}(?:not|never).{0,15}(?:exit|close).{0,15}without sav'),
+          }
+          missing.extend(name for name, covered in concepts.items() if not covered)
+      return not missing, "Guidance coverage only; missing: " + (", ".join(missing) or "none")
+
+  - name: field_error_associations
+    description: Guidance links fields to real unique error IDs and exposes invalid state beyond color
+    if: "annotations.get('expect_accessible_errors') == True"
+    check: |
+      import re
+      text = " ".join(outputs.get("conversation", "").lower().split())
+      def has(pattern):
+          return bool(re.search(pattern, text))
+      concepts = {
+          "field/error association": has(r'aria-describedby'),
+          "unique error/helper IDs": has(r'(?:unique|distinct) (?:error|helper|message|target)[\w -]{0,20}ids?|(?:error|helper|message|target)[\w -]{0,25}(?:unique|distinct) ids?|unique ids? for (?:each |the )?(?:error|helper|message|target)|unique.{0,25}(?:helper|error)[\w /-]{0,15}ids?'),
+          "existing ID targets": has(r'(?:real|exist\w*|render\w*|match\w*).{0,40}(?:element|target|id)|(?:element|target|id).{0,40}(?:exist|render|match)'),
+          "invalid state": has(r'aria-invalid|validated.{0,20}error|invalid state'),
+          "textual feedback beyond color": has(r'error (?:text|message)|text(?:ual)? (?:error|feedback)') and has(r'(?:not|never|beyond|alone|only|sole).{0,30}colou?r|colou?r.{0,30}(?:alone|only|insufficient)'),
+      }
+      missing = [name for name, covered in concepts.items() if not covered]
+      return not missing, "Guidance coverage only (no DOM verification); missing: " + (", ".join(missing) or "none")
+
+  - name: field_error_updates_and_discovery
+    description: Guidance makes relevant error updates perceivable contextually and locates offscreen errors
+    if: "annotations.get('expect_accessible_errors') == True"
+    check: |
+      import re
+      text = " ".join(outputs.get("conversation", "").lower().split())
+      def has(pattern):
+          return bool(re.search(pattern, text))
+      concepts = {
+          "live feedback": has(r'aria-live|live.region|role=.?[\"\x27]?(?:alert|status)'),
+          "contextual relevant updates": any(
+              re.search(r'context\w*|local\w*|relevant|affected|field.level|near.{0,20}field', s)
+              and re.search(r'aria-live|live.region|announc', s)
+              and re.search(r'update|chang|new error|announc', s)
+              and not re.search(r'announc\w*.{0,45}(?:every field|globally|all fields)', s)
+              for s in re.split(r'[.!?;]', text)
+          ) or has(r'relevant dynamic feedback.{0,65}(?:polite )?live region'),
+          "offscreen error discovery": has(r'link\w*.{0,30}(?:error summary|summary)|summary.{0,35}link|(?:focus|scroll).{0,50}(?:first|invalid|error)') and not has(r'summary without links'),
+      }
+      missing = [name for name, covered in concepts.items() if not covered]
+      return not missing, "Guidance coverage only (no screen reader test); missing: " + (", ".join(missing) or "none")
+
+  - name: async_pending_and_input_recovery
+    description: Guidance prevents overlapping submissions and preserves input after failure
+    if: "annotations.get('expect_async_recovery') == True"
+    check: |
+      import re
+      text = " ".join(outputs.get("conversation", "").lower().split())
+      def has(pattern):
+          return bool(re.search(pattern, text))
+      concepts = {
+          "pending feedback": has(r'pending|in.flight|submitting|await\w*.{0,25}response') and has(r'spinner|loading|progress|busy'),
+          "single request guard": has(r'guard|lock|prevent|deduplic|disabl') and has(r'single.flight|one.{0,20}(?:request|submission)|(?:duplicate|concurrent|overlapping).{0,20}(?:request|submission)|re.entr'),
+          "guard beyond button appearance": has(r'submit\w* handler|request guard|in.flight guard|all.{0,25}(?:submit|path|entr)|every.{0,25}(?:submit|path|entr)|re.entr') and not has(r'leave.{0,25}(?:enter|submission).{0,25}unrestricted'),
+          "failure recovery": has(r'fail|reject|error') and has(r'retry|try again|correct|recover'),
+          "preserve entered input": has(r'(?:preserv|retain|keep).{0,50}(?:input|values|data|entries)'),
+      }
+      missing = [name for name, covered in concepts.items() if not covered]
+      return not missing, "Guidance coverage only (no request execution); missing: " + (", ".join(missing) or "none")
+
+  - name: async_unknown_outcome_and_confirmed_success
+    description: Guidance avoids blind duplicate creates and reserves success for a confirmed result
+    if: "annotations.get('expect_async_recovery') == True"
+    check: |
+      import re
+      text = " ".join(outputs.get("conversation", "").lower().split())
+      def has(pattern):
+          return bool(re.search(pattern, text))
+      # Safe retry must address the ambiguous create, not merely mention a key.
+      reconciliation = has(r'reconcil|check.{0,35}(?:status|result|outcome)|(?:poll|query).{0,35}status')
+      stable_key = has(r'(?:same|reuse|re-use|stable).{0,30}(?:idempotenc|idempotent|key)|idempotenc\w* key.{0,25}(?:reuse|re-use|same)')
+      safe_retry = reconciliation or stable_key
+      confirmed = any(
+          re.search(r'success|succeeded', s)
+          and re.search(r'only|after|when|wait', s)
+          and re.search(r'(?:server|backend|api).{0,35}(?:confirm|acknowledg)|confirm\w*.{0,30}(?:server|response|result)|successful (?:response|result)|http (?:200|201)|201 created|intended outcome is confirmed', s)
+          for s in re.split(r'[.!?;]', text)
+      )
+      concepts = {
+          "unknown is not definite failure": has(r'unknown|uncertain|ambiguous|may have.{0,20}(?:creat|succeed|complet)|not.{0,15}(?:definite )?failure') and has(r'timeout|timed out|connection|network'),
+          "safe create retry": has(r'retry|try again') and safe_retry and not has(r'(?:new|fresh) idempotenc\w* key'),
+          "confirmed success only": confirmed,
+      }
+      missing = [name for name, covered in concepts.items() if not covered]
+      return not missing, "Guidance coverage only (no server verification); missing: " + (", ".join(missing) or "none")
+
 thresholds:
   hover_not_popover:
     min_pass_rate: 1.0
@@ -113,4 +312,20 @@ thresholds:
   multiple_options:
     min_pass_rate: 0.8
   gate_non_pf:
+    min_pass_rate: 1.0
+  wizard_all_navigation_paths:
+    min_pass_rate: 1.0
+  wizard_visited_is_not_valid:
+    min_pass_rate: 1.0
+  unsaved_shared_exit_policy:
+    min_pass_rate: 1.0
+  unsaved_exit_state_semantics:
+    min_pass_rate: 1.0
+  field_error_associations:
+    min_pass_rate: 1.0
+  field_error_updates_and_discovery:
+    min_pass_rate: 1.0
+  async_pending_and_input_recovery:
+    min_pass_rate: 1.0
+  async_unknown_outcome_and_confirmed_success:
     min_pass_rate: 1.0

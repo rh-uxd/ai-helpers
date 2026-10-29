@@ -1,0 +1,11 @@
+scenario: wizard-validation
+expect_pf_components: true
+expected_components:
+  - Wizard
+  - Form
+expect_validation_gates: true
+guidance_scope: recommendation_text_only
+expected_guidance:
+  - Gate every forward route on current prerequisite validity, not just Next.
+  - Include sidebar links to previously visited steps after earlier input becomes invalid.
+  - Visited/completed history is not current validity; allow backward correction.

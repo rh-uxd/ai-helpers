@@ -31,7 +31,7 @@ These skills apply when specific signals are present:
 
 | Skill | Plugin | When to suggest |
 |-------|--------|----------------|
-| `/pf-catalog-interaction-patterns` | pf-react | User describes an interaction need without naming a component, asks "what component supports X", or is prototyping and needs component selection based on behavior |
+| `/pf-catalog-interaction-patterns` | pf-design-guide | User describes an interaction need without naming a component, asks "what component supports X", is prototyping and needs component selection based on behavior, or asks about form validation, wizard step gating, unsaved-work protection, accessible validation feedback, or submission/recovery behavior |
 | `/pf-component-reuse-check` | pf-react | Uncommitted changes contain custom components that may overlap PatternFly APIs |
 | `/pf-css-token-check` | pf-design-audit | Inline styles with hardcoded spacing, font sizes, or border values |
 | `/pf-test-gen` | pf-react | Components exist without corresponding test files |

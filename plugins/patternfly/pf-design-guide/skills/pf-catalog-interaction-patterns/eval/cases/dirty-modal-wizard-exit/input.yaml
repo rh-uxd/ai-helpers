@@ -1,0 +1,6 @@
+prompt: >-
+  We're putting a PatternFly React connection setup wizard in a modal. There is no
+  draft autosave. People may leave halfway through entering connection details;
+  alongside the footer Cancel and header close, our shell supports backdrop dismissal
+  and navigation to another page. What components and dismissal behavior would you
+  recommend so abandoning setup isn't surprising?

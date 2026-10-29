@@ -1,0 +1,19 @@
+scenario: unsaved-modal-wizard
+expect_pf_components: true
+expected_components:
+  - Wizard
+  - Modal
+expect_unsaved_work: true
+exit_state: dirty_and_unchanged
+supported_exits:
+  - cancel
+  - close
+  - escape
+  - backdrop
+  - route
+guidance_scope: recommendation_text_only
+expected_guidance:
+  - Share one dirty-state confirmation policy across every supported exit.
+  - Exit unchanged work without a warning.
+  - Continue editing keeps entered data and the current step.
+  - Confirmed discard abandons work; Cancel is not Save or Submit.

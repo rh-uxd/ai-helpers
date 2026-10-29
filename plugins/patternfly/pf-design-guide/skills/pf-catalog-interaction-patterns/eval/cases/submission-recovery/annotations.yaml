@@ -1,0 +1,13 @@
+scenario: async-submission
+expect_pf_components: true
+expected_components:
+  - Button
+  - Spinner
+  - Alert
+expect_async_recovery: true
+guidance_scope: recommendation_text_only
+expected_guidance:
+  - Guard every submission path so pending work has only one request in flight.
+  - Failure preserves entered input and provides an actionable recovery path.
+  - Reconcile an unknown outcome or reuse an idempotency key before retrying a create.
+  - Show success only after a confirmed successful result, not a click or timer.
