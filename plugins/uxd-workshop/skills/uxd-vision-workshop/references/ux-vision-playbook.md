@@ -37,6 +37,7 @@ The target artifact is an **interactive vision prototype** — a clickable, shar
 
 - Use the product's existing design system so the experience looks and feels like the actual product
 - Show a complete user journey (not isolated screens)
+- Preserve the team's paired As-Is and To-Be journey map as source context for the narrative and prototype
 - Focus on a 6-12 month horizon — aspirational but achievable
 - Address specific, known user pain points
 - Demonstrate how new capabilities (AI, automation, integrations, etc.) create tangible value
@@ -52,29 +53,30 @@ Before starting, make sure you have:
 
 - [ ] **A product area to focus on.** Pick an area you're responsible for that has known user pain points and upcoming capability investments.
 - [ ] **Access to existing research.** User interviews, support tickets, analytics, journey maps — use what is available. A research lookup skill can help if one is installed and authorized for the source. If not, work from evidence the team provides and label gaps as assumptions.
-- [ ] **A cross-functional partner.** At minimum, one PM or engineering lead who can spend 1-2 hours with you during the brief and narrative phases. Vision work done in isolation tends to miss strategic context.
-- [ ] **The relevant skills are available.** Briefing, narrative, prototype creation, and experience review use `uxd-problem-brief-create`, `uxd-experience-narrative-create`, `uxd-prototype-create`, and `uxd-experience-review`. Prototype creation and ticket-based evaluation live in the `uxd-prototype` plugin.
+- [ ] **A cross-functional partner.** At minimum, one PM or engineering lead who can spend 1-2 hours with you during the brief and journey-map phases. Vision work done in isolation tends to miss strategic context.
+- [ ] **The relevant skills are available.** Briefing and narrative use `uxd-problem-brief-create` and `uxd-experience-narrative-create` from `uxd-workshop`; map authoring uses `uxd-canvas-create` from `uxd-design`; prototype creation and ticket-based evaluation use `uxd-prototype-create` and `uxd-prototype-evaluate` from `uxd-prototype`; strategic review uses `uxd-experience-review` from `uxd-workshop`.
 - [ ] **A target prototype workspace, when integrating into a product.** Follow its setup instructions, supported branch and branching rules, route conventions, feature flags, and documented commands. Use standalone mode for early exploration when there is no target codebase.
-- [ ] **~5-8 working days of effort** spread across the four phases (not necessarily consecutive).
+- [ ] **~5-8 working days of effort** spread across the five phases (not necessarily consecutive).
 
 ---
 
 ## The Process
 
-The process has four phases. Use the matching skills in sequence; this playbook supplies the shared vision context and workshop activities.
+The process has five phases. Use the matching skills in sequence; this playbook supplies the shared vision context and workshop activities.
 
 ### Phase 1: Vision Brief — Define the Problem Space
 
 **Skill:** `uxd-problem-brief-create`
 
-**What you'll do:** Agree on the problem, who experiences it, what evidence supports it, why it matters, the desired outcome, and the scope. Discuss future capabilities and the time horizon as enabling context for the narrative, not as part of the problem statement.
+**What you'll do:** Agree on the problem, who experiences it, what evidence supports it, why it matters, the desired outcome, and the scope. For vision work, also capture future capabilities and the time horizon as separate context for a provisional Journey starter, not as part of the problem statement.
 
 **Key outputs:**
 - A problem statement grounded in user evidence
 - A description of the target user and their current experience
 - Stakeholders who need to align on the problem and what they care about
+- For vision work, a separate provisional Journey starter with 3–5 paired As-Is/To-Be stages, evidence tags, and labeled hypotheses
 
-When the team needs product integration details, inspect the identified workspace separately. Do not add an unverified feature area, route, flag, branch convention, or design-history path to the problem brief.
+When the team needs product integration details, inspect the identified workspace separately. The brief may include a separate, optional Project Context section for verified details; leave unknown fields open and keep implementation context out of the problem statement.
 
 **How long:** 1-2 days (including the cross-functional conversation)
 
@@ -84,6 +86,8 @@ When the team needs product integration details, inspect the identified workspac
 - Defining capabilities abstractly ("add AI") instead of concretely ("use AI to auto-classify incoming tickets based on historical patterns")
 
 #### Workshop Activity: Value Proposition Canvas
+
+Miro template: [Value Proposition Canvas](https://miro.com/app/board/uXjVHyUtR8A=/?moveToWidget=3458764680752123318&cot=14)
 
 Run this as a collaborative session with your PM partner (and ideally an engineering lead) to ground the vision brief in customer reality before you start writing.
 
@@ -116,85 +120,105 @@ Print or share the findings so workshop participants can reference them directly
 
 **Time:** 60-90 min
 
-**Output → Vision Brief:** The top pain-reliever connections suggest which future capabilities to explore. Keep the problem statement focused on the current user condition; the jobs-to-be-done help define the target user, and unaddressed gaps help set scope.
+**Output → Vision Brief:** The top pain-reliever connections suggest which future capabilities to explore. Keep the problem statement focused on the current user condition; the jobs-to-be-done help define the target user, and unaddressed gaps help set scope. For vision work, draft a short paired Journey starter as a separate, provisional section of the brief. It gives the mapping workshop a first pass without making the To-Be a decision.
 
 ---
 
-### Phase 2: Vision Narrative — Craft the Story
+### Phase 2: Vision Journey Map — Map the Current and Future Experience
+
+**Skill:** `uxd-canvas-create` (from the `uxd-design` plugin)
+
+**What you'll do:** Turn the brief's provisional Journey starter and available research into a collaborative journey map. Start from one Miro board with matching **As-Is** and **To-Be** frames. The team edits and confirms the map together; AI seeds and synthesizes it without presenting assumptions as findings.
+
+**Key outputs:**
+- One actor, one scenario, and the same journey phases in both frames
+- User actions, touchpoints, screens or artifacts, mindsets, emotions, pain points, evidence, assumptions, and support opportunities
+- A To-Be path grounded in realistic capabilities and the agreed time horizon
+- The Miro board URL, which stays the shared source for the narrative and prototype steps
+
+**How long:** 90-120 min, with follow-up time if the map surfaces evidence gaps
+
+**Before the session:**
+- Bring the approved problem brief and research, tickets, analytics, or observations that support it.
+- If the brief does not include a time horizon or enabling capabilities, agree on them as separate future-state context; keep them out of the problem statement.
+- Ask `uxd-canvas-create` for a vision journey map using its paired As-Is/To-Be template. Create one Miro board with two matching frames and keep the Miro board as the canonical workspace.
+- Bring the brief's Journey starter and retain its `S#` labels. If the brief lacks one, have `uxd-canvas-create` draft a concise outline from the available evidence before seeding the board; mark assumptions and leave unsupported future claims open.
+
+**The map structure:** Both frames use the same phases and rows. The shared actor, scenario, and future horizon sit above the frames.
+
+| Row | As-Is frame | To-Be frame |
+|-----|-------------|-------------|
+| **Steps & actions** | What the person does today | What the person does in the future experience |
+| **Touchpoints** | Current product surfaces, tools, people, documents, or channels | Future touchpoints, including any meaningful transition between them |
+| **Screens & artifacts** | Current views or artifacts involved | Proposed screens, key content, and user actions |
+| **Mindsets & needs** | What the person thinks, asks, or needs | What is clarified, enabled, or still uncertain |
+| **Emotions** | Evidence-based or labeled assumed feelings | The intended emotional change, with assumptions labeled |
+| **Pain & friction** | Current delay, effort, risk, or breakdown | Remaining friction and any new risk |
+| **Evidence & assumptions** | `[E#]` sources and `[A#]` claims to validate | Keep the same source trail; mark future-state hypotheses as assumptions |
+| **Support & opportunities** | Where a product or team could help | The concrete product or service response that helps |
+
+**How to run it:**
+
+1. **Set the context (10 min).** Review the brief. Agree on the actor, scenario, desired outcome, scope, time horizon, and capabilities. Name readiness as committed, being explored, or aspirational.
+2. **Seed the As-Is (10 min).** Ask AI to draft only from the brief and available evidence. Tag sourced notes `[E#]` and hypotheses `[A#]`; add links or a compact source key.
+3. **Co-create the As-Is (20 min).** Designers and partners correct the stages, actions, touchpoints, screens, needs, emotions, and pain points. Use specific moments from the user's work, not generic labels.
+4. **Choose opportunities (15 min).** Connect the most important pains to opportunities. Select the few the To-Be should address; identify evidence gaps that need validation.
+5. **Co-create the To-Be (25 min).** Keep the same actor, scenario, and phases. Describe the user's actions, product response, proposed screens, and support. Leave unresolved or new friction visible.
+6. **Compare the frames (10 min).** Walk each stage from As-Is to To-Be. Check that the future response addresses a mapped pain and remains credible for the horizon.
+7. **Mark prototype screens (10 min).** Identify the 3-5 screens that carry the story. Record the map stage and stable `S#` step labels for each; several ordered steps may share a screen.
+
+**Output → Narrative and Prototype:** Keep the edited Miro URL. In Phase 3, pass the brief and board to `uxd-experience-narrative-create`. In Phase 4, pass the same board and the finished narrative to `uxd-prototype-create`.
+
+**Common mistakes:**
+- Filling the As-Is with AI-generated assumptions instead of the available evidence
+- Mapping a future state that removes every pain without showing how the product helps
+- Changing the actor or journey phases between the two frames
+- Treating every sticky note as a separate prototype screen
+
+---
+
+### Phase 3: Vision Narrative — Craft the Story
 
 **Skill:** `uxd-experience-narrative-create`
 
-**What you'll do:** Write the story of a specific user going through the future experience. This is the script that the prototype will bring to life.
+**What you'll do:** Turn the reviewed brief and paired journey map into a readable story. The map holds the team's detailed journey; the narrative makes the before-and-after experience easy to understand and share.
 
 **Key outputs:**
-- A named user persona with a concrete scenario (drawn from an existing persona in the target workspace when applicable; otherwise synthetic and labeled as such)
-- A step-by-step narrative walking through their experience in the future state
-- Moments of delight or transformation highlighted (where the new capability changes everything)
-- Clear before/after contrast at key moments
-- A screen breakdown table, with real routes when a target workspace is provided
+- A named user and concrete scene grounded in the brief and map
+- As-Is beats that retain the mapped actions, touchpoints, screens, pains, and evidence
+- A clear change and To-Be beats drawn from the mapped support opportunities
+- A 3-5 screen breakdown and prototype handoff linked to the Miro board
 
-The skill uses the brief to frame the scene, current-state beats, turning point, future-state beats, and payoff. It can use a matching persona or research finding when available. Pass `--workspace` only when you want the screen breakdown to include verified navigation paths.
+**How long:** About 1 day
 
-**How long:** 1-2 days
+**How to use it:** Give `uxd-experience-narrative-create` the brief and edited Miro URL. It reads the board directly and writes the final prose and screen breakdown. It preserves `[E#]` and `[A#]` markers, asks about material conflicts, and does not edit the board. If the Miro connection is unavailable, provide a JSON Canvas snapshot or export of both frames.
 
-**The narrative should answer these questions (from Julie Zhuo's North Star framework):**
+The narrative should answer these questions (from Julie Zhuo's North Star framework):
 - When would this person encounter this experience?
-- What's happening in their work/life that brings them here?
+- What's happening in their work or life that brings them here?
 - What was painful or broken before?
 - How does the new experience change what they can do?
 - What makes them want to come back?
 
 **Common mistakes:**
-- Writing a feature list disguised as a story — the narrative should follow a person, not describe an interface
-- Being too vague — "the user easily finds what they need" is not a narrative; "Maria clicks the AI-suggested filter and immediately sees the three clusters she spent 45 minutes building manually last week" is
-- Forgetting the emotional arc — good visions make people feel something
+- Re-running the map workshop instead of synthesizing the agreed map
+- Writing a feature list instead of following the person's actions and emotional arc
+- Dropping touchpoints, evidence, assumptions, or support responses from the prototype handoff
+- Inventing routes; include routes only after checking the target workspace
 
-#### Workshop Activity: Vision Journey Map
-
-Run this as a collaborative working session to brainstorm and structure the narrative before writing it. This is a custom format that combines journey mapping with story structure, so the map you create *is* the narrative outline.
-
-**What it is:** A journey map laid out on a timeline with five story-structure stages. Unlike a standard journey map that documents what *is*, this one maps what *will be* — showing the user's future experience as a story with rising tension, a turning point, and resolution.
-
-**The format:**
-
-Draw a large horizontal canvas (whiteboard, Miro, or FigJam) with five columns and four rows:
-
-|  | 1. Setup | 2. Rising Tension | 3. The Pivot | 4. New Experience | 5. Payoff |
-|--|---------|-------------------|-------------|-------------------|-----------|
-| **What happens** | The user encounters the situation that kicks off the journey | The current pain compounds — things are slow, manual, fragmented | The new capability intervenes — the experience fundamentally changes | The user moves through the transformed workflow | The user achieves the outcome and realizes the value |
-| **User action** | *What the user does* | *What the user does* | *What the user does* | *What the user does* | *What the user does* |
-| **System response** | *What the product shows or does* | *What the product shows or does* | *What the product shows or does (the new capability)* | *What the product shows or does* | *What the product shows or does* |
-| **Feeling** | Neutral / task-oriented | Frustrated / overwhelmed / anxious | Surprised / relieved | Confident / empowered | Satisfied / excited |
-
-**How to run it:**
-
-1. **Set the stage (10 min).** Review the Value Proposition Canvas from Phase 1. Agree on the user, the primary job-to-be-done, and the top pain-reliever connection that the vision will demonstrate. Give the user a name.
-
-2. **Map the "Before" columns together (20 min).** Fill in columns 1 (Setup) and 2 (Rising Tension) as a group. Use sticky notes. The goal is to make the current pain *vivid* — pull directly from research quotes, support ticket language, and known frustrations. Each sticky note should be one concrete moment, not an abstraction.
-
-3. **Define the Pivot (15 min).** This is the most important column. As a group, brainstorm: What is the single moment where the new capability changes everything? What does the user do, and what does the system do in response? This should be a concrete interaction, not a concept. Vote on the strongest version.
-
-4. **Map the "After" columns (20 min).** Fill in columns 4 (New Experience) and 5 (Payoff). Mirror the structure of the "Before" columns so the contrast is visceral. For each moment in the "Before," there should be a corresponding — and dramatically better — moment in the "After."
-
-5. **Walk the wall (10 min).** One person reads the full journey aloud, column by column, as a story. Does it flow? Does the pivot land? Does the payoff feel earned? Adjust sticky notes based on discussion.
-
-6. **Identify screens (10 min).** Mark which moments on the map represent distinct screens in the prototype. Typically: 1 screen for Setup, 1 for Rising Tension, 1-2 for the Pivot, and 1 for New Experience / Payoff.
-
-**Time:** 90 min
-
-**Output → Vision Narrative:** The completed journey map is the outline for the narrative document. Each column becomes a section. The screen markers become the screen breakdown table. When you run `uxd-experience-narrative-create`, use this map as the input.
+**Output → Prototype:** Review the narrative, then give `uxd-prototype-create` both the Miro URL and the final narrative. The map supplies the detailed journey context; the narrative supplies the readable story.
 
 ---
 
-### Phase 3: Vision Prototype — Build It
+### Phase 4: Vision Prototype — Build It
 
 **Skill:** `uxd-prototype-create` (from the `uxd-prototype` plugin)
 
-**What you'll do:** Use `uxd-prototype-create` to build an interactive prototype that brings the narrative to life. In an existing product workspace, provide that workspace so the prototype follows its actual shell, design system, navigation, and code conventions.
+**What you'll do:** Use `uxd-prototype-create` to build an interactive prototype from both the Miro journey map and finished narrative. In an existing product workspace, provide that workspace so the prototype follows its actual shell, design system, navigation, and code conventions.
 
 **Key outputs:**
 - A working prototype in the target product's design system (standalone HTML or integrated into an existing codebase)
-- Screens that follow the narrative sequence from Phase 2
+- Screens that follow the narrative sequence from Phase 3 and preserve the To-Be map's stages and touchpoints from Phase 2
 - Realistic sample data and content (not lorem ipsum)
 - Interactive elements that demonstrate the key capability moments
 - Structured prototype artifacts (changeset, metadata, summary) for downstream evaluation
@@ -202,18 +226,18 @@ Draw a large horizontal canvas (whiteboard, Miro, or FigJam) with five columns a
 **How long:** 2-3 days
 
 **How to use it:**
-When the skill asks "What are we prototyping?", provide the vision narrative document from Phase 2. The screen breakdown table is especially useful — it gives the skill the concrete screens, key elements, and interactions to build.
+When the skill asks "What are we prototyping?", provide the Miro board URL and the final narrative document from Phase 3. The board preserves the agreed journey steps, touchpoints, pains, evidence, assumptions, and support opportunities; the narrative provides the story and screen breakdown.
 
-When extending an existing product, pass its checked-out prototype repository with `--workspace <path>`. The skill analyzes the workspace before generating pages. Do not select standalone mode when the intent is to extend the product prototype.
+When extending an existing product, pass its checked-out workspace with `--workspace <path>`. The skill analyzes the workspace before generating pages. Do not select standalone mode when the intent is to extend the product experience.
 
 Recommended settings for vision work:
 - **Workspace:** the target product branch path (use `standalone` only for quick early exploration before integrating into the product repo)
-- **Decisions:** `human` (walk through design decisions with the assistant; choose `skip` or `auto` when that better fits the work)
-- **Depth:** `normal` (4-7 design decisions, when decisions are not skipped)
+- **Decisions:** `human` (choose together on a review page or in a chat walkthrough; choose `skip` or `auto` when that better fits the work)
+- **Depth:** `normal` (typically supports 4–7 meaningful design decisions when genuine tradeoffs exist; do not force a count)
 
 Before providing implementation context, inspect the current workspace for its route registration, feature-flag mechanism, component imports, and path aliases. Follow the conventions in the selected branch.
 
-**After the initial build:** Use `uxd-prototype-evaluate` only when the vision is tied to a Jira story and the prototype is reachable or its workspace is available. It evaluates acceptance criteria and usability; it is not a substitute for the strategic experience review. Use `uxd-experience-review` for that review, then pass concrete improvement feedback to `uxd-prototype-create` when another iteration is needed.
+**After the initial build:** Use `uxd-prototype-evaluate` only when the vision is tied to a Jira story and the prototype is reachable or its workspace is available. It evaluates acceptance criteria and usability; it is not a substitute for the strategic experience review. Use `uxd-experience-review` for that review; the designer selects recommendations for `uxd-prototype-create` to apply when another iteration is needed.
 
 **Common mistakes:**
 - Building standalone when you should be in workspace mode — a vision that doesn't live in the real product shell loses credibility with stakeholders who know the product
@@ -223,15 +247,17 @@ Before providing implementation context, inspect the current workspace for its r
 
 #### Workshop Activity: Component Mapping Session
 
+Miro template: [Component Mapping Session](https://miro.com/app/board/uXjVHyUtR8A=/?moveToWidget=3458764680752242192&cot=14)
+
 Run this as a quick working session before starting the build to bridge the narrative into a buildable spec. Can be done solo or with a PM to gut-check the information architecture.
 
-**What it is:** A lightweight exercise where you take each screen from the Vision Journey Map's screen markers and map it to components and a rough layout, using existing product pages as reference patterns.
+**What it is:** A lightweight exercise where you take each screen from the To-Be frame and narrative screen breakdown and map it to components and a rough layout, using existing product pages as reference patterns.
 
 **Before you start:** Browse existing pages in the target workspace that are similar to what you're building. Use the repository's documented command to run the prototype, then note the page structure, component choices, and data patterns. Your vision screens should feel like a natural extension of the existing product.
 
 **How to run it:**
 
-1. **List the screens (5 min).** Write each screen from the journey map on a separate sheet or section of a whiteboard. Include the screen name, which narrative moment it corresponds to, what the user is doing on this screen, and its route when one has been confirmed in the target workspace.
+1. **List the screens (5 min).** Write each screen from the To-Be frame and narrative on a separate sheet or section of a whiteboard. Include its journey stage, mapped `S#` step labels in order, touchpoints, what the user does, and its route when confirmed in the target workspace.
 
 2. **Find the closest existing page (5 min per screen).** For each screen, identify an existing page that has a similar layout or purpose. "My screen is like the existing inventory page but with a recommendations panel" is a more useful starting point than designing from scratch.
 
@@ -250,15 +276,15 @@ Run this as a quick working session before starting the build to bridge the narr
 
 ---
 
-### Phase 4: Vision Review — Evaluate and Refine
+### Phase 5: Vision Review — Evaluate and Prepare Refinements
 
 **Skill:** `uxd-experience-review`
 
-**What you'll do:** Evaluate the prototype against quality criteria, identify gaps, and refine it before sharing with stakeholders.
+**What you'll do:** Evaluate the prototype against quality criteria, identify gaps, and recommend refinements before sharing with stakeholders. The designer selects which changes to make; `uxd-prototype-create` applies those changes, then the updated experience is reviewed.
 
 **Key outputs:**
 - A quality assessment of narrative clarity, problem grounding, the change demonstrated, outcome, feasibility, and visual credibility
-- A list of specific improvements to make
+- A prioritized list of specific recommendations for the prototype skill to apply after the designer selects them
 - A presentation plan: who sees it, in what context, and what questions to anticipate
 - Updated design history, when the target project already maintains one
 
@@ -274,6 +300,8 @@ Use the `uxd-experience-review` scorecard:
 - **Feasibility:** Could a product team see a path to what is shown within the stated time horizon?
 - **Visual credibility:** Does it look like the target product? Judge against its design system, theming, and neighboring screens.
 
+As a cross-check alongside the six ratings, compare the prototype with the reviewed To-Be map: confirm it carries the intended stages, touchpoints, screens, and support opportunities, and explain any deliberate differences.
+
 When prototype code changed, follow the target repository's documented lint and build commands if available. If the project maintains a design log, record the review outcome and decisions in its established location; do not create a new logging convention.
 
 **Common mistakes:**
@@ -283,6 +311,8 @@ When prototype code changed, follow the target repository's documented lint and 
 - Skipping the repository's documented checks after implementation changes — execution defects can distract from the experience
 
 #### Workshop Activity: Structured Design Critique
+
+Miro template: [Structured Design Critique](https://miro.com/app/board/uXjVHyUtR8A=/?moveToWidget=3458764680822307526&cot=14)
 
 Run this as a review session with 2-6 participants (mixed design, PM, engineering) to evaluate the vision prototype before sharing it with leadership.
 
@@ -311,7 +341,7 @@ Run this as a review session with 2-6 participants (mixed design, PM, engineerin
 
 **Time:** 45-60 min
 
-**Output → Vision Review:** The categorized feedback list feeds directly into the `uxd-experience-review` skill's improvement plan. Run the skill after the critique to formalize the scorecard, incorporate the feedback, and prepare the stakeholder presentation.
+**Output → Vision Review:** The categorized feedback feeds the `uxd-experience-review` recommendations. The designer selects changes for `uxd-prototype-create` to apply; review the updated experience and prepare the stakeholder presentation.
 
 ---
 
@@ -337,7 +367,7 @@ Run this as a review session with 2-6 participants (mixed design, PM, engineerin
 A regular prototype tests a specific feature design for usability. A vision prototype tells the story of a transformed user experience. It's broader in scope, further in time horizon, and focused on value proposition rather than interaction details.
 
 **Do I need PM or engineering involvement?**
-Yes, especially in Phase 1 (the brief). Vision work done in a design silo tends to miss strategic context and lose credibility. A 1-2 hour working session with a PM partner during the brief phase is the minimum.
+Yes, especially during Phase 1 (the brief) and Phase 2 (the paired journey map). Vision work done in a design silo tends to miss strategic context and lose credibility. Plan for a 1-2 hour cross-functional working session across those phases.
 
 **What if I don't know what capabilities are coming?**
 Talk to your PM and engineering partners. Look at the roadmap. Read the org's strategy docs. If there's genuinely no signal about future capabilities, the vision exercise helps surface that gap — which is valuable in itself.
@@ -355,7 +385,7 @@ You don't need to be an expert, but you should be able to follow its setup instr
 The brief, narrative, and workshop activities can still be completed. Use standalone mode for early prototype exploration, and defer product-specific routes, components, and implementation decisions until a target workspace is chosen.
 
 **What happens to my vision after the review?**
-Keep the vision on a feature branch in the prototype repo. After stakeholder review, follow the team's normal review and merge process. If the project has an established design history, record the decisions there. The vision can then serve as a reference point for roadmap discussions, sprint planning, and future design work.
+Keep the vision in an isolated branch or workspace, following the target project's normal review, merge, and sharing process. If the project has an established design history, record the decisions there. The vision can then serve as a reference point for roadmap discussions, sprint planning, and future design work.
 
 ---
 
@@ -367,12 +397,13 @@ The playbook is supported by these skills. Names below follow the repository's c
 |-------|-------|-------------|--------|
 | Optional research lookup | Pre-work | Retrieves evidence or participant quotes when an approved source and lookup skill are available | Optional; use supplied evidence otherwise |
 | `uxd-problem-brief-create` | 1. Define | Frames the current problem, affected person, evidence, desired outcome, and scope | `uxd-workshop` plugin |
-| `uxd-experience-narrative-create` | 2. Story | Turns the brief into a before-and-after user journey and screen breakdown | `uxd-workshop` plugin |
-| `uxd-prototype-create` | 3. Build | Creates an interactive prototype in a standalone output or target workspace | `uxd-prototype` plugin |
+| `uxd-canvas-create` | 2. Map | Creates a paired As-Is/To-Be vision journey map on one Miro board | `uxd-design` plugin |
+| `uxd-experience-narrative-create` | 3. Story | Turns the brief and reviewed map into final prose and a screen breakdown | `uxd-workshop` plugin |
+| `uxd-prototype-create` | 4. Build | Creates an interactive prototype from the map and narrative | `uxd-prototype` plugin |
 | `uxd-prototype-evaluate` | Optional validation | Evaluates a prototype against a Jira story's acceptance criteria and usability | `uxd-prototype` plugin; requires Jira context and a reachable prototype or workspace |
-| `uxd-experience-review` | 4. Review | Judges whether the prototype carries the problem and prepares a stakeholder demo | `uxd-workshop` plugin |
+| `uxd-experience-review` | 5. Review | Judges whether the prototype carries the problem and prepares a stakeholder demo | `uxd-workshop` plugin |
 
-The brief and narrative ground the work in evidence and make the future experience concrete. Prototype creation and experience review carry that story into a reviewable artifact. Optional ticket-based evaluation is a separate check when a Jira story exists. Each stage's output feeds the next.
+The brief grounds the problem, the paired Miro map keeps the team's current and future journey visible, and the narrative turns that map into a story. Prototype creation receives both the board and prose; experience review recommends changes and prepares the result for stakeholders. The designer selects refinements for prototype creation to apply, then the updated experience is reviewed. Optional ticket-based evaluation is a separate check when a Jira story exists.
 
 ### Adapting to a target workspace
 

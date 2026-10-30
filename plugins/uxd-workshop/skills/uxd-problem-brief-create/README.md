@@ -29,7 +29,7 @@ Common miss: writing the feature you want to build as if it were the problem.
 
 | Piece | Where it is captured |
 |-------|----------------------|
-| Enabling capabilities and time horizon | `uxd-experience-narrative-create`, when the story depends on a change that does not exist today |
+| Enabling capabilities and time horizon | The brief's separate Vision handoff for the provisional Journey starter; the narrative builds on the context the team supplied |
 | Screens and a prototype | `uxd-experience-narrative-create`, then `uxd-prototype-create` |
 | Stakeholder demo plan | `uxd-experience-review` |
 

@@ -3,9 +3,10 @@ name: uxd-canvas-create
 version: 0.1.0
 description: >-
   Create or refine a canvas as local JSON Canvas, a Miro board, or both.
-  Covers journey maps, service blueprints, architecture diagrams, user flows,
-  affinity maps, mind maps, and Mermaid diagrams. Use when turning a brief,
-  research, an existing canvas, or a Miro board into a spatial artifact.
+  Covers journey maps, paired as-is/to-be vision maps, service blueprints,
+  architecture diagrams, user flows, affinity maps, mind maps, and Mermaid
+  diagrams. Use when turning a brief, research, an existing canvas, or a Miro
+  board into a spatial artifact.
 ---
 
 # Create Canvas
@@ -44,10 +45,11 @@ canvas/
 
 ## Templates
 
-If the user names a type below, read that folder's `context.md` and start from its `canvas.json`. See [templates/README.md](templates/README.md). Keep the template's columns, rows, and reading order. Replace the placeholder text. Add or remove a whole phase column when the evidence needs a different number of stages. When revising a canvas that already exists, keep its structure unless the user asks to restart from the template.
+If the user names a type below, read that folder's `context.md` and start from its `canvas.json`. See [templates/README.md](templates/README.md). For vision work after a problem brief, use the paired vision journey map. For other journey maps, use the general journey-map template. Keep the selected template's columns, rows, and reading order. Replace the placeholder text. Add or remove a whole phase column when the evidence needs a different number of stages. When revising a canvas that already exists, keep its structure unless the user asks to restart from the template.
 
 | Request | Template |
 |---|---|
+| Vision journey map, paired as-is and to-be map | `templates/vision-journey-map` |
 | Journey map, customer journey, or experience map | `templates/journey-map` |
 | Service blueprint | `templates/service-blueprint` |
 | User flow or task flow | `templates/user-flow` |
@@ -62,13 +64,14 @@ Follow the locations reference. Journey maps, blueprints, and affinity maps stay
 
 ## Authoring workflow
 
-1. Resolve location, communication goal, audience, canvas type, source evidence, and reading order.
+1. Resolve location, communication goal, audience, canvas type, source evidence, and reading order. For a vision journey map, check whether the brief has a separate **Journey starter**.
 2. If the type has a template, read its `context.md` and copy `canvas.json` as the base before writing anything else.
-3. If the source is a Miro URL, read that board or one frame and preserve every widget id before editing. Confirm before creating a board, writing widgets, or deleting items. Fit the board's content into the template when the user asked for one of those types.
-4. Read [JSON Canvas fields and extensions](references/canvas-schema.md) before authoring unfamiliar node types or presentation extensions.
-5. Write the working model with stable ids such as `phase-discover-actions`. Copy widget ids onto `miroId` in any snapshot. After a new board write, store the ids the create call returns.
-6. Copy local files into `assets/` and use relative paths. Do not embed credentials, authenticated URLs, or inaccessible local absolute paths.
-7. Validate any `canvas.json` you write:
+3. For a new vision map, use the brief's Journey starter as provisional seed content. If it is missing, draft a concise paired outline from the supplied brief now; preserve evidence tags, label assumptions, and leave missing capability or horizon context open instead of inventing it. Share the outline before creating or writing to a Miro board.
+4. If the source is a Miro URL, read that board or one frame and preserve every widget id before editing. Confirm before creating a board, writing widgets, or deleting items. Fit the board's content into the template when the user asked for one of those types.
+5. Read [JSON Canvas fields and extensions](references/canvas-schema.md) before authoring unfamiliar node types or presentation extensions.
+6. Write the working model with stable ids such as `phase-discover-actions`. Copy widget ids onto `miroId` in any snapshot. After a new board write, store the ids the create call returns.
+7. Copy local files into `assets/` and use relative paths. Do not embed credentials, authenticated URLs, or inaccessible local absolute paths.
+8. Validate any `canvas.json` you write:
 
 ```bash
 node "${CLAUDE_SKILL_DIR}/scripts/validate-canvas.mjs" <path-to-canvas.json>
@@ -89,6 +92,8 @@ Fix every error. Review warnings for overlaps, dense text, and edge routing rath
 ## Completion check
 
 - The structure answers the stated communication goal. A requested journey map, blueprint, flow, affinity map, or mind map still follows its template.
+- A vision journey map keeps matching As-Is and To-Be phases, actor, and scenario; evidence and assumptions remain distinguishable.
+- A vision map uses the brief's Journey starter as a draft, not a decision. Preserve its stable step labels and evidence trail while the team edits and confirms the Miro frames.
 - Placeholder template copy is gone. Research-derived claims trace to the supplied sources, and assumptions are labeled.
 - Local canvases pass the validator: unique ids, positive dimensions, resolved edges, readable labels, no unintended overlap, and local assets resolve.
 - A Miro write names the board URL. Updates reuse existing widget ids. Deletions were confirmed item by item.

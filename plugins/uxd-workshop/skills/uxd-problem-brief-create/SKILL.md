@@ -12,7 +12,7 @@ outputs: "A problem brief in markdown"
 
 # Problem Brief
 
-Produces an agreed problem frame. The statement describes the current condition and why it matters. It does not propose capabilities, a time horizon, screens, or a prototype.
+Produces an agreed problem frame. The statement describes the current condition and why it matters. For a future-state vision, the brief may also include a separate, provisional journey starter; that starter does not change the problem statement or represent an agreed design.
 
 Work one section at a time. Confirm what you heard before moving on. If a discovery brief already exists, start from it instead of re-interviewing.
 
@@ -75,7 +75,23 @@ If the frame is a whole product, ask which single situation the team needs to ag
 
 Ask who needs to agree that this is the problem, and what each of them cares about. Do not invent names. A presentation plan belongs in `uxd-experience-review`, when there is something to show.
 
-## Step 6: Write the brief
+## Optional: Verified project context
+
+When a target workspace is already identified and its conventions matter to the prototype handoff, inspect its documentation and include a separate, optional Project Context section. Record only verified details, such as the relevant product area, established design history, or branch/visibility conventions. Keep this information out of the problem statement and do not block the brief if the workspace is not known.
+
+## Step 6: Draft the journey starter (vision work only)
+
+If the brief supports a future-state vision, use the agreed user, situation, evidence, desired outcome, scope, time horizon, and enabling capabilities to sketch a paired As-Is/To-Be journey. Keep this distinct from the problem statement and label it **provisional — for team mapping**.
+
+- Use 3–5 high-level stages for the same person and scenario. Give each current/future pair a stable step label (`S1`, `S2`, …).
+- For As-Is, state the user's action, relevant touchpoint, and pain or need. Cite evidence as `[E#]`; mark unverified behavior `[A#]`.
+- For To-Be, suggest the corresponding user action and product/team support or opportunity. Tie it to a capability and horizon already supplied; mark future-state claims `[A#]` until the team confirms them.
+- Keep it an outline, not polished narrative, a feature specification, or a screen-by-screen plan. Leave missing evidence, capabilities, or horizon as open questions; do not invent them.
+- If the future horizon or enabling capabilities are missing, ask for them as separate context. They do not belong in the problem statement.
+
+For non-vision briefs, skip this section.
+
+## Step 7: Write the brief
 
 Write the brief from [references/template.md](references/template.md). Keep every heading.
 
@@ -89,5 +105,6 @@ Read it back. Revise until the statement has no solution in it, evidence and ass
 - Evidence and assumptions are labeled
 - Scope is one situation
 - At least one stakeholder is named by role, with what they care about
+- For vision briefs, the separate Journey starter is provisional, paired across the same stages, and traceable to evidence or labeled assumptions
 
-When the user wants to show an experience that responds to this problem, the next skill is `uxd-experience-narrative-create`.
+When this brief supports a future-state vision, pass its provisional Journey starter to `uxd-canvas-create` to seed the paired Miro map. The team edits and confirms it there; the reviewed map becomes the source for `uxd-experience-narrative-create` to write the final prose. Keep enabling capabilities and the time horizon separate from the problem statement. For other experience stories, the narrative skill can start directly from the brief.
