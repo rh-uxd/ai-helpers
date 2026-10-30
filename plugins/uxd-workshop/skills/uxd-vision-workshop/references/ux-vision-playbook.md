@@ -68,13 +68,13 @@ The process has five phases. Use the matching skills in sequence; this playbook 
 
 **Skill:** `uxd-problem-brief-create`
 
-**What you'll do:** Agree on the problem, who experiences it, what evidence supports it, why it matters, the desired outcome, and the scope. For vision work, also capture future capabilities and the time horizon as separate context for a provisional Journey starter, not as part of the problem statement.
+**What you'll do:** Agree on the problem, who experiences it, what evidence supports it, why it matters, the desired outcome, and the scope. For vision work, also capture future capabilities and the time horizon as separate context for the provisional As-Is and To-Be map starters, not as part of the problem statement.
 
 **Key outputs:**
 - A problem statement grounded in user evidence
 - A description of the target user and their current experience
 - Stakeholders who need to align on the problem and what they care about
-- For vision work, a separate provisional Journey starter with 3–5 paired As-Is/To-Be stages, evidence tags, and labeled hypotheses
+- For vision work, two provisional Journey map starters—As-Is and To-Be—each using the playbook's map lanes as rows and 3–5 matched `S#` journey stages as columns
 
 When the team needs product integration details, inspect the identified workspace separately. The brief may include a separate, optional Project Context section for verified details; leave unknown fields open and keep implementation context out of the problem statement.
 
@@ -120,7 +120,7 @@ Print or share the findings so workshop participants can reference them directly
 
 **Time:** 60-90 min
 
-**Output → Vision Brief:** The top pain-reliever connections suggest which future capabilities to explore. Keep the problem statement focused on the current user condition; the jobs-to-be-done help define the target user, and unaddressed gaps help set scope. For vision work, draft a short paired Journey starter as a separate, provisional section of the brief. It gives the mapping workshop a first pass without making the To-Be a decision.
+**Output → Vision Brief:** The top pain-reliever connections suggest which future capabilities to explore. Keep the problem statement focused on the current user condition; the jobs-to-be-done help define the target user, and unaddressed gaps help set scope. For vision work, draft two separate provisional Journey map starters in the brief: one As-Is and one To-Be. Each uses the playbook's map lanes as rows and the same 3–5 `S#` stages as columns. These tables seed the mapping workshop without making the To-Be a decision.
 
 ---
 
@@ -128,7 +128,7 @@ Print or share the findings so workshop participants can reference them directly
 
 **Skill:** `uxd-canvas-create` (from the `uxd-design` plugin)
 
-**What you'll do:** Turn the brief's provisional Journey starter and available research into a collaborative journey map. Start from one Miro board with matching **As-Is** and **To-Be** frames. The team edits and confirms the map together; AI seeds and synthesizes it without presenting assumptions as findings.
+**What you'll do:** Turn the brief's provisional As-Is and To-Be map starters and available research into a collaborative journey map. Start from one Miro board with matching **As-Is** and **To-Be** frames. The team edits and confirms the map together; AI seeds and synthesizes it without presenting assumptions as findings.
 
 **Key outputs:**
 - One actor, one scenario, and the same journey phases in both frames
@@ -142,7 +142,7 @@ Print or share the findings so workshop participants can reference them directly
 - Bring the approved problem brief and research, tickets, analytics, or observations that support it.
 - If the brief does not include a time horizon or enabling capabilities, agree on them as separate future-state context; keep them out of the problem statement.
 - Ask `uxd-canvas-create` for a vision journey map using its paired As-Is/To-Be template. Create one Miro board with two matching frames and keep the Miro board as the canonical workspace.
-- Bring the brief's Journey starter and retain its `S#` labels. If the brief lacks one, have `uxd-canvas-create` draft a concise outline from the available evidence before seeding the board; mark assumptions and leave unsupported future claims open.
+- Bring the brief's separate As-Is and To-Be map-shaped Journey starters and retain their matching `S#` stage columns and order. If the brief lacks them, have `uxd-canvas-create` draft a concise outline from the available evidence before seeding the board; mark assumptions and leave unsupported future claims open.
 
 **The map structure:** Both frames use the same phases and rows. The shared actor, scenario, and future horizon sit above the frames.
 

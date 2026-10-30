@@ -12,6 +12,7 @@ A problem brief is the agreed frame for a product problem: who is affected, what
 - Evidence and assumptions, labeled
 - One situation in scope, plus known constraints
 - The people who need to agree this is the problem
+- For vision work, separate provisional As-Is and To-Be map starters using the playbook's lanes and matching `S#` stage columns
 
 ## What this skill asks for
 

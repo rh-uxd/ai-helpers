@@ -12,7 +12,7 @@ outputs: "A problem brief in markdown"
 
 # Problem Brief
 
-Produces an agreed problem frame. The statement describes the current condition and why it matters. For a future-state vision, the brief may also include a separate, provisional journey starter; that starter does not change the problem statement or represent an agreed design.
+Produces an agreed problem frame. The statement describes the current condition and why it matters. For a future-state vision, the brief may also include separate, provisional As-Is and To-Be journey map starters; they do not change the problem statement or represent an agreed design.
 
 Work one section at a time. Confirm what you heard before moving on. If a discovery brief already exists, start from it instead of re-interviewing.
 
@@ -79,17 +79,18 @@ Ask who needs to agree that this is the problem, and what each of them cares abo
 
 When a target workspace is already identified and its conventions matter to the prototype handoff, inspect its documentation and include a separate, optional Project Context section. Record only verified details, such as the relevant product area, established design history, or branch/visibility conventions. Keep this information out of the problem statement and do not block the brief if the workspace is not known.
 
-## Step 6: Draft the journey starter (vision work only)
+## Step 6: Draft the journey map starters (vision work only)
 
 If the brief supports a future-state vision, use the agreed user, situation, evidence, desired outcome, scope, time horizon, and enabling capabilities to sketch a paired As-Is/To-Be journey. Keep this distinct from the problem statement and label it **provisional — for team mapping**.
 
-- Use 3–5 high-level stages for the same person and scenario. Give each current/future pair a stable step label (`S1`, `S2`, …).
-- For As-Is, state the user's action, relevant touchpoint, and pain or need. Cite evidence as `[E#]`; mark unverified behavior `[A#]`.
-- For To-Be, suggest the corresponding user action and product/team support or opportunity. Tie it to a capability and horizon already supplied; mark future-state claims `[A#]` until the team confirms them.
+- Use two separate map-shaped tables, one As-Is and one To-Be, with 3–5 high-level stages for the same person and scenario. Use the playbook's map lanes as rows and the journey stages as columns: `Steps & actions`, `Touchpoints`, `Screens & artifacts`, `Mindsets & needs`, `Emotions`, `Pain & friction`, `Evidence & assumptions`, and `Support & opportunities`.
+- Give corresponding stage columns the same stable `S#` label, stage name, and order in both tables.
+- In As-Is, describe current behavior and needs; cite evidence as `[E#]` and label unverified claims `[A#]`.
+- In To-Be, describe possible future behavior and support; tie it to a capability and horizon already supplied, and mark future-state claims `[A#]` until the team confirms them. Note remaining or new friction, or leave it open.
 - Keep it an outline, not polished narrative, a feature specification, or a screen-by-screen plan. Leave missing evidence, capabilities, or horizon as open questions; do not invent them.
 - If the future horizon or enabling capabilities are missing, ask for them as separate context. They do not belong in the problem statement.
 
-For non-vision briefs, skip this section.
+For non-vision briefs, skip these sections.
 
 ## Step 7: Write the brief
 
@@ -105,6 +106,6 @@ Read it back. Revise until the statement has no solution in it, evidence and ass
 - Evidence and assumptions are labeled
 - Scope is one situation
 - At least one stakeholder is named by role, with what they care about
-- For vision briefs, the separate Journey starter is provisional, paired across the same stages, and traceable to evidence or labeled assumptions
+- For vision briefs, the provisional Journey starter has separate As-Is and To-Be tables using the playbook's map lanes; matching stage columns and `S#` labels; and evidence or assumption markers
 
-When this brief supports a future-state vision, pass its provisional Journey starter to `uxd-canvas-create` to seed the paired Miro map. The team edits and confirms it there; the reviewed map becomes the source for `uxd-experience-narrative-create` to write the final prose. Keep enabling capabilities and the time horizon separate from the problem statement. For other experience stories, the narrative skill can start directly from the brief.
+When this brief supports a future-state vision, pass both provisional Journey map starters to `uxd-canvas-create` to seed the matching Miro frames. The team edits and confirms the map there; the reviewed map becomes the source for `uxd-experience-narrative-create` to write the final prose. Keep enabling capabilities and the time horizon separate from the problem statement. For other experience stories, the narrative skill can start directly from the brief.
