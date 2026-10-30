@@ -78,6 +78,7 @@ function createSchemaValidators() {
   ajv.addSchema(loadJson(path.join(SCHEMAS_DIR, 'shared.schema.json')));
   ajv.addSchema(loadJson(path.join(SCHEMAS_DIR, 'heuristics.schema.json')));
   ajv.addSchema(loadJson(path.join(SCHEMAS_DIR, 'split.schema.json')));
+  ajv.addSchema(loadJson(path.join(SCHEMAS_DIR, 'evaluation-plan.schema.json')));
   ajv.addSchema(loadJson(path.join(SCHEMAS_DIR, 'consistency-source.schema.json')));
   const validators = {};
   for (const [artifact, filename] of Object.entries(SCHEMA_FILES)) {
@@ -439,6 +440,8 @@ function validateDirectory(artifactsDir) {
     catch (error) { issue(validationErrors, 'evaluation.json', '/consistency/source_analysis', 'source_publication', error.message); }
     try { require('./walkthrough-contract').validatePublished(documents, path.resolve(artifactsDir)); }
     catch (error) { issue(validationErrors, 'state.json', '/workflow', 'walkthrough_publication', error.message); }
+    try { require('./evaluation-plan').validatePublished(documents, path.resolve(artifactsDir)); }
+    catch (error) { issue(validationErrors, 'state.json', '/planning', 'evaluation_plan', error.message); }
   }
   return { valid: validationErrors.length === 0, errors: validationErrors };
 }

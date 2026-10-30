@@ -144,6 +144,7 @@ function identify(docs, route, inputs) {
   const state = docs['state.json'];
   const intent = structuredClone(docs['brief.json'].intent);
   delete intent.scope.source_ref; delete intent.scope.changed_files; delete intent.scope.prototype_url;
+  if (intent.evaluation_plan) { delete intent.evaluation_plan.packet_sha256; delete intent.evaluation_plan.reviewed_at; }
   const sourceAnalysis = docs['evaluation.json']?.consistency.source_analysis;
   state.identity.intent_key = hash(JSON.stringify({ ...intent, ...(sourceAnalysis ? { consistency_selection: { design_system: sourceAnalysis.design_system, manifest_version: sourceAnalysis.guidelines_version, context: sourceAnalysis.guideline_context } } : {}) }));
   state.identity.build_key = hash(JSON.stringify(inputs));

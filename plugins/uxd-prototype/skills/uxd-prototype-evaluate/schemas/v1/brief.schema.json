@@ -203,7 +203,8 @@
               ],
               "additionalProperties": false
             },
-            "environment": { "$ref": "split.schema.json#/$defs/environment" }
+            "environment": { "$ref": "split.schema.json#/$defs/environment" },
+            "evaluation_plan": { "$ref": "evaluation-plan.schema.json" }
           },
           "required": ["stage", "title", "acceptance_criteria", "tasks", "personas", "scope"],
           "allOf": [

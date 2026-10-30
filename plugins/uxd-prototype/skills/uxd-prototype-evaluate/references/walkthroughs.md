@@ -29,8 +29,9 @@ hashes, build, task outcomes, pairs, environment, starting states and decisions.
 Reuse reviewed budget/limits/stops from the handoff notes; do not restart intake,
 reload a persona catalog or inject navigation answers/prior findings. Ask only
 about missing, stale, contradictory or unsupported inputs. Changed intent needs
-new review, not edits to an immutable packet. Persisted adaptive plans are separate
-work; this contract does not claim to enforce a budget or sanitize model context.
+new review, not edits to an immutable packet. Use
+[evaluation-planning.md](evaluation-planning.md) for persisted plans/changes and
+recorded budget checks. Neither contract sanitizes model context or schedules calls.
 
 The composer validates prepared tasks/environment before initial Full's selected
 Quick work. A Full checkpoint with no cohort can finish after review, but cannot
@@ -131,4 +132,4 @@ Alternatively record `purpose: complete-without-walkthroughs` and omit the bundl
 The parent remains immutable. Completion records the import, not universal success.
 Use `validate-canonical-artifacts.js <run-dir> --json` for readback validation.
 Keep task outcomes, AC verification, unknown usage and coverage gaps distinct in
-chat. HTML/shared synthesis and persisted adaptive planning are not in this package.
+chat. HTML/shared synthesis is not in this package.
