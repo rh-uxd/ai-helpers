@@ -207,7 +207,11 @@
       else if (block.type === 'quote') copy.appendChild(textEl('blockquote', block.text));
       else if (block.type === 'bullets') {
         const list = document.createElement('ul');
-        for (const item of block.items) list.appendChild(textEl('li', item));
+        for (const item of block.items) {
+          const line = textEl('li', itemText(item));
+          if (itemDepth(item)) line.classList.add('is-nested');
+          list.appendChild(line);
+        }
         copy.appendChild(list);
       } else if (block.type === 'code') {
         const pre = document.createElement('pre');
@@ -340,8 +344,14 @@
   }
 
   function renderImage(src, alt, className) {
+    const safeSrc = safeImageSrc(src);
+    if (!safeSrc) {
+      const fallback = document.createElement('p');
+      fallback.textContent = 'Blocked image source';
+      return fallback;
+    }
     const image = document.createElement('img');
-    image.src = src;
+    image.src = safeSrc;
     image.alt = alt || '';
     if (className) image.className = className;
     image.addEventListener('error', () => {
@@ -810,7 +820,7 @@
     const grid = document.createElement('div');
     grid.className = 'stat-grid';
     grid.style.setProperty('--stat-cols', '10');
-    for (let index = 0; index < total; index += 1) {
+    for (let index = 0; index < Math.min(total, 100); index += 1) {
       const cell = document.createElement('span');
       if (index < filled) cell.className = 'is-on';
       grid.appendChild(cell);
@@ -896,6 +906,18 @@
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;');
+  }
+
+  function safeImageSrc(src) {
+    const value = String(src || '');
+    if (!value.startsWith('assets/') || value.includes('\\')) return '';
+    try {
+      const assetsBase = new URL('assets/', document.baseURI);
+      const imageUrl = new URL(value, document.baseURI);
+      return imageUrl.href.startsWith(assetsBase.href) ? imageUrl.href : '';
+    } catch {
+      return '';
+    }
   }
 
   function safeUrl(url) {

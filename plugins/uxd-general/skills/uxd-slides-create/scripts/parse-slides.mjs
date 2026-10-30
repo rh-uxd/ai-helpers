@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const SPECIFICATIONS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', '..', '..', 'specifications', 'slides');
+const SPECIFICATIONS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'specifications', 'slides');
 const CURRENT_SPEC = JSON.parse(fs.readFileSync(path.join(SPECIFICATIONS_DIR, 'current.json'), 'utf8'));
 
 export const SLIDES_SPEC_VERSION = String(CURRENT_SPEC.version || '');
@@ -342,7 +342,7 @@ export function validateDeck(deck, { templatesDir } = {}) {
   if (!/^\d+\.\d+\.\d+$/.test(specVersion)) {
     errors.push('metadata.specVersion must be the slides spec version, for example 0.1.0.');
   } else if (specVersion !== SLIDES_SPEC_VERSION && SLIDES_SPEC_VERSIONS.includes(specVersion)) {
-    errors.push(`metadata.specVersion is ${specVersion}. Current slides spec is ${SLIDES_SPEC_VERSION}. Upgrade with specifications/slides/upgrades/${specVersion}-to-${SLIDES_SPEC_VERSION}.mjs.`);
+    errors.push(`metadata.specVersion is ${specVersion}. Current slides spec is ${SLIDES_SPEC_VERSION}. Upgrade with the plugin's specifications/slides/upgrades/${specVersion}-to-${SLIDES_SPEC_VERSION}.mjs.`);
   } else if (specVersion !== SLIDES_SPEC_VERSION) {
     errors.push(`metadata.specVersion "${specVersion}" is not a known slides spec. Known versions: ${SLIDES_SPEC_VERSIONS.join(', ')}.`);
   }

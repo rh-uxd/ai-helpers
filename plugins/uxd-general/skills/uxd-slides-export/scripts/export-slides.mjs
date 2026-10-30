@@ -189,12 +189,12 @@ export function exportDeck(inputDir, { output, title } = {}) {
 }
 
 function main() {
-  const options = parseArgs(process.argv.slice(2));
-  if (options.help || !options.input) {
-    console.log(usage());
-    process.exit(options.help ? 0 : 2);
-  }
   try {
+    const options = parseArgs(process.argv.slice(2));
+    if (options.help || !options.input) {
+      console.log(usage());
+      process.exit(options.help ? 0 : 2);
+    }
     const result = exportDeck(options.input, options);
     for (const warning of result.warnings) console.error(`WARNING: ${warning}`);
     console.log(`Wrote ${result.manifest.slideCount} slides to ${result.outputDir}`);

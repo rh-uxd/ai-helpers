@@ -1,6 +1,6 @@
 ---
 name: uxd-assist
-description: UXD skill routing — maps task context to the most appropriate UXD sub-skills.
+description: UXD skill routing — maps task context to the most appropriate UXD sub-skills. Active when working on UXD research, design review, prototyping, or presentation tasks.
 ---
 
 # UXD assist

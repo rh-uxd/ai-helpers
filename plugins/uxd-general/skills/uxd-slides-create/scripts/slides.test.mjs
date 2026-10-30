@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseSlidesMarkdown, partitionBeat, validateDeck, loadDeck, SLIDES_SPEC_VERSION } from './parse-slides.mjs';
 import { instantiateDeck } from './instantiate-deck.mjs';
 import { exportDeck } from '../../uxd-slides-export/scripts/export-slides.mjs';
@@ -387,4 +387,14 @@ test('records the current slides spec and rejects an unknown one', () => {
   fs.writeFileSync(path.join(root, 'metadata.json'), JSON.stringify(deckMeta));
   const report = validateDeck(loadDeck(root), { templatesDir: TEMPLATES });
   assert.ok(report.errors.some((error) => error.includes('9.9.9')));
+});
+
+
+test('parser reads its specification from an installed plugin directory', async () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'uxd-slides-plugin-'));
+  const plugin = path.join(root, 'uxd-general');
+  fs.cpSync(path.resolve(HERE, '..', '..', '..'), plugin, { recursive: true });
+  const parser = pathToFileURL(path.join(plugin, 'skills', 'uxd-slides-create', 'scripts', 'parse-slides.mjs')).href;
+  const installed = await import(parser);
+  assert.equal(installed.SLIDES_SPEC_VERSION, SLIDES_SPEC_VERSION);
 });

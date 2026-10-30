@@ -39,7 +39,7 @@ Default location is `.artifacts/slides-{name}/`. `{name}` is a kebab-case slug f
         └── …
 ```
 
-Deck `metadata.json` contains `specVersion` (`0.1.0`), `title`, `description`, `template` (the deck template name), `aspectRatio` (`16:9`), `status`, `createdAt`, and `updatedAt`. `specVersion` is the slides artifact spec in `specifications/slides/`. `status` is `draft` until publish. Optional `models` and `agents` record who made the deck: each entry is `{ "id", "description" }`. `id` is the model, agent, or skill identifier this session reports. `description` is one line on what it did. Omit a list when the identifier is unknown. Do not invent names. Do not put secrets in metadata. Do not change `specVersion` by hand.
+Deck `metadata.json` contains `specVersion` (`0.1.0`), `title`, `description`, `template` (the deck template name), `aspectRatio` (`16:9`), `status`, `createdAt`, and `updatedAt`. `specVersion` is the slides artifact spec in `../../specifications/slides/`. `status` is `draft` until publish. Optional `models` and `agents` record who made the deck: each entry is `{ "id", "description" }`. `id` is the model, agent, or skill identifier this session reports. `description` is one line on what it did. Omit a list when the identifier is unknown. Do not invent names. Do not put secrets in metadata. Do not change `specVersion` by hand.
 
 `assets/default.css` is the layout snapshot. Deck-wide theme changes, such as a new highlight color, go in `assets/custom.css`. A slide that must diverge from its slide template gets `slides/{n}/custom.css`. Omit both files until there is a real override.
 

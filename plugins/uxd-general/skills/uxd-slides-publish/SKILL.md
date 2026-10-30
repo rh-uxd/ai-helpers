@@ -22,6 +22,7 @@ The local markdown stays the authoring source. After a successful publish, `stat
 
 ## Requirements
 
+- Node.js 18 or later.
 - A deck directory with `metadata.json` and `slides/` that passes validation.
 - `gws` signed in with the Google Slides scope, for a Google target.
 - The Figma connection, the instructions for creating a new Figma file, and the Figma slides instructions, for a Figma target. See [Figma publish](references/figma-publish.md).

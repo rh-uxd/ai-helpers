@@ -51,7 +51,7 @@ A deck is a folder. Slide order is the numbered folder name under `slides/`. Reo
 }
 ```
 
-`specVersion` is the slides artifact spec this folder complies with. The current spec is 0.1.0, defined in `specifications/slides/`. `template` here is the deck template (`briefing`, `research-readout`, `design-review`, `user-journey`, or `vision`). `status` is `draft` while the folder is the working copy. After Google Slides or Figma Slides publish succeeds, set `status` to `published` and set `canonical` to `{ "target", "url", "publishedAt" }`. Editing the deck again sets `status` back to `draft` and keeps `canonical`.
+`specVersion` is the slides artifact spec this folder complies with. The current spec is 0.1.0, defined in `../../../specifications/slides/`. `template` here is the deck template (`briefing`, `research-readout`, `design-review`, `user-journey`, or `vision`). `status` is `draft` while the folder is the working copy. After Google Slides or Figma Slides publish succeeds, set `status` to `published` and set `canonical` to `{ "target", "url", "publishedAt" }`. Editing the deck again sets `status` back to `draft` and keeps `canonical`.
 
 `models` lists every model that authored or revised the deck. `agents` lists every agent or skill that did the same. Each entry has `id` (the identifier the tool reports) and `description` (one line on what it did). Omit a list when you do not know the identifiers. Keep earlier entries when a later model revises the deck.
 

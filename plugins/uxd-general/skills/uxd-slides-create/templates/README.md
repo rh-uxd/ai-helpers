@@ -2,7 +2,7 @@
 
 A **slide template** is one slide: `content.md`, `speaker-notes.md`, and `metadata.json`. A **deck template** is a starter sequence of those slides, plus theme rules that are copied into the deck.
 
-Create a deck by copying a deck template. That writes `.artifacts/slides-{name}/` with `metadata.json` (`specVersion` `0.1.0`), `slides/1`, `slides/2`, … and `assets/default.css`. The spec is `specifications/slides/`.
+Create a deck by copying a deck template. That writes `.artifacts/slides-{name}/` with `metadata.json` (`specVersion` `0.1.0`), `slides/1`, `slides/2`, … and `assets/default.css`. The spec is `../../../specifications/slides/`.
 
 ```bash
 node "${CLAUDE_SKILL_DIR}/scripts/instantiate-deck.mjs" briefing .artifacts/slides-name

@@ -307,7 +307,6 @@ In addition to the skill-creator guidance, skills in this repo must follow these
   command -v node >/dev/null 2>&1 || { echo "Error: This skill requires Node.js." >&2; exit 1; }
   ```
 - Use `$CLAUDE_SKILL_DIR` to reference scripts relative to the skill directory — it resolves to the directory containing SKILL.md regardless of where the repo is cloned
-- **Artifact formats live in `specifications/`.** A skill's frontmatter `version` is maturity, not the artifact format. If a skill change alters the folders, files, or fields an artifact contains, bump that specification's `specVersion` in the same change and add an upgrade script that rewrites artifacts from the previous version. See [AGENTS.md](AGENTS.md#artifact-specifications).
 
 ### MCP dependencies
 
