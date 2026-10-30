@@ -27,10 +27,10 @@
 
 # ─── Fonts ───────────────────────────────────────────────────────────
 fonts:
-  cdn: "https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;500;700&family=Red+Hat+Text:wght@400;500&family=Red+Hat+Mono&display=swap"
-  heading: "'Red Hat Display', -apple-system, sans-serif"
-  body: "'Red Hat Text', -apple-system, sans-serif"
-  mono: "'Red Hat Mono', 'SFMono-Regular', monospace"
+  cdn: ""
+  heading: "system-ui, -apple-system, sans-serif"
+  body: "system-ui, -apple-system, sans-serif"
+  mono: "ui-monospace, 'SFMono-Regular', monospace"
 
 # ─── Typography (PF v6 tokens) ──────────────────────────────────────
 typography:
@@ -227,10 +227,10 @@ components:
 # Generate this :root block once. All components reference these vars.
 # NOTE: Dark mode media query removed — re-add when dark theme is ready.
 css_variables: |
-  :root{--bg:#fff;--bg2:#f9f9f9;--text:#1a1a1a;--text2:#6b7280;--border:#eaeaea;--accent:#0066cc;--status-success:#16a34a;--status-danger:#dc2626;--status-warning:#d97706;--narr-bg:#fafafa;--narr-brd:#e8e8e8;--font-heading:'Red Hat Display',-apple-system,sans-serif;--font-body:'Red Hat Text',-apple-system,sans-serif;--font-mono:'Red Hat Mono','SFMono-Regular',monospace}
+  :root{--bg:#fff;--bg2:#f9f9f9;--text:#1a1a1a;--text2:#6b7280;--border:#eaeaea;--accent:#0066cc;--status-success:#16a34a;--status-danger:#dc2626;--status-warning:#d97706;--narr-bg:#fafafa;--narr-brd:#e8e8e8;--font-heading:system-ui,-apple-system,sans-serif;--font-body:system-ui,-apple-system,sans-serif;--font-mono:ui-monospace,'SFMono-Regular',monospace}
 
 # ─── Usage Guide (for the HTML generator) ───────────────────────────
-# 1. Emit the font <link> tag from fonts.cdn
+# 1. Emit a font <link> only when fonts.cdn is explicitly configured
 # 2. Emit css_variables as the first <style> block
 # 3. Emit each component's .css block once (concatenated)
 # 4. In HTML, use class names: class="badge badge-pass"

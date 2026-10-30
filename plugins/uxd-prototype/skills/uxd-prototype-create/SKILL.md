@@ -145,7 +145,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/frontmatter.py" set "artifacts/{ID}/rfe-sna
 
 Parse from the RFE: user stories, acceptance criteria, personas/roles, key entities, flows, and page states.
 
-- Personas: prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml`; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/`. If internal-ai-helpers is available, read `plugins/uxd-eval-config/knowledge/personas/<id>.md` for Sources; skip if missing.
+- Personas: prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml`; apply persona attributes from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/` only when selected. Use research citations explicitly supplied for the project; do not discover private repositories automatically.
 - **Page states:** run [references/state-brainstorm.md](references/state-brainstorm.md) before writing `states.json`. Prefer 3–7 distinct on-load end-states per page.
 - Write `artifacts/{ID}/user-stories.json`, `journeys.json`, and `states.json`. If the RFE is thin, record assumptions in `metadata.json`.
 - Keep journey ids as `journey-N` and `ac_ids` as source criterion ids (`AC-1`). Record each journey `persona`. Step 9 maps these into the design spec; do not invent a second numbering.

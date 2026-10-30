@@ -30,7 +30,7 @@ export USABILITY_TESTING_REPO="git@example.com:org/usability-testing.git"
 export CONSISTENCY_CHECKER_REPO="git@example.com:org/consistency-checker.git"
 ```
 
-Product-specific remotes, MLflow, and Pages URLs come from the `uxd-eval-config` plugin (internal marketplace). Personas: `plugins/uxd-prototype/knowledge/personas/`. Overlay details: `references/skill-overlays.md`.
+MLflow tracking is opt-in; see [references/mlflow-logging.md](references/mlflow-logging.md). Personas: `plugins/uxd-prototype/knowledge/personas/`.
 
 ## Quick start
 
@@ -38,10 +38,6 @@ Product-specific remotes, MLflow, and Pages URLs come from the `uxd-eval-config`
 /uxd-prototype-evaluate PROJ-298 http://localhost:3000 --workspace=/path/to/prototype
 /uxd-prototype-evaluate review PROJ-298
 ```
-
-## Optional Google Sheet sync
-
-Set `tracking.sheet_id` in `config/product-overlay.yaml` (or `EVAL_SHEET_ID`). Leave empty to disable. Requires `gcloud auth login --enable-gdrive-access`.
 
 ## Validators
 
