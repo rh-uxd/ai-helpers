@@ -2,8 +2,8 @@
 name: uxd-prototype-create
 version: "2.0.0"
 description: >-
-  Create or refine a UX prototype from a Jira ticket, Figma design, feature
-  description, or rough idea. Enumerates user journeys and page states
+  Create or refine a UX prototype from a Jira ticket, Figma design, vision
+  journey map, feature description, or rough idea. Enumerates user journeys and page states
   (empty/error/alternate conditions), wires mock data via ?state=, writes a
   design spec for
   QE test-plan ingest, and supports export of each step × state. Use when
@@ -26,6 +26,8 @@ Family: **create → evaluate → publish** (optional export along the way). Pip
 | Input | Required | Source |
 |-------|----------|--------|
 | What to prototype (Jira URL/key, Figma link, description, or idea) | **Yes** | User; skill asks if omitted |
+| Vision journey map | No; recommended for vision work | Miro board URL or local JSON Canvas, paired with the final narrative |
+| Final narrative | No; recommended for vision work | Narrative document or user-provided text |
 | Workspace (`--workspace`) | No | Local path, git URL, or `standalone` (default) |
 | Push destination (`--target`) | No | `none` unless publishing |
 | Prior eval feedback | No | `artifacts/{ID}/eval/` when refining |
@@ -52,11 +54,13 @@ Schemas: [references/output-formats.md](references/output-formats.md).
 
 $ARGUMENTS
 
-Parse as: `<source> [--workspace <path-or-url-or-standalone>] [--target <dest>] [--decisions skip|auto|human] …`
+Parse as: `<source> [--journey-map <miro-url-or-canvas-path>] [--narrative <path>] [--workspace <path-or-url-or-standalone>] [--target <dest>] [--decisions skip|auto|human] …`
 
 | Flag | Values | Default | Description |
 |------|--------|---------|-------------|
 | `--workspace` | path, git URL, or `standalone` | `standalone` | Codebase to build in |
+| `--journey-map` | Miro URL or local canvas path | none | Paired As-Is/To-Be vision map to use with the narrative |
+| `--narrative` | path | none | Final narrative generated from the journey map |
 | `--workspace-branch` | branch name | from URL / default branch | Clone branch |
 | `--target` | `repo`, `github`, `gitlab`, `vercel`, `none`, or a git URL | `none` (pipeline) | Publish destination only. A git URL means open an MR/PR against that repo (implies `repo`) |
 | `--target-branch` | branch name | `--workspace-branch` | MR/PR base on `--target` |
@@ -85,6 +89,10 @@ Ask only for missing information; honor answers and flags already supplied. Ask 
 ### What would you like to prototype?
 
 > Share a Jira ticket, a Figma link, a feature description, or a rough idea.
+
+For vision work, share the edited paired journey map (Miro URL or local canvas) and the final narrative. The map and narrative are complementary sources: the map carries the agreed steps, touchpoints, screens, pains, evidence, assumptions, and support opportunities; the narrative carries the readable story and emotional arc.
+
+When following the UX Vision Playbook and the user has not specified otherwise, recommend `--decisions human` and `--depth normal`. Explain that `human` supports choosing together on the decision page or in a chat walkthrough. At normal depth, expect roughly 4–7 meaningful design decisions when genuine tradeoffs exist; never invent decisions to fill that range. Respect an explicit user preference or project constraint.
 
 Use follow-ups only when a missing detail would change the experience. Do not demand a full requirements template from someone with a rough idea.
 
@@ -117,7 +125,13 @@ Describe the actual feature, starting point, design-choice approach, and relevan
 
 ---
 
-## Step 1: Fetch RFE Source
+## Step 1: Read the source material
+
+When the source includes a paired vision journey map, read both the As-Is and To-Be frames before planning the prototype. For a Miro URL, read the board directly through the Miro connection and follow the read guidance in `uxd-canvas-create`; do not write to the board. If the connection is unavailable, ask for a JSON Canvas snapshot or an export of both frames and say what could not be read. Do not claim to have reviewed inaccessible map content.
+
+Use the final narrative for the story and the team-edited map for structured journey details. The map is authoritative for mapped actions, touchpoints, screen candidates, pains, opportunities, evidence, and assumptions. If the two sources conflict on the actor, scope, stage order, or a key interaction, ask the designer which to follow before generating. Do not replace a reviewed map with an AI-only interpretation.
+
+### Jira and other source lookup
 
 1. **Local artifacts** — `artifacts/*/rfe-snapshot.md` with valid frontmatter (may have been edited).
 2. **Jira MCP** (preferred): `getJiraIssue` with the issue key. Resolve `cloudId` from a full Jira URL hostname, or via `getAccessibleAtlassianResources` when only a key is given. Prefer `responseContentFormat: "markdown"`.
@@ -144,6 +158,15 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/frontmatter.py" set "artifacts/{ID}/rfe-sna
 ## Step 4: Extract User Stories and Journeys
 
 Parse from the RFE: user stories, acceptance criteria, personas/roles, key entities, flows, and page states.
+
+When a vision journey map and narrative are available, derive the prototype journeys from both:
+
+- Use the map's To-Be frame to preserve the agreed stages, user actions, touchpoints, screen candidates, support opportunities, and evidence/assumption markers.
+- Use the narrative to establish the scene, pivot, emotional arc, and payoff. Include As-Is screens only when the designer wants the current-state contrast in the prototype.
+- Group map steps that belong on one screen without dropping their order. Each `journeys.json` step needs a real or verified route; screen candidates are not permission to invent routes.
+- Preserve the map's stable `S#` labels in journey step names or descriptions, in the same order. When several mapped steps share a screen, keep each label visible rather than merging away the team's sequence.
+- A human-reviewed map is user-provided context; use `source: "user"` for its journey entries. Keep unsupported details in `metadata.json` as assumptions.
+- Derive `states.json` from meaningful page conditions, not from every journey-map note.
 
 - Personas: prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml`; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/`. If internal-ai-helpers is available, read `plugins/uxd-eval-config/knowledge/personas/<id>.md` for Sources; skip if missing.
 - **Page states:** run [references/state-brainstorm.md](references/state-brainstorm.md) before writing `states.json`. Prefer 3–7 distinct on-load end-states per page.
@@ -289,7 +312,7 @@ If `--pipeline` / `--speedrun`, continue with [references/pipeline-mode.md](refe
 
 ## Refinement
 
-Apply targeted changes from user feedback or existing evaluation findings — do not rewrite the prototype. Full procedure: [references/refinement-procedure.md](references/refinement-procedure.md).
+Apply targeted changes selected by the designer from experience-review recommendations, user feedback, or existing evaluation findings — do not rewrite the prototype or apply unselected recommendations. Preserve the paired journey map and narrative alignment while refining. Full procedure: [references/refinement-procedure.md](references/refinement-procedure.md).
 
 Reads `artifacts/{ID}/eval/evaluation-report.csv` + `refinement-suggestions.json`. For explicitly requested evaluation loops, pass = zero FAIL and default max = 3 cycles. Ordinary refinement applies feedback, runs code-level checks, and hands back the prototype without re-evaluating.
 

@@ -12,6 +12,7 @@ A problem brief is the agreed frame for a product problem: who is affected, what
 - Evidence and assumptions, labeled
 - One situation in scope, plus known constraints
 - The people who need to agree this is the problem
+- For vision work, separate provisional As-Is and To-Be map starters using the playbook's lanes and matching `S#` stage columns
 
 ## What this skill asks for
 
@@ -29,7 +30,7 @@ Common miss: writing the feature you want to build as if it were the problem.
 
 | Piece | Where it is captured |
 |-------|----------------------|
-| Enabling capabilities and time horizon | `uxd-experience-narrative-create`, when the story depends on a change that does not exist today |
+| Enabling capabilities and time horizon | The brief's separate Vision handoff for the provisional Journey starter; the narrative builds on the context the team supplied |
 | Screens and a prototype | `uxd-experience-narrative-create`, then `uxd-prototype-create` |
 | Stakeholder demo plan | `uxd-experience-review` |
 

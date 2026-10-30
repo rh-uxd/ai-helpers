@@ -76,6 +76,11 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
       "key": "PROJ-298",
       "label": "RFE",
       "url": "https://issues.example.com/browse/PROJ-298"
+    },
+    {
+      "kind": "other",
+      "label": "Vision journey map",
+      "url": "https://miro.com/app/board/example/"
     }
   ],
   "build_mode": "existing-codebase",
@@ -103,6 +108,8 @@ Status values: `"draft"`, `"refined"`, `"reviewed"`, `"submitted"`.
 
 Optional fields: `journeys_path`, `states_path`, `design_spec_path`, `prototype_bar`, `exports` (populated when `--export` runs), `source_rfes` (multi-RFE compose), `sources` (normalized provenance for the Prototype Bar), `figma_url`.
 
+For vision work, keep `source.type` as `description` when the prototype is based on the brief and final narrative, and include the Miro board in `sources` as `{ "kind": "other", "label": "Vision journey map", "url": "<board-url>" }`. `kind: "other"` is supported by the Prototype Bar; the board remains the canonical map.
+
 ## artifacts/{ID}/prototype-bar.json
 
 Written during Step 9 (and refreshed by evaluate / publish-report). Runtime config for the Prototype Bar Sources dropdown and Prototype ↔ Eval switch. Prefer generating it with:
@@ -126,6 +133,11 @@ Or write it directly from `metadata.json` fields. Schema: see `uxd-prototype-exp
       "key": "PROJ-298",
       "label": "RFE",
       "url": "https://issues.example.com/browse/PROJ-298"
+    },
+    {
+      "kind": "other",
+      "label": "Vision journey map",
+      "url": "https://miro.com/app/board/example/"
     }
   ],
   "views": {
