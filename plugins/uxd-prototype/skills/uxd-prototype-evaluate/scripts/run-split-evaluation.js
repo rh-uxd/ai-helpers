@@ -46,7 +46,6 @@ function run(options) {
   options = { ...options };
   const route = options.route;
   if (!['quick', 'walkthroughs', 'full'].includes(route) || !options.output) throw new Error('Select --route quick|walkthroughs|full and --output <fresh-run-dir>');
-  if (options.report) throw new Error('Split HTML reporting is not packaged yet; retain canonical results and request reporting separately');
   if (['continue-from', 'verify-from', 'adapt-from'].filter(k => options[k]).length > 1) throw new Error('Choose continuation, verification or adaptation, not multiple parents');
   let parent;
   let approval;
@@ -156,7 +155,6 @@ function run(options) {
       receipt.plan_change = planning?.change || null;
       C.write(stage, 'checks/workflow.json', receipt);
       const state = docs['state.json'];
-      if (options.report) state.phases = state.phases.filter(p => p.name !== 'report');
       if (options['verify-from']) {
         state.phases = state.phases.filter(p => p.name !== 'fix');
         state.permissions = { ...state.permissions, prototype_edits: { status: 'approved', scope: `Selected actions: ${approval.action_ids.join(', ')}`, recorded_at: approval.recorded_at } };
@@ -170,7 +168,14 @@ function run(options) {
       C.identify(docs, route, receipt);
       return docs;
     });
-    return { run_id: docs['brief.json'].run_id, artifacts_dir: path.resolve(options.output), artifact_sha256: C.digest(options.output), ...docs['state.json'].workflow, model_invoked: false };
+    // Reporting is derived local rendering of the published canonical run:
+    // it launches no model work and never mutates the canonical files.
+    let report = null;
+    if (options.report) {
+      const rendered = require('./canonical-report').render(options.output);
+      report = { evaluation_report: rendered.outputs.evaluation_report, integrity: 'report-integrity.json', model_invoked: false };
+    }
+    return { run_id: docs['brief.json'].run_id, artifacts_dir: path.resolve(options.output), artifact_sha256: C.digest(options.output), ...docs['state.json'].workflow, ...(report ? { report } : {}), model_invoked: false };
   } finally { if (quickTemp) fs.rmSync(quickTemp, { recursive: true, force: true }); }
 }
 
