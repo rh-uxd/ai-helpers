@@ -111,9 +111,9 @@ cd "${UXD_PROJECT_ROOT}"
 
 Stop if Chromium install fails; do not start Playwright without it.
 
-Context repos (`.context/consistency-checker/`, `.context/usability-testing/`) bootstrap on first run when `CONSISTENCY_CHECKER_REPO` / `USABILITY_TESTING_REPO` (or overlay `context_repos`) are set; otherwise those phases degrade. Product overlay: [references/skill-overlays.md](references/skill-overlays.md).
+Context repos (`.context/consistency-checker/`, `.context/usability-testing/`) bootstrap on first run when `CONSISTENCY_CHECKER_REPO` / `USABILITY_TESTING_REPO` are set; otherwise those phases degrade.
 
-**Personas:** `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` + overlays. Deep YAML from `.context/usability-testing/`. Internal study URLs: `node ${CLAUDE_SKILL_DIR}/scripts/overlay-get.js --knowledge-persona <id>` when internal-ai-helpers is present.
+**Personas:** `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` + selected persona attribute overlays. Deep YAML from `.context/usability-testing/`. Use research citations explicitly supplied for the project.
 
 IDE auto-approve for the bundled scripts is optional and tool-specific — see this skill's README if the user is prompted on every script.
 
@@ -196,4 +196,3 @@ After each run, offer: fix a specific issue, explain a finding, re-run, or accep
 | [phases/eval-report.md](references/phases/eval-report.md) | HTML report |
 | [phases/eval-review.md](references/phases/eval-review.md) | Reviewing a prior run |
 | [playwright-rules.md](references/playwright-rules.md) | Writing Playwright scripts |
-| [skill-overlays.md](references/skill-overlays.md) | Product-specific config |

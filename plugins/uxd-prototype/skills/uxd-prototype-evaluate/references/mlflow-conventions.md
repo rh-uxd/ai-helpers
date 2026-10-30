@@ -6,9 +6,7 @@ across all UXD prototype-evaluator subskills.
 **Tracking server:** opt-in. Do not commit a cluster URL.
 
 ```bash
-# From env, or from product-overlay.local.yaml / EVAL_OVERLAY_PATH
-eval "$(make mlflow-env)"
-# or
+# Example: a separately started local tracking server.
 export MLFLOW_TRACKING_URI=http://127.0.0.1:5000
 ```
 
@@ -150,13 +148,14 @@ claude-trace --model claude-opus-4-6 \
 ### Auto-trigger from pipeline
 
 When `MLFLOW_TRACKING_URI` is set (or `mlflow.tracking_uri` is in
-the product overlay), the pipeline auto-logs results after report generation.
+`eval.yaml`), the pipeline auto-logs results after report generation.
 See the post-pipeline step in `orchestration.md`.
 
 ## eval.yaml Configuration
 
 Each skill's eval.yaml should include experiment metadata. Do **not** commit
-a tracking URI — set `MLFLOW_TRACKING_URI` or overlay `mlflow.tracking_uri`:
+a tracking URI — set `MLFLOW_TRACKING_URI` or `mlflow.tracking_uri` in
+`eval.yaml`:
 
 ```yaml
 mlflow:
@@ -166,5 +165,5 @@ mlflow:
     pipeline: prototype-evaluator
 ```
 
-The harness resolves tracking URI with precedence:
-`MLFLOW_TRACKING_URI` env > overlay `mlflow.tracking_uri` > `eval.yaml mlflow.tracking_uri` > `http://127.0.0.1:5000` (local smoke only)
+The pipeline uses `MLFLOW_TRACKING_URI` when set; otherwise, it may read
+`mlflow.tracking_uri` from `eval.yaml`.
