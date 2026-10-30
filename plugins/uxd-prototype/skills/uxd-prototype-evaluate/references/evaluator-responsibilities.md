@@ -169,9 +169,10 @@ It does not itself operate browser/model tools. The shared
 receipts per pair in bundle v2, including failed calls and unexecuted outcomes.
 Legacy v1 retains its single-completed-call limit. Do not collapse real calls.
 
-Shared structured decision synthesis remains follow-up implementation work.
-The current HTML renderer
-is a derived findings view, not yet the complete synthesis contract above. An
+Shared structured decision synthesis is implemented for local chat and HTML:
+`scripts/evaluation-synthesis.js` builds one deterministic synthesis, and
+`run-report.js --chat` plus the canonical HTML renderer present it. Publishing
+and hosted reports remain follow-up work. An
 installed source companion must match the modern policy/report contract; presence
 of its directory alone does not establish compatibility. No completed standalone
 run splicing, cross-build selective reuse, automatic spec write-back or implicit
