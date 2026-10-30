@@ -3,11 +3,15 @@
 [![License](https://img.shields.io/github/license/rh-uxd/ai-helpers)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 [![Plugins](https://img.shields.io/badge/plugins-14-blueviolet)](./PLUGINS.md)
-[![Skills](https://img.shields.io/badge/skills-66-blue)](./PLUGINS.md)
+[![Skills](https://img.shields.io/badge/skills-70-blue)](./PLUGINS.md)
 [![Agents](https://img.shields.io/badge/agents-8-teal)](./PLUGINS.md)
 [![skillsaw grade](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Frh-uxd%2Fai-helpers%2Fmain%2F.skillsaw-badge.json)](https://github.com/rh-uxd/ai-helpers/blob/main/.skillsaw-baseline.json)
 
-AI skills for PatternFly and UXD teams — component development, design, accessibility, and migration. Skills work in both **Claude Code** and **Cursor**; the `patternfly` meta-plugin is Claude Code-only.
+AI skills for PatternFly and UXD teams — component development, design, accessibility, and migration. Skills are available in **Claude Code**, **Cursor**, and **Codex** (desktop app and CLI). The `patternfly` dependency bundle auto-installs sub-plugins only in Claude Code.
+
+Official setup docs: [Claude Code plugins](https://code.claude.com/docs/en/plugins), [Cursor plugins](https://cursor.com/docs/plugins), [OpenAI plugins and local marketplaces](https://developers.openai.com/plugins/build/plugins), and [Codex CLI](https://developers.openai.com/codex/cli/).
+
+> **Codex marketplace support:** Codex also supports a native repo marketplace at `.agents/plugins/marketplace.json`. This repository uses the existing `.claude-plugin/marketplace.json` because Codex can read it independently, so a second catalog would duplicate maintenance. A Codex-specific marketplace can be added if Codex-only metadata or policies become necessary.
 
 <p align="center">
   <img src="assets/install-plugins-terminal.gif" alt="Browsing and installing plugins interactively in Claude Code" width="600">
@@ -52,7 +56,7 @@ Enable auto-update to receive new skills as they're merged:
 
 ### Cursor
 
-Cursor doesn't support the `dependencies` feature that powers the `patternfly` meta-plugin, so install plugins individually. Add the marketplace in **Settings → Marketplace**, then install the ones you need — see the [Plugins](#plugins) table below for the full list.
+Cursor uses its own `.cursor-plugin/marketplace.json` format and does not currently read this repository's `.claude-plugin/marketplace.json`. It also does not support the `dependencies` feature that powers the `patternfly` meta-plugin, so install plugins individually. Add the marketplace in **Settings → Marketplace**, then install the ones you need — see the [Plugins](#plugins) table below for the full list.
 
 <details>
 <summary>See it in action</summary>
@@ -71,6 +75,51 @@ After installing, skills work the same way — slash commands in any project:
 ```
 
 > **Note:** Install `pf-mcp` separately for MCP server access. See the [FAQ](FAQ.md#how-do-i-test-a-skill-without-the-patternfly-mcp-server) for setup.
+
+### Codex app (UI)
+
+Open this repository in the Codex desktop app. Codex can read the existing `.claude-plugin/marketplace.json`, so Claude Code and the Codex CLI are not required. Open the **Plugins Directory**, choose `uxd-ai-helpers`, and install the plugins you need.
+
+Install PatternFly plugins individually; the `patternfly` dependency bundle is Claude Code-only. If you change the marketplace files, restart the app before checking the Plugins Directory again. See the [OpenAI plugin documentation](https://developers.openai.com/plugins/build/plugins) for local marketplace details.
+
+### Codex CLI
+
+#### Using Claude Code too
+
+Keep the existing Claude Code setup, then add the marketplace to Codex:
+
+```bash
+claude plugins marketplace add rh-uxd/ai-helpers
+codex plugin marketplace add rh-uxd/ai-helpers
+```
+
+Install a plugin in either tool:
+
+```bash
+claude plugins install uxd-research@uxd-ai-helpers
+codex plugin add uxd-research@uxd-ai-helpers
+```
+
+#### Codex only
+
+Claude Code is not required. Install Codex CLI for macOS or Linux, start it, and sign in:
+
+```bash
+curl -fsSL https://chatgpt.com/codex/install.sh | sh
+codex
+```
+
+Then add the marketplace and install a plugin:
+
+```bash
+# Add the marketplace (one time)
+codex plugin marketplace add rh-uxd/ai-helpers
+
+codex plugin list --marketplace uxd-ai-helpers --available
+codex plugin add uxd-research@uxd-ai-helpers
+```
+
+Codex reads the existing `.claude-plugin/marketplace.json` directly. Claude Code does not need to be installed or configured first. Install individual plugins; the `patternfly` dependency bundle is not applied by Codex. See the [Codex CLI docs](https://developers.openai.com/codex/cli/) for other platforms. OpenCode is not covered here yet.
 
 ## Plugins
 
@@ -114,8 +163,8 @@ Use the [skill discovery matrix](PLUGINS.md#skill-discovery-matrix) to compare a
 
 ## How It Works
 
-1. You add this repo as a **marketplace** in Claude Code or Cursor
-2. You install plugins — on Claude Code, `patternfly` auto-installs all PF sub-plugins; on Cursor, install them individually
+1. You add this repo as a **marketplace** in Claude Code, Cursor, or Codex
+2. You install plugins — on Claude Code, `patternfly` auto-installs all PF sub-plugins; on Cursor and Codex, install PF plugins individually
 3. Skills become available as `/<plugin>:<skill>` slash commands in any project
 
 ## Repository Structure
@@ -143,7 +192,7 @@ Use the [skill discovery matrix](PLUGINS.md#skill-discovery-matrix) to compare a
 
 ## PatternFly MCP Server
 
-The [PatternFly MCP server](https://github.com/patternfly/patternfly-mcp) gives AI tools access to component documentation, prop schemas, and design guidelines. On Claude Code, `pf-mcp` is included automatically when you install `patternfly`. On Cursor, the MCP server requires [separate setup](FAQ.md#how-do-i-test-a-skill-without-the-patternfly-mcp-server).
+The [PatternFly MCP server](https://github.com/patternfly/patternfly-mcp) gives AI tools access to component documentation, prop schemas, and design guidelines. On Claude Code, `pf-mcp` is included automatically when you install `patternfly`. On Cursor and Codex CLI, install `pf-mcp` separately.
 
 ## Contributing
 

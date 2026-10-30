@@ -1,0 +1,1 @@
+prompt: "Set up a PatternFly Page layout with an RHDS header using the bare <rh-navigation-primary> custom element tag instead of the React wrapper. My project uses TypeScript. Show me how to wire it up with proper types so TSC doesn't complain about the unknown element."

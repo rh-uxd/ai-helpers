@@ -15,10 +15,12 @@ mkdir my-skill-workspace
 cd my-skill-workspace
 ```
 
-Open your AI tool (Claude Code, Cursor, etc.):
+Open your AI tool (Claude Code, Cursor, or Codex):
 
 ```bash
-claude  # or open the project in Cursor
+claude  # Claude Code
+codex   # Codex CLI, or open the project in the Codex desktop app
+# Or open the project in Cursor
 ```
 
 ## Step 2: Describe what you want
@@ -59,7 +61,7 @@ Iterate until the output matches what you'd actually want to see.
 Open the file and read it. It's just markdown. Ask yourself:
 
 - Are the instructions clear enough that any AI tool would produce the same quality output?
-- Is there anything tool-specific that wouldn't work in both Claude Code and Cursor?
+- Is there anything client-specific that wouldn't work in Claude Code, Cursor, or Codex?
 - Is it under 500 lines? Shorter is better.
 
 ## Step 5: Pick the right plugin
@@ -73,7 +75,7 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 <tr><td nowrap><b>uxd-assist</b></td><td>UXD skill routing — discover the right skills for research, design review, and prototyping workflows</td><td></td></tr>
 <tr><td nowrap><b>uxd-design</b></td><td>UX design workflow — Figma context, design evaluation, and implementation handoff</td><td>`uxd-canvas-create`, `uxd-canvas-export`, `uxd-canvas-publish`</td></tr>
 <tr><td nowrap><b>uxd-prototype</b></td><td>Create UX prototypes from Jira tickets, Figma designs, or feature descriptions</td><td>`uxd-prototype-create`, `uxd-prototype-evaluate`, `uxd-prototype-export`</td></tr>
-<tr><td nowrap><b>uxd-research</b></td><td>UX research pipeline — heuristic evaluation, usability testing, research methodology</td><td>`uxd-discovery`, `uxd-evaluate-design-heuristics`, `uxd-research-heuristic-eval`</td></tr>
+<tr><td nowrap><b>uxd-research</b></td><td>UX research pipeline — heuristic evaluation, usability testing, research methodology</td><td>`uxd-discovery`, `uxd-evaluate-code-heuristics`, `uxd-evaluate-design-heuristics`</td></tr>
 <tr><td nowrap><b>uxd-workshop</b></td><td>UXD skill incubator — new skills start here before graduating to consumer plugins</td><td>`uxd-experience-narrative-create`, `uxd-experience-review`, `uxd-problem-brief-create`</td></tr>
 <tr><td nowrap><b>pf-a11y</b></td><td>Accessibility auditing, reporting, and documentation</td><td>`pf-a11y-audit`, `pf-a11y-keyboard`, `pf-a11y-test-gen`</td></tr>
 <tr><td nowrap><b>pf-assist</b></td><td>PatternFly skill routing — maps project signals to the right PF sub-skills for compliance, migration, and design audits</td><td></td></tr>
@@ -81,7 +83,7 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 <tr><td nowrap><b>pf-design-audit</b></td><td>Design audit — validate existing code and designs against PatternFly standards</td><td>`pf-ai-audit`, `pf-color-scan`, `pf-css-token-check`</td></tr>
 <tr><td nowrap><b>pf-design-guide</b></td><td>Design guide — component selection, interaction patterns, AI experience patterns, Figma design creation</td><td>`pf-catalog-interaction-patterns`, `pf-figma-design-mode`, `pf-screenshot-mapping`</td></tr>
 <tr><td nowrap><b>pf-migration</b></td><td>PF version migration — breaking change detection, class scanning, upgrade planning</td><td>`pf-css-migration-scan`, `pf-react-migration-scan`, `pf-release-candidate-update`</td></tr>
-<tr><td nowrap><b>pf-react</b></td><td>React component development — coding standards, testing, and structure</td><td>`pf-chart-gen`, `pf-component-check`, `pf-component-reuse-check`</td></tr>
+<tr><td nowrap><b>pf-react</b></td><td>React component development — coding standards, testing, and structure</td><td>`pf-chart-gen`, `pf-chatbot-bundle-audit`, `pf-component-check`</td></tr>
 <tr><td nowrap><b>pf-workshop</b></td><td>PatternFly team tools and skill incubation — issue triage, release management, codebase auditing, new skill development</td><td>`pf-analytics-repo-pruning`, `pf-bug-triage`, `pf-content-review`</td></tr>
 </table>
 <!-- END PLUGIN TABLE -->
@@ -276,15 +278,29 @@ ai-helpers/
 │           └── agents/
 ```
 
-Each AI tool looks for its own directory (`.claude-plugin/`, `.cursor-plugin/`) to find `marketplace.json`, which lists plugins with relative paths. UXD plugins live at `plugins/<name>/`. PatternFly plugins live under `plugins/patternfly/<name>/`. Each plugin has identical manifests in both `.claude-plugin/` and `.cursor-plugin/` directories. Adding support for a new tool means copying the manifest into a new `.<tool>-plugin/` directory.
+Marketplace behavior differs by client:
+
+- **Claude Code** uses `.claude-plugin/marketplace.json`.
+- **Cursor** uses `.cursor-plugin/marketplace.json` and does not currently read `.claude-plugin/`.
+- **Codex**
+  - The desktop app and CLI can independently read the existing Claude marketplace format. Claude Code is not required.
+  - Codex also supports a native repo marketplace at `.agents/plugins/marketplace.json`.
+  - This repository does not duplicate its catalog unless Codex-specific metadata or policies require it.
+
+For platform-specific behavior, see the [Claude Code plugin docs](https://code.claude.com/docs/en/plugins), [Cursor plugin docs](https://cursor.com/docs/plugins), and [OpenAI plugin docs](https://developers.openai.com/plugins/build/plugins).
+
+UXD plugins live at `plugins/<name>/`. PatternFly plugins live under `plugins/patternfly/<name>/`. Keep plugin skills portable and tool-agnostic.
 
 ## Step 6: Contribute it
 
 Once you're happy with the skill:
 
 1. Fork and clone this repo
-2. Copy your `SKILL.md` into the appropriate plugin's `skills/` directory (e.g., `plugins/patternfly/react/skills/your-skill-name/SKILL.md` for PF skills, or `plugins/<uxd-plugin>/skills/your-skill-name/SKILL.md` for UXD skills)
-3. Open a pull request
+2. Copy your `SKILL.md` into the appropriate plugin's `skills/` directory:
+   - PatternFly: `plugins/patternfly/react/skills/your-skill-name/SKILL.md`
+   - UXD: `plugins/<uxd-plugin>/skills/your-skill-name/SKILL.md`
+3. Run `make validate` to check manifests, skills, agents, and eval configuration
+4. Open a pull request
 
 Your skill becomes available as `/<plugin-name>:your-skill-name` for anyone who installs the plugin.
 
@@ -301,7 +317,7 @@ In addition to the skill-creator guidance, skills in this repo must follow these
 - **Frontmatter is required** with `name` and `description`. The `name` must match the directory name. See [Writing descriptions](#writing-descriptions) for the description formula.
 - Add `disable-model-invocation: true` if your skill has side effects (creates issues, posts comments, deploys)
 - **Describe outcomes, not implementation** — tell the AI what to accomplish, not how to do it. The AI already knows how to use `git`, `gh`, `grep`, etc.
-- **Skills must be tool-agnostic** — they run in both Claude Code and Cursor. Avoid referencing a specific tool (e.g., use "Assistant:" instead of "Claude:" in examples).
+- **Skills must be tool-agnostic** — they should run wherever the target tool supports the shared skill format, including Claude Code, Cursor, and Codex. Avoid referencing a specific tool (e.g., use "Assistant:" instead of "Claude:" in examples).
 - **Prefer bash** for bundled scripts — every user has it, no runtime dependency. If a script requires Node.js or Python, declare it in a `## Requirements` section and fail with a clear error if missing:
   ```bash
   command -v node >/dev/null 2>&1 || { echo "Error: This skill requires Node.js." >&2; exit 1; }
@@ -335,7 +351,9 @@ Evals are **expected** for consumer-facing skills. A skill graduating from a wor
 
 Write test cases that target what the skill **uniquely contributes** — don't test things the base model already knows without the skill loaded. Good eval cases are *discriminating*: they should fail (or produce noticeably worse output) without the skill loaded.
 
-Evals use [agent-eval-harness](https://github.com/opendatahub-io/agent-eval-harness) and are colocated with their skill at `skills/<skill-name>/eval/eval.yaml`. See `plugins/patternfly/react/skills/pf-test-gen/eval/eval.yaml` for a working example. To run evals locally, install the harness plugin:
+Evals use [agent-eval-harness](https://github.com/opendatahub-io/agent-eval-harness) and are colocated with their skill at `skills/<skill-name>/eval/eval.yaml`. See `plugins/patternfly/react/skills/pf-test-gen/eval/eval.yaml` for a working example.
+
+To run evals locally with Claude Code, install the harness plugin:
 
 ```bash
 claude plugin marketplace add https://github.com/opendatahub-io/agent-eval-harness.git

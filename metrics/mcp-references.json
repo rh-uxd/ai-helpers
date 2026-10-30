@@ -42,16 +42,7 @@
       "README.md",
       "packages/ds-patternfly/src/examples/README.md",
       "packages/ds-patternfly/src/stories/ai/MCP.stories.tsx",
-      "package.json",
-      "pnpm-lock.yaml"
-    ]
-  },
-  {
-    "name": "Hyperkid123/nxtcm-ui-agent",
-    "url": "https://github.com/Hyperkid123/nxtcm-ui-agent",
-    "description": "",
-    "files": [
-      "instance/ui-config/agent/instance.yaml"
+      "package.json"
     ]
   },
   {
@@ -150,6 +141,15 @@
     ]
   },
   {
+    "name": "RedHatInsights/nxtcm-ui-agent",
+    "url": "https://github.com/RedHatInsights/nxtcm-ui-agent",
+    "description": "",
+    "files": [
+      "instance/ui-config/agent/instance.yaml",
+      "instance/renovate-config/agent/instance.yaml"
+    ]
+  },
+  {
     "name": "RedHatInsights/obsint-processing-ai-bot-instance",
     "url": "https://github.com/RedHatInsights/obsint-processing-ai-bot-instance",
     "description": "",
@@ -222,6 +222,7 @@
     "url": "https://github.com/fleetshift/fleetshift-bot-instance",
     "description": "",
     "files": [
+      "README.md",
       "instance/fleetshift-config/agent/instance.yaml"
     ]
   },
@@ -248,6 +249,14 @@
     "files": [
       "README.md",
       "package.json"
+    ]
+  },
+  {
+    "name": "jscotka/cockpit_plugin_ai",
+    "url": "https://github.com/jscotka/cockpit_plugin_ai",
+    "description": "",
+    "files": [
+      "opencode.json"
     ]
   },
   {
@@ -286,7 +295,9 @@
     "url": "https://github.com/kubev2v/forklift-console-plugin",
     "description": "OpenShift Console Plugin For Forklift, the plugin adds a web based user interface for Migration Toolkit for Virtualization inside Openshift web console.",
     "files": [
-      ".cursor/rules/agents/ux-reviewer.mdc"
+      ".agents/rules/agents/ux-reviewer.md",
+      ".codex/config.toml",
+      "scripts/agent-rules/validate.mjs"
     ]
   },
   {

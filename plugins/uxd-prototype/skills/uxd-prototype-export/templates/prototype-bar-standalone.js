@@ -127,7 +127,7 @@
     });
   }
 
-  var SCENARIO_UNAVAILABLE_HINT = 'No scenarios available for the current page';
+  var SCENARIO_UNAVAILABLE_HINT = 'No states available for the current page';
 
   /**
    * Notify listeners when SPA navigations change the URL.
@@ -174,7 +174,7 @@
   function getActiveScenarioId() {
     if (window.UxdScenario) return window.UxdScenario.get();
     try {
-      return new URLSearchParams(window.location.search).get('scenario') || 'default';
+      return new URLSearchParams(window.location.search).get('state') || 'default';
     } catch (e) {
       return 'default';
     }
@@ -186,8 +186,8 @@
       return;
     }
     var url = new URL(window.location.href);
-    if (id === 'default') url.searchParams.delete('scenario');
-    else url.searchParams.set('scenario', id);
+    if (id === 'default') url.searchParams.delete('state');
+    else url.searchParams.set('state', id);
     window.location.assign(url.toString());
   }
 
@@ -440,7 +440,7 @@
             text: label + (s.id === activeId ? ' ✓' : ''),
             onclick: function () {
               menu.setAttribute('hidden', 'true');
-              setStatus('Scenario: ' + s.id);
+              setStatus('State: ' + s.id);
               selectScenario(s.id);
             },
           }),
@@ -519,7 +519,7 @@
     var scenarioBtn = el('button', {
       type: 'button',
       class: 'uxd-pb-btn',
-      text: 'Scenario ▾',
+      text: 'State ▾',
       onclick: function () {
         if (scenarioBtn.disabled) return;
         if (scenarioMenu.hasAttribute('hidden')) {

@@ -61,9 +61,10 @@ judges:
     check: |
       import re
       text = outputs.get("conversation", "")
-      file_key = annotations.get("expected_file_key", "AbCdEfGhIjKlMnOp")
-      api_node = annotations.get("expected_api_node_id") or ""
-      url_node = annotations.get("url_node_id") or ""
+      eval_annotations = outputs.get("annotations", {})
+      file_key = eval_annotations.get("expected_file_key", "AbCdEfGhIjKlMnOp")
+      api_node = eval_annotations.get("expected_api_node_id") or ""
+      url_node = eval_annotations.get("url_node_id") or ""
       if file_key not in text:
           return False, f"File key {file_key} not found in output"
       if not api_node:
@@ -129,8 +130,9 @@ judges:
     check: |
       import re
       text = outputs.get("conversation", "")
-      page_id = annotations.get("page_id", "0:1")
-      frame_ids = annotations.get("frame_ids", ["16:1047", "16:1048"])
+      eval_annotations = outputs.get("annotations", {})
+      page_id = eval_annotations.get("page_id", "0:1")
+      frame_ids = eval_annotations.get("frame_ids", ["16:1047", "16:1048"])
       found_frames = [fid for fid in frame_ids if fid in text]
       if len(found_frames) < 1:
           return False, f"No frame IDs from {frame_ids} found in screenshot selection"

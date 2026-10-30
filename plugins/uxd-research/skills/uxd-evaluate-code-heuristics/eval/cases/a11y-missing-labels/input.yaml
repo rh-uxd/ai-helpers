@@ -1,0 +1,6 @@
+prompt: >-
+  Using the uxd-evaluate-code-heuristics skill: evaluate the React component
+  in fixture.tsx for UX issues. The component is a notification panel with
+  dismiss and mark-read actions. Apply all evaluation dimensions from the
+  skill's rubric and accessibility checklist. Do not call network or MCP tools.
+fixture: fixture.tsx

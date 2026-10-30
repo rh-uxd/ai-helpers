@@ -1,332 +1,158 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Decision 1: Layout Pattern — {Project Name}</title>
-  <!-- PatternFly 6 CDN — required for all decision pages. Do not replace with custom dark themes. -->
-  <link rel="stylesheet" href="https://unpkg.com/@patternfly/patternfly@6/patternfly.min.css" />
-  <link rel="stylesheet" href="https://unpkg.com/@patternfly/patternfly@6/patternfly-addons.min.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>@@TITLE@@</title>
+  <link rel="stylesheet" href="https://unpkg.com/@patternfly/patternfly@6/patternfly.min.css">
+  <link rel="stylesheet" href="https://unpkg.com/@patternfly/patternfly@6/patternfly-addons.min.css">
   <style>
-    /* Minimal layout helpers only — prefer PF utility / component classes for chrome. */
-    .decision-page { max-width: 1200px; margin: 0 auto; padding: var(--pf-t--global--spacer--xl); }
-    .options-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--pf-t--global--spacer--lg);
-      margin: var(--pf-t--global--spacer--xl) 0;
+    /* PatternFly card anatomy and tokens; keep report styles out of the previews. */
+    body {
+      margin: 0;
+      font-family: var(--pf-t--global--font--family--body, 'Red Hat Text', sans-serif);
+      font-size: var(--pf-t--global--font--size--body--default, 1rem);
+      line-height: 1.5;
+      color: var(--pf-t--global--text--color--regular, #151515);
+      background: var(--pf-t--global--background--color--secondary--default, #f2f2f2);
     }
-    @media (max-width: 768px) {
-      .options-grid { grid-template-columns: 1fr; }
+    .review-report { max-width: 1280px; margin: auto; padding: var(--pf-t--global--spacer--2xl, 3rem); }
+    .report-header { padding-bottom: var(--pf-t--global--spacer--xl, 2rem); }
+    .eyebrow, .option-letter {
+      color: var(--pf-t--global--text--color--subtle, #4d4d4d);
+      font-size: var(--pf-t--global--font--size--sm, .875rem);
+      font-weight: 500;
     }
-    .option-card { position: relative; height: 100%; display: flex; flex-direction: column; }
-    .option-card.recommended {
-      box-shadow: var(--pf-t--global--box-shadow--md);
-      outline: 2px solid var(--pf-t--global--border--color--status--warning--default);
+    .report-header h1 { margin: .5rem 0 1rem; font-size: var(--pf-t--global--font--size--heading--h1, 2rem); }
+    .project-name { font-weight: 500; margin-bottom: .5rem; }
+    .report-description { max-width: 76ch; color: var(--pf-t--global--text--color--subtle, #4d4d4d); }
+    .report-instructions { margin-top: 1rem; }
+    .decision {
+      padding: var(--pf-t--global--spacer--xl, 2rem) 0;
+      border-top: 1px solid var(--pf-t--global--border--color--default, #d2d2d2);
     }
-    .option-card.selected {
-      outline: 2px solid var(--pf-t--global--border--color--status--success--default);
-    }
-    .option-card.not-chosen { opacity: 0.65; }
-    .option-letter {
-      font-size: var(--pf-t--global--font--size--sm);
-      font-weight: var(--pf-t--global--font--weight--heading--bold);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: var(--pf-t--global--spacer--xs);
-    }
-    .option-letter.a { color: var(--pf-t--global--color--nonstatus--blue--100); }
-    .option-letter.b { color: var(--pf-t--global--color--nonstatus--orange--100); }
-    .option-letter.c { color: var(--pf-t--global--color--nonstatus--yellow--100); }
-    .option-letter.d { color: var(--pf-t--global--color--nonstatus--purple--100); }
-    .visual-preview {
-      min-height: 280px;
-      margin: var(--pf-t--global--spacer--md) 0;
-      border: 1px solid var(--pf-t--global--border--color--default);
-      border-radius: var(--pf-t--global--border--radius--small);
-      overflow: hidden;
-      background: var(--pf-t--global--background--color--primary--default);
-    }
-    /* Scale mock UI inside the preview so four cards fit on one page */
-    .visual-preview .preview-frame {
-      transform: scale(0.72);
-      transform-origin: top left;
-      width: 138.9%; /* 100 / 0.72 */
-      pointer-events: none;
-    }
-    .badge-row {
-      position: absolute;
-      top: 0;
-      right: var(--pf-t--global--spacer--md);
+    .decision-heading h2 { margin-top: .5rem; max-width: 58ch; }
+    .decision-context { margin-top: .75rem; max-width: 88ch; color: var(--pf-t--global--text--color--subtle, #4d4d4d); }
+    .decision-options { border: 0; padding: 0; margin: 1.5rem 0 0; min-width: 0; }
+    .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr)); gap: var(--pf-t--global--spacer--lg, 1.5rem); }
+    .option-card {
+      min-width: 0;
+      position: relative;
       display: flex;
-      gap: var(--pf-t--global--spacer--xs);
+      flex-direction: column;
+      border: 1px solid var(--pf-t--global--border--color--default, #c7c7c7);
+      border-radius: var(--pf-t--global--border--radius--medium, .5rem);
+      background: var(--pf-t--global--background--color--primary--default, white);
+      overflow: hidden;
     }
-    .comparison-section, .recommendation-section, .footer-prompt {
-      margin-top: var(--pf-t--global--spacer--2xl);
+    .option-card:has(input[data-decision]:checked) {
+      border-color: var(--pf-t--global--border--color--brand--default, #0066cc);
+      box-shadow: inset 0 0 0 1px var(--pf-t--global--border--color--brand--default, #0066cc);
+    }
+    .option-card:focus-within { outline: 2px solid var(--pf-t--global--border--color--brand--default, #0066cc); outline-offset: 3px; }
+    .option-card > .pf-v6-c-card__header { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 1rem; padding: 1.5rem; }
+    .option-card > .pf-v6-c-card__header > .pf-v6-c-label { margin: 0; flex-shrink: 0; }
+    .choice-heading { display: flex; align-items: flex-start; gap: .75rem; flex: 1; min-width: 12rem; }
+    .choice-heading input { flex-shrink: 0; width: 1rem; height: 1rem; margin-top: .25rem; accent-color: var(--pf-t--global--color--brand--default, #0066cc); cursor: pointer; }
+    .choice-heading .pf-v6-c-card__title { padding: 0; min-width: 0; }
+    .choice-heading .option-letter { margin: 0 0 .25rem; }
+    .choice-heading label { cursor: pointer; }
+    .option-card > .pf-v6-c-card__body { padding: 0 1.5rem 1.5rem; flex: 1; }
+    .option-description { color: var(--pf-t--global--text--color--subtle, #4d4d4d); min-height: 3rem; }
+    .visual-preview {
+      margin: 1.25rem 0;
+      min-height: 15rem;
+      max-height: 30rem;
+      overflow: auto;
+      border: 1px solid var(--pf-t--global--border--color--default, #d2d2d2);
+      border-radius: var(--pf-t--global--border--radius--small, .25rem);
+      background: var(--pf-t--global--background--color--secondary--default, #f2f2f2);
+    }
+    .visual-preview * { pointer-events: none; }
+    .suggestion-reason { border-left: 3px solid var(--pf-t--global--border--color--brand--default, #0066cc); padding: .75rem 1rem; margin-bottom: 1.25rem; background: var(--pf-t--global--background--color--secondary--default, #f2f2f2); font-size: .875rem; }
+    .tradeoffs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; font-size: .875rem; }
+    .tradeoff-heading { margin-bottom: .5rem; font-weight: 600; }
+    .tradeoffs .pf-v6-c-list { padding-left: 1.25rem; }
+    .option-card > .pf-v6-c-card__footer { padding: 1rem 1.5rem; border-top: 1px solid var(--pf-t--global--border--color--default, #d2d2d2); }
+    .when-to-use { color: var(--pf-t--global--text--color--subtle, #4d4d4d); font-size: .875rem; }
+    .comparison { margin-top: 1.5rem; }
+    .comparison-heading { font-size: 1rem; font-weight: 600; margin-bottom: .75rem; }
+    .table-scroll { overflow-x: auto; border: 1px solid var(--pf-t--global--border--color--default, #d2d2d2); border-radius: .25rem; }
+    .comparison table { width: 100%; border-collapse: collapse; background: var(--pf-t--global--background--color--primary--default, white); }
+    .comparison th, .comparison td { padding: .875rem 1rem; text-align: left; border-bottom: 1px solid var(--pf-t--global--border--color--default, #d2d2d2); }
+    .comparison tbody tr:last-child > * { border-bottom: 0; }
+    .comparison thead { background: var(--pf-t--global--background--color--secondary--default, #f2f2f2); }
+    .custom-choice { margin-top: 1rem; }
+    .response-panel { margin-top: 1rem; border-radius: .5rem; background: var(--pf-t--global--background--color--primary--default, white); }
+    .response-panel > .pf-v6-c-card__title { padding: 1.5rem 1.5rem .5rem; }
+    .response-panel > .pf-v6-c-card__body { padding: 0 1.5rem 1.5rem; }
+    .response-panel > .pf-v6-c-card__footer { padding: 0 1.5rem 1.5rem; }
+    .choice-progress { margin: 1rem 0 .5rem; color: var(--pf-t--global--text--color--subtle, #4d4d4d); font-size: .875rem; }
+    .response-text { display: block; box-sizing: border-box; width: 100%; padding: 1rem; border: 1px solid var(--pf-t--global--border--color--default, #c7c7c7); border-radius: .25rem; background: var(--pf-t--global--background--color--secondary--default, #f8f8f8); color: inherit; font: inherit; line-height: 1.65; resize: vertical; }
+    .response-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+    .response-actions p { color: var(--pf-t--global--text--color--subtle, #4d4d4d); }
+    .response-actions button { cursor: pointer; }
+    .response-actions button:disabled { cursor: default; }
+    .response-text:focus-visible, .response-actions button:focus-visible { outline: 2px solid var(--pf-t--global--border--color--brand--default, #0066cc); outline-offset: 3px; }
+    @media (max-width: 700px) {
+      .review-report { padding: 1.25rem; }
+      .tradeoffs { grid-template-columns: 1fr; }
+      .option-description { min-height: 0; }
     }
   </style>
 </head>
 <body>
-  <div class="decision-page">
-
-    <!-- ===== HEADER ===== -->
-    <header class="pf-v6-u-text-align-center pf-v6-u-mb-xl">
-      <p class="pf-v6-c-label pf-m-outline">
-        <span class="pf-v6-c-label__content">Decision 1 of N · Visual / IA</span>
-      </p>
-      <h1 class="pf-v6-c-title pf-m-2xl pf-v6-u-mt-sm">Layout Pattern</h1>
-      <p class="pf-v6-u-color-200 pf-v6-u-mt-sm" style="max-width: 40rem; margin-inline: auto;">
-        <!-- CONTEXT: why this decision matters for these user stories -->
-        What overall page structure best serves operators browsing and inspecting items?
-      </p>
+  <main class="review-report">
+    <header class="report-header">
+      <p class="eyebrow">Prototype design review</p>
+      <h1 class="pf-v6-c-title pf-m-2xl">@@TITLE@@</h1>
+      <p class="project-name">@@PROJECT@@</p>
+      <p class="report-description">@@DESCRIPTION@@</p>
+      <p class="report-instructions">Choose your preferred option for each decision.</p>
     </header>
-
-    <!-- ===== CROSS-DECISION NAV (required on every page, auto + human) ===== -->
-    <nav class="pf-v6-c-tabs pf-m-box" aria-label="Design decisions">
-      <ul class="pf-v6-c-tabs__list" role="presentation">
-        <li class="pf-v6-c-tabs__item" role="presentation">
-          <a href="index.html" class="pf-v6-c-tabs__link">All</a>
-        </li>
-        <li class="pf-v6-c-tabs__item pf-m-current" role="presentation">
-          <a href="01-layout-pattern.html" class="pf-v6-c-tabs__link" aria-current="page">1. Layout</a>
-        </li>
-        <li class="pf-v6-c-tabs__item" role="presentation">
-          <a href="02-interaction-model.html" class="pf-v6-c-tabs__link">2. Interaction</a>
-        </li>
-        <li class="pf-v6-c-tabs__item" role="presentation">
-          <a href="03-density.html" class="pf-v6-c-tabs__link">3. Density</a>
-        </li>
-        <!-- Add a tab per decision; keep short labels; highlight current with pf-m-current -->
-      </ul>
-    </nav>
-
-    <!-- ===== OPTIONS GRID ===== -->
-    <div class="options-grid">
-
-      <!-- Option A -->
-      <article class="pf-v6-c-card option-card">
-        <div class="badge-row">
-          <!-- Show Recommended on the AI pick; Selected only after choice is locked -->
-          <!-- <span class="pf-v6-c-label pf-m-orange"><span class="pf-v6-c-label__content">Recommended</span></span> -->
-          <!-- <span class="pf-v6-c-label pf-m-green"><span class="pf-v6-c-label__content">Selected</span></span> -->
-        </div>
-        <div class="pf-v6-c-card__header">
-          <div class="pf-v6-c-card__header-main">
-            <p class="option-letter a">Option A</p>
-            <h2 class="pf-v6-c-title pf-m-lg">Card Grid</h2>
-            <p class="pf-v6-u-color-200">Summary cards in a responsive grid; click through to detail.</p>
-          </div>
-        </div>
-        <div class="pf-v6-c-card__body">
-          <div class="visual-preview" aria-label="Preview of Card Grid">
-            <div class="preview-frame">
-              <!--
-                REQUIRED: Render real UI here (PF CDN or target-app components).
-                Ban ASCII and empty gray boxes as the primary preview.
-                Use product-domain copy from the RFE — no lorem ipsum.
-              -->
-            </div>
-          </div>
-          <div class="pf-v6-l-grid pf-m-all-6-col pf-m-gutter">
-            <div class="pf-v6-l-grid__item">
-              <strong class="pf-v6-u-success-color-100">Pros</strong>
-              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
-                <li>Scannable discovery</li>
-                <li>Works well on wide screens</li>
-              </ul>
-            </div>
-            <div class="pf-v6-l-grid__item">
-              <strong class="pf-v6-u-danger-color-100">Cons</strong>
-              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
-                <li>Weak for dense ops tables</li>
-                <li>Detail requires navigation</li>
-              </ul>
-            </div>
-          </div>
-          <p class="pf-v6-u-font-size-sm pf-v6-u-mt-md">
-            <strong>When to use:</strong> Catalog / discovery workflows.
-          </p>
-        </div>
-      </article>
-
-      <!-- Option B (example: recommended) -->
-      <article class="pf-v6-c-card option-card recommended">
-        <div class="badge-row">
-          <span class="pf-v6-c-label pf-m-orange">
-            <span class="pf-v6-c-label__content">Recommended</span>
-          </span>
-        </div>
-        <div class="pf-v6-c-card__header">
-          <div class="pf-v6-c-card__header-main">
-            <p class="option-letter b">Option B</p>
-            <h2 class="pf-v6-c-title pf-m-lg">List + Detail</h2>
-            <p class="pf-v6-u-color-200">Master list on the left; detail panel on the right.</p>
-          </div>
-        </div>
-        <div class="pf-v6-c-card__body">
-          <div class="visual-preview" aria-label="Preview of List + Detail">
-            <div class="preview-frame">
-              <!-- Rendered UI mockup for Option B -->
-            </div>
-          </div>
-          <div class="pf-v6-l-grid pf-m-all-6-col pf-m-gutter">
-            <div class="pf-v6-l-grid__item">
-              <strong class="pf-v6-u-success-color-100">Pros</strong>
-              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
-                <li>Browse + inspect without losing context</li>
-                <li>Maps to common admin patterns</li>
-              </ul>
-            </div>
-            <div class="pf-v6-l-grid__item">
-              <strong class="pf-v6-u-danger-color-100">Cons</strong>
-              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
-                <li>Needs careful responsive collapse</li>
-                <li>Less visual for marketing-style content</li>
-              </ul>
-            </div>
-          </div>
-          <p class="pf-v6-u-font-size-sm pf-v6-u-mt-md">
-            <strong>When to use:</strong> Browse-heavy ops and configuration lists.
-          </p>
-        </div>
-      </article>
-
-      <!-- Option C -->
-      <article class="pf-v6-c-card option-card">
-        <div class="pf-v6-c-card__header">
-          <div class="pf-v6-c-card__header-main">
-            <p class="option-letter c">Option C</p>
-            <h2 class="pf-v6-c-title pf-m-lg">Dashboard</h2>
-            <p class="pf-v6-u-color-200">Widgets and status panels as the primary surface.</p>
-          </div>
-        </div>
-        <div class="pf-v6-c-card__body">
-          <div class="visual-preview" aria-label="Preview of Dashboard">
-            <div class="preview-frame"><!-- Rendered UI --></div>
-          </div>
-          <div class="pf-v6-l-grid pf-m-all-6-col pf-m-gutter">
-            <div class="pf-v6-l-grid__item">
-              <strong class="pf-v6-u-success-color-100">Pros</strong>
-              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
-                <li>Status at a glance</li>
-              </ul>
-            </div>
-            <div class="pf-v6-l-grid__item">
-              <strong class="pf-v6-u-danger-color-100">Cons</strong>
-              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
-                <li>Weak for item-level CRUD</li>
-              </ul>
-            </div>
-          </div>
-          <p class="pf-v6-u-font-size-sm pf-v6-u-mt-md">
-            <strong>When to use:</strong> Monitoring and operational overview.
-          </p>
-        </div>
-      </article>
-
-      <!-- Option D -->
-      <article class="pf-v6-c-card option-card">
-        <div class="pf-v6-c-card__header">
-          <div class="pf-v6-c-card__header-main">
-            <p class="option-letter d">Option D</p>
-            <h2 class="pf-v6-c-title pf-m-lg">Wizard / Stepper</h2>
-            <p class="pf-v6-u-color-200">Guided multi-step flow as the primary surface.</p>
-          </div>
-        </div>
-        <div class="pf-v6-c-card__body">
-          <div class="visual-preview" aria-label="Preview of Wizard">
-            <div class="preview-frame"><!-- Rendered UI --></div>
-          </div>
-          <div class="pf-v6-l-grid pf-m-all-6-col pf-m-gutter">
-            <div class="pf-v6-l-grid__item">
-              <strong class="pf-v6-u-success-color-100">Pros</strong>
-              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
-                <li>Reduces cognitive load for complex create</li>
-              </ul>
-            </div>
-            <div class="pf-v6-l-grid__item">
-              <strong class="pf-v6-u-danger-color-100">Cons</strong>
-              <ul class="pf-v6-c-list pf-v6-u-font-size-sm">
-                <li>Poor fit for ongoing browse/manage</li>
-              </ul>
-            </div>
-          </div>
-          <p class="pf-v6-u-font-size-sm pf-v6-u-mt-md">
-            <strong>When to use:</strong> Complex creation or setup flows.
-          </p>
-        </div>
-      </article>
-
-    </div>
-
-    <!-- ===== COMPARISON TABLE (required) ===== -->
-    <section class="comparison-section" aria-labelledby="comparison-heading">
-      <h2 id="comparison-heading" class="pf-v6-c-title pf-m-xl pf-v6-u-mb-md">Comparison</h2>
-      <table class="pf-v6-c-table pf-m-compact pf-m-grid-md" role="grid">
-        <caption class="pf-v6-u-screen-reader">Option comparison across key dimensions</caption>
-        <thead>
-          <tr role="row">
-            <th role="columnheader" scope="col">Dimension</th>
-            <th role="columnheader" scope="col">A · Card Grid</th>
-            <th role="columnheader" scope="col">B · List + Detail</th>
-            <th role="columnheader" scope="col">C · Dashboard</th>
-            <th role="columnheader" scope="col">D · Wizard</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- 5–8 rows of meaningful dimensions for THIS decision -->
-          <tr role="row">
-            <td role="cell"><strong>Browse speed</strong></td>
-            <td role="cell">High</td>
-            <td role="cell">High</td>
-            <td role="cell">Medium</td>
-            <td role="cell">Low</td>
-          </tr>
-          <tr role="row">
-            <td role="cell"><strong>Inspect without leaving list</strong></td>
-            <td role="cell">Low</td>
-            <td role="cell">High</td>
-            <td role="cell">Low</td>
-            <td role="cell">N/A</td>
-          </tr>
-          <tr role="row">
-            <td role="cell"><strong>Fits RFE browse+inspect stories</strong></td>
-            <td role="cell">Medium</td>
-            <td role="cell">High</td>
-            <td role="cell">Low</td>
-            <td role="cell">Low</td>
-          </tr>
-        </tbody>
-      </table>
-    </section>
-
-    <!-- ===== RECOMMENDATION ===== -->
-    <section class="recommendation-section" aria-labelledby="rec-heading">
-      <div class="pf-v6-c-alert pf-m-info" aria-label="Recommendation">
-        <div class="pf-v6-c-alert__icon">
-          <!-- optional icon -->
-        </div>
-        <h2 id="rec-heading" class="pf-v6-c-alert__title">Recommendation: Option B — List + Detail</h2>
-        <div class="pf-v6-c-alert__description">
-          <p>
-            <!-- Plain English, grounded in RFE / codebase context -->
-            The RFE centers on browsing items and inspecting details without losing list context,
-            which maps cleanly to a master–detail layout.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ===== FOOTER PROMPT ===== -->
-    <footer class="footer-prompt pf-v6-u-text-align-center">
-      <p class="pf-v6-c-helper-text">
-        <span class="pf-v6-c-helper-text__item">
-          Respond with: <strong>Option A / B / C / D</strong> (or describe your own).
-          Open <a href="index.html">all decisions</a> to jump around.
-        </span>
-      </p>
-    </footer>
-
-  </div>
+    @@CONTENT@@
+    @@RESPONSE@@
+  </main>
+  <script type="application/json" id="decision-data">@@DATA@@</script>
+  <script>
+    (() => {
+      const data = JSON.parse(document.getElementById('decision-data').textContent);
+      const response = document.getElementById('choice-response');
+      const progress = document.getElementById('choice-progress');
+      const status = document.getElementById('copy-status');
+      const inputs = Array.from(document.querySelectorAll('input[data-decision]'));
+      function update() {
+        const choices = data.decisions.flatMap((decision, index) => {
+          const selected = inputs.find(input => input.dataset.decision === decision.id && input.checked);
+          const option = decision.options.find(option => option.id === selected?.value);
+          const answer = option
+            ? `Option ${option.id} — ${option.title}`
+            : decision.custom
+              ? `Custom — ${decision.custom.title}\n   Reasoning — ${decision.custom.reasoning}`
+              : null;
+          return answer ? [`${index + 1}. ${decision.title}\n   ${answer}`] : [];
+        });
+        response.value = choices.length
+          ? `My design choices for ${data.prototypeId}:\n\n${choices.join('\n\n')}`
+          : 'Choose an option above to prepare your response.';
+        response.rows = Math.max(5, response.value.split('\n').length + 1);
+        progress.textContent = `${choices.length} of ${data.decisions.length} choices selected`;
+        document.getElementById('copy-response').disabled = !choices.length;
+        status.textContent = '';
+      }
+      inputs.forEach(input => input.addEventListener('change', update));
+      document.getElementById('copy-response').addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(response.value);
+          status.textContent = 'Copied. Paste it back to the agent.';
+        } catch (_) {
+          response.focus();
+          response.select();
+          status.textContent = 'Copy the highlighted text and paste it back to the agent.';
+        }
+      });
+      update();
+    })();
+  </script>
 </body>
 </html>

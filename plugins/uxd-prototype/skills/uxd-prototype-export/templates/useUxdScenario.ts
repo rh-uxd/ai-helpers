@@ -12,7 +12,7 @@ declare global {
 }
 
 /**
- * Active prototype scenario id from ?scenario= (via window.UxdScenario).
+ * Active prototype state id from ?state= (via window.UxdScenario).
  * Falls back to "default" when the runtime is not loaded.
  */
 export function useUxdScenario(): string {

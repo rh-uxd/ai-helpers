@@ -10,7 +10,7 @@ Enforce correct **parent-child composition**: PatternFly’s layout CSS targets 
 ## Page and shell
 
 - **`Page`**: Put main content in **`PageSection`** (or **`PageGroup`** with sections inside). Do not use arbitrary divs as direct children for primary content.
-- **`masthead`** and **`sidebar`** are **`Page` props**, not children.
+- **`masthead`**, **`sidebar`**, and **`footer`** are **`Page` props**, not children. Non-`Masthead` headers use **`PageHeader`** passed via `masthead`; custom footers use **`PageFooter`** passed via `footer` (both `@patternfly/react-core` 6.7.0+).
 - **`PageSection`** auto-wraps children in **`PageBody`** for horizontal padding. Use **`hasBodyWrapper={false}`** only when you need multiple **`PageBody`** regions.
 - **`PageSidebar`** must wrap its content in **`PageSidebarBody`**.
 
@@ -62,7 +62,7 @@ Set **`aria-labelledby`** to match **`ModalHeader`**’s label id, or **`aria-la
 ## Drawer
 
 - **`DrawerPanelContent`** is passed as **`panelContent`** on **`DrawerContent`**, not as a sibling child inside **`DrawerContent`**.
-- Main column content goes in **`DrawerContentBody`**.
+- Main column content goes in **`DrawerContentBody`** (optional when `DrawerContent` has no main-column children).
 - **`DrawerCloseButton`** belongs under **`DrawerActions`** inside **`DrawerHead`**.
 
 ## Navigation

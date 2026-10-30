@@ -1,22 +1,44 @@
-# Fullsend review profiles
+# Fullsend configuration
 
-Each directory is a complete, independently runnable Fullsend review profile.
+This repository configures Fullsend's `review` role for automated, read-only
+pull-request review. The managed workflow also contains limited command and
+status handling outside that review role.
 
-- `claude/` uses the Claude runtime with Vertex AI and Haiku.
-- `openai/` uses the Pi runtime with OpenAI's Luna model.
+## What is configured
 
-The manual workflows select the profile explicitly. Keep provider credentials
-and runtime-specific settings inside the matching profile.
+- `config.yaml` enables the `review` role and selects the Pi runtime.
+- `harness/review.yaml` uses the review harness tagged for the pinned Fullsend
+  release; the runtime and harness are updated together.
+- `skills/ai-helpers-review/` adds ai-helpers-specific contribution and
+  architecture context without replacing the upstream review.
+- `lock.yaml` pins the harness dependencies used by the workflow.
 
-## Review policy
+The local review skill uses `AGENTS.md`, `CONTRIBUTING.md`,
+`CONTRIBUTING-SKILLS.md`, and other repository source-of-truth documents when
+they apply to the changed files. It should report only actionable findings
+supported by changed-file evidence and should not duplicate deterministic CI,
+lint, security, ownership, or review-bot checks.
 
-Fullsend identifies potential issues. Humans decide which issues must be fixed.
+## Credentials and permissions
 
-- `REVIEW_FINDING_SEVERITY_THRESHOLD` controls which findings are shown; it is
-  not a merge-blocking policy. The current workflows use `medium`.
-- A GitHub `REQUEST_CHANGES` review is Fullsend's synthesized assessment, not
-  proof that every posted comment is mandatory.
-- Treat findings as advisory until a human confirms the finding and its
-  remediation.
-- Fullsend is not a required merge check while this proof of concept is being
-  evaluated.
+The workflow supplies `FULLSEND_GCP_PROJECT_ID` and
+`FULLSEND_GCP_WIF_PROVIDER` from protected GitHub secrets. Do not add secret
+values or GitHub Actions expressions to `config.yaml`.
+
+Only the `review` role is enabled. This configuration does not grant Fullsend
+cross-repository issue-creation targets.
+
+## Maintainer notes
+
+- `.github/workflows/fullsend.yaml` and `prioritize.yml` are managed by
+  Fullsend; do not edit them directly.
+- Keep the local review skill aligned with changes to contribution and
+  governance documents.
+- The Fullsend runtime, upstream review harness, and lockfile are pinned as a
+  compatible set. Upgrade them together only when intentionally adopting a
+  newer Fullsend release, using Fullsend's setup or scaffold-sync command.
+- Regenerate the lockfile with
+  `fullsend lock --all --update --fullsend-dir .fullsend` as part of that
+  deliberate upgrade.
+- Fullsend findings are advisory. Whether the review is a required merge check
+  is controlled by repository branch protection.

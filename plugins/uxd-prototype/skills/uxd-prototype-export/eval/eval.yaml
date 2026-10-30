@@ -140,7 +140,7 @@ judges:
           re.IGNORECASE,
       )
       all_scenarios = re.search(
-          r"every scenario|all scenarios|each scenario|scenario.{0,30}(route|step)|\?scenario",
+          r"every scenario|all scenarios|each scenario|every state|each state|scenario.{0,30}(route|step)|state.{0,30}(route|step)|\?scenario|\?state",
           text,
           re.IGNORECASE | re.DOTALL,
       )

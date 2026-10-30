@@ -4,6 +4,5 @@ prompt: >-
   - Workspace: standalone
   - Decisions: skip
 
-  Print the Prototype Plan summary (Source, Workspace, Decisions; omit Depth when
-  decisions are skip) and ask for confirmation. After printing the plan, STOP —
-  do not generate the prototype or write any files.
+  Describe the experience you plan to create and ask for confirmation.
+  After the plan, STOP — do not generate the prototype or write any files.

@@ -1,13 +1,13 @@
 /**
  * Scenario switcher runtime for UXD prototypes.
- * Active scenario: ?scenario=<id> (default when absent: "default").
+ * Active state: ?state=<id> (default when absent: "default").
  *
  * window.UxdScenario.get() / .set(id) / .subscribe(cb)
  */
 (function (global) {
   'use strict';
 
-  var PARAM = 'scenario';
+  var PARAM = 'state';
   var DEFAULT_ID = 'default';
   var listeners = [];
 

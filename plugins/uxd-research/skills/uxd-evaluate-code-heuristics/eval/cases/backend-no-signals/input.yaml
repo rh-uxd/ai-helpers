@@ -1,0 +1,6 @@
+prompt: >-
+  Using the uxd-evaluate-code-heuristics skill: evaluate the Go code in
+  fixture.go for UX issues. The code is a billing reconciliation function
+  that deletes unpaid invoices. Apply all evaluation dimensions from the
+  skill's rubric and accessibility checklist. Do not call network or MCP tools.
+fixture: fixture.go

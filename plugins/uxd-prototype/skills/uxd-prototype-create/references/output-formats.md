@@ -5,25 +5,26 @@ Schema definitions for artifacts produced by the prototype creation pipeline. Lo
 **Layout (consumer project root):**
 
 ```
-.artifacts/{ID}/
+artifacts/{ID}/
   code/                 # cloned workspace repo (workspace mode)
   prototype/            # standalone HTML
   decisions/            # decision pages + decisions.json
   eval/                 # evaluate outputs (report, screenshots, Playwright scripts)
-  exports/              # optional journey × scenario captures
-  *.json / *.md / …     # snapshots, metadata, journeys, scenarios
+  exports/              # optional journey × state captures
+  *.json / *.md / …     # snapshots, metadata, journeys, states
+  {ID}-design-spec.md   # QE companion (screens, journeys, roles, sample data)
 ```
 
 Never write these under the skill install directory (`${CLAUDE_SKILL_DIR}`). Eval files belong in `eval/`, not the key root.
 
-## .artifacts/{ID}/workspace-analysis.json
+## artifacts/{ID}/workspace-analysis.json
 
 Written during Step 6 (codebase analysis). Critical for workspace mode — publish's `submit_to_repo.py` reads `branch` (workspace clone), `clone_url`, optional `upstream_url`, and optional `target_branch` (MR/PR base) from this file.
 
 ```json
 {
   "rfe_key": "PROJ-298",
-  "workspace_path": ".artifacts/PROJ-298/code",
+  "workspace_path": "artifacts/PROJ-298/code",
   "branch": "3.5",
   "clone_url": "https://gitlab.example.com/user/fork.git",
   "upstream_url": "https://gitlab.example.com/org/canonical.git",
@@ -55,7 +56,7 @@ Written during Step 6 (codebase analysis). Critical for workspace mode — publi
 
 `branch` is the workspace clone branch (`--workspace-branch`). `target_branch` is the MR/PR merge base (`--target-branch`, or a branch embedded in the `--target` / `--upstream` URL). When `target_branch` is omitted, submit falls back to `branch`.
 
-## .artifacts/{ID}/metadata.json
+## artifacts/{ID}/metadata.json
 
 Written during Step 9. Tracks prototype state across creation and refinement. Uses the same terminology as `prototype-summary.yaml` for consistency.
 
@@ -81,13 +82,14 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
   "decision_mode": "skip",
   "status": "draft",
   "iteration": 0,
-  "workspace_path": ".artifacts/PROJ-298/code",
+  "workspace_path": "artifacts/PROJ-298/code",
   "screens": ["ApiKeyList", "ApiKeyDetail", "CreateApiKeyWizard"],
-  "journeys_path": ".artifacts/PROJ-298/journeys.json",
-  "scenarios_path": ".artifacts/PROJ-298/scenarios.json",
+  "journeys_path": "artifacts/PROJ-298/journeys.json",
+  "states_path": "artifacts/PROJ-298/states.json",
+  "design_spec_path": "artifacts/PROJ-298/PROJ-298-design-spec.md",
   "prototype_bar": true,
   "exports": {
-    "path": ".artifacts/PROJ-298/exports",
+    "path": "artifacts/PROJ-298/exports",
     "count": 0
   },
   "assumptions": [],
@@ -99,16 +101,16 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
 
 Status values: `"draft"`, `"refined"`, `"reviewed"`, `"submitted"`.
 
-Optional fields: `journeys_path`, `scenarios_path`, `prototype_bar`, `exports` (populated when `--export` runs), `source_rfes` (multi-RFE compose), `sources` (normalized provenance for the Prototype Bar), `figma_url`.
+Optional fields: `journeys_path`, `states_path`, `design_spec_path`, `prototype_bar`, `exports` (populated when `--export` runs), `source_rfes` (multi-RFE compose), `sources` (normalized provenance for the Prototype Bar), `figma_url`.
 
-## .artifacts/{ID}/prototype-bar.json
+## artifacts/{ID}/prototype-bar.json
 
 Written during Step 9 (and refreshed by evaluate / publish-report). Runtime config for the Prototype Bar Sources dropdown and Prototype ↔ Eval switch. Prefer generating it with:
 
 ```bash
 EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
 node "${EXPORT_SKILL}/scripts/sync-prototype-bar-config.mjs" \
-  --artifacts ".artifacts/{ID}"
+  --artifacts "artifacts/{ID}"
 ```
 
 Or write it directly from `metadata.json` fields. Schema: see `uxd-prototype-export/references/prototype-bar-config.md`.
@@ -137,9 +139,9 @@ Or write it directly from `metadata.json` fields. Schema: see `uxd-prototype-exp
 }
 ```
 
-`sources` is a single list for all provenance (outcome, RFE, strat, Figma, description). Outcome / strat entries are usually added later by evaluate when `outcome-context.json` exists. `views.eval` uses the conventional static path `/evals/{ID}/` so Pages hosting works once the report is copied there. `scenarios` is a slim flatten of `scenarios.json` (synced by `sync-prototype-bar-config.mjs`) for the bar Scenario menu.
+`sources` is a single list for all provenance (outcome, RFE, strat, Figma, description). Outcome / strat entries are usually added later by evaluate when `outcome-context.json` exists. `views.eval` uses the conventional static path `/evals/{ID}/` so Pages hosting works once the report is copied there. `scenarios` is a slim flatten of `states.json` (synced by `sync-prototype-bar-config.mjs`) for the bar menu. The active state is `?state=<id>`.
 
-## .artifacts/{ID}/changeset.md
+## artifacts/{ID}/changeset.md
 
 Written during Step 9. Lists all files affected.
 
@@ -171,7 +173,7 @@ Refinements append sections:
 - `src/pages/ApiKeys/ApiKeyList.tsx` — Added empty state, loading skeleton
 ```
 
-## .artifacts/{ID}/prototype-summary.yaml
+## artifacts/{ID}/prototype-summary.yaml
 
 Written during Step 9. Structured summary of the prototype for downstream skill consumption. This is the primary machine-readable output — `uxd-prototype-evaluate`, `uxd-prototype-publish`, and pipeline orchestrators read this file to understand what was built and how.
 
@@ -189,8 +191,8 @@ prototype_summary:
   # How the prototype was built
   build_mode: existing-codebase  # standalone-html | existing-codebase
   decision_mode: skip            # skip | auto | human (legacy: decide/interactive → human)
-  # decision_depth: normal       # under | normal | over — only when decision_mode is auto or human
-  # decisions_count: 5           # only when decision_mode is auto or human
+  # decision_depth: normal       # optional explicit exploration effort; never a decision quota
+  # decisions_count: 2           # actual surfaced tradeoffs, possibly zero; auto or human only
 
   # What was produced
   files_created: 3
@@ -199,24 +201,25 @@ prototype_summary:
     - ApiKeyList
     - ApiKeyDetail
     - CreateApiKeyWizard
-  journeys_path: .artifacts/PROJ-298/journeys.json
-  scenarios_path: .artifacts/PROJ-298/scenarios.json
+  journeys_path: artifacts/PROJ-298/journeys.json
+  states_path: artifacts/PROJ-298/states.json
+  design_spec_path: artifacts/PROJ-298/PROJ-298-design-spec.md
   prototype_bar: true
-  prototype_path: .artifacts/PROJ-298/code  # or .artifacts/PROJ-298/prototype/ for standalone
+  prototype_path: artifacts/PROJ-298/code  # or artifacts/PROJ-298/prototype/ for standalone
 
   # Optional — present after create --export
   exports:
-    path: .artifacts/PROJ-298/exports
+    path: artifacts/PROJ-298/exports
     count: 2
-    manifest: .artifacts/PROJ-298/exports/export-manifest.json
-    index: .artifacts/PROJ-298/exports/index.html
-    implementation_spec: .artifacts/PROJ-298/exports/implementation-spec.json  # when pf-spec format included
+    manifest: artifacts/PROJ-298/exports/export-manifest.json
+    index: artifacts/PROJ-298/exports/index.html
+    implementation_spec: artifacts/PROJ-298/exports/implementation-spec.json  # when pf-spec format included
 
   # Iteration state
   iteration: 0
   status: draft              # draft | refined | reviewed | submitted
 
-  # Verification results (existing-codebase only; omitted for standalone-html)
+  # Code-check results (existing-codebase only; not a browser evaluation)
   verification:
     status: pass             # pass | fail | skipped
     lint: pass
@@ -236,10 +239,10 @@ prototype_summary:
 | `source.reference` | string | The Jira key, Figma URL, or omitted when the source was freeform text |
 | `source.rfe_count` | int | Number of RFEs merged into this prototype (1 for single-ticket, 2+ for composed features) |
 | `build_mode` | enum | `standalone-html` — self-contained HTML/CSS/JS with PatternFly CDN. `existing-codebase` — modifications to a cloned product repo |
-| `decision_mode` | enum | `skip` — no decision kit; design calls made while building. `auto` — AI resolved decisions with batch summary override. `human` — user picked from HTML comparison pages one at a time. Maps 1:1 from `--decisions`. |
-| `decision_depth` | enum | `under` (2–3), `normal` (4–7), or `over` (8–12). Only present when `decision_mode` is `auto` or `human` |
+| `decision_mode` | enum | `skip` — no decision kit; design calls made while building. `auto` — AI resolved decisions with batch summary override. `human` — user chooses independent decisions together on the review page or in chat. Maps 1:1 from `--decisions`. |
+| `decision_depth` | enum | Optional exploration effort (`under`, `normal`, `over`), not a count. Record when explicitly supplied and `decision_mode` is `auto` or `human` |
 | `status` | enum | `draft` (initial creation), `refined` (after refinement pass), `reviewed` (after evaluation), `submitted` (pushed to repo) |
-| `verification` | object | Post-change verification results. Only present for `existing-codebase` builds. Omit entirely for `standalone-html` |
+| `verification` | object | Code-level lint/build/type-check results; does not imply browser or journey evaluation. Only present for `existing-codebase` builds. Omit entirely for `standalone-html` |
 | `prototype_path` | string | Relative path to the prototype files |
 
 ### Refinement updates
@@ -262,7 +265,7 @@ When the refinement procedure runs, update `prototype-summary.yaml` in place:
       applied_at: "2025-01-16T09:00:00Z"
 ```
 
-## .artifacts/{ID}/journeys.json
+## artifacts/{ID}/journeys.json
 
 Written during Step 4 (kept in sync if flows change). Drives implementation reachability in Step 8 and batch export.
 
@@ -270,17 +273,48 @@ Written during Step 4 (kept in sync if flows change). Drives implementation reac
 
 Also keep the flat `screens` list in `metadata.json` / `prototype-summary.yaml` as a convenience index of screen names.
 
-## .artifacts/{ID}/scenarios.json
+## artifacts/{ID}/states.json
 
-Written during Step 4 (kept in sync if pages/conditions change). Sibling to `journeys.json`. Catalog of **data/condition variants** per page. Interaction states (modal open) stay in journey `actions` — not scenarios.
+Written during Step 4 (kept in sync if pages/conditions change). Sibling to `journeys.json`. Catalog of **data/condition variants** per page. Modal and drawer open stay in journey `actions`.
 
-**Canonical schema:** [scenarios-schema.md](../../uxd-prototype-export/references/scenarios-schema.md) in `uxd-prototype-export`.
+```json
+{
+  "prototype_id": "PROJ-298",
+  "pages": [
+    {
+      "route": "/api-keys",
+      "screen": "ApiKeyList",
+      "states": [
+        {
+          "id": "default",
+          "name": "Populated list",
+          "description": "Happy path with several API keys",
+          "default": true
+        },
+        {
+          "id": "empty",
+          "name": "Empty list",
+          "description": "No API keys yet"
+        }
+      ]
+    }
+  ]
+}
+```
 
-Brainstorm checklist: [scenario-brainstorm.md](scenario-brainstorm.md). Mock wiring: [scenario-mocks.md](scenario-mocks.md). Every journey route needs at least a `default` scenario.
+The active state is `?state=<id>` (`default` when absent). Field rules for each entry (`id`, `name`, `description`, `default`): [states-schema.md](../../uxd-prototype-export/references/states-schema.md). The file name is `states.json` and the page collection key is `states`.
 
-## .artifacts/{ID}/verification.json
+Brainstorm checklist: [state-brainstorm.md](state-brainstorm.md). Mock wiring: [state-mocks.md](state-mocks.md). Every journey route needs at least a `default` state.
 
-Written during Step 11 (workspace mode post-change verification).
+## artifacts/{ID}/{ID}-design-spec.md
+
+Written during Step 9 and refreshed on refinement when UI content changes. Markdown companion for QE test-plan ingest. `journeys.json` and `states.json` stay the export schemas; this file projects them into `SCR-*` screens (with built HTML), `J-*` journeys, `TU-*` roles, and `DATA-*` sample data.
+
+Rules: [design-spec.md](design-spec.md). Template: [templates/design-spec.md](templates/design-spec.md). Record the path as `design_spec_path` in `metadata.json` and `prototype-summary.yaml`.
+
+## artifacts/{ID}/verification.json
+
+Written during Step 11 (workspace code-level checks). Record only performed lint/build/type checks; runtime evaluation is separate.
 
 ```json
 {
@@ -301,7 +335,7 @@ JSON output from the workspace resolution script:
   "clone_url": "https://gitlab.example.com/org/repo.git",
   "branch": "3.5",
   "branch_source": "url",
-  "clone_path": ".artifacts/PROJ-298/code",
+  "clone_path": "artifacts/PROJ-298/code",
   "upstream_url": "https://gitlab.example.com/org/canonical.git",
   "target_branch": "main",
   "target_branch_source": "flag",

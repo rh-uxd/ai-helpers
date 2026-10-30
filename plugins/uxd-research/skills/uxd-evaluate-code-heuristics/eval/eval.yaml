@@ -1,0 +1,282 @@
+name: uxd-evaluate-code-heuristics-eval
+description: >-
+  Evaluate that the skill applies four UX dimensions (state coverage,
+  content & microcopy, destructive action safety, accessibility) with
+  ERROR/WARN severity, WCAG citations, and returns [] for irrelevant code
+
+skill: uxd-research:uxd-evaluate-code-heuristics
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/uxd-research
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: case_type and expected_dimensions for conditional judges
+    - fixture file (.tsx or .go) containing code for the skill to evaluate
+
+outputs:
+  - path: artifacts
+    schema: |
+      Findings with file, line, dimension, severity (ERROR/WARN), gap,
+      and standard — or [] when no UX signals are found.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: uses_skill_dimensions
+    description: >-
+      Findings reference the skill's specific named dimensions rather than
+      giving generic UX advice
+    if: "annotations.get('case_type') == 'positive-multi-dimension'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+
+      dimensions = {
+          "state coverage": re.search(r"state\s+coverage", text, re.IGNORECASE),
+          "content.*microcopy": re.search(r"content\s*[&and]*\s*microcopy", text, re.IGNORECASE),
+          "destructive action": re.search(r"destructive\s+action\s+safety", text, re.IGNORECASE),
+          "accessibility": re.search(r"accessibility", text, re.IGNORECASE),
+      }
+
+      found = [d for d, m in dimensions.items() if m]
+      if len(found) < 2:
+          return False, f"Expected findings referencing skill dimensions, found only: {found}"
+      return True, f"Findings reference skill dimensions: {found}"
+
+  - name: severity_classification
+    description: >-
+      Findings use ERROR/WARN severity tied to rubric criteria, not generic
+      importance levels
+    if: "annotations.get('case_type', '').startswith('positive')"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+
+      error_findings = re.findall(
+          r"\b(ERROR)\b[^.]{0,120}(empty\s+state|error\s+state|loading|"
+          r"confirmation|feedback|placeholder|raw\s+error|"
+          r"aria.label|accessible\s+name|live\s+region|scope\s+visibility)",
+          text, re.IGNORECASE
+      )
+      warn_findings = re.findall(
+          r"\b(WARN)\b[^.]{0,120}(generic|jargon|undo|"
+          r"inconsistent|overflow|first.run|"
+          r"assertive|aria.busy|visually\s+distinguished)",
+          text, re.IGNORECASE
+      )
+
+      total = len(error_findings) + len(warn_findings)
+      if total == 0:
+          return False, "No ERROR/WARN findings anchored to rubric criteria"
+      return True, f"Found {len(error_findings)} ERROR and {len(warn_findings)} WARN findings with rubric criteria"
+
+  - name: wcag_citations
+    description: >-
+      Accessibility findings cite specific WCAG success criteria by number
+    if: "annotations.get('case_type') == 'positive-a11y'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+
+      wcag_refs = re.findall(
+          r"WCAG\s+\d+\.\d+\.\d+|\b(?:success\s+criter\w+|SC)\s+[1-4]\.\d+\.\d+\b",
+          text, re.IGNORECASE
+      )
+      if len(wcag_refs) == 0:
+          return False, "Accessibility findings do not cite any WCAG success criteria"
+      return True, f"Accessibility findings cite WCAG criteria: {wcag_refs[:5]}"
+
+  - name: accessible_name_findings
+    description: >-
+      Identifies icon-only buttons missing aria-label as an accessibility
+      ERROR — this is the skill's a11y Check 1
+    if: "annotations.get('case_type') == 'positive-a11y'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+
+      has_icon_button_finding = re.search(
+          r"(icon.only|no\s+(aria.label|accessible\s+name)|"
+          r"button.{0,40}(icon|svg).{0,40}(label|name)|"
+          r"(missing|without|no).{0,40}(aria.label|accessible\s+name))",
+          text, re.IGNORECASE
+      )
+      if not has_icon_button_finding:
+          return False, "Did not flag icon-only buttons missing accessible names"
+      return True, "Correctly flagged icon-only buttons missing accessible names"
+
+  - name: no_findings_for_backend
+    description: >-
+      Returns empty findings ([] or explicit no-findings statement) for
+      backend code with no UI signals
+    if: "annotations.get('case_type') == 'negative-no-signals'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+
+      has_empty = re.search(
+          r"(\[\s*\]|no\s+(UX\s+)?findings|no\s+(relevant\s+)?signals|"
+          r"no\s+issues\s+found|no\s+code\s+signals|"
+          r"not\s+applicable|does\s+not\s+contain\s+(UI|frontend)|"
+          r"no\s+UI|no\s+user.facing|return.{0,20}\[\])",
+          text, re.IGNORECASE
+      )
+      if not has_empty:
+          return False, "Did not return empty findings or indicate no UI signals for backend code"
+
+      has_false_positive = re.search(
+          r"\b(ERROR|WARN)\b[^.]{0,80}(empty\s+state|error\s+state|confirmation|"
+          r"aria.label|placeholder|feedback)",
+          text, re.IGNORECASE
+      )
+      if has_false_positive:
+          return False, "Produced false-positive UX findings on backend code"
+
+      return True, "Correctly returned no findings for backend code with no UI signals"
+
+  - name: finding_structure
+    description: >-
+      Each finding includes required fields: file reference, dimension,
+      severity, and gap description
+    if: "annotations.get('case_type', '').startswith('positive')"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+
+      has_file_ref = re.search(r"(fixture\.tsx|\.tsx)\s*[:\|]?\s*\d+|line\s+\d+", text, re.IGNORECASE)
+      has_dimension = re.search(
+          r"(state\s+coverage|content.*microcopy|destructive\s+action|accessibility)",
+          text, re.IGNORECASE
+      )
+      has_severity = re.search(
+          r"\b(ERROR|WARN)\b[^.]{0,80}(state\s+coverage|content|destructive|accessibility|"
+          r"empty\s+state|error\s+state|confirmation|aria|label|feedback)",
+          text, re.IGNORECASE
+      )
+      has_gap = re.search(r"(gap|issue|problem|violation|missing|absent|without)", text, re.IGNORECASE)
+
+      missing = []
+      if not has_file_ref:
+          missing.append("file/line reference")
+      if not has_dimension:
+          missing.append("dimension name")
+      if not has_severity:
+          missing.append("severity (ERROR/WARN)")
+      if not has_gap:
+          missing.append("gap description")
+
+      if missing:
+          return False, f"Findings missing required fields: {', '.join(missing)}"
+      return True, "Findings include file reference, dimension, severity, and gap description"
+
+  - name: destructive_action_detection
+    description: >-
+      Identifies the archive-without-confirmation pattern as a Destructive
+      Action Safety ERROR
+    if: "annotations.get('case_type') == 'positive-multi-dimension'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+
+      has_destructive = re.search(
+          r"(destructive|archive|delete).{0,80}(confirmation|confirm|single.click|no.confirm|directly)",
+          text, re.IGNORECASE
+      )
+      if not has_destructive:
+          return False, "Did not flag the archive action firing without confirmation"
+      return True, "Correctly flagged destructive action without confirmation"
+
+  - name: content_microcopy_detection
+    description: >-
+      Identifies raw error object display or generic CTA labels as
+      Content & Microcopy findings
+    if: "annotations.get('case_type') == 'positive-multi-dimension'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+
+      raw_error = re.search(
+          r"(raw\s+error|JSON\.stringify|error\s+object|stack\s+trace|"
+          r"error.{0,40}user.facing|stringify.{0,40}error)",
+          text, re.IGNORECASE
+      )
+      generic_cta = re.search(
+          r"(generic\s+(CTA|label|button)|\"OK\"\s+(button|label|text)|"
+          r"non.specific|vague\s+(label|button|CTA))",
+          text, re.IGNORECASE
+      )
+
+      if not raw_error and not generic_cta:
+          return False, "Did not flag raw error display or generic CTA labels"
+
+      found = []
+      if raw_error:
+          found.append("raw error display")
+      if generic_cta:
+          found.append("generic CTA")
+      return True, f"Content & Microcopy findings detected: {', '.join(found)}"
+
+thresholds:
+  uses_skill_dimensions:
+    min_pass_rate: 0.67
+  severity_classification:
+    min_pass_rate: 0.67
+  wcag_citations:
+    min_pass_rate: 0.67
+  accessible_name_findings:
+    min_pass_rate: 1.0
+  no_findings_for_backend:
+    min_pass_rate: 1.0
+  finding_structure:
+    min_pass_rate: 1.0
+  destructive_action_detection:
+    min_pass_rate: 1.0
+  content_microcopy_detection:
+    min_pass_rate: 0.67

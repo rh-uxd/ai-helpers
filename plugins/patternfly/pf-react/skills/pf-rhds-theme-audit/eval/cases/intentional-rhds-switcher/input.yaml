@@ -1,0 +1,1 @@
+prompt: "We intentionally use the RHDS scheme toggle as our only theme control. Audit the PF and RHDS synchronization, preserve that approach, and fix only real issues. The project is in the current directory."

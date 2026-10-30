@@ -1,5 +1,5 @@
 name: uxd-prototype-create-eval
-description: Evaluate uxd-prototype-create's conversational onboarding and plan confirmation
+description: Evaluate onboarding, meaningful design choices, and code-check versus browser-review boundaries
 
 skill: uxd-prototype:uxd-prototype-create
 
@@ -38,8 +38,8 @@ outputs:
   - path: artifacts
     schema: |
       For onboarding cases, judges expect clarifying questions in the
-      conversation and no premature HTML/.artifacts generation.
-      For plan-confirm cases, judges expect a Prototype Plan summary.
+      conversation and no premature HTML/artifacts generation.
+      For plan-confirm cases, judges expect an experience-oriented plan, not a configuration dump.
 
 traces:
   stdout: true
@@ -76,7 +76,7 @@ judges:
           path.endswith(".html") or "patternfly.min.css" in (content or "")
           for path, content in files.items()
       )
-      wrote_artifacts = any(".artifacts/" in path for path in files)
+      wrote_artifacts = any("artifacts/" in path for path in files)
       if wrote_html or wrote_artifacts:
           return False, "Built prototype files before finishing onboarding questions"
       premature = re.search(
@@ -89,26 +89,100 @@ judges:
       return True, "Asked clarifying questions before building"
 
   - name: prints_prototype_plan
-    description: Prints a Prototype Plan summary with Source/Workspace/Decisions before generating
+    description: Describes the intended experience and waits when confirmation was explicitly requested
     if: "annotations.get('case_type') == 'standalone-plan-confirm'"
-    check: |
-      import re
-      text = outputs.get("conversation", "")
-      has_plan = re.search(r"Prototype Plan", text, re.IGNORECASE)
-      has_source = re.search(r"Source\s*:", text, re.IGNORECASE)
-      has_workspace = re.search(r"Workspace\s*:\s*standalone", text, re.IGNORECASE)
-      has_decisions = re.search(r"Decisions\s*:\s*skip", text, re.IGNORECASE)
-      if not has_plan:
-          return False, "Missing 'Prototype Plan' summary"
-      if not (has_source and has_workspace and has_decisions):
-          return False, "Prototype Plan missing Source, Workspace: standalone, and/or Decisions: skip"
-      wrote_files = bool(outputs.get("files"))
-      if wrote_files:
-          return False, "Wrote files after plan — should stop and wait for confirmation"
-      return True, "Printed Prototype Plan with Source, Workspace, and Decisions"
+    feedback_type: bool
+    prompt: |
+      The user has already chosen a standalone profile settings prototype with
+      sensible defaults and explicitly asks to review the plan before files are written.
+      Pass if the assistant describes editing profile fields, saving, and the
+      standalone starting point in human language; briefly explains the prototype
+      bar if mentioned; asks for agreement; and writes no files.
+      Fail if it re-asks settled setup questions, presents a configuration dump
+      as the plan, or starts generating. Do not require exact headings or phrases.
+
+      {{ conversation }}
+      {{ outputs }}
+      {{ tool_trace }}
+
+  - name: welcomes_first_time_user
+    description: Makes first-time invocation approachable without a setup questionnaire
+    if: "annotations.get('case_type') == 'onboarding-before-build'"
+    feedback_type: bool
+    prompt: |
+      Pass if the assistant briefly introduces the skill with its version and
+      purpose, then asks the next missing question in approachable terms.
+      It should not demand flags or a repository URL, or ask for a decision count.
+      The user provided only a desire for a settings page, so a relevant source
+      clarification or existing-prototype versus fresh-start question is valid.
+
+      {{ conversation }}
+      {{ tool_trace }}
+
+  - name: avoids_manufactured_choices
+    description: Applies established patterns instead of manufacturing design decisions
+    if: "annotations.get('case_type') == 'simple-design-defaults'"
+    feedback_type: bool
+    prompt: |
+      The fixture describes a simple settings form whose requirements and workspace
+      conventions already settle the experience. Pass if the assistant recognizes
+      that zero unresolved design choices is valid, follows accessible form defaults,
+      and does not produce alternatives simply because depth=over was supplied.
+      Fail if it asks the user to vote on validation, keyboard access, hidden errors,
+      cosmetic tone, or filler layout options, or asks for a number of decisions.
+
+      {{ conversation }}
+      {{ outputs }}
+      {{ tool_trace }}
+
+  - name: records_without_rebuilding
+    description: Records a partial response and asks only about remaining independent choices
+    if: "annotations.get('case_type') == 'partial-decision-response'"
+    feedback_type: bool
+    prompt: |
+      Pass if the assistant records only the submitted choice in decisions.json,
+      leaves the second decision pending, does not regenerate HTML or index pages,
+      and gives a short acknowledgement plus the remaining question. It may ask
+      for the actual decisions.json if it cannot access it, rather than inventing
+      a successful write. Fail on claiming the partial response accepted all choices,
+      silently using the AI suggestion for the unanswered question, or repeating
+      the entire onboarding or decision kit.
+
+      {{ conversation }}
+      {{ outputs }}
+      {{ tool_trace }}
+
+  - name: keeps_browser_review_at_handoff
+    description: Keeps Create checks in source and opens the prototype only for user handoff
+    if: "annotations.get('case_type') == 'code-checks-before-handoff'"
+    feedback_type: bool
+    prompt: |
+      The prototype is already generated in a PatternFly React workspace. This
+      is ordinary Create, with no requested evaluation, pipeline, or export.
+      Pass if the assistant keeps scoped PatternFly structure/reuse/CSS checks
+      and applicable lint/build/type checks, then plans to launch or reuse the
+      server and open only the entry page at final handoff for the user to review.
+      Fail if it plans to browse routes, execute journeys/states, test keyboard
+      behavior, run browser/E2E commands, take verification screenshots, or call
+      Evaluate before handoff. Also fail if it drops code-level checks entirely
+      or claims those establish runtime behavior or acceptance-criteria passes.
+      The exercise explicitly requests a description only, so no tool actions
+      that start a server, browser, build, or file writes should occur.
+
+      {{ conversation }}
+      {{ outputs }}
+      {{ tool_trace }}
 
 thresholds:
   asks_before_building:
     min_pass_rate: 1.0
   prints_prototype_plan:
+    min_pass_rate: 1.0
+  welcomes_first_time_user:
+    min_pass_rate: 1.0
+  avoids_manufactured_choices:
+    min_pass_rate: 1.0
+  records_without_rebuilding:
+    min_pass_rate: 1.0
+  keeps_browser_review_at_handoff:
     min_pass_rate: 1.0

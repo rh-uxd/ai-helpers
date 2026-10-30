@@ -1,16 +1,16 @@
 # Prototype Bar config
 
-Runtime config for Sources, Prototype ↔ Eval navigation, and Scenario switching. Source of truth on disk:
+Runtime config for Sources, Prototype ↔ Eval navigation, and State switching. Source of truth on disk:
 
 `.artifacts/{ID}/prototype-bar.json`
 
-Full scenario catalog lives in sibling `.artifacts/{ID}/scenarios.json` (see `scenarios-schema.md`). Sync flattens it into the slim `scenarios` array below.
+Full state catalog lives in sibling `.artifacts/{ID}/states.json` (see `states-schema.md`). Sync flattens it into the slim `scenarios` array below.
 
 At install/publish time this is copied or inlined so the running page can read:
 
 `window.__UXD_PROTOTYPE__`
 
-Active scenario on the page: `?scenario=<id>` (default when absent: `default`). Runtime: `window.UxdScenario` from `templates/uxd-scenario-runtime.js`.
+Active state on the page: `?state=<id>` (default when absent: `default`). Runtime: `window.UxdScenario` from `templates/uxd-scenario-runtime.js`.
 
 ## Schema
 
@@ -74,9 +74,9 @@ Active scenario on the page: `?scenario=<id>` (default when absent: `default`). 
 | `sources[].url` | string | Optional link (Jira browse, Figma, etc.) |
 | `views.prototype` | string \| null | URL for Prototype view; `null` = session return URL / referrer / `/` |
 | `views.eval` | string \| null | Relative Pages path (`/evals/{ID}/`) or absolute hosted URL; empty until report exists |
-| `scenarios` | array | Slim flatten of `scenarios.json` for the Scenario menu |
+| `scenarios` | array | Slim flatten of `states.json` for the State menu |
 | `scenarios[].route` | string | Page path; menu filters by current pathname |
-| `scenarios[].id` | string | Scenario id (`?scenario=<id>`) |
+| `scenarios[].id` | string | State id (`?state=<id>`) |
 | `scenarios[].name` | string | Display label |
 | `scenarios[].default` | boolean | Optional; marks the default scenario |
 
@@ -89,8 +89,8 @@ Active scenario on the page: `?scenario=<id>` (default when absent: `default`). 
 | Absolute `views.eval` (http/https) | Eval navigates there when helper is down / missing report |
 | Relative `views.eval` (e.g. `/evals/{id}/`) | Probes **`<base href>`-prefixed** path first (e.g. `/mr-218/evals/{id}/` on GitLab MR Pages), then site-root `/evals/{id}/`. Only enables Eval when the probe finds a real report (not an SPA `historyApiFallback` shell) |
 | No reachable report | Eval disabled; local hint mentions `export-helper` on `:9417`; on hosted Pages the hint shows the expected `{base}evals/{id}/` path |
-| ≤1 scenario for current route | Scenario menu hidden |
-| Scenario ▾ (prototype view) | Always shown; enabled when ≥2 scenarios match the current route (updates on SPA navigation). Disabled with tooltip when none. Selection sets `?scenario=` |
+| ≤1 scenario for current route | State menu hidden |
+| State ▾ (prototype view) | Always shown; enabled when ≥2 scenarios match the current route (updates on SPA navigation). Disabled with tooltip when none. Selection sets `?state=` |
 
 **Local SPA note:** On webpack/Vite apps, bare `/evals/{id}/` usually returns the app shell. Keep `export-helper.mjs` running so Eval can open the HTML report from `.artifacts/`. On GitLab/GitHub Pages, copy the report with `copy-eval-for-pages.sh` into `public/evals/{id}/` (and commit it) so the build emits real static HTML. The bar resolves relative eval URLs against `<base href>` / `ASSET_PATH` (MR previews live under `/mr-{iid}/`, not the site root).
 
@@ -107,7 +107,7 @@ Active scenario on the page: `?scenario=<id>` (default when absent: `default`). 
 | **publish-report.sh** | Set `views.eval` to Pages URL or `/evals/{KEY}/`; write `report-url.txt` |
 | **install-prototype-bar.sh** | With `--artifacts`: sync config, inject into standalone HTML or copy next to workspace public assets, install `uxd-scenario-runtime.js`, copy eval report for Pages |
 
-Use `scripts/sync-prototype-bar-config.mjs` to create or merge the file from metadata + optional outcome context + `scenarios.json`.
+Use `scripts/sync-prototype-bar-config.mjs` to create or merge the file from metadata + optional outcome context + `states.json`.
 
 ## Static Pages layout
 

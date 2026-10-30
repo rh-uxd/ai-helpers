@@ -84,7 +84,7 @@ function normalizePath(p: string): string {
   return noQuery || '/';
 }
 
-const SCENARIO_UNAVAILABLE_HINT = 'No scenarios available for the current page';
+const SCENARIO_UNAVAILABLE_HINT = 'No states available for the current page';
 
 async function helperHealthy(): Promise<boolean> {
   try {
@@ -206,7 +206,7 @@ function resolvePrototypeUrl(cfg: UxdPrototypeConfig): string {
 function getActiveScenarioId(): string {
   if (window.UxdScenario) return window.UxdScenario.get();
   try {
-    return new URLSearchParams(window.location.search).get('scenario') || 'default';
+    return new URLSearchParams(window.location.search).get('state') || 'default';
   } catch {
     return 'default';
   }
@@ -588,17 +588,17 @@ export const PrototypeBar: React.FC = () => {
   const selectScenario = (id: string) => {
     setScenarioOpen(false);
     if (id === activeScenario) {
-      setStatus(`Scenario: ${id}`);
+      setStatus(`State: ${id}`);
       return;
     }
-    setStatus(`Scenario: ${id}`);
+    setStatus(`State: ${id}`);
     if (window.UxdScenario) {
       window.UxdScenario.set(id);
       return;
     }
     const url = new URL(window.location.href);
-    if (id === 'default') url.searchParams.delete('scenario');
-    else url.searchParams.set('scenario', id);
+    if (id === 'default') url.searchParams.delete('state');
+    else url.searchParams.set('state', id);
     window.location.assign(url.toString());
   };
 
@@ -700,7 +700,7 @@ export const PrototypeBar: React.FC = () => {
                 setScenarioOpen((v) => !v);
               }}
             >
-              Scenario ▾
+              State ▾
             </button>
             {scenarioMenuEnabled && (
               <ul className="uxd-pb-menu uxd-pb-scenario-menu" role="menu" hidden={!scenarioOpen}>

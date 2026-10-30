@@ -1,258 +1,137 @@
-# Decision Workflow
+# Design choices
 
-Full procedure for Step 7 design decision generation. Load this when the prototype reaches the design decision phase and `--decisions` is `auto` or `human`. When `--decisions=skip`, do not run this workflow.
+Load for Step 7 when `--decisions=auto|human`. With `skip`, build with defaults, record assumptions in metadata, and create no decision kit.
 
-Copy the page skeleton from [decision-page-template.html](decision-page-template.html). Read [decision-page-example.md](decision-page-example.md) for preview quality rules by decision type.
+## Choose what needs a decision
 
----
+Read the source and workspace conventions before framing choices. Surface a question only if the answer changes the experience and at least two viable options satisfy known requirements. Explain the competing benefits in the user's task: “Keep the resource list visible while editing, or give a long form its own page?”
 
-## Quality bar (non-negotiable)
+Apply established accessibility, validation, navigation, and design-system practices as defaults. Do not ask whether to hide errors, remove keyboard access, use misleading labels, or break the product's patterns. Avoid cosmetic questions already settled by the codebase. A straightforward form may need no decisions; a larger workflow may need several. Neither decision count nor option count is a quota. Usually two or three alternatives suffice; include more only for a real tradeoff.
 
-Decision pages must feel like decision-kit artifacts: rich, browsable HTML with **real rendered UI** in every option preview — not chat summaries with ASCII art.
+`--depth under|normal|over` remains compatible as exploration effort, never a minimum number of questions. Use [decision-points.yaml](decision-points.yaml) for ideas only.
 
-| Rule | Requirement |
-|------|-------------|
-| Chrome | PatternFly 6 CDN for page chrome (`patternfly.min.css` + `patternfly-addons.min.css`). Do **not** invent a dark custom theme. |
-| Options | Exactly 4 options (A–D) unless the user asks for more |
-| Previews | Real HTML UI in each `.visual-preview` slot. **Ban ASCII art and empty gray-box wireframes** as the primary preview. |
-| Preview source | Match the build target (see below) |
-| Comparison | Mandatory comparison table (5–8 dimensions) rating all options |
-| Cross-links | Every page links to all other decisions + `index.html` |
-| Surface | Always print absolute `file://` URLs and open the index in the browser |
+Group independent decisions in one review. When one answer changes the viable options for another, resolve that dependency first, then prepare the affected batch. Never present contradictory choices as independent.
 
-### Preview source by workspace
+## Data first, one reusable report
 
-- **Standalone** — Compose option previews from PatternFly CDN components (same stack as the eventual prototype).
-- **Workspace** — Prefer the target codebase’s real components, patterns, and class names when available. If that is impractical for a static HTML decision page, fall back to PatternFly CDN mockups that still represent the same choice (same layout/interaction/component tradeoff).
+Write `artifacts/{ID}/decisions/decisions.json` as the authoritative record. Use Python 3 (standard library only) and the bundled renderer instead of hand-building page chrome:
 
-### Quality checklist (before presenting any page)
-
-- [ ] Four options are visually distinct at a glance (not four accent-color variants of the same layout)
-- [ ] Product-real copy in previews (domain nouns from the RFE — no lorem ipsum / “Item 1”)
-- [ ] Comparison table present with 5–8 meaningful dimensions
-- [ ] Recommended badge on the AI pick; Selected badge only after a choice is locked
-- [ ] Nav links to every decision page + `index.html` work
-- [ ] Page loads PatternFly CDN and uses PF layout/card/table classes for chrome
-
----
-
-## Decision Page Generation
-
-Generate one self-contained HTML file per decision under `.artifacts/{ID}/decisions/`, named `01-{slug}.html`, `02-{slug}.html`, etc.
-
-**Start from** [decision-page-template.html](decision-page-template.html). Fill in content; do not redesign the chrome.
-
-### Required page sections
-
-1. **Header** — decision number, title, short context (why this decision matters for these user stories)
-2. **Cross-decision nav** — PatternFly tabs or nav strip linking every decision page + `index.html`; highlight the current page (required for **both** `auto` and `human`)
-3. **Options grid (2×2)** — one card per option; each card includes:
-   - Letter label (A / B / C / D)
-   - Name and one-sentence description
-   - `.visual-preview` with **rendered** UI (see preview source rules)
-   - Pros and cons (2–3 each)
-   - “When to use” guidance
-   - “Recommended” badge on the AI suggestion
-   - “Selected” badge on the chosen option (after decision)
-4. **Comparison table** — rows = dimensions that matter for this decision; columns = A–D
-5. **Recommendation** — which option and why (plain English, grounded in RFE / codebase)
-6. **Footer** — “Respond with: Option A / B / C / D (or describe your own)”
-
-### Preview type by decision category
-
-| Category | Preview must show |
-|----------|-------------------|
-| Layout / IA | Mini app frame: masthead/nav + content region illustrating the structure |
-| Interaction | Vertical flow or in-context UI showing how the action unfolds (drawer vs modal vs page) |
-| Density / tone | Same content rendered at different densities or visual emphasis using real components |
-| Key components | Actual components (PF or target-app) composing the critical UI element — not labeled boxes |
-
----
-
-## Index page
-
-Always write `.artifacts/{ID}/decisions/index.html` whenever decision pages exist.
-
-- List every decision with title, status badge (`pending` / `auto-resolved` / `user-decided`), chosen option (if any), and link to its HTML file
-- Link back from every decision page’s nav to this index
-- Style with the same PatternFly CDN chrome as decision pages
-
----
-
-## Surface to the user (browser)
-
-After generating (or regenerating) decision pages and `index.html`:
-
-1. Resolve the **absolute** path to the decisions directory.
-2. Print clickable `file://` URLs in chat — at minimum the index, plus the first or current decision page:
-
-```
-Decision pages (open in your browser):
-  Index:    file:///absolute/path/.artifacts/{ID}/decisions/index.html
-  Current:  file:///absolute/path/.artifacts/{ID}/decisions/01-layout-pattern.html
+```bash
+python3 "${CLAUDE_SKILL_DIR}/scripts/decision_kit.py" render "artifacts/{ID}/decisions/decisions.json"
 ```
 
-3. Open the index in the default browser:
-   - macOS: `open ".artifacts/{ID}/decisions/index.html"`
-   - Linux: `xdg-open ".artifacts/{ID}/decisions/index.html"`
-   - Windows: `start "" ".artifacts/{ID}/decisions/index.html"`
+The renderer reuses [decision-page-template.html](decision-page-template.html) and creates only `index.html`: one report containing every decision, preview, and choice control. Do not create individual comparison pages, a top navigation strip, or cross-page links. No package install, server, JSON fetch, or browser storage is required. Legacy `htmlFile` fields are ignored by the renderer; new records may point to `index.html#<decision-id>` if a downstream artifact needs a link.
 
-Do **not** only mention a relative `.artifacts/...` path. Users must get a URL they can click or a file that opens in the browser.
+Render once before review. Persist incoming answers to JSON without rebuilding HTML. After all independent answers are accepted, render once more to refresh the selected options and write the strategy brief. Only revise a comparison early if new information invalidates its options; retain unaffected answers and explain what changed.
 
----
+### Record format
 
-## Decision Storage Format
-
-Initialize `.artifacts/{ID}/decisions/decisions.json`:
+Preserve existing fields consumed by evaluate/publish; additional fields supply page content:
 
 ```json
 {
-  "projectName": "{ID} — {Title}",
-  "projectDescription": "Prototype decisions for {Title}",
-  "createdAt": "2025-01-15T10:30:00Z",
-  "workspace": "/path/to/workspace",
-  "rfeKey": "{ID}",
-  "decisions": []
+  "projectName": "PROJ-298 — Resource settings",
+  "projectDescription": "Choose how people edit resource settings.",
+  "createdAt": "2026-10-15T14:00:00Z",
+  "workspace": "standalone",
+  "rfeKey": "PROJ-298",
+  "decisions": [
+    {
+      "id": "edit-context",
+      "title": "Where should editing happen?",
+      "context": "People often compare a setting with other resources before saving.",
+      "status": "pending",
+      "chosenOption": null,
+      "chosenTitle": null,
+      "reasoning": "",
+      "options": ["A", "B"],
+      "recommended": "A",
+      "recommendationReason": "Keeps the resource list available during short edits.",
+      "htmlFile": "index.html#edit-context",
+      "decidedAt": null,
+      "summary": "",
+      "optionDetails": [
+        {
+          "id": "A",
+          "title": "Side panel",
+          "description": "Edit beside the resource list.",
+          "previewHtml": "<div class=\"pf-v6-c-drawer\">...generated resource UI...</div>",
+          "pros": ["Keeps comparison context"],
+          "cons": ["Less room for long forms"],
+          "whenToUse": "Short edits alongside a list."
+        },
+        {
+          "id": "B",
+          "title": "Dedicated page",
+          "description": "Edit on a full page, then return to the list.",
+          "previewHtml": "<form class=\"pf-v6-c-form\">...generated resource UI...</form>",
+          "pros": ["More room for complex fields"],
+          "cons": ["Requires navigation back to compare"],
+          "whenToUse": "Longer, focused editing tasks."
+        }
+      ],
+      "comparison": [
+        {"dimension": "List context", "values": {"A": "Visible", "B": "Return to list"}},
+        {"dimension": "Form space", "values": {"A": "Limited width", "B": "Full page"}}
+      ]
+    }
+  ]
 }
 ```
 
-Each decision record:
+For older decision kits, keep accepted choices and add `context`, `optionDetails`, `comparison`, and `recommendationReason` before using the renderer; do not re-ask resolved questions. Applying responses still accepts the legacy record fields.
 
-```json
-{
-  "id": "layout-pattern",
-  "title": "Layout Pattern",
-  "status": "auto-resolved",
-  "chosenOption": "B",
-  "chosenTitle": "List + Detail",
-  "reasoning": "The RFE describes browsing and inspecting items, which maps to a list+detail pattern.",
-  "options": ["A", "B", "C", "D"],
-  "recommended": "B",
-  "htmlFile": "01-layout-pattern.html",
-  "decidedAt": "2025-01-15T10:30:00Z",
-  "summary": "Master list on left, detail panel on right for item inspection"
-}
+Replace abbreviated preview content with real rendered UI. `previewHtml` is assistant-authored markup, never raw ticket text, fetched HTML, or user input. Escape source content before interpolating into it; keep previews inert (no scripts, event handlers, or external embeds). The renderer removes `script`, `iframe`, `object`, and `embed` tags, event-handler attributes, and `javascript:` URLs.
+
+Status values remain `pending`, `auto-resolved`, `user-decided`. `recommended` is the AI's suggestion, not user approval. Use **AI suggestion** in all visible labels and give a short, evidence-based rationale. Keep recorded choices separate from suggestions; checked radio controls show the recorded options. `chosenOption: custom` is supported with the user's description in `chosenTitle`, `summary`, and `reasoning`; discuss feasibility and requirements before accepting it.
+
+With no genuine tradeoffs, write an empty `decisions` array, set `decisions_count: 0`, explain that established patterns cover the feature, and continue. Do not generate empty review pages or wait for an empty submission.
+
+## Present and collect
+
+Open `index.html` using the available browser/file-opening capability and give a clickable absolute path (or local URL if served). Keep chat brief:
+
+```text
+Review the options on [Review design choices](<absolute-path-to-index>), select your choices, then click **Copy response** and send it back to me. You can also describe another approach.
 ```
 
-Status values: `"auto-resolved"`, `"user-decided"`, `"pending"`.
+The page has keyboard-accessible radio controls, an **AI suggestion** badge and rationale directly in the suggested card, a progress count, a plain-language response preview, and one **Copy response** button. The closing section says “Send your choices back to the agent” and “Copy your response and paste it into your conversation.” Do not add a bulk suggestion button, show JSON to the user, or explain acceptance states and reload behavior in the page copy. If clipboard access is unavailable, highlight the response for manual copying and give a brief instruction.
 
-Preserve these field names — downstream skills (`uxd-prototype-evaluate`, `uxd-prototype-publish`) read them.
+The copied response uses the prototype reference, question titles, and selected option names, for example:
 
-**Vocabulary:** Chat / CLI `--decisions=skip|auto|human` maps 1:1 to `decision_mode` in `prototype-summary.yaml` and `metadata.json`. Legacy values `decide` / `interactive` mean `human`.
+```text
+My design choices for PROJ-298:
 
----
-
-## Skip — No Decision Kit
-
-When `--decisions=skip`:
-
-1. Do **not** create `.artifacts/{ID}/decisions/` pages, `decisions.json`, or `strategy-brief.md`
-2. Make design calls inline during prototype generation
-3. Record `decision_mode: skip` and omit `decision_depth` / `decisions_count`
-
----
-
-## Auto — Batch Review
-
-After auto-resolving all decisions:
-
-1. Generate all HTML decision pages with the chosen option highlighted (Selected badge)
-2. Write / update `index.html`
-3. Surface `file://` URLs and open the index in the browser
-4. Present a batch summary table in chat:
-
-```
-Auto-Resolved Design Decisions:
-
-  #  Decision              Chosen            Reasoning
-  ─  ────────              ──────            ─────────
-  1  Layout Pattern        List + Detail     Browse/inspect pattern matches RFE
-  2  Interaction Model     Drawer Panels     Context preserved during inspection
-  3  Information Density   Progressive       Mixed audience (admin + end user)
-  4  Visual Tone           Utilitarian       Enterprise platform consistency
-  5  Key Components        Table + Drawer    Standard PF6 pattern for this layout
-
-Want to override any of these? (Enter numbers to change, or "ok" to proceed)
+1. Where should editing happen?
+   Option A — Side panel
 ```
 
-5. If the user overrides any: update `decisions.json`, regenerate the corresponding HTML page and index
-6. Once confirmed, ensure all decisions are in final status (`auto-resolved` or `user-decided`)
+The agent maps this readable response to the matching prototype and decision IDs, then normalizes it to the internal JSON shape `{"prototypeId":"PROJ-298","choices":{"edit-context":"A"}}`. JSON remains an internal storage and helper format. Check the question and option names against the current kit; if they disagree or the answer is ambiguous, clarify rather than guessing. Existing JSON submissions remain supported.
 
----
+Partial responses are allowed. Record them and ask only about remaining choices. Validate prototype ID, decision IDs, and option membership; do not turn missing answers into acceptance. For a custom chat answer, normalize it to `{"option":"custom","title":"...","reasoning":"..."}` after resolving any consequential uncertainty.
 
-## Human — Interactive Walk-Through
+The assistant saves the pasted or normalized response to a temporary JSON file and applies it:
 
-1. Generate ALL decision pages + `index.html` upfront (before asking any questions)
-2. Surface `file://` URLs and open the index (or the first decision page) in the browser
-3. Present decisions sequentially in chat:
-
-```
-Decision 1/5: Layout Pattern
-
-  What overall page structure best serves these user stories?
-
-  Open the visual comparison:
-  file:///absolute/path/.artifacts/{ID}/decisions/01-layout-pattern.html
-
-  All decisions: file:///absolute/path/.artifacts/{ID}/decisions/index.html
-
-  My recommendation: List + Detail (Option B)
-  — The RFE describes browsing and inspecting items.
-
-  Which option do you prefer? (A/B/C/D, "recommended", or describe your own)
+```bash
+python3 "${CLAUDE_SKILL_DIR}/scripts/decision_kit.py" apply "artifacts/{ID}/decisions/decisions.json" --response /path/to/response.json
 ```
 
-4. Wait for the user's choice before proceeding to the next decision
-5. After each choice: update `decisions.json`, regenerate that page (Selected badge) and `index.html`
-6. If the user provides a custom answer, generate a card for it and record with `chosenOption: "custom"`
-7. After all decisions, generate the strategy brief
+The helper validates the whole response before updating JSON atomically, preserves unanswered records, and does not regenerate pages. Acknowledge recorded choices in a sentence; do not repeat the complete options, links, and instructions after each answer. Show a compact recap after the batch is complete.
 
----
+### Review AI suggestions (`auto`)
 
-## Strategy Brief
+Set each `chosenOption` to `recommended`, populate its title, reasoning, summary and timestamp, and mark `auto-resolved`. Render once and present a short batch summary of **AI suggestions**, each with rationale. Users can accept the batch in chat or override individual choices on the index. Wait for the requested review before building; do not label these as human choices. Overrides become `user-decided`; retain `auto-resolved` on accepted AI picks.
 
-Write `.artifacts/{ID}/decisions/strategy-brief.md`:
+### Choose together (`human`)
 
-```markdown
-# Design Strategy — {ID}
+Initialize all choices as pending. Show the index once; users can answer independent choices together. Offer one-at-a-time conversation when preferred. After each response, update JSON only; preserve prior answers. Never interpret silence as a selection.
 
-## Decisions Made
+## Visual quality
 
-| # | Decision | Choice | Mode |
-|---|----------|--------|------|
-| 1 | Layout Pattern | List + Detail | auto-resolved |
-| 2 | Interaction Model | Drawer Panels | auto-resolved |
+Use PatternFly 6 for page chrome. Each option shows real UI, with the same task and content across alternatives, plus concise pros, cons, and when it fits. Match workspace components where possible; otherwise use PatternFly mockups showing the same tradeoff. No ASCII, empty gray boxes, or implausible filler alternatives. See [decision-page-example.md](decision-page-example.md).
 
-### 1. Layout Pattern → List + Detail
-[Reasoning and context]
+Comparison tables include only dimensions that distinguish viable alternatives; there is no row quota. Use PatternFly card header/body/footer markup, complete label content markup, consistent token-based spacing, and scoped report styles that do not restyle the option previews. Validate the single report and its previews once before presenting; repeated selections alone do not call for rebuilds or browser checks.
 
-### 2. Interaction Model → Drawer Panels
-[Reasoning and context]
+## Strategy brief
 
-## Design Direction
-[1-2 paragraph synthesis of how decisions combine into a coherent approach]
-```
-
----
-
-## Cross-decision navigation
-
-Include on **every** decision page (`auto` and `human`). Prefer PatternFly tab markup from the template; keep relative `href`s so pages work when opened via `file://`:
-
-```html
-<nav class="pf-v6-c-tabs pf-m-box" aria-label="Design decisions">
-  <ul class="pf-v6-c-tabs__list">
-    <li class="pf-v6-c-tabs__item">
-      <a href="index.html" class="pf-v6-c-tabs__link">All</a>
-    </li>
-    <li class="pf-v6-c-tabs__item pf-m-current">
-      <a href="01-layout-pattern.html" class="pf-v6-c-tabs__link" aria-current="page">1. Layout</a>
-    </li>
-    <li class="pf-v6-c-tabs__item">
-      <a href="02-interaction-model.html" class="pf-v6-c-tabs__link">2. Interaction</a>
-    </li>
-  </ul>
-</nav>
-```
-
-Highlight the current page. Use short labels (decision title, truncated if needed).
+After the batch is resolved, write `strategy-brief.md` with a compact table of decision, choice, status, and rationale, followed by a short explanation of how the choices combine into the intended experience. Keep `decision_mode: skip|auto|human` in metadata/summary for downstream compatibility; legacy `decide` / `interactive` normalize to `human`.

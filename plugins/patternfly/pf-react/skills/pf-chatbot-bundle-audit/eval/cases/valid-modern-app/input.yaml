@@ -1,0 +1,1 @@
+prompt: "Audit this PatternFly ChatBot application for bundle and setup problems. Do not invent changes when the current setup is correct. The project is in the current directory."

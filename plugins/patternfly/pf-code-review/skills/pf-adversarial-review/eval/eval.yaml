@@ -51,7 +51,7 @@ judges:
           text += "\n" + content
       findings = ann.get("expected_findings", [])
       if not findings:
-          return False, "Test case missing expected_findings annotations"
+          return False, "Test case has no expected_findings in its annotation file"
       missing = []
       for finding in findings:
           location = re.compile(
@@ -76,7 +76,7 @@ judges:
           text += "\n" + content
       findings = ann.get("expected_findings", [])
       if not findings:
-          return False, "Test case missing expected_findings annotations"
+          return False, "Test case has no expected_findings in its annotation file"
       missing = []
       for finding in findings:
           location = re.compile(
@@ -101,7 +101,7 @@ judges:
           text += "\n" + content
       findings = ann.get("expected_findings", [])
       if not findings:
-          return False, "Test case missing expected_findings annotations"
+          return False, "Test case has no expected_findings in its annotation file"
       missing = []
       for finding in findings:
           location = re.compile(

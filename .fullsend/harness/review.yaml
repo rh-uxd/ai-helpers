@@ -1,0 +1,24 @@
+# Thin ai-helpers overlay over the pinned upstream review harness.
+base: https://raw.githubusercontent.com/fullsend-ai/agents/d8a9bc78b9566158a03efda6265d904c7dfc1981/harness/review.yaml#sha256=58414921e8dd6b7a7135a7d23dde70e4a51fe4cbbc2b4bacd74de2eeb62acd99
+
+description: "Fullsend review with ai-helpers-specific augmentation"
+
+# The local skill adds repository-specific judgment without replacing the
+# upstream review dimensions.
+skills:
+  - skills/ai-helpers-review
+
+# Keep remote resource resolution explicit for the pinned base harness.
+allowed_remote_resources:
+  - https://raw.githubusercontent.com/fullsend-ai/agents/
+
+# These values must remain synchronized between runner and sandbox. Normal
+# plugin contributions are reviewed through CODEOWNERS and are not protected
+# paths. Repository governance and agent configuration remain human-owned.
+env:
+  runner:
+    REVIEW_FINDING_SEVERITY_THRESHOLD: "medium"
+    REVIEW_PROTECTED_PATHS: ".claude/,.cursor/,.pi/,.gitattributes,.gitignore,.github/,.pre-commit-config.yaml,AGENTS.md,CODEOWNERS,.fullsend/,CLAUDE.md,CONTRIBUTING.md,CONTRIBUTING-SKILLS.md,GOVERNANCE.md,SECURITY.md,.coderabbit.yaml,Containerfile,Dockerfile,harness/,images/,agents/,api-servers/,policies/,profiles/,providers/,scripts/"
+  sandbox:
+    REVIEW_FINDING_SEVERITY_THRESHOLD: "medium"
+    REVIEW_PROTECTED_PATHS: ".claude/,.cursor/,.pi/,.gitattributes,.gitignore,.github/,.pre-commit-config.yaml,AGENTS.md,CODEOWNERS,.fullsend/,CLAUDE.md,CONTRIBUTING.md,CONTRIBUTING-SKILLS.md,GOVERNANCE.md,SECURITY.md,.coderabbit.yaml,Containerfile,Dockerfile,harness/,images/,agents/,api-servers/,policies/,profiles/,providers/,scripts/"

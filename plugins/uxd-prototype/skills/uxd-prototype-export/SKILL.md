@@ -4,16 +4,16 @@ version: 0.1.0
 description: >-
   Export a prototype page or journey step as static HTML, a React component
   tree, or a PatternFly implementation spec, and install the Prototype Bar
-  (Sources, Prototype|Eval, Scenario, Export). Use when capturing the current
+  (Sources, Prototype|Eval, State, Export). Use when capturing the current
   view, batch-exporting journey screens and page scenarios, or wiring
   provenance/eval/scenario navigation into a prototype.
 ---
 
 # Export Prototype
 
-Captures prototype screens as portable artifacts — from the running app (Prototype Bar) or in batch from journey + scenario files. Also installs the Prototype Bar (Sources, Prototype|Eval, Scenario, Export).
+Captures prototype screens as portable artifacts — from the running app (Prototype Bar) or in batch from journey + scenario files. Also installs the Prototype Bar (Sources, Prototype|Eval, State, Export).
 
-Family: `uxd-prototype-create` writes `journeys.json` / `scenarios.json` / `prototype-bar.json`; this skill captures them; `uxd-prototype-evaluate` reports can be opened from the bar; `uxd-prototype-publish` copies evals into static Pages.
+Family: `uxd-prototype-create` writes `journeys.json` / `states.json` / `prototype-bar.json`; this skill captures them; `uxd-prototype-evaluate` reports can be opened from the bar; `uxd-prototype-publish` copies evals into static Pages.
 
 ## Inputs
 
@@ -21,7 +21,7 @@ Family: `uxd-prototype-create` writes `journeys.json` / `scenarios.json` / `prot
 |-------|----------|--------|
 | What to export (current page, journey batch, or install bar) | **Yes** | User; skill asks if omitted |
 | Live prototype URL (`--base-url`) | Yes for capture | Running app |
-| `journeys.json` + `scenarios.json` | Yes for batch | `.artifacts/{ID}/` from create |
+| `journeys.json` + `states.json` | Yes for batch | `artifacts/{ID}/` from create |
 | Prototype source path (`--source`) | Yes for `--install-bar` | Standalone dir or workspace root |
 
 If the user says "export" without details, **stop and ask** which path (below).
@@ -60,7 +60,7 @@ Parse as: `[--install-bar] [--base-url <url>] [--journeys <path>] [--formats htm
 | `--config` | path | auto-detect | `prototype-bar.json` (with `--install-bar`) |
 | `--base-url` | URL | — | Live prototype URL for Playwright |
 | `--journeys` | path | `.artifacts/{ID}/journeys.json` | Journey definitions |
-| `--scenarios` | path | sibling `scenarios.json` | Page scenario catalog |
+| `--scenarios` | path | sibling `states.json` | Page state catalog |
 | `--out` | path | `.artifacts/{ID}/exports` | Output directory |
 | `--formats` | `html`, `tree`, `pf-spec` | `html` | Export formats |
 | `--source` | path | — | Prototype dir or workspace root (install bar) |
@@ -71,8 +71,8 @@ Parse as: `[--install-bar] [--base-url <url>] [--journeys <path>] [--formats htm
 > What should I export?
 >
 > - **Current page** — capture whatever is on screen (use the Prototype Bar, or give me a URL)
-> - **Journey steps × scenarios** — batch-export from `.artifacts/{ID}/journeys.json` + `scenarios.json`
-> - **Install Prototype Bar** — add the sticky bar (Sources, Eval, Scenario, Export)
+> - **Journey steps × states** — batch-export from `artifacts/{ID}/journeys.json` + `states.json`
+> - **Install Prototype Bar** — add the sticky bar (Sources, Eval, State, Export)
 
 ## Step 1: Choose Path
 
@@ -87,29 +87,29 @@ bash "${CLAUDE_SKILL_DIR}/scripts/install-prototype-bar.sh" \
   [--mode standalone|workspace]
 ```
 
-Assets-only (no config sync): omit `--artifacts` and pass `--config` if you already have `prototype-bar.json`. Schema: [references/prototype-bar-config.md](references/prototype-bar-config.md). Scenario runtime (`?scenario=<id>`) is `uxd-scenario-runtime.js`.
+Assets-only (no config sync): omit `--artifacts` and pass `--config` if you already have `prototype-bar.json`. Schema: [references/prototype-bar-config.md](references/prototype-bar-config.md). Scenario runtime (`?state=<id>`) is `uxd-scenario-runtime.js`.
 
-If workspace/React auto-mount fails, copy `templates/PrototypeBar.tsx` + CSS and mount `<PrototypeBar />` in the app shell. Mock branching: create skill `references/scenario-mocks.md`.
+If workspace/React auto-mount fails, copy `templates/PrototypeBar.tsx` + CSS and mount `<PrototypeBar />` in the app shell. Mock branching: create skill `references/state-mocks.md`.
 
 **B. Export current URL**
 
 ```bash
 bash "${CLAUDE_SKILL_DIR}/scripts/export-current.sh" \
-  --url "http://localhost:3000/some-route?scenario=empty" \
+  --url "http://localhost:3000/some-route?state=empty" \
   --out ".artifacts/{ID}/exports" \
   [--formats html,tree,pf-spec]
 ```
 
 **C. Batch-export journey steps × scenarios**
 
-Requires [journeys-schema.md](references/journeys-schema.md) and optionally [scenarios-schema.md](references/scenarios-schema.md). For each `export: true` step, captures every scenario for that `route` (`?scenario=<id>`, then step `actions`).
+Requires [journeys-schema.md](references/journeys-schema.md) and optionally [states-schema.md](references/states-schema.md). For each `export: true` step, captures every scenario for that `route` (`?state=<id>`, then step `actions`).
 
 ```bash
 node "${CLAUDE_SKILL_DIR}/scripts/export-journey.mjs" \
   --base-url "http://localhost:3000" \
-  --journeys ".artifacts/{ID}/journeys.json" \
-  --scenarios ".artifacts/{ID}/scenarios.json" \
-  --out ".artifacts/{ID}/exports" \
+  --journeys "artifacts/{ID}/journeys.json" \
+  --scenarios "artifacts/{ID}/states.json" \
+  --out "artifacts/{ID}/exports" \
   --formats html,pf-spec
 ```
 
@@ -133,7 +133,7 @@ bash "${CLAUDE_SKILL_DIR}/scripts/copy-eval-for-pages.sh" \
   --pages-root public
 ```
 
-Sync merges Sources and flattens `scenarios.json` into `prototype-bar.json`. `copy-eval-for-pages` copies the report to `public/evals/{ID}/index.html` and sets `views.eval` to `/evals/{ID}/`.
+Sync merges Sources and flattens `states.json` into `prototype-bar.json`. `copy-eval-for-pages` copies the report to `public/evals/{ID}/index.html` and sets `views.eval` to `/evals/{ID}/`.
 
 ## Step 2: Confirm Outputs
 
@@ -144,10 +144,10 @@ Report paths to the user. Static HTML is a **visual** snapshot — it does not r
 | Zone | Controls |
 |------|----------|
 | Left | Brand + **Sources** (outcome / RFE / Figma / description) |
-| Center | **Prototype \| Eval** + **Scenario ▾** (enabled when ≥2 scenarios match the route) |
+| Center | **Prototype \| Eval** + **State ▾** (enabled when ≥2 scenarios match the route) |
 | Right | **Export** (Static HTML \| Component tree \| PF spec) + status |
 
-Eval resolution: helper `/evals/{id}/` when healthy → else `views.eval` under `<base href>` then site root → else disabled. Scenario switching sets `?scenario=<id>` and reloads; pages read `window.UxdScenario.get()`.
+Eval resolution: helper `/evals/{id}/` when healthy → else `views.eval` under `<base href>` then site root → else disabled. State switching sets `?state=<id>` and reloads; pages read `window.UxdScenario.get()`.
 
 Shared capture: `scripts/serialize-page.js` and `templates/serialize-page.browser.js`.
 
@@ -164,5 +164,5 @@ Shared capture: `scripts/serialize-page.js` and `templates/serialize-page.browse
 |-----|-------------|
 | [export-formats.md](references/export-formats.md) | Format details |
 | [journeys-schema.md](references/journeys-schema.md) | `journeys.json` |
-| [scenarios-schema.md](references/scenarios-schema.md) | `scenarios.json` |
+| [states-schema.md](references/states-schema.md) | `states.json` |
 | [prototype-bar-config.md](references/prototype-bar-config.md) | Bar config schema |

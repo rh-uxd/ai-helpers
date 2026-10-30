@@ -6,6 +6,8 @@ End-to-end orchestration: create → evaluate → optional refine → publish.
 
 User asks for a full pipeline, "speedrun", "create and evaluate and publish", or passes `--pipeline` / `--speedrun`.
 
+Create itself performs source checks and ends at the user handoff. An explicit pipeline request additionally authorizes the separate serving/evaluation stages below; do not add a browser smoke test inside the Create stage.
+
 ## Onboarding extras (pipeline only)
 
 After normal create questions, also ask:
@@ -23,14 +25,14 @@ After normal create questions, also ask:
                Syncs prototype-bar.json from metadata + installs assets into source.
                Must run BEFORE serve so the bar is visible immediately.
 2. SERVE     → ensure prototype is reachable at {URL}
-2b. EXPORT?  → if --export, run Step 12 (journey static HTML / tree under .artifacts/{ID}/exports)
+2b. EXPORT?  → if --export, run Step 12 (journey static HTML / tree under artifacts/{ID}/exports)
 3. EVALUATE  → /uxd-prototype-evaluate {ID} {URL} [--workspace=…]
 3b. BAR (refresh) → re-run install-prototype-bar.sh --artifacts after evaluate.
                This re-syncs the config AND copies the eval report into
                public/evals/{ID}/ so the Eval tab works on Pages.
                (Happens automatically — Step 3 in the unified script detects the report.)
                MUST run before publish so public/evals/ exists on disk.
-4. REFINE?   → if .artifacts/{ID}/eval/evaluation-report.csv has FAIL → refine (this skill) → re-eval
+4. REFINE?   → if artifacts/{ID}/eval/evaluation-report.csv has FAIL → refine (this skill) → re-eval
                skip when FAIL count is 0
 5. PUBLISH?  → /uxd-prototype-publish {ID} --target={target}  (if target ≠ none)
                When target was a git URL, pass --target=<url> (or --target=repo with
@@ -39,7 +41,7 @@ After normal create questions, also ask:
                auto-stages public/evals/{ID}/ even if omitted from changeset.md.
 ```
 
-Persist flags to `.artifacts/{ID}/pipeline-config.yaml` so the run survives context compression:
+Persist flags to `artifacts/{ID}/pipeline-config.yaml` so the run survives context compression:
 
 ```yaml
 pipeline:
@@ -47,7 +49,7 @@ pipeline:
   workspace: https://gitlab.example.com/user/fork.git
   workspace_branch: main          # optional; clone branch for --workspace
   decisions: skip
-  # depth: normal          # only when decisions is auto or human
+  # depth: normal          # optional explicit exploration effort, not a count
   url: http://localhost:3000
   target: repo
   target_repo_url: https://gitlab.example.com/org/canonical.git
@@ -66,7 +68,7 @@ When `--target` is a git URL, normalize `target` to `repo` and store the URL in 
 | Flag | Default |
 |------|---------|
 | `--decisions` | `skip` |
-| `--depth` | `normal` (ignored when `--decisions=skip`) |
+| `--depth` | `normal` exploration effort; no count quota or onboarding question (ignored with `skip`) |
 | `--target` | `none` |
 | `--max-refine-cycles` | `3` |
 | `--headless` | off |
@@ -76,7 +78,7 @@ When `--target` is a git URL, normalize `target` to `repo` and store the URL in 
 ## Evaluate contract
 
 - Evaluate needs a **live URL** — do not claim "quick rubric" scoring.
-- Pass for continuing to publish without `--force`: zero FAIL in `.artifacts/{ID}/eval/evaluation-report.csv`.
+- Pass for continuing to publish without `--force`: zero FAIL in `artifacts/{ID}/eval/evaluation-report.csv`.
 - FLAGGED criteria: surface to the user; do not auto-block publish unless the user wants a clean report.
 
 ## Repo submit notes

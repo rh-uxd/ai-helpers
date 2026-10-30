@@ -10,7 +10,7 @@
 
 ## Checklist
 
-- [ ] Ran `make validate` (validates manifests and skills)
+- [ ] Ran `make validate` (validates manifests, skills, agents, and eval configuration)
 - [ ] Skill name uses the correct prefix (`uxd-` for UXD skills, `pf-` for PF skills)
 - [ ] Frontmatter has `name` and `description` (`name` matches directory name)
 - [ ] Description follows the [formula](https://github.com/rh-uxd/ai-helpers/blob/main/CONTRIBUTING-SKILLS.md#writing-descriptions)

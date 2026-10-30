@@ -24,12 +24,53 @@
     ]
   },
   {
+    "name": "andre-motta/model-routing-eval",
+    "url": "https://github.com/andre-motta/model-routing-eval",
+    "description": "Cheapest model and effort that still passes, per coding-task tier. agent-eval-harness dataset behind the Red Hat AI Enablement session on token and model cost optimization.",
+    "files": [
+      "setup.sh",
+      "harness/build_uxd.py",
+      "eval-uxd.yaml"
+    ]
+  },
+  {
+    "name": "findscripter/everything-skills",
+    "url": "https://github.com/findscripter/everything-skills",
+    "description": "A curated, cross-referenced encyclopedia of 1100+ open-source agent skills (native languages kept) and 1600+ indexed skill repos. Install as a Claude Code marketplace plugin.",
+    "files": [
+      "data/skill-repos.part87.audit.md",
+      "data/upstream-body-association-2026-10-23.json",
+      "data/discovery/2026-10-22/additions.json",
+      "data/discovery/2026-10-23/baseline.json",
+      "data/upstream-review-completed-2026-10-23.json",
+      "data/skill-repos.part87.search-provenance.json",
+      "data/upstream-commit-tree-bindings-2026-10-23.json"
+    ]
+  },
+  {
     "name": "flightctl/ai-workflows",
     "url": "https://github.com/flightctl/ai-workflows",
     "description": "Reusable AI workflows a team member can install globally or per-project, in any environment: Cursor, Claude Code and others.",
     "files": [
       "ux-design/README.md",
       "install.sh"
+    ]
+  },
+  {
+    "name": "fullsend-ai/agents",
+    "url": "https://github.com/fullsend-ai/agents",
+    "description": "First-class agents for fullsend",
+    "files": [
+      "skills/pr-review/sub-agents/user-experience.md",
+      "profiles/fullsend-github-public-ro.yaml"
+    ]
+  },
+  {
+    "name": "jaquevan/agent-skills",
+    "url": "https://github.com/jaquevan/agent-skills",
+    "description": "",
+    "files": [
+      "skills/sprint-manager/reference.md"
     ]
   },
   {
@@ -65,6 +106,16 @@
       "skills/2998-patternfly/12791-pf-figma-diff/references/troubleshooting.md",
       "skills/3006-pf-workshop/12841-pf-figma-diff/references/troubleshooting.md",
       "skills/3011-uxd-research/12864-uxd-research-heuristic-eval/references/report-templates.md"
+    ]
+  },
+  {
+    "name": "kosif199022-jpg/kosif-tool",
+    "url": "https://github.com/kosif199022-jpg/kosif-tool",
+    "description": "KOSIF TOOL: Claude motion style library, original production prompts and source video links",
+    "files": [
+      ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3011-uxd-research/SOURCE.md",
+      ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3000-pf-code-review/SOURCE.md",
+      ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3011-uxd-research/12864-uxd-research-heuristic-eval/references/report-templates.md"
     ]
   },
   {
@@ -112,6 +163,9 @@
       "docs/architecture.md",
       "src/docs.json",
       "src/collection.patternFlyApi.json",
+      "tooling/collections/__tests__/update.patternFlyDocsHelpers.test.ts",
+      "tooling/collections/__tests__/update.patternFlyDocs.test.ts",
+      "tooling/collections/__tests__/helpers.test.ts",
       "src/__tests__/__snapshots__/collection.patternFlyDocs.test.ts.snap"
     ]
   },
@@ -130,7 +184,9 @@
     "url": "https://github.com/sudosubin/agents.nix",
     "description": "Nixpkgs overlay for AI agent skills from skills.sh and skillsdirectory.com",
     "files": [
-      "data/codex-marketplaces/github.com/opendatahub-io/skills-registry.json"
+      "data/codex-marketplaces/github.com/opendatahub-io/skills-registry.json",
+      "data/codex-plugins/sources.json",
+      "data/claude-code-plugins/sources.json"
     ]
   }
 ]
