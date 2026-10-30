@@ -163,11 +163,12 @@ plan and decisions, but are not schema-enforced planning or execution receipts.
 
 The pending runtime supports selected Quick imports, standalone walkthrough
 imports, Full pause/unchanged continuation/finish, and one post-fix verification.
-It does not itself operate browser/model tools. Runtime contracts still require
-one invocation receipt per walkthrough pair; multi-call sessions must be deferred
-until that importer is extended. Do not collapse several real calls into one.
+It does not itself operate browser/model tools. The shared
+[walkthrough contract](walkthroughs.md) supports multiple actual invocation
+receipts per pair in bundle v2, including failed calls and unexecuted outcomes.
+Legacy v1 retains its single-completed-call limit. Do not collapse real calls.
 
-Persisted adaptive planning, multi-invocation walkthroughs, and shared structured
+Persisted adaptive planning and shared structured
 decision synthesis are follow-up implementation work. The current HTML renderer
 is a derived findings view, not yet the complete synthesis contract above. An
 installed source companion must match the modern policy/report contract; presence

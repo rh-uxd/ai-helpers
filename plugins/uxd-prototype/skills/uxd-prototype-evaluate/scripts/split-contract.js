@@ -18,6 +18,16 @@ const digest = root => {
   return hash(JSON.stringify(FILES.map(name => [name, hash(fs.readFileSync(path.join(base, name)))])));
 };
 
+function referenceBytes(root, reference) {
+  if (!reference || typeof reference.path !== 'string' || !/^[A-Za-z0-9._+@=/-]+$/.test(reference.path) || reference.path.split('/').some(p => !p || p === '.' || p === '..')) throw new Error('Invalid portable artifact reference');
+  const base = fs.realpathSync(root);
+  const file = fs.realpathSync(path.join(base, reference.path));
+  if (!file.startsWith(`${base}${path.sep}`) || !fs.statSync(file).isFile() || fs.statSync(file).size > 32 * 1024 * 1024) throw new Error('Artifact reference escapes run or exceeds size bound');
+  const bytes = fs.readFileSync(file);
+  if (hash(bytes) !== reference.sha256) throw new Error(`Artifact file/hash mismatch: ${reference.path}`);
+  return bytes;
+}
+
 // Check every canonical leaf before any validator, reader or digest follows it.
 // Resolve the explicitly selected root once (OS path aliases are supported),
 // while rejecting a run-root link and any canonical file link/nonregular entry.
@@ -236,4 +246,4 @@ function validateSplit(docs) {
   return errors;
 }
 
-module.exports = { FILES, hash, read, write, digest, copyReference, copyTree, loadRun, publish, identify, counts, validateSplit, isDeepStrictEqual };
+module.exports = { FILES, hash, read, write, digest, referenceBytes, copyReference, copyTree, loadRun, publish, identify, counts, validateSplit, isDeepStrictEqual };

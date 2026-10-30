@@ -81,7 +81,7 @@
         },
         "phases": {
           "type": "array",
-          "maxItems": 100,
+          "maxItems": 200,
           "items": {
             "type": "object",
             "properties": {
@@ -90,6 +90,10 @@
               "model_invoked": { "type": "boolean" },
               "provider": { "type": "string", "enum": ["none", "openai", "anthropic-compatible", "other"] },
               "model": { "type": "string", "maxLength": 160 },
+              "provider_id": { "type": "string", "minLength": 1, "maxLength": 160 },
+              "invocation_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+              "task_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+              "persona_id": { "$ref": "shared.schema.json#/$defs/identifier" },
               "started_at": { "$ref": "shared.schema.json#/$defs/timestamp" },
               "ended_at": { "$ref": "shared.schema.json#/$defs/timestamp" },
               "duration_ms": { "anyOf": [{"$ref": "shared.schema.json#/$defs/non_negative_integer"}, {"type": "null"}] },
