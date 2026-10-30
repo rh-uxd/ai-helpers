@@ -9,7 +9,9 @@ Renders the final HTML report from JSON/CSV artifacts produced by earlier phases
 | `.artifacts/<KEY>/eval/evaluation-report.csv` | AC verdicts (Section 1) + usability dimensions (Section 2) | Yes |
 | `.artifacts/<KEY>/eval/journey-log.json` | Playwright step log with screenshots and usability overlays | Yes |
 | `.artifacts/<KEY>/eval/screenshots/` | Journey step screenshots (embedded as base64) | Yes |
-| `.artifacts/<KEY>/eval/consistency-report.json` | PatternFly design violations | No |
+| `.artifacts/<KEY>/eval/consistency-report.json` | Selected product-guideline findings | No |
+| `.artifacts/<KEY>/eval/llm-consistency-report.json` | Validated LLM findings with guideline and changed-code citations | No |
+| `.artifacts/<KEY>/eval/fix-proposals.json` | Separate non-applied guideline-rooted fix handoff | No |
 | `.artifacts/<KEY>/eval/outcome-context.json` | Parent Outcome ticket context for breadcrumb | No |
 | `.artifacts/<KEY>/eval/extract-state.json` | Breadcrumb, persona selection (for report header) | Yes |
 | `.artifacts/<KEY>/eval/iteration-log.json` | Cross-iteration pass/fail counts (if iterating) | No |
@@ -50,7 +52,13 @@ Before rendering, validate all artifact JSON files against the schemas render-re
 node ${CLAUDE_SKILL_DIR}/scripts/validate-artifact-schemas.js $ARTIFACTS_DIR/
 ```
 
-If any violations are found, fix them before proceeding. The script prints specific fix instructions for each violation.
+If any violations are found, fix them before proceeding. The script prints specific fix instructions for each violation. When present, the LLM report must retain separate LLM/deterministic/manual coverage, and every finding/fix must link to exact guideline and source evidence.
+
+For semantic report 1.1, render approved code paths, selected guideline sections,
+metadata-derived applicability, exact excerpt locations, and explicit per-source
+ref status. A null/unverifiable ref is not a pinned revision. Mark report 1.0 as
+legacy evidence without repaired scope guarantees. Display incomplete JSX checks
+separately; absent candidates are not deterministic passes.
 
 **Note:** `render-report.js` also auto-normalizes common schema drift (absolute screenshot paths, missing step counts, dimension ID aliases, flat dimension scores) via `normalizeJourneyLog` and `normalizeUsabilityDimensions`. But the validation script catches issues normalization can't fix.
 
@@ -64,6 +72,8 @@ This script:
 - Reads all JSON/CSV artifacts from the directory
 - Embeds screenshots as base64 into the HTML (reads from `screenshots/` directory, matches paths in journey-log steps)
 - Applies the template from `templates/evaluation-report.html`
+- Renders deterministic and LLM guideline evidence separately; LLM `no_issue_found` is not a deterministic pass
+- Links validated guideline citations, changed code evidence, and unapplied fix proposals
 - Writes the output to `.artifacts/<KEY>/eval/evaluation-report.html`
 - Also writes `evaluation-summary.json` alongside the HTML report — an agent-readable summary with AC verdicts, usability scores, counts, and iteration state.
 

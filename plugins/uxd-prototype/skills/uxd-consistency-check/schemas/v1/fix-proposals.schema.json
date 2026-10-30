@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Guideline-rooted fix proposal handoff v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_type", "guideline_ref", "applied", "approval_state", "proposals"],
+  "properties": {
+    "schema_version": {"enum": ["1.0.0", "1.1.0"]},
+    "artifact_type": {"const": "guideline_rooted_fix_proposals"},
+    "guideline_ref": {"type": ["string", "null"], "minLength": 1},
+    "approved_scope": {"type": "object", "required": ["kind", "directories", "files"]},
+    "selection_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "applied": {"const": false},
+    "approval_state": {"const": "pending_human_approval"},
+    "proposals": {"type": "array", "items": {"$ref": "#/$defs/proposal"}}
+  },
+  "allOf": [{"if": {"properties": {"schema_version": {"const": "1.1.0"}}}, "then": {
+    "required": ["approved_scope", "selection_sha256"],
+    "properties": {"proposals": {"items": {"properties": {
+      "guideline": {"required": ["ref_status", "selected_scope"]},
+      "source_evidence": {"required": ["column_start", "evidence_type"]}
+    }}}}
+  }}],
+  "$defs": {
+    "citation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "heading", "anchor", "href", "quote", "sha256", "ref"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "heading": {"type": "string", "minLength": 1},
+        "anchor": {"type": "string", "minLength": 1},
+        "href": {"type": "string", "minLength": 1},
+        "quote": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "ref": {"type": ["string", "null"], "minLength": 1},
+        "ref_status": {"enum": ["verified_git_blob", "working_tree_content", "unverifiable_legacy_ref"]},
+        "selected_scope": {"type": "object"}
+      }
+    },
+    "evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["file", "line_start", "line_end", "excerpt", "href", "sha256"],
+      "properties": {
+        "file": {"type": "string", "minLength": 1},
+        "line_start": {"type": "integer", "minimum": 1},
+        "line_end": {"type": "integer", "minimum": 1},
+        "column_start": {"type": "integer", "minimum": 1},
+        "evidence_type": {"const": "source_excerpt"},
+        "excerpt": {"type": "string", "minLength": 1},
+        "href": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "proposal": {
+      "type": "object", "additionalProperties": false,
+      "required": ["finding_id", "guideline_id", "status", "severity", "confidence", "guideline", "source_evidence", "proposed_change", "why_it_satisfies_rule", "side_effects_or_unknowns", "smallest_safe_file_scope", "test_suggestion", "acceptance_condition", "applied", "approval_state"],
+      "properties": {
+        "finding_id": {"type": "string", "minLength": 1},
+        "guideline_id": {"type": "string", "minLength": 1},
+        "status": {"const": "violation"},
+        "severity": {"enum": ["error", "warning"]},
+        "confidence": {"enum": ["high", "medium", "low"]},
+        "guideline": {"$ref": "#/$defs/citation"},
+        "source_evidence": {"$ref": "#/$defs/evidence"},
+        "proposed_change": {"type": "string", "minLength": 1},
+        "why_it_satisfies_rule": {"type": "string", "minLength": 1},
+        "side_effects_or_unknowns": {"type": "string", "minLength": 1},
+        "smallest_safe_file_scope": {"type": "array", "items": {"type": "string", "minLength": 1}},
+        "test_suggestion": {"type": "string", "minLength": 1},
+        "acceptance_condition": {"type": "string", "minLength": 1},
+        "applied": {"const": false},
+        "approval_state": {"const": "pending_human_approval"}
+      }
+    }
+  }
+}

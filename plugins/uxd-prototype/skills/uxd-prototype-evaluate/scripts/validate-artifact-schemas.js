@@ -240,7 +240,58 @@ if (consistencyReport) {
   } else {
     check('consistency was skipped', false,
       `Consistency checks were skipped: ${consistencyReport.reason || 'unknown reason'}. ` +
-      'Verify .context/consistency-checker/ is bootstrapped.');
+      'This evaluator distribution includes the sibling uxd-consistency-check skill. Restore or update the combined plugin if it is missing; for a deliberately separate installation, set UXD_CONSISTENCY_CHECKER_DIR to its absolute skill-directory path. Select product guidance, then rerun evaluation.');
+  }
+}
+
+// ─── LLM guideline review / fix handoff ─────────────────────────────
+
+const llmReviewPresent = existsSync(join(abs, 'llm-consistency-report.json'));
+const llmReview = readJson('llm-consistency-report.json');
+if (llmReviewPresent) {
+  log('\nllm-consistency-report.json:');
+  check('LLM report readable', !!llmReview, llmReview ? 'valid JSON' : 'invalid or unreadable JSON');
+  if (llmReview) {
+    check('LLM report contract', llmReview.report_type === 'product_guideline_llm_review'
+      && llmReview.method === 'llm' && ['1.0.0', '1.1.0'].includes(llmReview.schema_version) && !!llmReview.prompt_sha256,
+    llmReview.report_type === 'product_guideline_llm_review' ? 'versioned semantic report' : 'missing versioned LLM contract');
+    check('LLM coverage separated', !!(llmReview.coverage && llmReview.coverage.llm
+      && llmReview.coverage.deterministic && llmReview.coverage.manual),
+    'LLM, deterministic, and manual coverage remain distinct');
+    const reviews = Array.isArray(llmReview.reviews) ? llmReview.reviews : [];
+    const missingCitations = reviews.filter(item => !item.guideline?.href || !item.guideline?.quote
+      || !item.guideline?.sha256 || (llmReview.schema_version === '1.1.0'
+        ? !item.guideline?.ref_status : !item.guideline?.ref)
+      || (['violation', 'no_issue_found', 'uncertain'].includes(item.status)
+        && (!item.source_evidence?.href || !item.source_evidence?.excerpt)));
+    check('LLM citations present', missingCitations.length === 0,
+      missingCitations.length ? `${missingCitations.length} review(s) lack exact citations` : `${reviews.length} cited review(s)`);
+    if (llmReview.schema_version === '1.1.0') {
+      check('approved review scope bound', llmReview.approved_scope?.kind === 'code_paths'
+        && /^[0-9a-f]{64}$/.test(llmReview.selection_sha256 || ''), 'structured scope and selection hash');
+      check('applicability and provenance explicit', reviews.every(item => item.applicability?.outcome
+        && (item.guideline?.ref_status === 'verified_git_blob' ? !!item.guideline.ref : item.guideline.ref === null)),
+      'unverified refs are null; applicability is metadata-derived');
+    }
+    const counts = llmReview.coverage?.statuses || {};
+    const hasNonpassing = ['uncertain', 'unsupported', 'unavailable'].some(key => (counts[key] || 0) > 0);
+    if (hasNonpassing) check('LLM abstentions visible', true, 'uncertain/unsupported/unavailable coverage is recorded');
+  }
+} else {
+  log('\nllm-consistency-report.json: not present (LLM method not reported)');
+}
+
+const fixHandoffPresent = existsSync(join(abs, 'fix-proposals.json'));
+const fixHandoff = readJson('fix-proposals.json');
+if (fixHandoffPresent) {
+  log('\nfix-proposals.json:');
+  check('fix handoff readable', !!fixHandoff, fixHandoff ? 'valid JSON' : 'invalid or unreadable JSON');
+  if (fixHandoff) {
+    const proposals = Array.isArray(fixHandoff.proposals) ? fixHandoff.proposals : [];
+    check('fix handoff remains proposed', fixHandoff.artifact_type === 'guideline_rooted_fix_proposals'
+      && fixHandoff.applied === false && fixHandoff.approval_state === 'pending_human_approval'
+      && proposals.every(item => item.applied === false && item.guideline?.href && item.source_evidence?.href),
+    `${proposals.length} proposal(s), unapplied and citation-linked`);
   }
 }
 

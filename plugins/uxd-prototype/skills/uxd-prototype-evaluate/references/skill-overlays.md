@@ -2,7 +2,7 @@
 
 ## What It Is
 
-A skill overlay is a set of project-specific context that sits on top of the general-purpose `prototype-evaluate` skill. Instead of hard-coding product knowledge (Jira URLs, repo conventions, design system paths, MLflow, context git remotes) into the SKILL.md, we externalize it into a YAML config file.
+A skill overlay is a set of project-specific context that sits on top of the general-purpose `prototype-evaluate` skill. Instead of hard-coding product knowledge (Jira URLs, repo conventions, MLflow, usability context git remotes) into the SKILL.md, we externalize it into a YAML config file.
 
 ## Why
 
@@ -43,12 +43,11 @@ Auto-discovery checks:
 Environment variables still override individual keys when the scripts read them first:
 
 - `MLFLOW_TRACKING_URI`
-- `CONSISTENCY_CHECKER_REPO`
 - `USABILITY_TESTING_REPO`
 - `EVAL_PAGES_REPO` / `EVAL_PAGES_URL`
 - `JIRA_BASE_URL`
 
-Scripts read overlay YAML via `scripts/overlay-get.js`.
+Scripts read overlay YAML via `scripts/overlay-get.js`. Consistency does not read clone URLs or analyzer paths from overlays: it discovers the `uxd-consistency-check` sibling shipped in this plugin distribution, using `SKILL.md` and `scripts/analyze.py`. If that sibling is missing, restore or update the combined plugin; no separate checker clone is needed. A deliberately separate installation may use `UXD_CONSISTENCY_CHECKER_DIR`. Select product guideline paths explicitly in the consistency phase; a design-system label is applicability metadata, not policy selection.
 
 ## Forced path (if discovery misses)
 
@@ -68,11 +67,9 @@ export EVAL_OVERLAY_PATH="$UXD_INTERNAL_HELPERS/plugins/uxd-eval-config/overlays
 | `git.base_branch` | What branch to diff against for MR delta |
 | `git.remote_url` | Prototype repo URL used when building MR/PR links |
 | `git.mr_url_style` | `gitlab` (`/-/merge_requests/N`) or `github` (`/pull/N`) |
-| `context_repos.consistency_checker` | Git URL for design-guideline bootstrap (empty = skip) |
 | `context_repos.usability_testing` | Git URL for deep persona YAML bootstrap (empty = skip) |
 | `mlflow.tracking_uri` | Optional tracking server (empty = skip unless env is set) |
 | `publish.*` | Pages repo, Pages base URL, Jira base, hosted dashboard URL |
-| `design_system` | PatternFly/consistency checker paths |
 | `personas` | Persona + overlay catalog paths for usability scoring |
 | `navigation` | Which files define sidebar nav and routes |
 | `known_mrs` | Manual MR number mapping (until forge API is available) |

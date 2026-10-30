@@ -1,0 +1,22 @@
+{
+  "case_type": "unavailable-local-export",
+  "strict_expected": {
+    "status": "unavailable",
+    "selected_source_ids": [
+      "doc-controls"
+    ],
+    "qualified_rule_ids": [],
+    "locator": {
+      "kind": "gdrive",
+      "document_id": "Doc123",
+      "section": "controls"
+    },
+    "approval_required": false,
+    "fallback_approval_required": false,
+    "model_approval_required": false,
+    "deterministic_passes": 0,
+    "policy_mode": "product_design_guidelines_only",
+    "peer_audit": false,
+    "next_action": "request_authorized_local_export"
+  }
+}

@@ -1,0 +1,6 @@
+prompt: >-
+  Using uxd-consistency-check, I selected two product-owned local corpora,
+  alpha=/project/alpha-guidelines and beta=/project/beta-guidelines. Both define
+  a theme rule with the same original ID but different text. Explain how to
+  preserve both without silent precedence. Planning only; do not retrieve sources
+  or run the checker.

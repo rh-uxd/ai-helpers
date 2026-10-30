@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Product guideline LLM review report v1",
+  "type": "object",
+  "required": ["schema_version", "report_type", "status", "method", "checker_version", "run_id", "model", "prompt_version", "prompt_sha256", "guideline_ref", "workspace", "guideline_manifest_sha256", "scope", "coverage", "reviews", "summary"],
+  "properties": {
+    "schema_version": {"enum": ["1.0.0", "1.1.0"]},
+    "report_type": {"const": "product_guideline_llm_review"},
+    "status": {"const": "completed"},
+    "method": {"const": "llm"},
+    "checker_version": {"enum": ["consistency-checker-llm-v1", "consistency-checker-llm-v1.1"]},
+    "run_id": {"type": "string", "minLength": 1},
+    "model": {"type": "string", "minLength": 1},
+    "prompt_version": {"type": "string", "minLength": 1},
+    "prompt_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "guideline_ref": {"type": ["string", "null"], "minLength": 1},
+    "approved_scope": {"type": "object", "required": ["kind", "directories", "files"]},
+    "selection_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "workspace": {"type": "string", "minLength": 1},
+    "guideline_manifest_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "scope": {"type": "object", "required": ["scope", "head", "base", "source_sha256", "target_files", "tracked_only", "merge_base", "changed_lines"]},
+    "coverage": {"type": "object", "required": ["selected_rules", "llm_reviewed_rules", "statuses", "llm", "deterministic", "manual"]},
+    "reviews": {"type": "array", "items": {"$ref": "#/$defs/review"}},
+    "summary": {"type": "object", "required": ["violations", "no_issue_found", "uncertain", "nonpassing_rules"]}
+  },
+  "allOf": [{"if": {"properties": {"schema_version": {"const": "1.1.0"}}}, "then": {
+    "required": ["approved_scope", "selection_sha256"],
+    "properties": {"reviews": {"items": {"required": ["applicability"], "properties": {
+      "guideline": {"required": ["ref_status", "selected_scope"]},
+      "source_evidence": {"required": ["column_start", "evidence_type"]}
+    }}}}
+  }}],
+  "$defs": {
+    "guideline": {
+      "type": "object", "required": ["path", "heading", "anchor", "href", "quote", "sha256", "ref"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "heading": {"type": "string", "minLength": 1},
+        "anchor": {"type": "string", "minLength": 1},
+        "href": {"type": "string", "minLength": 1},
+        "quote": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "ref": {"type": ["string", "null"], "minLength": 1},
+        "ref_status": {"enum": ["verified_git_blob", "working_tree_content", "unverifiable_legacy_ref"]},
+        "selected_scope": {"type": "object"}
+      }
+    },
+    "sourceEvidence": {
+      "type": ["object", "null"], "required": ["file", "line_start", "line_end", "excerpt", "href", "sha256"],
+      "properties": {
+        "file": {"type": "string", "minLength": 1},
+        "line_start": {"type": "integer", "minimum": 1},
+        "line_end": {"type": "integer", "minimum": 1},
+        "column_start": {"type": "integer", "minimum": 1},
+        "evidence_type": {"const": "source_excerpt"},
+        "excerpt": {"type": "string", "minLength": 1},
+        "href": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "review": {
+      "type": "object", "required": ["guideline_id", "method", "status", "severity", "confidence", "guideline", "source_evidence", "rationale", "limitations", "verifier", "disagreement"],
+      "properties": {
+        "guideline_id": {"type": "string", "minLength": 1},
+        "method": {"const": "llm"},
+        "status": {"enum": ["violation", "no_issue_found", "uncertain", "not_applicable", "unsupported", "unavailable"]},
+        "severity": {"type": ["string", "null"], "enum": ["error", "warning", null]},
+        "confidence": {"enum": ["high", "medium", "low"]},
+        "guideline": {"$ref": "#/$defs/guideline"},
+        "source_evidence": {"$ref": "#/$defs/sourceEvidence"},
+        "rationale": {"type": "string", "minLength": 1},
+        "limitations": {"type": "array", "items": {"type": "string"}},
+        "verifier": {"type": ["object", "null"]},
+        "disagreement": {"type": ["object", "null"]}
+      }
+    }
+  }
+}

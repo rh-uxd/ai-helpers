@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Product guideline LLM review input v1",
+  "type": "object",
+  "required": ["schema_version", "status", "method", "model", "checker_version", "run_id", "prompt_version", "prompt_sha256", "guideline_ref", "reviews"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {"enum": ["1.0.0", "1.1.0"]},
+    "status": {"const": "completed"},
+    "method": {"const": "llm"},
+    "model": {"type": "string", "minLength": 1},
+    "checker_version": {"enum": ["consistency-checker-llm-v1", "consistency-checker-llm-v1.1"]},
+    "run_id": {"type": "string", "minLength": 1},
+    "prompt_version": {"type": "string", "minLength": 1},
+    "prompt_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "guideline_ref": {"type": ["string", "null"], "minLength": 1},
+    "reviews": {"type": "array", "items": {"$ref": "#/$defs/review"}}
+  },
+  "$defs": {
+    "guidelineCitation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "heading", "quote", "sha256", "ref"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "heading": {"type": "string", "minLength": 1},
+        "quote": {"type": "string", "minLength": 1},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "ref": {"type": ["string", "null"], "minLength": 1}
+      }
+    },
+    "sourceEvidence": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "required": ["file", "line_start", "line_end", "excerpt"],
+      "properties": {
+        "file": {"type": "string", "minLength": 1},
+        "line_start": {"type": "integer", "minimum": 1},
+        "line_end": {"type": "integer", "minimum": 1},
+        "excerpt": {"type": "string", "minLength": 1}
+      }
+    },
+    "review": {
+      "type": "object", "additionalProperties": false,
+      "required": ["guideline_id", "status", "severity", "confidence", "guideline", "source_evidence", "rationale", "limitations", "suggested_fix", "side_effects", "test_suggestion", "acceptance_condition", "verifier"],
+      "properties": {
+        "guideline_id": {"type": "string", "minLength": 1},
+        "status": {"enum": ["violation", "no_issue_found", "uncertain", "not_applicable", "unsupported", "unavailable"]},
+        "severity": {"type": ["string", "null"], "enum": ["error", "warning", null]},
+        "confidence": {"enum": ["high", "medium", "low"]},
+        "guideline": {"$ref": "#/$defs/guidelineCitation"},
+        "source_evidence": {"$ref": "#/$defs/sourceEvidence"},
+        "rationale": {"type": "string", "minLength": 1},
+        "limitations": {"type": "array", "items": {"type": "string"}},
+        "suggested_fix": {"type": ["string", "null"]},
+        "side_effects": {"type": ["string", "null"]},
+        "test_suggestion": {"type": ["string", "null"]},
+        "acceptance_condition": {"type": ["string", "null"]},
+        "verifier": {"$ref": "#/$defs/verifier"}
+      }
+    },
+    "verifier": {
+      "type": ["object", "null"], "additionalProperties": false,
+      "required": ["model", "status", "agrees", "rationale"],
+      "properties": {
+        "model": {"type": "string", "minLength": 1},
+        "status": {"enum": ["violation", "no_issue_found", "uncertain", "not_applicable", "unsupported", "unavailable"]},
+        "agrees": {"type": "boolean"},
+        "rationale": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}

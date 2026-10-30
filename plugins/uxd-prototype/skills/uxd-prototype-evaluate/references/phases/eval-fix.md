@@ -7,7 +7,8 @@ Applies fixes to the prototype based on evaluation findings. Does NOT re-evaluat
 | Input | Description | Required |
 |-------|-------------|----------|
 | `.artifacts/<KEY>/eval/refinement-suggestions.json` | Fix suggestions from eval-journey + eval-usability + eval-consistency | Yes |
-| `.artifacts/<KEY>/eval/consistency-report.json` | PatternFly violations with file/line references | No |
+| `.artifacts/<KEY>/eval/consistency-report.json` | Selected product-guideline findings with file/line references | No |
+| `.artifacts/<KEY>/eval/fix-proposals.json` | Validated LLM guideline-rooted proposals, all unapplied by default | No |
 | `--workspace` | Path to the prototype source code | Yes |
 | `.artifacts/<KEY>/eval/extract-state.json` | AC context for understanding fix intent | No |
 | `.artifacts/<KEY>/decisions/decisions.json` | Decision context (prevents undoing deliberate choices) | No |
@@ -25,16 +26,24 @@ Applies fixes to the prototype based on evaluation findings. Does NOT re-evaluat
 
 Read `.artifacts/<KEY>/eval/refinement-suggestions.json`. Suggestions have three types, applied in this order:
 
-1. **Consistency violations** (`type: "consistency"`) — Deterministic fixes with explicit file paths and line numbers. Apply directly. These are guaranteed correct (PatternFly docs are the reference).
+1. **Consistency violations** (`type: "consistency"`) — Deterministic findings or LLM proposals with explicit guideline and code evidence. Verify the exact selected product rule and current source evidence. A pending proposal is not approval to edit.
 2. **AC failures** (`type: "ac_failure"`) — Code changes to make failing acceptance criteria pass. Require reading the verdict rationale.
 3. **Usability gaps** (`type: "usability"`, score 0-1) — Design improvements from persona scoring.
 
 **Skip already-applied suggestions:** If a suggestion has `"applied": true`, skip it entirely — it was fixed in a previous iteration.
 
+**Approval gate for guideline proposals:** Apply a consistency proposal only after an explicit user instruction authorizes that finding (or a clearly identified set of proposals). Confidence/severity, presence in `refinement-suggestions.json`, or an evaluator run is not approval. If `approval_state` is `pending_human_approval`, leave the prototype unchanged and record the proposal as awaiting approval. Preserve the exact rule quote, selected ref/hash, code excerpt, and finding identity.
+
+New consistency proposals must retain report/handoff 1.1 bindings: approved code
+scope, selection fingerprint, selected guideline section, actual excerpt
+locations, and explicit ref status (null when unverifiable). Historical proposals
+are not silently upgraded. Revalidate missing bindings before requesting approval;
+never turn incomplete JSX coverage or inapplicable guidance into a fix.
+
 Confidence filtering:
-- `confidence: "high"` — Apply directly
-- `confidence: "medium"` — Apply but note in fix-log as "medium confidence"
-- `confidence: "low"` — Log but do NOT apply. These are flagged for human review.
+- `confidence: "high"` — May be applied only after explicit approval
+- `confidence: "medium"` — May be applied only after explicit approval; note confidence in fix-log
+- `confidence: "low"` — Do not apply without direct user instruction for the specific proposal; record verifier disagreement/limitations.
 
 ### Step 2: Check decision context
 
@@ -52,9 +61,9 @@ If `.artifacts/<KEY>/decisions/decisions.json` exists, cross-reference each sugg
 
 For each `type: "consistency"` suggestion:
 
-1. Read the file at the specified path
-2. Apply the fix (usually a single import change or prop modification)
-3. Verify the fix doesn't break the file (basic syntax check)
+1. Confirm explicit approval for the exact proposal and verify its rule/code citations against current files
+2. Read the file at the specified path and make only the approved minimal change
+3. Run its focused regression test and capture before/after rule and code evidence
 
 ### Step 4: Apply AC failure fixes
 
@@ -95,7 +104,7 @@ For each `type: "usability"` suggestion with `confidence != "low"`:
 
 ### Step 6: Write fix-log.json and mark applied suggestions
 
-After writing the fix-log, update `refinement-suggestions.json` to mark each successfully applied suggestion so it is not re-attempted on subsequent iterations:
+After writing the fix-log, update `refinement-suggestions.json` to mark each explicitly approved and successfully applied suggestion so it is not re-attempted on subsequent iterations:
 
 For each entry in fix-log.json where `applied == true`, find the matching suggestion in `refinement-suggestions.json` (match by `criterion_id` or `guideline_id` + `type`) and set:
 ```json
@@ -139,25 +148,15 @@ Key rules for each entry:
 - `timestamp`: ISO 8601 string when the fix was applied or skipped
 - `type`, `criterion_id`, `file`, `change`, `confidence`: the semantic detail fields
 
-### Step 7: PatternFly compliance validation (static checks only)
+### Step 7: Validate against selected product guidance (static checks only)
 
-After all fixes are applied, read each modified file and verify the fixes didn't introduce PatternFly violations. These are **source-code-only checks** — no rendering or viewport verification.
-
-**Import completeness:**
-- Every PatternFly component used in the file has a corresponding import from `@patternfly/react-core` or `@patternfly/react-table`
-- Icon components (`*Icon`) are imported from `@patternfly/react-icons`
-
-**Label/status patterns:**
-- Non-interactive `<Label>` components use `variant="outline"` (filled variant implies onClick)
-- Tooltips use `<Tooltip content={...}>` wrapper, not inline `title` attributes
-
-**Table structure (static tables only — skip for `.map()`-rendered dynamic tables):**
-- If columns were added/removed in literal JSX, verify `<Thead>` column count matches `<Tbody>` rows
-- Expandable rows have correct `colSpan` on the expanded `<Td>`
-
-**If any check fails:** Fix the issue before writing fix-log.json.
-
-**Note:** Viewport-level rendering validation (column truncation, responsive layout) cannot be verified from source alone. That's what eval-consistency `--mode=visual` handles post-journey.
+After fixes, rerun the deterministic source checks for the same explicitly selected
+product rules and MR scope. Verify each changed file against the applicable rule
+and actual evidence. No bundled design-system baseline, token audit, or unscoped
+peer audit is added by the fix phase. Unsupported/prose-only rules remain
+unevaluated; review them separately when authorized. Surface checker errors rather
+than inventing a pass. Viewport or visual judgments require separate authorization
+and evidence; source checks cannot establish them.
 
 ## Rules
 

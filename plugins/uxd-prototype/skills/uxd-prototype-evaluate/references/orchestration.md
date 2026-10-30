@@ -165,19 +165,20 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-stat
   extract_core_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp) \
   consistency_source_start=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
 
-# ── Pre-flight: verify consistency guidelines exist ────────────────
-GUIDELINE_COUNT=$(ls "${UXD_PROJECT_ROOT}/.context/consistency-checker/guidelines/"*.md 2>/dev/null | wc -l)
-if [ "$GUIDELINE_COUNT" -eq 0 ]; then
-  echo "WARNING: No consistency guidelines found. Attempting re-bootstrap..."
-  bash "${CLAUDE_SKILL_DIR}/scripts/bootstrap-consistency-checker.sh"
-  GUIDELINE_COUNT=$(ls "${UXD_PROJECT_ROOT}/.context/consistency-checker/guidelines/"*.md 2>/dev/null | wc -l)
-fi
-echo "Consistency guidelines available: ${GUIDELINE_COUNT} files"
+# ── Pre-flight: check bundled sibling checker (no network) ─────────
+bash "${CLAUDE_SKILL_DIR}/scripts/bootstrap-consistency-checker.sh"
+# The combined plugin ships both skills; absence records unavailable and indicates a broken/incomplete installation.
+# A deliberately separate installation may use UXD_CONSISTENCY_CHECKER_DIR; no remote clone is performed.
+# Only explicitly selected product guidelines run; no default audit or PF fallback.
 
 Read ${CLAUDE_SKILL_DIR}/references/phases/eval-consistency.md and execute it with --mode=source
-# Runs ONCE (source-mode only). Produces: consistency-report.json, appends to refinement-suggestions.json
-# Visual-mode deferred to after eval-journey when screenshots exist.
-# Uses analyze.py bash commands for deterministic checks (no report generation).
+# Runs ONCE (source-mode only). Confirm indexed product selection/staging first;
+# consume the receipt with run-consistency-selection.py, preserving its narrow
+# analysis_workspace. Outputs consistency-report.json + consistency-selection.json;
+# append actionable findings to refinement-suggestions.json separately.
+# Unknown currentness/manual evidence never become deterministic passes.
+# Visual-mode requires separate explicit selection and authorization.
+# Uses the offline analyzer's JSON directly; never execute guideline commands.
 
 python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-state.yaml \
   consistency_source_end=$(python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py timestamp)
@@ -352,10 +353,10 @@ python3 ${CLAUDE_SKILL_DIR}/scripts/eval_state.py set ${ARTIFACTS_DIR}/eval-stat
 
 # Launch all three in parallel using Task tool with run_in_background=true:
 #
-# TASK 1: eval-consistency --mode=visual
+# TASK 1: eval-consistency --mode=visual (only if explicitly selected and authorized)
 #   Uses journey screenshots for visual guideline checks.
-#   Appends visual findings to consistency-report.json.
-#   Informational for report — does NOT re-trigger fix loop.
+#   Writes a separately validated visual supplement; source JSON stays unchanged.
+#   Link it in the human summary; the aggregate renderer does not load supplements.
 #   ERROR HANDLING: If fails, consistency-report.json keeps visual_mode.ran=false. Non-blocking.
 #
 # TASK 2: eval-extract --phase=enrichment
@@ -657,4 +658,4 @@ one additional Phase A crank. See the git history for full design details.
 - **Prototype URL unreachable:** Wait 10s, retry once. If still down, stop with error.
 - **eval-fix produces no changes:** Stop Phase A — more iterations won't help. Proceed to Phase B.
 - **Dev server crashes after fix:** Stop Phase A, note which files may have caused it. Proceed to Phase B.
-- **Missing .context/ directories (context repos not configured or unreachable):** Phase A runs in degraded mode (pf-css-token-check fallback if available). Phase B runs using the bundled plugin persona catalog with reduced behavioral fidelity. Re-run bootstrap scripts after setting `CONSISTENCY_CHECKER_REPO` / `USABILITY_TESTING_REPO` (or overlay `context_repos`).
+- **Missing local consistency skill:** Record checks as unavailable; install or restore sibling `uxd-consistency-check` beside this evaluator with `SKILL.md` and `scripts/analyze.py`, then rerun evaluation. Do not clone a checker, substitute another audit, or invent a pass. Without selected product guidelines, no policy or peer audit runs and no compliance pass is implied. **Missing usability context:** Phase B uses the bundled plugin persona catalog with reduced behavioral fidelity; usability context can be configured separately through `USABILITY_TESTING_REPO` or its overlay.
