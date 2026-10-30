@@ -437,6 +437,8 @@ function validateDirectory(artifactsDir) {
   if (!validationErrors.length) {
     try { require('./consistency-contract').validateCanonical(documents['evaluation.json'].consistency, path.resolve(artifactsDir)); }
     catch (error) { issue(validationErrors, 'evaluation.json', '/consistency/source_analysis', 'source_publication', error.message); }
+    try { require('./walkthrough-contract').validatePublished(documents, path.resolve(artifactsDir)); }
+    catch (error) { issue(validationErrors, 'state.json', '/workflow', 'walkthrough_publication', error.message); }
   }
   return { valid: validationErrors.length === 0, errors: validationErrors };
 }

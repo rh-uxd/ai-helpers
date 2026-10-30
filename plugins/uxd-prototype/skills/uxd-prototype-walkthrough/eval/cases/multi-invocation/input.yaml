@@ -1,0 +1,8 @@
+prompt: >-
+  Prepare only; no tools or provider work are authorized. The evaluator has already
+  frozen the junior/create pair and its environment. The host expects two actual
+  model calls for this pair, but the second might be interrupted. Explain how the
+  shared independent/prepared contract records calls, contexts, results/errors,
+  ordered observations, isolation, evidence, stopping conditions and unavailable
+  usage. Task success must not automatically verify acceptance criteria. Do not
+  restart intake, combine calls into a made-up measurement or claim live execution.

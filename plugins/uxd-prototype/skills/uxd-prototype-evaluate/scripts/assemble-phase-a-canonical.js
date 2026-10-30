@@ -264,7 +264,7 @@ function buildDocuments(artifactsDir, cacheDecision, inputs = null) {
     ...filesUnder(path.join(skillRoot, 'references', 'phases')),
     ...[
       'assemble-phase-a-canonical.js', 'legacy-artifact-adapter.js', 'csv-utils.js',
-      'xray-cache.js', 'split-contract.js', 'validate-canonical-artifacts.js',
+      'xray-cache.js', 'split-contract.js', 'validate-canonical-artifacts.js', 'walkthrough-contract.js',
       'consistency-compat.js', 'consistency-contract.js', 'validate-consistency.js',
       ...(inputs
         ? ['run-quick-checks.js', 'quick-judgment-bundle.js', 'run-classification.js', 'classify-ac-tier.js']

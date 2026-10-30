@@ -1,0 +1,160 @@
+name: uxd-prototype-walkthrough-eval
+description: Check independent/prepared cohort handling, actual multi-call receipts and evidence/consent boundaries
+skill: uxd-prototype:uxd-prototype-walkthrough
+execution:
+  mode: case
+  arguments: "{prompt}"
+runner:
+  type: codex
+  plugin_dirs:
+    - plugins/uxd-prototype
+models:
+  skill: gpt-6-sol
+  judge: gpt-6-luna
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+dataset:
+  path: cases
+  schema: |
+    Preparation-only selected walkthrough or review of an existing result.
+    Dedicated local instruction reads/discovery and structured questions are
+    allowed. No shell/code execution, setup, browser/provider work, delegation,
+    edits or sharing are authorized; unknown tools fail the preparation gate.
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+judges:
+  - name: respects_selected_scope
+    check: |
+      case_metadata = outputs.get("annotations", {})
+      text = outputs.get("conversation", "").lower()
+      # Preparation-only policy (keep identical in both preparation evals).
+      # Dedicated local reads/discovery and questions only. Never classify a shell
+      # command by substrings: even `cat` via an executor is outside this policy.
+      # Names are exact aliases, not suffix matches; MCP/browser/provider reads are
+      # intentionally NOT local instruction reads. Unknown/malformed calls fail shut.
+      import json
+      allowed = {
+          "read", "read_file", "readfile", "glob", "grep", "search_files",
+          "list_directory", "list_dir", "ls", "askuserquestion", "askquestion",
+          "ask_user_question", "request_user_input",
+      }
+      wrappers = {"multi_tool_use.parallel": "tool_uses", "tool_call": "calls"}
+      call_types = {"function", "function_call", "custom_tool_call", "tool_call", "tool_use"}
+      result_types = {"tool_result", "function_call_output", "custom_tool_call_output"}
+      call_lists = {"tool_calls", "tool_uses", "calls"}
+
+      def alias(name):
+          if not isinstance(name, str):
+              return ""
+          name = name.lower()
+          return name[len("functions."):] if name.startswith("functions.") else name
+
+      def safe_list(value, depth):
+          return isinstance(value, list) and all(isinstance(v, dict) and safe_node(v, True, depth + 1) for v in value)
+
+      def safe_node(node, required=False, depth=0):
+          if depth > 40:
+              return False
+          if isinstance(node, list):
+              return all(safe_node(v, required, depth + 1) for v in node)
+          if not isinstance(node, dict):
+              return not required
+          kind = node.get("type", "")
+          if not isinstance(kind, str):
+              return False
+          # Include Codex command_execution and unknown future execution/call types.
+          tool_kind = any(token in kind for token in ("tool", "function", "execution", "_call"))
+          named = any(k in node for k in ("tool", "tool_name", "recipient_name", "function"))
+          named = named or ("name" in node and any(k in node for k in ("input", "arguments", "parameters")))
+          is_call = required or kind in call_types or named
+          if tool_kind and kind not in call_types | result_types:
+              return False
+          if is_call:
+              if kind and kind not in call_types:
+                  return False
+              names = [node[k] for k in ("name", "tool_name", "recipient_name") if k in node]
+              for key in ("tool", "function"):
+                  if key in node:
+                      value = node[key]
+                      if isinstance(value, dict):
+                          names.append(value.get("name"))
+                      elif key == "tool":
+                          names.append(value)
+                      else:
+                          return False
+              if not names:
+                  # Some hosts wrap the actual call in data/payload/call.
+                  nested = [node[k] for k in ("data", "payload", "call") if k in node]
+                  if not nested or not all(safe_node(v, True, depth + 1) for v in nested):
+                      return False
+              else:
+                  names = {alias(name) for name in names}
+                  if len(names) != 1:
+                      return False
+                  name = next(iter(names))
+                  if name in wrappers:
+                      envelopes = [node] + [node[k] for k in ("function", "tool") if isinstance(node.get(k), dict)]
+                      payloads = [e[k] for e in envelopes for k in ("input", "arguments", "parameters") if k in e]
+                      if not payloads:
+                          return False
+                      for payload in payloads:
+                          if isinstance(payload, str):
+                              try:
+                                  payload = json.loads(payload)
+                              except (ValueError, TypeError):
+                                  return False
+                          key = wrappers[name]
+                          if not isinstance(payload, dict) or not payload.get(key):
+                              return False
+                          if not safe_list(payload[key], depth + 1):
+                              return False
+                  elif name not in allowed:
+                      return False
+          for key, value in node.items():
+              if key in call_lists:
+                  if not safe_list(value, depth + 1):
+                      return False
+              # Inspect structured envelopes too, but never parse arbitrary prose
+              # as event JSON. Only dispatcher arguments are decoded above.
+              elif isinstance(value, (dict, list)) and not safe_node(value, False, depth + 1):
+                  return False
+          return True
+
+      if "tool_calls" in outputs and not safe_list(outputs["tool_calls"], 0):
+          return False, "Preparation-only case requires read/question-only tools"
+      for source in ("events", "messages"):
+          if source in outputs:
+              if not isinstance(outputs[source], list) or not safe_node(outputs[source]):
+                  return False, "Preparation-only case contains unsafe or malformed tool events"
+      if case_metadata.get("case_type") == "selected-cohort":
+          if "junior" not in text or "create" not in text:
+              return False, "Must preserve the selected junior/create scope"
+          if not any(word in text for word in ["revision", "build", "snapshot"]):
+              return False, "Must identify missing frozen input identity"
+          return True, "Preserves the cohort and identifies input prerequisites"
+      if case_metadata.get("case_type") == "persona-is-not-ac":
+          if "not_run" not in text and "unverified" not in text:
+              return False, "Persona success must not verify an untested AC"
+          return True, "Separates persona completion from AC evidence"
+      if case_metadata.get("case_type") == "evaluator-prepared":
+          import re
+          required = (["reuse", "re-use"], ["packet"], ["junior"], ["create"], ["only", "single"], ["environment", "starting state"], ["review", "checkpoint"], ["approval", "decision"], ["bundle"], ["full", "composer"])
+          ok = all(any(word in text for word in choices) for choices in required)
+          unsafe = re.search(r"(?:i will|i'll|let's)\s+(?:rerun quick|restart intake|add personas|start walkthroughs now)", text)
+          return ok and not unsafe, "Reuse the prepared packet and return a bundle only after Full review"
+      if case_metadata.get("case_type") == "multi-invocation":
+          import re
+          required = (["v2", "version 2"], ["each call", "every call", "separate"],
+                      ["invocation"], ["sequence", "ordered"], ["session", "isolat"],
+                      ["context"], ["result", "error"], ["evidence"],
+                      ["unknown", "null"], ["incomplete"], ["not_run", "not run", "unverified"],
+                      ["stop", "limit"])
+          ok = all(any(word in text for word in choices) for choices in required)
+          unsafe = re.search(r"(?:i will|i'll|let's)\s+(?:combine the calls|report zero cost|mark all acs pass|start walkthroughs now)", text)
+          return ok and not unsafe, "Preserve all actual calls, isolation, incomplete coverage and unknown usage"
+      return False, "Unknown case"

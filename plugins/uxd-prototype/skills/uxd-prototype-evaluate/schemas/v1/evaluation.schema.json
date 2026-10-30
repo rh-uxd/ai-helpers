@@ -48,6 +48,7 @@
                   "properties": {
                     "id": { "$ref": "shared.schema.json#/$defs/identifier" },
                     "sequence": { "type": "integer", "minimum": 1, "maximum": 1000 },
+                    "invocation_id": { "$ref": "shared.schema.json#/$defs/identifier" },
                     "action": { "type": "string", "enum": ["navigate", "click", "input", "select", "verify", "observe"] },
                     "target": { "type": "string", "minLength": 1, "maxLength": 280 },
                     "outcome": { "type": "string", "enum": ["success", "failure", "blocked", "partial"] },
@@ -57,6 +58,17 @@
                   "required": ["id", "sequence", "action", "target", "outcome", "evidence_ids", "note"],
                   "additionalProperties": false
                 }
+              },
+              "execution": {
+                "type": "object",
+                "properties": {
+                  "status": { "enum": ["completed", "failed", "blocked", "incomplete", "not-run"] },
+                  "stop_reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
+                  "session_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                  "invocation_ids": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/identifier" }, "uniqueItems": true, "maxItems": 100 }
+                },
+                "required": ["status", "stop_reason", "session_id", "invocation_ids"],
+                "additionalProperties": false
               }
             },
             "required": ["id", "task_id", "persona_id", "ac_ids", "source", "verdict", "steps"],
