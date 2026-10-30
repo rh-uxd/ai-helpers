@@ -154,6 +154,7 @@
           "additionalProperties": false
         },
         "permissions": { "$ref": "split.schema.json#/$defs/permissions" },
+        "planning": { "$ref": "evaluation-plan.schema.json#/$defs/state" },
         "workflow": {
           "type": "object",
           "properties": {

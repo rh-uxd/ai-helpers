@@ -43,27 +43,31 @@ function seed(input, stage) {
 }
 
 function run(options) {
+  options = { ...options };
   const route = options.route;
   if (!['quick', 'walkthroughs', 'full'].includes(route) || !options.output) throw new Error('Select --route quick|walkthroughs|full and --output <fresh-run-dir>');
   if (options.report) throw new Error('Split HTML reporting is not packaged yet; retain canonical results and request reporting separately');
-  if (options['continue-from'] && options['verify-from']) throw new Error('Choose continuation or verification, not both');
+  if (['continue-from', 'verify-from', 'adapt-from'].filter(k => options[k]).length > 1) throw new Error('Choose continuation, verification or adaptation, not multiple parents');
   let parent;
   let approval;
-  const parentRoot = options['continue-from'] || options['verify-from'];
+  const parentRoot = options['continue-from'] || options['verify-from'] || options['adapt-from'];
   if (parentRoot) {
     parent = C.loadRun(parentRoot);
-    if (route !== 'full') throw new Error('Continuation/verification requires the Full route');
+    if (!options['adapt-from'] && route !== 'full') throw new Error('Continuation/verification requires the Full route');
     // The host records the human decision; a receipt cannot grant authority.
     // Bind it to the reviewed bytes so edits invalidate that decision's snapshot.
-    approval = C.read(options.approval);
-    if (approval.run_id !== parent['brief.json'].run_id || approval.artifact_sha256 !== C.digest(parentRoot) || approval.approved !== true || !approval.recorded_at) throw new Error('Review approval must identify the exact reviewed canonical snapshot');
-    if (!Number.isFinite(Date.parse(approval.recorded_at)) || !approval.recorded_at.endsWith('Z')) throw new Error('Review approval needs a UTC timestamp');
+    if (!options['adapt-from'] || options.approval) {
+      approval = C.read(options.approval);
+      if (approval.run_id !== parent['brief.json'].run_id || approval.artifact_sha256 !== C.digest(parentRoot) || approval.approved !== true || !approval.recorded_at) throw new Error('Review approval must identify the exact reviewed canonical snapshot');
+      if (!Number.isFinite(Date.parse(approval.recorded_at)) || !approval.recorded_at.endsWith('Z')) throw new Error('Review approval needs a UTC timestamp');
+    }
     if (options['continue-from'] && parent['state.json'].workflow?.status !== 'awaiting-review') throw new Error('Only an awaiting-review checkpoint can continue');
     if (options['verify-from'] && (parent['state.json'].workflow?.pass !== 1 || parent['state.json'].workflow?.status !== 'completed')) throw new Error('Only one post-fix verification pass is allowed');
   }
   let quickRoot;
   let quickTemp;
   try {
+    const planning = require('./evaluation-plan').preflight(options, parent, approval);
     // Validate the prepared cohort before selected Quick/browser/provider work.
     // Full without a cohort can finish after review, but cannot run walkthroughs.
     if (options.input && (route === 'walkthroughs' || route === 'full')) {
@@ -118,14 +122,16 @@ function run(options) {
       if (options['continue-from'] && !['continue-walkthroughs', 'complete-without-walkthroughs'].includes(approval.purpose)) throw new Error('Continuation needs an explicit review decision');
       if (options['continue-from'] && approval.permissions) docs['state.json'].permissions = approval.permissions;
       let pairs = [];
+      let inheritedPhaseCount = options['continue-from'] ? docs['state.json'].phases.length : 0;
       const executeWalkthroughs = route === 'walkthroughs' || Boolean(options['continue-from'] && approval.purpose === 'continue-walkthroughs') || Boolean(options['verify-from'] && parent['state.json'].workflow.selected_pairs.length);
       if (executeWalkthroughs) {
         if (!options['walkthrough-bundle']) throw new Error('Selected walkthroughs require --walkthrough-bundle');
         if (options['continue-from'] && C.read(options['walkthrough-bundle']).phases?.some(p => Date.parse(p.measurement?.started_at) < Date.parse(approval.recorded_at))) throw new Error('Full walkthrough execution must follow its explicit review decision; do not splice prior standalone work');
         docs['state.json'].phases = docs['state.json'].phases.filter(p => !['journey', 'usability'].includes(p.name));
+        if (options['continue-from']) inheritedPhaseCount = docs['state.json'].phases.length;
         pairs = require('./walkthrough-contract').merge(docs, options['walkthrough-bundle'], stage);
       } else if (options['walkthrough-bundle']) throw new Error('Full Evaluation pauses after Quick Checks; continue from the reviewed checkpoint');
-      const status = route === 'full' && !parent ? 'awaiting-review' : 'completed';
+      const status = route === 'full' && !options['continue-from'] && !options['verify-from'] ? 'awaiting-review' : 'completed';
       const pass = options['verify-from'] ? 2 : 1;
       if (options['verify-from']) {
         const fix = C.read(options['fix-receipt']);
@@ -146,8 +152,9 @@ function run(options) {
       }
       const fileReceipt = name => ({ path: name, sha256: C.hash(fs.readFileSync(path.join(stage, name))) });
       const receipt = { route, status, pass, report_requested: Boolean(options.report), parent_run_id: parent?.['brief.json'].run_id || null, parent_artifact_sha256: parent ? C.digest(parentRoot) : null, approval: approval || null, packet_sha256: C.hash(fs.readFileSync(path.join(stage, 'inputs/packet.json'))), selected_pairs: pairs, walkthrough_bundle: executeWalkthroughs ? fileReceipt('checks/walkthrough-bundle.json') : null, fix_receipt: options['verify-from'] ? fileReceipt('checks/fix-receipt.json') : null };
+      receipt.plan_sha256 = planning ? C.hash(planning.bytes) : null;
+      receipt.plan_change = planning?.change || null;
       C.write(stage, 'checks/workflow.json', receipt);
-      C.identify(docs, route, receipt);
       const state = docs['state.json'];
       if (options.report) state.phases = state.phases.filter(p => p.name !== 'report');
       if (options['verify-from']) {
@@ -155,9 +162,12 @@ function run(options) {
         state.permissions = { ...state.permissions, prototype_edits: { status: 'approved', scope: `Selected actions: ${approval.action_ids.join(', ')}`, recorded_at: approval.recorded_at } };
       }
       state.workflow = { route, status, pass, parent_run_id: receipt.parent_run_id, selected_pairs: pairs, receipt_path: 'checks/workflow.json', receipt_sha256: C.hash(fs.readFileSync(path.join(stage, 'checks/workflow.json'))) };
-      const history = parent?.['state.json'].lifecycle.iterations || [];
+      const history = options['adapt-from'] ? [] : parent?.['state.json'].lifecycle.iterations || [];
       const current = { iteration: pass, phase: executeWalkthroughs ? 'b' : 'a', timestamp: new Date().toISOString(), ac_results: docs['evaluation.json'].ac_results.map(r => ({ ac_id: r.ac_id, verdict: r.verdict })) };
       state.lifecycle = { status: status === 'awaiting-review' ? 'running' : 'completed', current_phase: executeWalkthroughs ? 'journey' : 'classify', iteration: pass, max_iterations: 2, exit_reason: status === 'awaiting-review' ? 'pending' : pass === 2 ? 'max-iterations' : 'no-fix', iterations: [...history.filter(i => i.iteration !== pass || i.phase !== current.phase), current] };
+      require('./evaluation-plan').attach(planning, docs, stage, inheritedPhaseCount);
+      // Identification includes the persisted plan, not just executed selection.
+      C.identify(docs, route, receipt);
       return docs;
     });
     return { run_id: docs['brief.json'].run_id, artifacts_dir: path.resolve(options.output), artifact_sha256: C.digest(options.output), ...docs['state.json'].workflow, model_invoked: false };
@@ -165,7 +175,7 @@ function run(options) {
 }
 
 function main() {
-  const { values } = parseArgs({ options: Object.fromEntries(['route', 'input', 'output', 'checks', 'workspace', 'base-ref', 'judgment-bundle', 'walkthrough-bundle', 'continue-from', 'verify-from', 'approval', 'fix-receipt', 'design-system', 'design-system-version', 'guideline-manifest'].map(k => [k, { type: 'string' }]).concat([['guidelines', { type: 'string', multiple: true }], ['report', { type: 'boolean', default: false }]])) });
+  const { values } = parseArgs({ options: Object.fromEntries(['route', 'input', 'output', 'checks', 'workspace', 'base-ref', 'judgment-bundle', 'walkthrough-bundle', 'continue-from', 'verify-from', 'adapt-from', 'plan', 'plan-change', 'approval', 'fix-receipt', 'design-system', 'design-system-version', 'guideline-manifest'].map(k => [k, { type: 'string' }]).concat([['guidelines', { type: 'string', multiple: true }], ['report', { type: 'boolean', default: false }]])) });
   process.stdout.write(`${JSON.stringify(run(values))}\n`);
 }
 if (require.main === module) { try { main(); } catch (error) { process.stderr.write(`${error.message}\n`); process.exitCode = 1; } }

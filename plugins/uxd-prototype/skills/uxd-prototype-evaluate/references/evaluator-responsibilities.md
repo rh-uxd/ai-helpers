@@ -156,8 +156,9 @@ expanding that envelope or crossing Full's walkthrough review checkpoint.
 
 Before execution, a changed selection needs a newly frozen packet and matching
 evidence scope. Never edit a completed packet/run to retrofit an adaptation.
-Until persisted adaptive planning is implemented, host review notes may retain the
-plan and decisions, but are not schema-enforced planning or execution receipts.
+Use the [versioned planning contract](evaluation-planning.md) for new runs. It
+persists the reviewed envelope and separate actual execution, with explicit
+parent-linked changes. Legacy runs need no invented retrospective planning data.
 
 ## Current capability limits and acceptance
 
@@ -168,8 +169,8 @@ It does not itself operate browser/model tools. The shared
 receipts per pair in bundle v2, including failed calls and unexecuted outcomes.
 Legacy v1 retains its single-completed-call limit. Do not collapse real calls.
 
-Persisted adaptive planning and shared structured
-decision synthesis are follow-up implementation work. The current HTML renderer
+Shared structured decision synthesis remains follow-up implementation work.
+The current HTML renderer
 is a derived findings view, not yet the complete synthesis contract above. An
 installed source companion must match the modern policy/report contract; presence
 of its directory alone does not establish compatibility. No completed standalone
