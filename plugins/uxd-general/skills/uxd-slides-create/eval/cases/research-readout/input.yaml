@@ -1,0 +1,7 @@
+prompt: >-
+  Using the uxd-slides-create skill, plan a local research readout for
+  UIESTRAT-220. Study: how platform engineers pick a model from the catalog.
+  Six interviews. Audience: the design review. Do not publish, and do not run
+  commands. Say where the files go, which template you start from, which parts
+  of that sequence you keep, what the deck metadata.json contains, and how
+  you validate the deck.

@@ -1,0 +1,4 @@
+.template-briefing .slide-title h1,
+.template-briefing .slide-closing h1 {
+  max-width: 16ch;
+}
