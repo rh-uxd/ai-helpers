@@ -430,20 +430,37 @@ function validateDocuments(documents) {
   return errors;
 }
 
-function validateDirectory(artifactsDir) {
+// skipLinkedArtifacts is for internal five-file staging/cache paths only;
+// CLI and consumer validation retain strict linked-closure checks by default.
+function validateDirectoryCore(artifactsDir) {
   const errors = [];
-  const documents = loadDocuments(path.resolve(artifactsDir), errors);
-  if (errors.length > 0) return { valid: false, errors };
+  let root;
+  try { root = require('./linked-artifact-contract').canonicalRoot(artifactsDir); }
+  catch (error) {
+    issue(errors, '', '', 'unsafe_run_directory', error.message);
+    return { root: null, documents: null, errors };
+  }
+  const documents = loadDocuments(root, errors);
+  if (errors.length > 0) return { root, documents: null, errors };
   const validationErrors = validateDocuments(documents);
   if (!validationErrors.length) {
-    try { require('./consistency-contract').validateCanonical(documents['evaluation.json'].consistency, path.resolve(artifactsDir)); }
+    try { require('./consistency-contract').validateCanonical(documents['evaluation.json'].consistency, root); }
     catch (error) { issue(validationErrors, 'evaluation.json', '/consistency/source_analysis', 'source_publication', error.message); }
-    try { require('./walkthrough-contract').validatePublished(documents, path.resolve(artifactsDir)); }
+    try { require('./walkthrough-contract').validatePublished(documents, root); }
     catch (error) { issue(validationErrors, 'state.json', '/workflow', 'walkthrough_publication', error.message); }
-    try { require('./evaluation-plan').validatePublished(documents, path.resolve(artifactsDir)); }
+    try { require('./evaluation-plan').validatePublished(documents, root); }
     catch (error) { issue(validationErrors, 'state.json', '/planning', 'evaluation_plan', error.message); }
   }
-  return { valid: validationErrors.length === 0, errors: validationErrors };
+  return { root, documents, errors: validationErrors };
+}
+
+function validateDirectory(artifactsDir, options = {}) {
+  const result = validateDirectoryCore(artifactsDir);
+  const schemaInvalid = result.errors.some(error => error.code.startsWith('schema_'));
+  if (!options.skipLinkedArtifacts && result.documents && !schemaInvalid) {
+    result.errors.push(...require('./linked-artifact-contract').verifyLinkedArtifacts(result.root, result.documents));
+  }
+  return { valid: result.errors.length === 0, errors: result.errors };
 }
 
 function main() {
@@ -474,4 +491,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { validateDirectory, validateDocuments };
+module.exports = { validateDirectory, validateDirectoryCore, validateDocuments };

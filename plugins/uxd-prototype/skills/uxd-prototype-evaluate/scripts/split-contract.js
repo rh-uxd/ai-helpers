@@ -4,6 +4,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { isDeepStrictEqual } = require('util');
+const { canonicalRoot, verifyLinkedArtifacts } = require('./linked-artifact-contract');
 const FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
 const hash = value => `sha256:${crypto.createHash('sha256').update(value).digest('hex')}`;
 const read = file => {
@@ -26,26 +27,6 @@ function referenceBytes(root, reference) {
   const bytes = fs.readFileSync(file);
   if (hash(bytes) !== reference.sha256) throw new Error(`Artifact file/hash mismatch: ${reference.path}`);
   return bytes;
-}
-
-// Check every canonical leaf before any validator, reader or digest follows it.
-// Resolve the explicitly selected root once (OS path aliases are supported),
-// while rejecting a run-root link and any canonical file link/nonregular entry.
-function canonicalRoot(root) {
-  // Normalize syntax before lstat: a trailing slash or /. can make lstat follow
-  // the final directory link on some platforms even though the plain path does not.
-  root = path.resolve(root);
-  const entry = fs.lstatSync(root);
-  if (entry.isSymbolicLink() || !entry.isDirectory()) throw new Error('Canonical run root must be a directory, not a symlink');
-  const base = fs.realpathSync(root);
-  for (const name of FILES) {
-    const file = path.join(base, name);
-    const stat = fs.lstatSync(file);
-    if (stat.isSymbolicLink() || !stat.isFile()) throw new Error(`Canonical artifact must be a regular file, not a symlink: ${name}`);
-    if (!fs.realpathSync(file).startsWith(`${base}${path.sep}`)) throw new Error(`Canonical artifact escapes run root: ${name}`);
-    if (stat.size > 16 * 1024 * 1024) throw new Error('Canonical artifact exceeds 16 MiB');
-  }
-  return base;
 }
 
 function copyTree(source, target) {
@@ -78,42 +59,11 @@ function copyReference(root, stage, reference) {
 
 function loadRun(root) {
   root = canonicalRoot(root);
-  const check = require('./validate-canonical-artifacts').validateDirectory(root);
-  if (!check.valid) throw new Error(`Invalid canonical run: ${JSON.stringify(check.errors)}`);
-  const docs = Object.fromEntries(FILES.map(name => [name, read(path.join(root, name))]));
-  function verify(reference) {
-    const base = fs.realpathSync(root);
-    const file = fs.realpathSync(path.join(base, reference.path));
-    if (!file.startsWith(`${base}${path.sep}`) || hash(fs.readFileSync(file)) !== reference.sha256) throw new Error(`Artifact file/hash mismatch: ${reference.path}`);
-  }
-  const receipt = docs['state.json'].workflow;
-  if (receipt) {
-    verify({ path: receipt.receipt_path, sha256: receipt.receipt_sha256 });
-    const workflow = read(path.join(root, receipt.receipt_path));
-    verify({ path: 'inputs/packet.json', sha256: workflow.packet_sha256 });
-    if (workflow.walkthrough_bundle) {
-      verify(workflow.walkthrough_bundle);
-      const bundle = read(path.join(root, workflow.walkthrough_bundle.path));
-      verify(bundle.inspection.receipt);
-      for (const phase of bundle.phases) { verify(phase.submitted_context); verify(phase.returned_result); }
-    }
-    if (workflow.fix_receipt) verify(workflow.fix_receipt);
-  }
-  const quick = docs['state.json'].quick_checks;
-  if (quick) {
-    verify({ path: quick.context_path, sha256: quick.context_sha256 });
-    const context = read(path.join(root, quick.context_path));
-    verify(context.packet);
-    for (const check of context.checks) verify({ path: check.output, sha256: check.output_sha256 });
-    if (context.judgments) {
-      verify({ path: context.judgments.bundle_path, sha256: context.judgments.bundle_sha256 });
-      for (const file of context.judgments.files) verify(file);
-    }
-  }
-  const source = docs['brief.json'].intent.source_input;
-  if (source) verify({ path: source.snapshot_path, sha256: source.sha256 });
-  for (const capture of docs['evidence.json'].captures) if (capture.raw_image) verify(capture.raw_image);
-  for (const item of docs['evidence.json'].items) if (item.image) verify(item.image);
+  const check = require('./validate-canonical-artifacts').validateDirectoryCore(root);
+  if (check.errors.length) throw new Error(`Invalid canonical run: ${JSON.stringify(check.errors)}`);
+  const docs = check.documents;
+  const linkedErrors = verifyLinkedArtifacts(root, docs);
+  if (linkedErrors.length) throw new Error(`Invalid linked artifacts: ${JSON.stringify(linkedErrors)}`);
   return docs;
 }
 
