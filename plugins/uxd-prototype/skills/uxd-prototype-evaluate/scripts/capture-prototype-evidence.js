@@ -48,11 +48,14 @@ function assertSupportedUrl(rawUrl) {
 async function main() {
   const artifactsDir = path.resolve(artifactsArg);
   const url = assertSupportedUrl(prototypeUrl);
-  const screenshotsDir = path.join(artifactsDir, 'screenshots');
   const screenshotRelative = 'screenshots/journey-baseline.png';
   const evidencePath = path.join(artifactsDir, 'prototype-evidence.json');
-
-  fs.mkdirSync(screenshotsDir, { recursive: true });
+  try {
+    fs.lstatSync(evidencePath);
+    throw new Error(`Evidence file already exists: ${evidencePath}`);
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
 
   const browser = await chromium.launch({ headless: true });
   try {
@@ -122,14 +125,16 @@ async function main() {
       prototype_url: page.url(),
       captured_at: new Date().toISOString(),
       viewport: DEFAULT_VIEWPORT,
-      screenshots: [screenshotRelative],
+      screenshots: [targeted.capture.raw_image.path],
       model_screenshots: targeted.model_screenshots,
       capture: targeted.capture,
       crops: targeted.crops,
       input_metrics: targeted.input_metrics,
       page: targeted.page_state,
     };
-    fs.writeFileSync(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`);
+    // Keep a prior run's evidence intact; the fixed manifest name is only
+    // created when it does not already exist.
+    fs.writeFileSync(evidencePath, `${JSON.stringify(evidence, null, 2)}\n`, { flag: 'wx' });
 
     const result = {
       status: 'completed',

@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 const DEFAULT_VIEWPORT = { width: 1440, height: 900 };
+const PENDING_IMAGES = Symbol('pendingEvidenceImages');
 
 function sha256(buffer) {
   return `sha256:${crypto.createHash('sha256').update(buffer).digest('hex')}`;
@@ -19,12 +20,96 @@ function resolvePortable(artifactsDir, relative) {
   if (!relative || path.isAbsolute(relative) || relative.split(/[\\/]/).includes('..')) {
     throw new Error(`Evidence path must be relative and portable: ${relative}`);
   }
-  const root = path.resolve(artifactsDir);
-  const target = path.resolve(root, relative);
-  if (target !== root && !target.startsWith(`${root}${path.sep}`)) {
+  const requestedRoot = path.resolve(artifactsDir);
+  let root = requestedRoot;
+  try {
+    root = fs.realpathSync(requestedRoot);
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+  // Treat both slash styles as separators so paths remain portable between
+  // platforms, rather than allowing a Windows-style traversal on POSIX.
+  const portableRelative = relative.split(/[\\/]/).join(path.sep);
+  const target = path.resolve(root, portableRelative);
+  if (target === root) {
+    throw new Error(`Evidence path must name a file below the artifacts directory: ${relative}`);
+  }
+  const rootPrefix = root.endsWith(path.sep) ? root : `${root}${path.sep}`;
+  if (!target.startsWith(rootPrefix)) {
     throw new Error(`Evidence path escapes artifacts directory: ${relative}`);
   }
+
+  // Lexical confinement does not protect a path whose existing directory is a
+  // symlink. Check each existing component below the artifact root before any
+  // caller writes to the returned path.
+  const segments = path.relative(root, target).split(path.sep).filter(Boolean);
+  let current = root;
+  for (let index = 0; index < segments.length; index += 1) {
+    current = path.join(current, segments[index]);
+    let stat;
+    try {
+      stat = fs.lstatSync(current);
+    } catch (error) {
+      if (error.code === 'ENOENT') break;
+      throw error;
+    }
+    if (stat.isSymbolicLink()) {
+      throw new Error(`Evidence path contains a symlink: ${relative}`);
+    }
+    if (index < segments.length - 1 && !stat.isDirectory()) {
+      throw new Error(`Evidence path parent is not a directory: ${relative}`);
+    }
+  }
   return target;
+}
+
+function ensurePortableParent(artifactsDir, relative) {
+  const requestedRoot = path.resolve(artifactsDir);
+  fs.mkdirSync(requestedRoot, { recursive: true });
+  // Validate before creating any caller-controlled subdirectories.
+  resolvePortable(requestedRoot, relative);
+  const root = fs.realpathSync(requestedRoot);
+  const portableRelative = relative.split(/[\\/]/).join(path.sep);
+  const parent = path.dirname(portableRelative);
+  let current = root;
+  if (parent !== '.') {
+    for (const segment of parent.split(path.sep).filter(Boolean)) {
+      current = path.join(current, segment);
+      try {
+        fs.mkdirSync(current);
+      } catch (error) {
+        if (error.code !== 'EEXIST') throw error;
+      }
+      const stat = fs.lstatSync(current);
+      if (stat.isSymbolicLink() || !stat.isDirectory()) {
+        throw new Error(`Evidence path parent is not a safe directory: ${relative}`);
+      }
+    }
+  }
+}
+
+function withFreshSuffix(relative) {
+  const parsed = path.parse(relative.split(/[\\/]/).join(path.sep));
+  const suffix = crypto.randomBytes(8).toString('hex');
+  return path.join(parsed.dir, `${parsed.name}-${suffix}${parsed.ext}`).split(path.sep).join('/');
+}
+
+function writeCapture(artifactsDir, preferredRelative, buffer) {
+  ensurePortableParent(artifactsDir, preferredRelative);
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const relative = attempt === 0 ? preferredRelative : withFreshSuffix(preferredRelative);
+    const outputPath = resolvePortable(artifactsDir, relative);
+    try {
+      // `wx` is the final collision guard; screenshots are captured to memory
+      // so Playwright never follows or truncates an existing destination. Use
+      // the requested path when fresh, then fall back to unique names on reuse.
+      fs.writeFileSync(outputPath, buffer, { flag: 'wx' });
+      return { path: outputPath, relative };
+    } catch (error) {
+      if (error.code !== 'EEXIST') throw error;
+    }
+  }
+  throw new Error(`Could not allocate a fresh evidence path for: ${preferredRelative}`);
 }
 
 function clipForBox(box, viewport, padding = 16) {
@@ -158,11 +243,22 @@ async function captureStableRender(page, capture, { ready, settleMs = 150, timeo
 }
 
 async function captureTargetedEvidence(page, options = {}) {
-  return captureStableRender(page, async () => {
+  const evidence = await captureStableRender(page, async () => {
     const evidence = await captureTargetedFrame(page, options);
     if (options.readState) evidence.page_state = await options.readState();
     return evidence;
   }, options.stability);
+  try {
+    for (const pending of evidence[PENDING_IMAGES]) {
+      pending.reference.path = writeCapture(options.artifactsDir, pending.preferredRelative, pending.buffer).relative;
+    }
+    evidence.model_screenshots = evidence.crops.length
+      ? evidence.crops.map(item => item.image.path)
+      : [evidence.capture.raw_image.path];
+    return evidence;
+  } finally {
+    delete evidence[PENDING_IMAGES];
+  }
 }
 
 async function captureTargetedFrame(page, {
@@ -174,25 +270,28 @@ async function captureTargetedFrame(page, {
   maxCrops = 6,
   padding = 16,
 } = {}) {
-  const root = path.resolve(artifactsDir);
   const segment = safeSegment(prefix);
   const viewport = page.viewportSize() || DEFAULT_VIEWPORT;
-  const rawPath = resolvePortable(root, rawRelative);
-  fs.mkdirSync(path.dirname(rawPath), { recursive: true });
-  await page.screenshot({ path: rawPath, fullPage: false, animations: 'disabled' });
-  const rawBuffer = fs.readFileSync(rawPath);
+  const rawBuffer = await page.screenshot({ fullPage: false, animations: 'disabled' });
   const targets = await collectVisibleTargets(page, { focus, maxCrops });
   const crops = [];
+  const pendingImages = [];
   let cropBytes = 0;
+  const rawImage = { path: rawRelative, width: viewport.width, height: viewport.height, sha256: sha256(rawBuffer) };
+  pendingImages.push({ preferredRelative: rawRelative, buffer: rawBuffer, reference: rawImage });
   for (let index = 0; index < targets.length; index += 1) {
     const target = targets[index];
     const coordinates = clipForBox(target.box, viewport, padding);
-    const relative = `evidence/crops/${segment}-${index + 1}.png`;
-    const outputPath = resolvePortable(root, relative);
-    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
-    await page.screenshot({ path: outputPath, clip: coordinates.clip, fullPage: false, animations: 'disabled' });
-    const buffer = fs.readFileSync(outputPath);
+    const preferredRelative = `evidence/crops/${segment}-${index + 1}.png`;
+    const buffer = await page.screenshot({ clip: coordinates.clip, fullPage: false, animations: 'disabled' });
     cropBytes += buffer.length;
+    const image = {
+      path: preferredRelative,
+      width: coordinates.clip.width,
+      height: coordinates.clip.height,
+      sha256: sha256(buffer),
+    };
+    pendingImages.push({ preferredRelative, buffer, reference: image });
     crops.push({
       id: `evidence-${segment}-${index + 1}`,
       capture_id: `capture-${segment}`,
@@ -200,12 +299,7 @@ async function captureTargetedFrame(page, {
       purpose,
       subject: target.subject,
       crop: coordinates.crop,
-      image: {
-        path: relative,
-        width: coordinates.clip.width,
-        height: coordinates.clip.height,
-        sha256: sha256(buffer),
-      },
+      image,
       dom: target.dom,
     });
   }
@@ -213,11 +307,11 @@ async function captureTargetedFrame(page, {
   const selectedBytes = crops.length ? cropBytes : rawBuffer.length;
   const selectedPixels = crops.length ? crops.reduce((sum, item) => sum + (item.image.width * item.image.height), 0) : viewport.width * viewport.height;
   const rawPixels = viewport.width * viewport.height;
-  return {
+  const evidence = {
     capture: {
       id: `capture-${segment}`,
       viewport: { ...viewport, device_scale_factor: 1 },
-      raw_image: { path: rawRelative, width: viewport.width, height: viewport.height, sha256: sha256(rawBuffer) },
+      raw_image: rawImage,
     },
     crops,
     model_screenshots: modelScreenshots,
@@ -229,6 +323,8 @@ async function captureTargetedFrame(page, {
       pixel_ratio: Math.round((selectedPixels / rawPixels) * 10000) / 10000,
     },
   };
+  Object.defineProperty(evidence, PENDING_IMAGES, { value: pendingImages, configurable: true });
+  return evidence;
 }
 
 module.exports = {
