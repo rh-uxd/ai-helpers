@@ -1,4 +1,5 @@
-node_modules/
+# Dependency directories or local links to an external dependency cache
+/node_modules
 package-lock.json
 
 # Stray Playwright scripts from eval runs
@@ -11,5 +12,5 @@ test-results/
 # Temporary golden fixtures (copied from live eval runs, not committed)
 tests/fixtures/.golden-*/
 
-# Team-specific overlay (not committed)
+# Keep obsolete local configuration private; it is no longer loaded.
 config/product-overlay.local.yaml

@@ -1,0 +1,2 @@
+prompt: |
+  Read plugins/uxd-prototype/agents/uxd-evaluator.md and follow the uxd-evaluator agent. I want to review wording and hierarchy with combined canonical evidence/history, not run users through tasks. I have not shared the source/build yet. Prepare a clean CLI-style onboarding: recommend the workflow, show which missing decisions need multiple choice, checkbox selection or short open-ended answers, and reuse what I already told you. Explain the approval boundary. Preparation only; do not run tools against a prototype, call providers or edit anything.

@@ -103,10 +103,10 @@ For each entry in fix-log.json where `applied == true`, find the matching sugges
 ```
 
 fix-log.json format — a flat array where each entry includes BOTH the semantic
-fields (type, criterion_id, file, change) AND the scorer-required fields
-(description, applied, timestamp). The MLflow scorer `Fix Log Entry Schema`
+fields (type, criterion_id, file, change) AND the schema-required fields
+(description, applied, timestamp). `scripts/validate-artifact-schemas.js`
 validates that each entry has `description`, `applied`, and `timestamp` — without
-them the scorer fails even though the fix data is present.
+them schema validation fails even though the fix data is present.
 
 ```json
 [

@@ -16,6 +16,10 @@ tmp/
 # Eval run artifacts
 **/eval/runs/
 
+# Consumer-generated artifacts
+/.artifacts/
+/artifacts/
+
 # Local skill-creator loop output (not the harness)
 **/evals/
 
