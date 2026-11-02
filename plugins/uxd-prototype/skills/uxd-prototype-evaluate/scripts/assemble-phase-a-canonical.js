@@ -263,7 +263,7 @@ function buildDocuments(artifactsDir, cacheDecision, inputs = null) {
     ...filesUnder(path.join(skillRoot, 'config')),
     ...filesUnder(path.join(skillRoot, 'references', 'phases')),
     ...[
-      'assemble-phase-a-canonical.js', 'legacy-artifact-adapter.js', 'csv-utils.js',
+      'assemble-phase-a-canonical.js', 'legacy-artifact-adapter.js', 'csv-utils.js', 'linked-artifact-contract.js',
       'xray-cache.js', 'split-contract.js', 'validate-canonical-artifacts.js', 'walkthrough-contract.js', 'evaluation-plan.js',
       'consistency-compat.js', 'consistency-contract.js', 'validate-consistency.js',
       ...(inputs
@@ -465,7 +465,8 @@ function main() {
       };
       documents['state.json'].phases = documents['state.json'].phases.map(phase => ({ ...phase, status: 'cached' }));
       writeDocuments(fullStage, documents);
-      const validation = validateDirectory(fullStage);
+      // Full-cache stages intentionally contain only five canonical files.
+      const validation = validateDirectory(fullStage, { skipLinkedArtifacts: true });
       if (!validation.valid) throw new Error(`Full cache restore failed validation: ${JSON.stringify(validation.errors)}`);
       install(fullStage, artifactsDir);
       installLegacyActionArtifacts(artifactsDir, documents);
@@ -498,7 +499,8 @@ function main() {
       writeDocuments(stage, documents);
     }
     if (documents['evaluation.json'].consistency.source_analysis?.evaluator_publication) require('./split-contract').copyTree(path.join(artifactsDir, '.artifacts'), path.join(stage, '.artifacts'));
-    const validation = validateDirectory(stage);
+    // Legacy Phase-A staging may omit referenced source/image files; consumer validation stays strict.
+    const validation = validateDirectory(stage, { skipLinkedArtifacts: true });
     if (!validation.valid) throw new Error(`Phase A canonical validation failed: ${JSON.stringify(validation.errors)}`);
     const parity = compareLegacyParity(artifactsDir, documents);
     if (cacheLookup.decision !== 'hit' && !documents['evaluation.json'].consistency.source_analysis) store(cacheRoot, stage);

@@ -47,7 +47,8 @@ function validateEntry(entryDir, expectedIdentity) {
     const data = fs.readFileSync(target);
     if (record.bytes !== data.length || record.sha256 !== digest(data)) return { valid: false, reason: `checksum_${filename}` };
   }
-  const validation = validateDirectory(entryDir);
+  // Cache entries intentionally retain only the five canonical files.
+  const validation = validateDirectory(entryDir, { skipLinkedArtifacts: true });
   if (!validation.valid) return { valid: false, reason: 'schema_invalid', errors: validation.errors };
   const state = JSON.parse(fs.readFileSync(path.join(entryDir, 'state.json'), 'utf8'));
   if (state.quick_checks || state.workflow) return { valid: false, reason: 'unsupported_receipt_closure' };
@@ -74,7 +75,8 @@ function lookup(cacheRoot, expectedIdentity, previousIdentity = null) {
 
 function store(cacheRoot, canonicalDir) {
   const source = path.resolve(canonicalDir);
-  const validation = validateDirectory(source);
+  // This compatibility cache intentionally omits legacy linked-file closures.
+  const validation = validateDirectory(source, { skipLinkedArtifacts: true });
   if (!validation.valid) throw new Error(`Cannot cache invalid canonical artifacts: ${JSON.stringify(validation.errors)}`);
   const state = JSON.parse(fs.readFileSync(path.join(source, 'state.json'), 'utf8'));
   if (state.quick_checks || state.workflow) throw new Error('Five-file compatibility caches cannot preserve Quick/split evidence and receipt closures');
@@ -137,7 +139,8 @@ function restore(cacheRoot, expectedIdentity, destination) {
     }
     throw error;
   }
-  const validation = validateDirectory(target);
+  // Restores contain only canonical files; linked closures stay with the source run.
+  const validation = validateDirectory(target, { skipLinkedArtifacts: true });
   if (!validation.valid) throw new Error(`Restored canonical artifacts failed validation: ${JSON.stringify(validation.errors)}`);
   return { ...hit, restored_artifacts: [...CANONICAL_FILES] };
 }
