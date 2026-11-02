@@ -5,6 +5,7 @@
 # Discovers fixture directories and runs each validator against them.
 #
 # Output protocol: "Test <name> (<fixture>):\n{PASS|FAIL}"
+# This matches what mlflow-trace-eval.py's run_script_tests() parser expects.
 #
 # Exit codes:
 #   0 = all tests pass

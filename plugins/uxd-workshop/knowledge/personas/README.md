@@ -35,7 +35,7 @@ Copy [`TEMPLATE.md`](TEMPLATE.md). Required shape:
 | `aliases` | Also-known-as phrases for the same role (matching + human labels); singular only |
 | `default_experience` | Which experience overlay levels to pair for eval |
 
-Keep Who / When to use product-agnostic. **Do not** put private study URLs or other restricted research on these cards. Keep citations in the project's approved research store and supply relevant references explicitly when needed.
+Keep Who / When to use product-agnostic. **Do not** put Google Docs, internal slides, or other research URLs on these cards — those citations live in the VPN-only [internal-ai-helpers](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers) repo at `plugins/uxd-eval-config/knowledge/personas/`.
 
 ## Aliases (matching)
 
@@ -89,4 +89,4 @@ If `.context/usability-testing/personas/<composed-id>.yaml` exists (from bootstr
 1. Copy [`TEMPLATE.md`](TEMPLATE.md) to `{id}.md` and fill it in
 2. Add an entry to `catalog.yaml` with matching `id`, `aliases`, and `card:`
 3. Optionally add matching deep YAML under your local `.context/` for evaluate Phase B
-4. Keep restricted research links in your project's approved research store, not here; supply relevant citations explicitly for a run.
+4. If you have internal research links, add them in internal-ai-helpers `plugins/uxd-eval-config/knowledge/personas/{id}.md` — not here
