@@ -1,0 +1,5 @@
+prompt: >-
+  In a PatternFly React modal wizard, operators often open connection setup just to
+  inspect the defaults and then leave without editing anything. The prototype now
+  asks whether to discard work every time they leave. What component behavior would
+  you recommend for this read-only visit?

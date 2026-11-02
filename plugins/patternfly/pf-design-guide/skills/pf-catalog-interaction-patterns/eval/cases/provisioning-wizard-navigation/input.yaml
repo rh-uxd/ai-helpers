@@ -1,0 +1,5 @@
+prompt: >-
+  I'm designing a PatternFly React provisioning wizard with Details -> Configuration -> Review.
+  Users often reach Review, then go back and clear or change the resource name in Details.
+  Our prototype still makes later steps look available in the sidebar. Which components
+  and navigation behavior would you recommend for this flow?

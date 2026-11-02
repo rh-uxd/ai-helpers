@@ -41,10 +41,10 @@ Components indexed by the user interactions they support. Use this catalog to fi
 
 | Component | Behavior |
 |-----------|----------|
-| Modal | Click trigger to open; click backdrop or X to close |
+| Modal | Click trigger to open; supported dismiss actions request closure (apply unsaved-work protection for editing workflows) |
 | Drawer | Click trigger to slide panel in from edge |
 | Popover | Click trigger to show contextual content (NOT hover) |
-| Wizard | Click actions to progress through steps |
+| Wizard | Click actions to progress through steps; validation-gated flows need application-owned eligibility checks |
 
 ### Navigate
 
@@ -117,13 +117,13 @@ Components indexed by the user interactions they support. Use this catalog to fi
 
 | Component | Behavior |
 |-----------|----------|
-| Modal | Closes and restores focus |
+| Modal | Requests closure; editing workflows apply the shared abandonment policy before closing and restoring focus |
 | Drawer | Closes panel |
 | Popover | Closes popover |
 | Menu | Closes and returns focus to toggle |
 | Select | Closes dropdown |
 | DatePicker | Closes calendar |
-| Wizard | Closes wizard (if modal) |
+| Wizard | Modal-host Escape dismissal must use the same abandonment policy as Cancel and Close |
 
 ### Tab navigation
 
@@ -156,7 +156,7 @@ Components indexed by the user interactions they support. Use this catalog to fi
 | Component | Behavior |
 |-----------|----------|
 | Modal | Traps focus within modal while open |
-| Wizard | Traps focus within wizard dialog |
+| Wizard (within Modal) | Modal host traps focus; in-page wizards do not need a dialog focus trap |
 | Drawer (modal) | Traps focus when `isInline={false}` |
 | Popover | Traps focus when interactive content present |
 
@@ -211,3 +211,19 @@ Components indexed by the user interactions they support. Use this catalog to fi
 | Table (bulk select) | Select all / deselect all via header checkbox |
 | DataList (bulk select) | Bulk selection toolbar pattern |
 | Toolbar (bulk select) | Bulk selection dropdown with count |
+
+---
+
+## Workflow — Form and wizard behaviors
+
+These interactions require application state and coordinated handlers, not just component selection. Read [Form and wizard behaviors](form-wizard-behaviors.md) for applicability, required state, defaults, exceptions, and verification.
+
+| Interaction need | Components | Behavior reference |
+|------------------|------------|--------------------|
+| Collect related input in a suitable editing surface | Form, FormGroup, Modal, Wizard | [Surface and baseline guidance](form-wizard-behaviors.md#surface-and-baseline-guidance) |
+| Validate ordered steps without sidebar bypasses | Wizard, WizardStep, Form | [Validated wizard progression](form-wizard-behaviors.md#validated-wizard-progression) |
+| Cancel or dismiss without losing meaningful edits | Form, Wizard, Modal | [Shared unsaved-work protection](form-wizard-behaviors.md#shared-unsaved-work-protection) |
+| Explain errors and make updates perceivable | FormGroup, FormHelperText, HelperText, HelperTextItem, Alert | [Accessible validation feedback](form-wizard-behaviors.md#accessible-validation-feedback) |
+| Save once, show pending status, and recover from failure | Form, ActionGroup, Wizard, Button, Spinner, Alert | [Shared submission and recovery](form-wizard-behaviors.md#shared-submission-and-recovery) |
+
+The default PoC is **Details → Configuration → Review**, with a small Form and a mock asynchronous save. The four behavior sections are reusable across products; validation rules, dirty-state criteria, and recovery semantics remain explicit application policies.

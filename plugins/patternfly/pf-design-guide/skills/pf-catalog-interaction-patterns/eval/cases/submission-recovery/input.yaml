@@ -1,0 +1,6 @@
+prompt: >-
+  In our PatternFly React workspace provisioning flow, Create calls an API that can
+  take a while. Testers sometimes press it again. A quota rejection is easy to
+  reproduce, but a connection timeout can also happen after the server has created
+  the workspace. Which components and submission/recovery interactions should we
+  recommend for this PoC?
