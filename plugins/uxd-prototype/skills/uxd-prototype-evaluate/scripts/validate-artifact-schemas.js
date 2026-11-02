@@ -2,7 +2,7 @@
 /**
  * Validate pipeline artifact schemas before report generation.
  * Catches schema drift between skill outputs and downstream consumers
- * (render-report.js, MLflow scorers, validate-pipeline-output.js).
+ * (render-report.js, validate-pipeline-output.js).
  *
  * Usage: node validate-artifact-schemas.js .artifacts/<KEY>/
  * Exit code 0 = all pass, 1 = failures found.

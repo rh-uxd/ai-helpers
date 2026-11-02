@@ -4,7 +4,7 @@
 Usage: python3 propagate-exit-reason.py <ARTIFACTS_DIR>
 
 The iteration-log.json root-level exit_reason is the canonical field
-that downstream consumers read (MLflow scorers, leaderboard, report).
+that downstream consumers read (leaderboard, report).
 Without this, the report shows "exit_reason: pending" after clean exit.
 """
 import json
