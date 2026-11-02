@@ -200,9 +200,10 @@ Before authorized work, show a compact plan with all applicable fields resolved:
 - **Scope:** selected screens/states; roles/fixtures and exact task/persona pairs
   when relevant. Describe starting state and any approved fallback hints.
 - **Evidence and capability:** screenshot/DOM capture boundary, model context and
-  result receipts, expected invocation count and limitations. The initial
-  walkthrough importer permits one model invocation receipt per selected pair;
-  defer multi-call persona sessions until the contract supports every invocation.
+  result receipts, expected invocation count and limitations. New walkthrough
+  producers use bundle v2: record every actual invocation, including failed calls;
+  unexecuted outcomes have no fabricated call. Legacy v1 permits only one completed
+  invocation per pair. See the [walkthrough contract](walkthroughs.md#bundle-v2).
 - **Estimate and limits:** reviewed goal/scope/budget and stopping conditions;
   model/browser work, expected duration/spend when known, and what
   is unknown. No made-up price or unknown-as-zero estimate; host-session cost is
@@ -221,10 +222,13 @@ before the corresponding activity. Declined work stays skipped/blocked, not PASS
 
 Record in-scope adaptations and their public rationale, planned versus actual
 work, and evidence gaps. Ask before expanding the reviewed goal/scope/budget or
-crossing Full's walkthrough checkpoint. Current schemas do not persist adaptive
-plans: keep host planning/decision notes alongside the packet without inventing
-canonical fields. Changed frozen selection requires a newly reviewed packet/run;
-unchanged continuation must not rerun Quick.
+crossing Full's walkthrough checkpoint. New runs can persist an optional typed
+plan with separate actual-execution records; legacy runs need no invented
+retrospective plan. Unchanged Full continuation reuses its frozen plan and packet
+without rerunning Quick. Adaptations create a fresh parent-linked child and change
+record. Expanding the reviewed envelope requires bound approval; adapted Full runs
+pause at a new review checkpoint. Follow the [planning contract](evaluation-planning.md)
+for adaptation and approval boundaries; never mutate a completed run.
 
 ## Checkpoints and recovery
 
