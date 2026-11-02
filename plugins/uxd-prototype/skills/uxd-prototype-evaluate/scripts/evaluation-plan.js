@@ -9,9 +9,20 @@ const assert = (ok, message) => { if (!ok) throw new Error(message); };
 const same = C.isDeepStrictEqual;
 const overCostCap = (value, cap) => cap !== null && value - cap > Number.EPSILON * Math.max(Number.MIN_VALUE, value, cap) * 4;
 const zero = () => ({ model_invocations: 0, llm_cost_usd: 0, known_cost_usd: 0 });
-const combine = (a, b) => ({ model_invocations: a.model_invocations + b.model_invocations, llm_cost_usd: a.llm_cost_usd === null || b.llm_cost_usd === null ? null : a.llm_cost_usd + b.llm_cost_usd, known_cost_usd: a.known_cost_usd + b.known_cost_usd });
+const unknown = () => ({ model_invocations: null, llm_cost_usd: null, known_cost_usd: null });
+const combine = (a, b) => ({ model_invocations: a.model_invocations === null || b.model_invocations === null ? null : a.model_invocations + b.model_invocations, llm_cost_usd: a.llm_cost_usd === null || b.llm_cost_usd === null ? null : a.llm_cost_usd + b.llm_cost_usd, known_cost_usd: a.known_cost_usd === null || b.known_cost_usd === null ? null : a.known_cost_usd + b.known_cost_usd });
 function usage(phases) {
   return phases.filter(p => p.model_invoked).reduce((total, p) => combine(total, { model_invocations: 1, llm_cost_usd: p.llm_cost_usd, known_cost_usd: p.llm_cost_usd ?? 0 }), zero());
+}
+function lineageUsage(state) {
+  if (state.planning) return state.planning.lineage_usage;
+  if (state.usage_attribution) return state.usage_attribution.lineage_usage;
+  // A root's retained phases are its own. On a historical child, their
+  // ownership is unknowable: they may include any number of ancestor phases.
+  return state.workflow?.parent_run_id ? unknown() : usage(state.phases);
+}
+function priorUsage(parentState) {
+  return parentState ? lineageUsage(parentState) : zero();
 }
 let validator;
 function validatePlan(plan, packetHash) {
@@ -93,7 +104,9 @@ function preflight(options, parent, approval) {
     if (parent['state.json'].planning?.budget_status === 'unknown' && plan.limits.max_cost_usd !== null && plan.steps.some(s => ['heuristic', 'consistency-visual', 'walkthroughs'].includes(s.check))) assert(approval && ['expand-evaluation', 'continue-unknown-usage'].includes(approval.purpose) && approval.plan_sha256 === C.hash(bytes) && approval.packet_sha256 === plan.packet_sha256, 'Unknown prior cost cannot establish remaining budget; review uncertainty before additional model work');
     change = { kind: expands ? 'expanded' : 'within-envelope', reason: record.reason, recorded_at: record.recorded_at, allow_rerun: record.allow_rerun };
   } else assert(!options['plan-change'], '--plan-change requires --adapt-from');
-  return { plan, bytes, change, prior_usage: parent ? parent['state.json'].planning?.lineage_usage || usage(parent['state.json'].phases) : zero() };
+  const prior = priorUsage(parent?.['state.json']);
+  assert(prior.model_invocations !== null && prior.known_cost_usd !== null, 'Cannot create a planned child from historical ancestry without usage attribution; preserve the unknowns or create an unplanned run');
+  return { plan, bytes, change, prior_usage: prior };
 }
 
 function execution(plan, docs) {
@@ -122,8 +135,21 @@ function stateFor(prepared, docs, inherited) {
   const exceeded = limits.max_model_invocations !== null && total.model_invocations > limits.max_model_invocations || overCostCap(total.known_cost_usd, limits.max_cost_usd);
   return { schema_version: 1, plan_sha256: C.hash(prepared.bytes), inherited_phase_count: inherited, prior_usage: prepared.prior_usage, change: prepared.change, execution: execution(prepared.plan, docs), own_usage: own, lineage_usage: total, budget_status: exceeded ? 'exceeded' : total.llm_cost_usd === null ? 'unknown' : 'within-known' };
 }
-function attach(prepared, docs, stage, inherited) {
-  if (!prepared) return;
+function attach(prepared, docs, stage, inherited, parentState) {
+  if (!prepared) {
+    const state = docs['state.json'];
+    const own = usage(state.phases.slice(inherited));
+    const prior = priorUsage(parentState);
+    state.usage_attribution = {
+      schema_version: 1,
+      parent_run_id: state.workflow?.parent_run_id || null,
+      inherited_phase_count: inherited,
+      own_usage: own,
+      prior_usage: prior,
+      lineage_usage: combine(prior, own),
+    };
+    return;
+  }
   const target = path.join(stage, 'inputs/evaluation-plan.json');
   if (fs.existsSync(target)) assert(C.hash(fs.readFileSync(target)) === C.hash(prepared.bytes), 'Cannot overwrite an inherited frozen plan');
   else fs.writeFileSync(target, prepared.bytes, { flag: 'wx' });
@@ -133,6 +159,21 @@ function attach(prepared, docs, stage, inherited) {
 function validatePublished(docs, root) {
   const plan = docs['brief.json'].intent.evaluation_plan; const stored = docs['state.json'].planning;
   assert(Boolean(plan) === Boolean(stored), 'Plan and planning execution state must appear together');
+  const state = docs['state.json'];
+  const attribution = state.usage_attribution;
+  if (attribution) {
+    assert(!stored, 'Usage attribution is only used when no reviewed plan is persisted');
+    assert(attribution.parent_run_id === (state.workflow?.parent_run_id || null), 'Usage attribution parent disagrees with workflow lineage');
+    assert(attribution.inherited_phase_count <= state.phases.length, 'Inherited phase count exceeds recorded phases');
+    const expectedOwn = usage(state.phases.slice(attribution.inherited_phase_count));
+    assert(same(expectedOwn, attribution.own_usage), 'Own usage disagrees with attributed phases');
+    const prior = attribution.prior_usage;
+    const unknownPrior = prior.model_invocations === null && prior.llm_cost_usd === null && prior.known_cost_usd === null;
+    const knownPrior = Number.isInteger(prior.model_invocations) && (prior.llm_cost_usd === null || Number.isFinite(prior.llm_cost_usd)) && Number.isFinite(prior.known_cost_usd);
+    assert(unknownPrior || knownPrior, 'Prior usage must be fully attributed or wholly unknown');
+    if (!attribution.parent_run_id) assert(attribution.inherited_phase_count === 0 && same(attribution.prior_usage, zero()), 'Root usage attribution cannot invent inherited work');
+    assert(same(combine(attribution.prior_usage, attribution.own_usage), attribution.lineage_usage), 'Lineage usage disagrees with own and prior attribution');
+  }
   if (!plan) return;
   const bytes = C.referenceBytes(root, { path: 'inputs/evaluation-plan.json', sha256: stored.plan_sha256 });
   assert(same(JSON.parse(bytes), plan), 'Canonical plan differs from frozen plan bytes');

@@ -112,5 +112,9 @@ Canonical envelope version stays 1; plan/state extensions are optional and the
 plan format is explicitly versioned. Legacy runs remain readable and unchanged
 continuations need no invented retrospective plan. New planned runs use this
 contract. Adapting a legacy run needs a reviewed plan and explicit expansion
-approval because no earlier envelope was recorded. Older strict readers may
-reject the extensions; use the matching validator, not a lossy down-conversion.
+approval because no earlier envelope was recorded. Unplanned runs may persist
+optional `state.usage_attribution` to distinguish own phases from inherited
+usage. Historical children without it retain unknown ownership and totals. A
+planned child fails closed when its parent's lineage cannot be attributed; not
+all historical children can be adapted safely. Older strict readers may reject
+the extensions; use the matching validator, not a lossy down-conversion.

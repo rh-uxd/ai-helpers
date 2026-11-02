@@ -8,6 +8,7 @@ const path = require('path');
 const C = require('./split-contract');
 const S = require('./evaluation-synthesis');
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const invocationCount = value => value === null || value === undefined ? 'Unknown' : value;
 function table(headers, rows) {
   if (!rows.length) return '';
   return `<table><thead><tr>${headers.map(h => `<th>${escape(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${escape(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
@@ -39,9 +40,9 @@ function render(directory) {
       : '<p>No consistency or heuristic findings were recorded.</p>'],
     ['Uncertainty', list(synthesis.uncertainty.length ? synthesis.uncertainty : ['No unverified criteria, unreviewed findings or blocked work remain in this run.'])],
     ['Usage', table(['Scope', 'Model invocations', 'Cost USD', 'Budget'], [
-      ['Own', synthesis.usage.own.model_invocations, synthesis.usage.own.llm_cost_usd === null ? 'Unknown' : synthesis.usage.own.llm_cost_usd, synthesis.usage.budget_status || 'no reviewed limits'],
-      ...(synthesis.usage.prior ? [['Inherited (counted once)', synthesis.usage.prior.model_invocations, synthesis.usage.prior.llm_cost_usd === null ? 'Unknown' : synthesis.usage.prior.llm_cost_usd, '—']] : []),
-      ['Lineage total', synthesis.usage.lineage.model_invocations, synthesis.usage.lineage.llm_cost_usd === null ? 'Unknown' : synthesis.usage.lineage.llm_cost_usd, '—'],
+      ['Own', invocationCount(synthesis.usage.own.model_invocations), synthesis.usage.own.llm_cost_usd === null ? 'Unknown' : synthesis.usage.own.llm_cost_usd, synthesis.usage.budget_status || 'no reviewed limits'],
+      ...(synthesis.usage.prior ? [['Inherited (counted once)', invocationCount(synthesis.usage.prior.model_invocations), synthesis.usage.prior.llm_cost_usd === null ? 'Unknown' : synthesis.usage.prior.llm_cost_usd, '—']] : []),
+      ['Lineage total', invocationCount(synthesis.usage.lineage.model_invocations), synthesis.usage.lineage.llm_cost_usd === null ? 'Unknown' : synthesis.usage.lineage.llm_cost_usd, '—'],
     ])],
     ['Recommended next actions', synthesis.next_actions.length
       ? table(['ID', 'Kind', 'Priority', 'Origin', 'Recommendation', 'Handoff'], synthesis.next_actions.map(action => [action.id, action.kind, action.priority, action.origin || '—', action.recommendation, action.handoff || '—']))

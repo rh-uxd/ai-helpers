@@ -3,6 +3,31 @@
   "$id": "https://ai-helpers.uxd/schemas/v1/state.schema.json",
   "title": "UXD Prototype Evaluation state v1",
   "type": "object",
+  "$defs": {
+    "attributed_usage": {
+      "type": "object",
+      "properties": {
+        "model_invocations": { "type": ["integer", "null"], "minimum": 0 },
+        "llm_cost_usd": { "type": ["number", "null"], "minimum": 0 },
+        "known_cost_usd": { "type": ["number", "null"], "minimum": 0 }
+      },
+      "required": ["model_invocations", "llm_cost_usd", "known_cost_usd"],
+      "additionalProperties": false
+    },
+    "usage_attribution": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "const": 1 },
+        "parent_run_id": { "anyOf": [{ "$ref": "shared.schema.json#/$defs/run_id" }, { "type": "null" }] },
+        "inherited_phase_count": { "type": "integer", "minimum": 0, "maximum": 200 },
+        "own_usage": { "$ref": "#/$defs/attributed_usage" },
+        "prior_usage": { "$ref": "#/$defs/attributed_usage" },
+        "lineage_usage": { "$ref": "#/$defs/attributed_usage" }
+      },
+      "required": ["schema_version", "parent_run_id", "inherited_phase_count", "own_usage", "prior_usage", "lineage_usage"],
+      "additionalProperties": false
+    }
+  },
   "allOf": [
     { "$ref": "shared.schema.json#/$defs/envelope" },
     {
@@ -155,6 +180,7 @@
         },
         "permissions": { "$ref": "split.schema.json#/$defs/permissions" },
         "planning": { "$ref": "evaluation-plan.schema.json#/$defs/state" },
+        "usage_attribution": { "$ref": "#/$defs/usage_attribution" },
         "workflow": {
           "type": "object",
           "properties": {

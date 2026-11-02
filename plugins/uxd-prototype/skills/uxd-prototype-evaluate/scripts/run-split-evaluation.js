@@ -163,7 +163,7 @@ function run(options) {
       const history = options['adapt-from'] ? [] : parent?.['state.json'].lifecycle.iterations || [];
       const current = { iteration: pass, phase: executeWalkthroughs ? 'b' : 'a', timestamp: new Date().toISOString(), ac_results: docs['evaluation.json'].ac_results.map(r => ({ ac_id: r.ac_id, verdict: r.verdict })) };
       state.lifecycle = { status: status === 'awaiting-review' ? 'running' : 'completed', current_phase: executeWalkthroughs ? 'journey' : 'classify', iteration: pass, max_iterations: 2, exit_reason: status === 'awaiting-review' ? 'pending' : pass === 2 ? 'max-iterations' : 'no-fix', iterations: [...history.filter(i => i.iteration !== pass || i.phase !== current.phase), current] };
-      require('./evaluation-plan').attach(planning, docs, stage, inheritedPhaseCount);
+      require('./evaluation-plan').attach(planning, docs, stage, inheritedPhaseCount, parent?.['state.json']);
       // Identification includes the persisted plan, not just executed selection.
       C.identify(docs, route, receipt);
       return docs;

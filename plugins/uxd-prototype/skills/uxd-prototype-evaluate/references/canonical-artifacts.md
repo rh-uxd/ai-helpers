@@ -103,6 +103,11 @@ files:
   unknown cost stays unknown.
 - Proposed next actions and eligible handoffs.
 
+New unplanned runs may persist optional `state.usage_attribution` with the
+inherited phase prefix and own, prior and lineage usage. Historical children
+without that attribution remain unknown: retained phases are not assumed to be
+the child's own or recounted as new work.
+
 Rendering is local and deterministic: it invokes no provider, launches no
 browser session and never mutates the canonical files. Reports are derived
 artifacts and may be regenerated; `report-integrity.json` records the

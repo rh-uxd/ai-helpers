@@ -41,6 +41,7 @@ function usageFromPhases(phases) {
     known_cost_usd: costs.filter(c => c !== null && c !== undefined).reduce((a, b) => a + b, 0),
   };
 }
+const unknownUsage = () => ({ model_invocations: null, llm_cost_usd: null, known_cost_usd: null });
 
 function coverage(docs) {
   const state = docs['state.json'];
@@ -218,6 +219,16 @@ function usageView(docs) {
       budget_status: planning.budget_status,
     };
   }
+  if (state.usage_attribution) {
+    const { own_usage, prior_usage, lineage_usage } = state.usage_attribution;
+    return { reviewed_limits: false, limits: null, own: own_usage, prior: state.usage_attribution.parent_run_id ? prior_usage : null, lineage: lineage_usage, budget_status: null };
+  }
+  if (state.workflow?.parent_run_id) {
+    // Older child artifacts retained phases without ownership metadata. Do
+    // not present inherited calls as the child's own or count them again.
+    const unknown = unknownUsage();
+    return { reviewed_limits: false, limits: null, own: unknown, prior: unknown, lineage: unknown, budget_status: null };
+  }
   const own = usageFromPhases(state.phases);
   return { reviewed_limits: false, limits: null, own, prior: null, lineage: own, budget_status: null };
 }
@@ -277,6 +288,9 @@ function build(docs) {
 function costText(usage) {
   return usage.llm_cost_usd === null ? 'unknown' : `$${usage.llm_cost_usd.toFixed(2)}`;
 }
+function invocationText(usage) {
+  return usage.model_invocations === null ? 'unknown' : usage.model_invocations;
+}
 
 function chatMarkdown(synthesis) {
   const lines = [];
@@ -331,9 +345,9 @@ function chatMarkdown(synthesis) {
   else lines.push('- No unverified criteria, unreviewed findings or blocked work remain in this run.');
   lines.push('');
   lines.push('## Usage');
-  lines.push(`- Own: ${s.usage.own.model_invocations} model invocations, cost ${costText(s.usage.own)}`);
-  if (s.usage.prior) lines.push(`- Inherited: ${s.usage.prior.model_invocations} invocations, cost ${costText(s.usage.prior)} (counted once, not re-billed here)`);
-  lines.push(`- Lineage total: ${s.usage.lineage.model_invocations} invocations, cost ${costText(s.usage.lineage)}${s.usage.budget_status ? ` · budget ${s.usage.budget_status}` : ''}`);
+  lines.push(`- Own: ${invocationText(s.usage.own)} model invocations, cost ${costText(s.usage.own)}`);
+  if (s.usage.prior) lines.push(`- Inherited: ${invocationText(s.usage.prior)} invocations, cost ${costText(s.usage.prior)} (counted once, not re-billed here)`);
+  lines.push(`- Lineage total: ${invocationText(s.usage.lineage)} invocations, cost ${costText(s.usage.lineage)}${s.usage.budget_status ? ` · budget ${s.usage.budget_status}` : ''}`);
   lines.push('');
   lines.push('## Recommended next actions');
   if (s.next_actions.length) {
