@@ -36,7 +36,7 @@
   {
     "name": "findscripter/everything-skills",
     "url": "https://github.com/findscripter/everything-skills",
-    "description": "A curated, cross-referenced encyclopedia of 1100+ open-source agent skills (native languages kept) and 1600+ indexed skill repos. Install as a Claude Code marketplace plugin.",
+    "description": "Find agent skills by task, connect them into workflows, and install by volume. Includes reproducible examples and an external skill repository directory.",
     "files": [
       "data/skill-repos.part87.audit.md",
       "data/upstream-body-association-2026-10-23.json",
@@ -44,7 +44,9 @@
       "data/discovery/2026-10-23/baseline.json",
       "data/upstream-review-completed-2026-10-23.json",
       "data/skill-repos.part87.search-provenance.json",
-      "data/upstream-commit-tree-bindings-2026-10-23.json"
+      "data/upstream-commit-tree-bindings-2026-10-23.json",
+      "data/discovery/2026-11-01/baseline-identities.json",
+      "data/discovery/2026-11-02/baseline-identities.json"
     ]
   },
   {
@@ -115,6 +117,7 @@
     "files": [
       ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3011-uxd-research/SOURCE.md",
       ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3000-pf-code-review/SOURCE.md",
+      ".claude/skills/kosif-superpowers/vendor/100-superskills/skills/accessibility-wcag/references/sources.md",
       ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3011-uxd-research/12864-uxd-research-heuristic-eval/references/report-templates.md"
     ]
   },

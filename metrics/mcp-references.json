@@ -25,14 +25,6 @@
     ]
   },
   {
-    "name": "Gkrumbach07/openshell-dashboard",
-    "url": "https://github.com/Gkrumbach07/openshell-dashboard",
-    "description": "Standalone upstream web admin UI for OpenShell",
-    "files": [
-      ".claude/settings.json"
-    ]
-  },
-  {
     "name": "GoldenPassport/ds-patternfly",
     "url": "https://github.com/GoldenPassport/ds-patternfly",
     "description": "Brandable React design system built on PatternFly 6, for BPM/automation projects.",
@@ -76,18 +68,6 @@
       "presets/shared/skills/detect-tech-stack/SKILL.md",
       "docs/onboarding-new-instance.md",
       "presets/shared/skills/detect-tech-stack/detect_tech_stack.py"
-    ]
-  },
-  {
-    "name": "RedHat-UX/next-gen-ui-agent",
-    "url": "https://github.com/RedHat-UX/next-gen-ui-agent",
-    "description": "The goal of this AI agent is to generate personalised and rich UI components based on the user prompt, chat history and backend data provided by other agents in your AI assistant.",
-    "files": [
-      "libs/next_gen_ui_mcp/BUILD",
-      ".cursor/plans/mcp_modules_refactor_59aefb76.plan.md",
-      "libs/next_gen_ui_mcp/README.md",
-      "libs/next_gen_ui_mcp_apps_ui_patternfly/README.md",
-      "libs/next_gen_ui_mcp_apps_ui_patternfly/package.json"
     ]
   },
   {
@@ -137,7 +117,7 @@
     "url": "https://github.com/RedHatInsights/nxtcm-components",
     "description": "Shared React component library for Red Hat Insights ACM and OCM projects built with PatternFly",
     "files": [
-      ".agents/skills/patternfly/SKILL.md"
+      "docs/agent-rules/ui-component.md"
     ]
   },
   {
@@ -175,14 +155,22 @@
     ]
   },
   {
+    "name": "ai-openshell/console",
+    "url": "https://github.com/ai-openshell/console",
+    "description": "Standalone upstream web admin UI for OpenShell",
+    "files": [
+      ".claude/settings.json"
+    ]
+  },
+  {
     "name": "ansible/ansible-ui",
     "url": "https://github.com/ansible/ansible-ui",
     "description": "The UIs for Ansible Projects such as AWX, EDA, and HUB.",
     "files": [
-      ".claude/skills/library_references.md",
       ".mcp.json",
-      ".claude/skills/frontend-overlay/SKILL.md",
-      ".claude/skills/coding_standards.md"
+      ".agents/skills/library-references/references/library-references.md",
+      ".agents/skills/apply-frontend-overlay/references/frontend-overlay.md",
+      ".agents/skills/apply-coding-standards/references/coding-standards.md"
     ]
   },
   {
