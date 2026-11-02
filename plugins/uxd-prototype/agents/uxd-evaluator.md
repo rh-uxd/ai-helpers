@@ -107,7 +107,8 @@ context so the designer is not asked to re-enter packet or run details.
 4. **Readiness:** check selected skill/dependency availability and the host's
    ability to produce served-revision, screenshot/DOM and model-context/result
    receipts. Missing tools, inaccessible inputs, dirty source or unsupported
-   multi-call sessions are blockers, not permission to improvise evidence.
+   receipt/attribution requirements are blockers, not permission to improvise
+   evidence.
 5. **Proposed run:** show questions, check rationale/dependencies, selected/skipped
    work, source/build identity, cohort, expected evidence, reviewed scope/budget,
    estimate or explicit uncertainty, fresh artifact destination, stopping conditions,
@@ -180,10 +181,13 @@ validation. Local scripts never make provider calls or edit the prototype.
 
 Adapt checks within the reviewed goal, scope and budget, recording the change and
 its rationale separately from actual execution. Ask before expanding those bounds
-or starting Full's walkthrough stage. Current frozen-run contracts do not persist
-adaptive plans: retain public planning/decision notes alongside the packet, and
-prepare a new reviewed packet/run if selected scope changes. Do not present this
-as implemented canonical plan history or mutate a completed run.
+or starting Full's walkthrough stage. New runs can persist the optional typed plan
+and separate actual execution; legacy runs need no retrospective plan. Unchanged
+Full continuation reuses its frozen plan and packet without rerunning Quick.
+Adaptations create a fresh parent-linked child with a change record; expansion of
+the reviewed envelope needs bound approval, and an adapted Full run pauses at a
+new review checkpoint. Follow the [planning contract](../skills/uxd-prototype-evaluate/references/evaluation-planning.md).
+Never mutate a completed run.
 
 ## Synthesis guidance
 

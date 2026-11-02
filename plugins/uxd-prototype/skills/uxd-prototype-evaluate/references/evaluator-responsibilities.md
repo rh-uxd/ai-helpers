@@ -154,8 +154,13 @@ work from actual calls, evidence, skips and blocks. The evaluator may adapt chec
 within the reviewed envelope and must record what changed and why; ask before
 expanding that envelope or crossing Full's walkthrough review checkpoint.
 
-Before execution, a changed selection needs a newly frozen packet and matching
-evidence scope. Never edit a completed packet/run to retrofit an adaptation.
+Selection-only adaptations within the frozen goal, packet/evidence scope and
+allowed-check envelope may reuse the exact packet bytes: review a fresh plan and
+change record in a parent-linked child. Repeating prior checks needs an explicit
+rerun reason. Changed intent or evidence scope needs a newly reviewed plan and,
+when packet scope changes, a newly reviewed packet; envelope expansion requires
+hash-bound approval. An adapted Full child pauses at a new `awaiting-review`
+checkpoint. Never edit a completed packet/run to retrofit an adaptation.
 Use the [versioned planning contract](evaluation-planning.md) for new runs. It
 persists the reviewed envelope and separate actual execution, with explicit
 parent-linked changes. Legacy runs need no invented retrospective planning data.
@@ -171,7 +176,7 @@ Legacy v1 retains its single-completed-call limit. Do not collapse real calls.
 
 Shared structured decision synthesis is implemented for local chat and HTML:
 `scripts/evaluation-synthesis.js` builds one deterministic synthesis, and
-`run-report.js --chat` plus the canonical HTML renderer present it. Publishing
+`node scripts/run-report.js --chat` plus the canonical HTML renderer present it. Publishing
 and hosted reports remain follow-up work. An
 installed source companion must match the modern policy/report contract; presence
 of its directory alone does not establish compatibility. No completed standalone

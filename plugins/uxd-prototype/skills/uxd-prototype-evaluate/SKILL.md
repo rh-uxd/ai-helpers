@@ -92,8 +92,8 @@ Present a decision-focused chat summary by default: goal, planned versus actual
 coverage, prioritized evidence-linked findings, uncertainty and the next useful
 decision. Keep task outcomes, AC verdicts, consistency and heuristics distinct.
 Chat and HTML derive from one deterministic structured synthesis:
-`scripts/run-report.js <run-directory> --chat` prints the chat synthesis,
-`scripts/run-report.js <run-directory> --json` renders the local HTML report,
+`node scripts/run-report.js <run-directory> --chat` prints the chat synthesis,
+`node scripts/run-report.js <run-directory> --json` renders the local HTML report,
 and the split entrypoint's `--report` renders that HTML into a fresh run after
 canonical publication. Rendering launches no model work and does not publish.
 Keep all consumer artifacts outside the installed skill directory. Preserve old
