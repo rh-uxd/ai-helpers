@@ -31,7 +31,7 @@ ${CLAUDE_SKILL_DIR}/../../knowledge/...
 
 ## What does not belong here
 
-- Project-specific issue URLs, repository refs and build identities → explicitly reviewed run context, not shared product configuration
-- Restricted research citations → the project's approved research store; supply relevant references explicitly for a run
+- Product-specific Jira keys, repo URLs, or MR maps → skill `config/product-overlay.yaml` (internal values in [internal-ai-helpers](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers) `uxd-eval-config`)
+- Internal research citations / Google Docs study URLs → [internal-ai-helpers](https://gitlab.cee.redhat.com/uxd/internal-ai-helpers) `plugins/uxd-eval-config/knowledge/personas/`
 - Deep behavioral scoring rubrics / full usability YAML → `.context/` (auto-bootstrapped when a usability-testing repo is configured)
 - Task procedures → `skills/`
