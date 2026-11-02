@@ -134,6 +134,7 @@ Print or share the findings so workshop participants can reference them directly
 - One actor, one scenario, and the same journey phases in both frames
 - User actions, touchpoints, screens or artifacts, mindsets, emotions, pain points, evidence, assumptions, and support opportunities
 - A To-Be path grounded in realistic capabilities and the agreed time horizon
+- 3-5 prototype screens marked directly in the To-Be **Screens & Artifacts** row, with reference patterns and open questions
 - The Miro board URL, which stays the shared source for the narrative and prototype steps
 
 **How long:** 90-120 min, with follow-up time if the map surfaces evidence gaps
@@ -143,6 +144,24 @@ Print or share the findings so workshop participants can reference them directly
 - If the brief does not include a time horizon or enabling capabilities, agree on them as separate future-state context; keep them out of the problem statement.
 - Ask `uxd-canvas-create` for a vision journey map using its paired As-Is/To-Be template. Create one Miro board with two matching frames and keep the Miro board as the canonical workspace.
 - Bring the brief's separate As-Is and To-Be map-shaped Journey starters and retain their matching `S#` stage columns and order. If the brief lacks them, have `uxd-canvas-create` draft a concise outline from the available evidence before seeding the board; mark assumptions and leave unsupported future claims open.
+
+#### Connect Miro MCP to Codex
+
+If you are using Codex and want it to read and edit the Miro board directly, connect Miro's hosted MCP server before starting the mapping session:
+
+1. In a terminal, add the Miro MCP server:
+   ```bash
+   codex mcp add miro --url https://mcp.miro.com
+   ```
+2. Open the authorization link Codex provides, sign in to Miro, and approve the requested access to read and write boards.
+3. Start a new Codex chat or restart Codex so it loads the Miro MCP tools.
+4. Check the connection:
+   ```bash
+   codex mcp list
+   ```
+   The list should show `miro` as enabled.
+
+The server is added to your global Codex configuration. Treat the authorization link as private; do not share it because it is specific to your sign-in flow.
 
 **The map structure:** Both frames use the same phases and rows. The shared actor, scenario, and future horizon sit above the frames.
 
@@ -165,9 +184,9 @@ Print or share the findings so workshop participants can reference them directly
 4. **Choose opportunities (15 min).** Connect the most important pains to opportunities. Select the few the To-Be should address; identify evidence gaps that need validation.
 5. **Co-create the To-Be (25 min).** Keep the same actor, scenario, and phases. Describe the user's actions, product response, proposed screens, and support. Leave unresolved or new friction visible.
 6. **Compare the frames (10 min).** Walk each stage from As-Is to To-Be. Check that the future response addresses a mapped pain and remains credible for the horizon.
-7. **Mark prototype screens (10 min).** Identify the 3-5 screens that carry the story. Record the map stage and stable `S#` step labels for each; several ordered steps may share a screen.
+7. **Mark prototype screens and annotate the handoff (15 min).** Identify the 3-5 screens that carry the story. In the To-Be **Screens & Artifacts** row, label each screen `[P1]` through `[P5]` and retain its journey stage and `S#` labels. Reuse the same `[P#]` when one screen spans multiple stages. On the screen's existing map note, add a relevant product screen or pattern to reference and any open questions. The Actions, Touchpoints, and Mindsets & Needs rows already hold the related journey context. Detailed component mapping happens in Phase 4, once the target workspace and design system are known.
 
-**Output → Narrative and Prototype:** Keep the edited Miro URL. In Phase 3, pass the brief and board to `uxd-experience-narrative-create`. In Phase 4, pass the same board and the finished narrative to `uxd-prototype-create`.
+**Output → Narrative and Prototype:** Keep the edited Miro URL and the screen markers and notes in the To-Be **Screens & Artifacts** row. In Phase 3, pass the brief and board to `uxd-experience-narrative-create`. In Phase 4, pass the same board and finished narrative to `uxd-prototype-create`.
 
 **Common mistakes:**
 - Filling the As-Is with AI-generated assumptions instead of the available evidence
