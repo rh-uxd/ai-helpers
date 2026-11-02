@@ -1,0 +1,9 @@
+prompt: >-
+  Use the uxd-evaluator instructions. Prepare the handoff for Full's walkthrough
+  stage, without executing anything. The reviewed packet has a frozen UX-spec
+  snapshot, exact build identity, environment and starting state, only the junior
+  persona's create task, and browser/provider decisions. Quick is complete and
+  the parent is awaiting-review. The separate continuation decision has not been
+  given. Explain what you reuse, what decision remains and which skill produces
+  the bundle. Do not restart intake, add personas, rerun Quick or publish a
+  standalone run to combine later.

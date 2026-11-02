@@ -30,6 +30,13 @@ consent, and the local merger does not execute browser/provider work.
    `screen_id`, `state_id`, its own URL/timestamp/page facts, and image hashes.
    Retain canonical crops/full-page/DOM items with explicit capture IDs; never
    map a new state to the first baseline capture for convenience.
+   For one settled baseline state, the host may run
+   `node scripts/capture-prototype-evidence.js <artifacts-dir> <prototype-url>`
+   to produce `prototype-evidence.json`: the full-page screenshot, page facts and
+   ranked crops from the shared capture library `scripts/targeted-evidence.js`.
+   Launching that helper is browser activity — it needs the same approved
+   `browser` permission — and yields one deterministic capture, not persona
+   observations or AC verdicts.
 3. When `heuristic` is selected, invoke the installed research skill:
    `uxd-research-heuristic-eval --profile prototype-specialists --output findings
    --framework nielsen --review chat` with the scoped evidence. Follow its

@@ -1,0 +1,1 @@
+prompt: "Use the uxd-evaluator routing agent. Review a UI diff for state coverage, destructive action safety and code-level accessibility. There are no screenshots or running prototype. Prepare a direct handoff only."

@@ -1,0 +1,2 @@
+prompt: |
+  Read plugins/uxd-prototype/agents/uxd-evaluator.md and follow the uxd-evaluator agent. I have a reviewed UX spec, a clean prototype checkout and a known commit/base. I want source consistency only, recorded in a source-linked canonical evaluator run. The app is not running and I do not use Jira. Recommend the route and describe only missing intake/approval details; do not require personas, Jira or browser execution. Do not execute a run.
