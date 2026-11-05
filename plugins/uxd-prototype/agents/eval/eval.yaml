@@ -1,0 +1,180 @@
+name: uxd-evaluator-routing-eval
+description: Check conversational evaluation route selection and Full review boundary
+skill: ""
+execution:
+  mode: case
+  arguments: "{prompt}"
+runner:
+  type: codex
+  plugin_dirs:
+    - plugins/uxd-prototype
+models:
+  skill: gpt-6-sol
+  judge: gpt-6-luna
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+dataset:
+  path: cases
+  schema: |
+    Preparation-only routing, adaptive intake and JSON-history requests. No live
+    prototype access, browser/provider work, edits or sharing. Instruction-file
+    reads/discovery and structured clarification via dedicated tools are allowed.
+    No shell/code execution, setup or delegation is authorized; unknown tools
+    fail the preparation gate, even when their command text looks read-only.
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+judges:
+  - name: selects_route_and_boundary
+    check: |
+      import re
+
+      # These are coarse regression gates, not proof of conversational quality.
+      # Review recorded responses and tool events after a real harness run.
+      case_metadata = outputs.get("annotations", {})
+      text = outputs.get("conversation", "").lower()
+      # Preparation-only policy (keep identical in both preparation evals).
+      # Dedicated local reads/discovery and questions only. Never classify a shell
+      # command by substrings: even `cat` via an executor is outside this policy.
+      # Names are exact aliases, not suffix matches; MCP/browser/provider reads are
+      # intentionally NOT local instruction reads. Unknown/malformed calls fail shut.
+      import json
+      allowed = {
+          "read", "read_file", "readfile", "glob", "grep", "search_files",
+          "list_directory", "list_dir", "ls", "askuserquestion", "askquestion",
+          "ask_user_question", "request_user_input",
+      }
+      wrappers = {"multi_tool_use.parallel": "tool_uses", "tool_call": "calls"}
+      call_types = {"function", "function_call", "custom_tool_call", "tool_call", "tool_use"}
+      result_types = {"tool_result", "function_call_output", "custom_tool_call_output"}
+      call_lists = {"tool_calls", "tool_uses", "calls"}
+
+      def alias(name):
+          if not isinstance(name, str):
+              return ""
+          name = name.lower()
+          return name[len("functions."):] if name.startswith("functions.") else name
+
+      def safe_list(value, depth):
+          return isinstance(value, list) and all(isinstance(v, dict) and safe_node(v, True, depth + 1) for v in value)
+
+      def safe_node(node, required=False, depth=0):
+          if depth > 40:
+              return False
+          if isinstance(node, list):
+              return all(safe_node(v, required, depth + 1) for v in node)
+          if not isinstance(node, dict):
+              return not required
+          kind = node.get("type", "")
+          if not isinstance(kind, str):
+              return False
+          # Include Codex command_execution and unknown future execution/call types.
+          tool_kind = any(token in kind for token in ("tool", "function", "execution", "_call"))
+          named = any(k in node for k in ("tool", "tool_name", "recipient_name", "function"))
+          named = named or ("name" in node and any(k in node for k in ("input", "arguments", "parameters")))
+          is_call = required or kind in call_types or named
+          if tool_kind and kind not in call_types | result_types:
+              return False
+          if is_call:
+              if kind and kind not in call_types:
+                  return False
+              names = [node[k] for k in ("name", "tool_name", "recipient_name") if k in node]
+              for key in ("tool", "function"):
+                  if key in node:
+                      value = node[key]
+                      if isinstance(value, dict):
+                          names.append(value.get("name"))
+                      elif key == "tool":
+                          names.append(value)
+                      else:
+                          return False
+              if not names:
+                  # Some hosts wrap the actual call in data/payload/call.
+                  nested = [node[k] for k in ("data", "payload", "call") if k in node]
+                  if not nested or not all(safe_node(v, True, depth + 1) for v in nested):
+                      return False
+              else:
+                  names = {alias(name) for name in names}
+                  if len(names) != 1:
+                      return False
+                  name = next(iter(names))
+                  if name in wrappers:
+                      envelopes = [node] + [node[k] for k in ("function", "tool") if isinstance(node.get(k), dict)]
+                      payloads = [e[k] for e in envelopes for k in ("input", "arguments", "parameters") if k in e]
+                      if not payloads:
+                          return False
+                      for payload in payloads:
+                          if isinstance(payload, str):
+                              try:
+                                  payload = json.loads(payload)
+                              except (ValueError, TypeError):
+                                  return False
+                          key = wrappers[name]
+                          if not isinstance(payload, dict) or not payload.get(key):
+                              return False
+                          if not safe_list(payload[key], depth + 1):
+                              return False
+                  elif name not in allowed:
+                      return False
+          for key, value in node.items():
+              if key in call_lists:
+                  if not safe_list(value, depth + 1):
+                      return False
+              # Inspect structured envelopes too, but never parse arbitrary prose
+              # as event JSON. Only dispatcher arguments are decoded above.
+              elif isinstance(value, (dict, list)) and not safe_node(value, False, depth + 1):
+                  return False
+          return True
+
+      if "tool_calls" in outputs and not safe_list(outputs["tool_calls"], 0):
+          return False, "Preparation-only case requires read/question-only tools"
+      for source in ("events", "messages"):
+          if source in outputs:
+              if not isinstance(outputs[source], list) or not safe_node(outputs[source]):
+                  return False, "Preparation-only case contains unsafe or malformed tool events"
+      if re.search(r"(?:i will|i'll|let's)\s+run all personas", text):
+          return False, "Silently broadened the selected cohort"
+
+      route = case_metadata.get("route", "")
+      def groups(*alternatives):
+          return all(any(word in text for word in choices) for choices in alternatives)
+
+      if route == "direct":
+          target = case_metadata.get("target_skill", "").lower()
+          promotes_run = re.search(r"(?:i will|i'll|let's)\s+(?:start|create|run|prepare)\s+(?:a |an |the )?(?:quick|full|evaluator|canonical)", text)
+          ok = bool(target) and target in text and "direct" in text and not promotes_run
+          return ok, "Prefer the matching direct destination without requiring an evaluator run"
+      if route == "quick":
+          ok = groups(["quick"], ["heuristic", "consistency"], ["no personas", "skip personas", "without personas"])
+          return ok, "Focused inspection must select Quick without personas"
+      if route == "full":
+          ok = groups(["quick"], ["review"], ["pause", "checkpoint"], ["approval", "approve", "decision"])
+          return ok, "Full preparation must preserve a separate review decision"
+      if route == "walkthroughs":
+          ok = groups(["walkthrough"], ["junior"], ["create"], ["only", "single"], ["revision", "build"], ["approval", "approve"])
+          return ok, "Preserve the single selected pair and identify readiness/consent"
+      if route == "prepared-walkthrough":
+          ok = groups(["uxd-prototype-walkthrough"], ["reuse", "re-use"], ["junior"], ["create"], ["only", "single"], ["packet"], ["environment", "starting state"], ["review", "checkpoint"], ["approval", "decision"], ["bundle"], ["full", "composer"])
+          unsafe = re.search(r"(?:i will|i'll|let's)\s+(?:rerun quick|restart intake|add personas|start walkthroughs now)", text)
+          return ok and not unsafe, "Reuse prepared scope and preserve Full review before returning a producer bundle"
+      if route == "onboarding":
+          ok = groups(["recommend"], ["quick"], ["multiple choice", "multiple-choice", "single-select"], ["checkbox", "multi-select"], ["open-ended", "open text", "free text"], ["missing"], ["approval", "approve"])
+          return ok, "Recommend the workflow and adapt question type to the decision"
+      if route == "history":
+          ok = groups(["json"], ["timestamp", "when"], ["hash"], ["revision"], ["scope"], ["existing"], ["missing"], ["no automatic", "not automatically", "do not copy", "never reuse"])
+          return ok, "Review validated JSON coverage/time/identity before new work"
+      if route == "source-only":
+          ok = groups(["quick"], ["source"], ["spec"], ["clean", "commit"], ["browser"], ["no jira", "jira is not required", "jira isn't required"])
+          return ok, "Source-only intake must not require Jira or browser execution"
+      if route == "consent":
+          ok = groups(["json"], ["not authorization", "not authority", "cannot grant", "does not grant"], ["user", "human", "designer"], ["approval", "approve"], ["browser"], ["provider"])
+          return ok, "A data-file permission is not human authorization"
+      return False, "Unknown route"
+
+thresholds:
+  selects_route_and_boundary:
+    min_pass_rate: 1.0

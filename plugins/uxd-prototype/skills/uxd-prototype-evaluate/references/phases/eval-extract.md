@@ -23,7 +23,7 @@ When called without `--phase`, runs all steps (legacy behavior).
 | `.artifacts/<KEY>/rfe-snapshot.md`             | Frozen RFE content from prototype creation              | No                |
 | `.artifacts/<KEY>/decisions/decisions.json`    | Design decisions from prototype creation                | No                |
 | `.artifacts/<KEY>/decisions/strategy-brief.md` | Strategy brief from creation                            | No                |
-| `config/product-overlay.yaml`                  | Product-specific config (Jira URLs, git conventions)    | Yes               |
+| Reviewed source and workspace context          | Explicit source URLs, revisions and comparison base    | Yes               |
 
 
 
@@ -149,7 +149,7 @@ Build a criterion-to-reference map for tier classification (used by eval-classif
 
 ### Step 4: Discover Linked RFE (multi-strategy, short-circuit)
 
-**Skip Jira fetch if rfe-snapshot.md exists:** If `.artifacts/<KEY>/rfe-snapshot.md` exists and is non-empty, use it as the authoritative RFE source. Extract the RFE key from its content (or from product-overlay Jira prefixes) and set `rfe_key` without fetching from Jira. Proceed directly to Step 5.
+**Skip Jira fetch if rfe-snapshot.md exists:** If `.artifacts/<KEY>/rfe-snapshot.md` exists and is non-empty, use the reviewed snapshot as the RFE source. Extract the RFE key from its content and set `rfe_key` without fetching from Jira. Proceed directly to Step 5.
 
 **Otherwise**, try discovery strategies in order. **Stop on first match** — do not run remaining strategies after a match is found:
 
@@ -161,7 +161,7 @@ Build a criterion-to-reference map for tier classification (used by eval-classif
 issue in linkedIssues("<STORY-KEY>") AND project = <YOUR_RFE_PROJECT>
 ```
 
-(Use the RFE project key from `config/product-overlay.yaml`.)
+(Use only a project key supplied in the reviewed source context; skip this strategy if none is known.)
 
 **If found → stop, fetch RFE.**
 
@@ -281,11 +281,11 @@ Write to `.artifacts/<KEY>/eval/outcome-context.json`.
 
 ```bash
 cd <workspace-path>
-# Base branch from product overlay (config/product-overlay.yaml → git.base_branch), default: main
-BASE_BRANCH=$(grep 'base_branch:' "${CLAUDE_SKILL_DIR}/config/product-overlay.yaml" 2>/dev/null | awk '{print $2}' | tr -d '"' || echo "main")
-BASE=$(git merge-base HEAD "origin/${BASE_BRANCH:-main}" 2>/dev/null || git merge-base HEAD origin/main 2>/dev/null || echo "")
-git diff $BASE...HEAD --name-only > /tmp/eval-${KEY}-changed-files.txt
-git diff $BASE...HEAD --stat > /tmp/eval-${KEY}-diff-stats.txt
+# Use the explicitly reviewed comparison ref; do not guess a product's branch.
+BASE_BRANCH="${EVAL_BASE_REF:?Supply the reviewed comparison ref in EVAL_BASE_REF}"
+BASE=$(git merge-base HEAD "$BASE_BRANCH") || exit 1
+git diff "$BASE...HEAD" --name-only > /tmp/eval-${KEY}-changed-files.txt
+git diff "$BASE...HEAD" --stat > /tmp/eval-${KEY}-diff-stats.txt
 ```
 
 Categorize changes: new pages/components, modified components, route/nav changes, feature flag changes, style changes, test changes.

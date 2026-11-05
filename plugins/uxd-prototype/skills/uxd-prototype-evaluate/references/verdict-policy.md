@@ -1,6 +1,8 @@
 # Verdict Policy
 
-Consolidated verdict rules for eval-journey (Phase A) and eval-report. Referenced from eval-journey Step 7 and orchestration.md verdict cross-check.
+Consolidated verdict rules retained for the eval-journey and eval-report migration
+procedures. Agent-driven runs follow the canonical execution contract and explicit
+review checkpoints; these rules do not schedule phases or authorize reruns.
 
 ## FAIL vs FLAGGED
 

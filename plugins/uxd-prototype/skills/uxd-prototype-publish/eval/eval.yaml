@@ -21,12 +21,6 @@ permissions:
   deny:
     - "mcp__*"
 
-mlflow:
-  experiment: uxd-prototype-publish
-  tags:
-    team: uxd
-    pipeline: prototype-evaluator
-
 dataset:
   path: cases
   # Missing paths are skipped (asks-target has no .artifacts tree).

@@ -1,0 +1,1 @@
+prompt: "Use the uxd-evaluator routing agent. Check only our prototype source against the bundled consistency rules. I do not need acceptance-criterion verification, persona walkthroughs or a canonical evaluator run. Prepare the appropriate handoff only."

@@ -132,6 +132,6 @@ Build the nav section map: which parent button expands to reveal which child lin
 - Read ONLY files in the resolved source directory. Do not fetch external URLs.
 - If a file in mr-delta.json doesn't exist (deleted), skip it.
 - The nav_sections map must reflect the ACTUAL sidebar hierarchy, not assumptions.
-- Use `config/product-overlay.yaml > navigation` for file paths (sidebar_file, routes_file) instead of hardcoding paths.
+- Identify navigation files from the selected workspace and reviewed task context; do not assume product-specific file paths.
 - This skill runs ONCE per evaluation, deferred to just before Phase B. It runs after the Phase A fix loop, so hints reflect the final workspace state.
 - Output only `routes` and `nav_sections`. Do NOT extract selectors, page_structure, or feature_flags — these are either unused downstream or would compromise discovery persona testing.

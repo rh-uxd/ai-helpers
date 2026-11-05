@@ -13,10 +13,11 @@ if (!artifactsDir) {
 }
 
 const { resolveProjectRoot, resolveKeyFromArtifactsDir } = require('./resolve-root');
-const { loadOverlay } = require('./overlay-get');
+const { loadReportInputs } = require('./report-inputs');
 const absArtifacts = path.resolve(artifactsDir);
 const projectRoot = resolveProjectRoot();
 const templatePath = path.join(__dirname, '..', 'templates', 'evaluation-report.html');
+const reportInputs = loadReportInputs(absArtifacts);
 
 // ---------------------------------------------------------------------------
 // Inline SVG icons (used in action cards and evidence flags)
@@ -307,6 +308,10 @@ function resolvePersonaName(nameMap, rawId) {
 }
 
 function readFileOr(filePath, fallback) {
+  if (path.dirname(path.resolve(filePath)) === absArtifacts) {
+    const virtual = reportInputs.virtualFiles.get(path.basename(filePath));
+    if (virtual !== undefined) return virtual;
+  }
   try { return fs.readFileSync(filePath, 'utf8'); } catch { return fallback; }
 }
 
@@ -316,30 +321,9 @@ function readJsonOr(filePath, fallback) {
   try { return JSON.parse(raw); } catch { return fallback; }
 }
 
-let _overlayCache;
-function readProductOverlay() {
-  if (_overlayCache) return _overlayCache;
-  const loaded = loadOverlay();
-  const jira = loaded.jira || {};
-  const known = loaded.known_mrs && typeof loaded.known_mrs === 'object' && !Array.isArray(loaded.known_mrs)
-    ? loaded.known_mrs
-    : {};
-  _overlayCache = {
-    jira: {
-      instances: Array.isArray(jira.instances) ? jira.instances : [],
-      ticket_label: jira.ticket_label || 'Ticket',
-    },
-    git: loaded.git || {},
-    known_mrs: known,
-    mlflow: loaded.mlflow || {},
-    context_repos: loaded.context_repos || {},
-    publish: loaded.publish || {},
-  };
-  return _overlayCache;
-}
-
 function readKnownMRs() {
-  return readProductOverlay().known_mrs;
+  // MR identity belongs to the run's source data, never a product-wide map.
+  return {};
 }
 
 function readEvalStateYaml() {
@@ -349,36 +333,28 @@ function readEvalStateYaml() {
   return o;
 }
 
-function overlayJiraUrlForKey(key) {
+function reportUrl(value) {
+  try {
+    const url = new URL(value);
+    return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password ? url.href : '';
+  } catch { return ''; }
+}
+
+function configuredJiraUrlForKey(key) {
   if (!key) return '';
-  const overlay = readProductOverlay();
-  for (const inst of overlay.jira.instances) {
-    if (inst.prefix && key.startsWith(inst.prefix)) {
-      const base = inst.url.endsWith('/') ? inst.url : inst.url + '/';
-      return `${base}${key}`;
-    }
-  }
-  const fallback = overlay.jira.instances[0];
-  if (fallback && fallback.url) {
-    const base = fallback.url.endsWith('/') ? fallback.url : fallback.url + '/';
-    return `${base}${key}`;
-  }
-  const publishBase = overlay.publish.jira_base_url || '';
-  if (publishBase) {
-    const base = publishBase.endsWith('/') ? publishBase : publishBase + '/';
-    return `${base}${key}`;
-  }
-  return '';
+  const base = reportUrl(process.env.JIRA_BASE_URL);
+  return base ? `${base.replace(/\/$/, '')}/${key}` : '';
 }
 
-function overlayTicketLabel() {
-  return readProductOverlay().jira.ticket_label || 'Ticket';
+function ticketLabel() {
+  return 'Ticket';
 }
 
-function overlayMrUrl(mrNum, { diffs } = {}) {
-  const base = overlayGitBaseUrl();
+function configuredMrUrl(mrNum, { diffs } = {}) {
+  const base = configuredGitBaseUrl();
   if (!base || !mrNum) return '';
-  const style = String(readProductOverlay().git.mr_url_style || 'gitlab').replace(/"/g, '');
+  const style = process.env.PROTOTYPE_MR_URL_STYLE;
+  if (!['gitlab', 'github'].includes(style)) return '';
   const cleaned = base.replace(/\.git$/, '').replace(/\/$/, '');
   if (style === 'github') {
     const url = `${cleaned}/pull/${mrNum}`;
@@ -388,19 +364,16 @@ function overlayMrUrl(mrNum, { diffs } = {}) {
   return diffs ? `${url}/diffs` : url;
 }
 
-function overlayGitBaseUrl() {
-  const overlay = readProductOverlay();
-  return overlay.git.remote_url || '';
+function configuredGitBaseUrl() {
+  return reportUrl(process.env.PROTOTYPE_REPO_URL);
 }
 
-function overlayPagesBaseUrl() {
-  const overlay = readProductOverlay();
-  return overlay.git.pages_base_url || '';
+function configuredPagesBaseUrl() {
+  return reportUrl(process.env.PROTOTYPE_PAGES_URL);
 }
 
-function overlayMrBranchPattern() {
-  const overlay = readProductOverlay();
-  return overlay.git.mr_branch_pattern || 'mr-{number}';
+function configuredMrBranchPattern() {
+  return process.env.PROTOTYPE_MR_BRANCH_PATTERN || 'mr-{number}';
 }
 
 function escapeHtml(str) {
@@ -704,12 +677,22 @@ function loadScreenshots(screenshotsDir) {
   const map = {};
   const fileToHash = {};
   const hashToFirstFile = {};
-  if (!fs.existsSync(screenshotsDir)) return { map, fileToHash, hashToFirstFile };
-  const files = fs.readdirSync(screenshotsDir).filter(f => f.endsWith('.png')).sort((a, b) => {
-    const stepA = parseInt((a.match(/step-(\d+)/) || [])[1] || '0', 10);
-    const stepB = parseInt((b.match(/step-(\d+)/) || [])[1] || '0', 10);
+  const legacyFiles = fs.existsSync(screenshotsDir)
+    ? fs.readdirSync(screenshotsDir).filter(f => f.endsWith('.png')).map(file => ({ file, filePath: path.join(screenshotsDir, file) }))
+    : [];
+  const canonicalFiles = reportInputs.imagePaths.map(relative => ({
+    file: path.basename(relative),
+    filePath: path.join(absArtifacts, relative),
+  })).filter(item => fs.existsSync(item.filePath));
+  const files = [...legacyFiles, ...canonicalFiles].filter((item, index, all) =>
+    all.findIndex(candidate => candidate.filePath === item.filePath) === index
+  ).sort((a, b) => {
+    const fileA = a.file;
+    const fileB = b.file;
+    const stepA = parseInt((fileA.match(/step-(\d+)/) || [])[1] || '0', 10);
+    const stepB = parseInt((fileB.match(/step-(\d+)/) || [])[1] || '0', 10);
     if (stepA !== stepB) return stepA - stepB;
-    return a.localeCompare(b);
+    return fileA.localeCompare(fileB);
   });
 
   const journeyLogPath = path.join(path.dirname(screenshotsDir), 'journey-log.json');
@@ -720,8 +703,7 @@ function loadScreenshots(screenshotsDir) {
   const hashToDataUri = new Map();
   let dedupSaved = 0;
 
-  for (const file of files) {
-    const filePath = path.join(screenshotsDir, file);
+  for (const { file, filePath } of files) {
     if (journeyLogMtime > 0) {
       const ssMtime = fs.statSync(filePath).mtimeMs;
       if (ssMtime > journeyLogMtime + 60000) {
@@ -780,7 +762,7 @@ function buildDeltaHtml() {
 
   const protoId = extractPrototypeId();
   const mrNum = delta.mr_number || readKnownMRs()[protoId];
-  const mrDiffUrl = overlayMrUrl(mrNum, { diffs: true });
+  const mrDiffUrl = configuredMrUrl(mrNum, { diffs: true });
 
   let html = `<p class="small"><strong>${delta.stats?.files_changed || delta.total_files_changed || 0} files changed</strong> against <code>${escapeHtml(delta.base_branch || '?')}</code>`;
   if (mrNum && mrDiffUrl) html += ` · <a href="${mrDiffUrl}" target="_blank">View full diff (MR !${mrNum})</a>`;
@@ -1579,9 +1561,9 @@ function buildCodeDeltasHtml() {
 
   const protoId = extractPrototypeId();
   const mrNum = delta.mr_number || readKnownMRs()[protoId];
-  const mrBaseUrl = overlayGitBaseUrl();
-  const style = String(readProductOverlay().git.mr_url_style || 'gitlab').replace(/"/g, '');
-  const baseUrl = mrBaseUrl
+  const mrBaseUrl = configuredGitBaseUrl();
+  const style = process.env.PROTOTYPE_MR_URL_STYLE;
+  const baseUrl = mrBaseUrl && ['github', 'gitlab'].includes(style)
     ? (style === 'github'
       ? `${mrBaseUrl.replace(/\.git$/, '').replace(/\/$/, '')}/pull`
       : `${mrBaseUrl.replace(/\.git$/, '').replace(/\/$/, '')}/-/merge_requests`)
@@ -1593,8 +1575,8 @@ function buildCodeDeltasHtml() {
   function getFileDiff(filePath, maxLines) {
     if (!canReadDiff) return null;
     try {
-      const baseBranch = readProductOverlay().git.base_branch || 'main';
-      const diff = execSync(`git diff origin/${baseBranch} HEAD -- "${filePath}" 2>/dev/null`, { cwd: workspaceDir, encoding: 'utf8', maxBuffer: 1024 * 100 });
+      if (!delta.base_ref) return null;
+      const diff = require('child_process').execFileSync('git', ['diff', delta.base_ref, 'HEAD', '--', filePath], { cwd: workspaceDir, encoding: 'utf8', maxBuffer: 1024 * 100 });
       if (!diff) return null;
       const lines = diff.split('\n');
       return lines.slice(0, maxLines || 40).join('\n');
@@ -2182,7 +2164,7 @@ function buildSmartComplianceTab(reason) {
   html += `<div class="card card-flat" style="margin:0 0 1.5rem">`;
   html += `<p style="font-weight:700;margin:0 0 0.25rem;color:var(--status-warning)">Automated Compliance Check Not Available</p>`;
   html += `<p class="small" style="margin:0">${escapeHtml(reason || 'consistency-checker not bootstrapped')}</p>`;
-  html += `<p class="small muted" style="margin:0.5rem 0 0">Set <code>context_repos.consistency_checker</code> in the product overlay (or <code>CONSISTENCY_CHECKER_REPO</code>), then re-run <code>bootstrap-consistency-checker.sh</code>.</p>`;
+  html += `<p class="small muted" style="margin:0.5rem 0 0">Set <code>CONSISTENCY_CHECKER_REPO</code> explicitly, then re-run <code>bootstrap-consistency-checker.sh</code>.</p>`;
   html += `</div>`;
 
   const componentMap = readJsonOr(path.join(absArtifacts, 'component-map.json'), null);
@@ -2329,14 +2311,24 @@ function buildConsistencyHtml() {
   if (!summary.total_guidelines_checked && summary.violations != null) {
     summary.total_guidelines_checked = (summary.violations || 0) + (summary.warnings || 0) + (summary.passes || 0);
   }
-  const violations = (srcMode && Array.isArray(srcMode.violations) && srcMode.violations.length > 0)
+  const sourceFindings = (srcMode && Array.isArray(srcMode.violations) && srcMode.violations.length > 0)
     ? srcMode.violations
     : (srcMode && Array.isArray(srcMode.findings))
       ? srcMode.findings.filter(f => f.severity === 'error' || f.severity === 'violation')
       : (Array.isArray(report.findings) ? report.findings : []);
+  const visualFindings = report.visual_mode && Array.isArray(report.visual_mode.findings)
+    ? report.visual_mode.findings
+    : [];
+  const violations = [...sourceFindings, ...visualFindings];
   let html = '';
 
   // Summary stats
+  const sourceAnalysis = report.source_analysis || (report.coverage ? report : null);
+  if (sourceAnalysis) {
+    html += `<h3>Guideline consistency</h3><p>${escapeHtml(sourceAnalysis.design_system.id)}: ${escapeHtml(sourceAnalysis.guideline_consistency.status)}. Unevaluated rules: ${escapeHtml(sourceAnalysis.coverage.unevaluated_rules.join(', ') || 'none')}. Frozen manifest: <code>${escapeHtml(sourceAnalysis.guideline_manifest)}</code>.</p>`;
+    html += `<h3>Internal consistency</h3><p>${escapeHtml(sourceAnalysis.internal_consistency.status)} — ${escapeHtml(sourceAnalysis.internal_consistency.reason)}</p>`;
+    for (const candidate of sourceAnalysis.internal_consistency.findings) html += `<p class="small">Unreviewed source-comparison candidate (not a normative violation or automatic fix): ${escapeHtml(candidate.file)}:${escapeHtml(candidate.line_start)} — ${escapeHtml(candidate.description)}</p>`;
+  }
   html += `<div class="consistency-summary">`;
   html += `<div class="consistency-stat"><span class="consistency-stat-n">${summary.total_guidelines_checked || 0}</span><span class="consistency-stat-l">Checked</span></div>`;
   if (summary.violations) html += `<div class="consistency-stat"><span class="consistency-stat-n" style="color:var(--status-danger)">${summary.violations}</span><span class="consistency-stat-l">Errors</span></div>`;
@@ -2345,7 +2337,7 @@ function buildConsistencyHtml() {
   html += `</div>`;
 
   if (!violations.length) {
-    html += `<p class="muted small">No violations found in MR-scoped files.</p>`;
+    html += `<p class="muted small">No guideline findings in scoped files. Zero selection, partial coverage and internal review candidates do not establish compliance.</p>`;
     return html;
   }
 
@@ -2355,7 +2347,7 @@ function buildConsistencyHtml() {
     const k = v.guideline_id;
     if (!byGuideline[k]) byGuideline[k] = { ...v, count: 0, files: new Set() };
     byGuideline[k].count++;
-    byGuideline[k].files.add(v.file);
+    byGuideline[k].files.add(v.file || v.screenshot || 'visual evidence');
   }
 
   const allQuickFixes = Object.values(byGuideline)
@@ -2757,7 +2749,7 @@ function buildJiraAttributionCard() {
   html += `<div style="display:grid;grid-template-columns:auto 1fr;gap:0.15rem 0.75rem;font-size:0.8125rem;line-height:1.6">`;
 
   html += `<span class="muted">Story</span>`;
-  html += `<span><a href="${escapeHtml(overlayJiraUrlForKey(key))}" target="_blank">${escapeHtml(key)}</a>`;
+  html += `<span><a href="${escapeHtml(configuredJiraUrlForKey(key))}" target="_blank">${escapeHtml(key)}</a>`;
   if (title) html += ` — ${escapeHtml(title)}`;
   html += `</span>`;
 
@@ -2765,14 +2757,14 @@ function buildJiraAttributionCard() {
     const oKey = outcomeContext.key || outcomeContext.outcome_key;
     const oTitle = outcomeContext.title || outcomeContext.summary || '';
     html += `<span class="muted">Outcome</span>`;
-    html += `<span><a href="${escapeHtml(overlayJiraUrlForKey(oKey))}" target="_blank">${escapeHtml(oKey)}</a>`;
+    html += `<span><a href="${escapeHtml(configuredJiraUrlForKey(oKey))}" target="_blank">${escapeHtml(oKey)}</a>`;
     if (oTitle) html += ` — ${escapeHtml(oTitle)}`;
     html += `</span>`;
   }
 
   if (rfeKey) {
     html += `<span class="muted">RFE</span>`;
-    html += `<span><a href="${escapeHtml(overlayJiraUrlForKey(rfeKey))}" target="_blank">${escapeHtml(rfeKey)}</a></span>`;
+    html += `<span><a href="${escapeHtml(configuredJiraUrlForKey(rfeKey))}" target="_blank">${escapeHtml(rfeKey)}</a></span>`;
   }
 
   html += `</div>`;
@@ -3060,7 +3052,7 @@ function buildTokens(opts = {}) {
   const gapsSummary = [failPart, flagPart].filter(Boolean).join(' · ');
   const journeySummary = `${journeyPass}/${journeyTotal} completed`;
 
-  const jiraUrl = overlayJiraUrlForKey(protoId);
+  const jiraUrl = configuredJiraUrlForKey(protoId);
   const prototypeUrl = journeyLog ? journeyLog.prototype_url || '#' : '#';
 
   // ---- AC Table Rows (split by source) ----
@@ -3119,7 +3111,7 @@ function buildTokens(opts = {}) {
   // ---- Breadcrumb ----
   // Resolve Jira instance URL based on project key prefix
   function jiraUrlForKey(key) {
-    return overlayJiraUrlForKey(key);
+    return configuredJiraUrlForKey(key);
   }
 
   // Render a breadcrumb link — validated links become anchors, unvalidated become plain text with tooltip
@@ -3146,7 +3138,7 @@ function buildTokens(opts = {}) {
     }
     if (bc.strat && bc.strat.key) {
       const stratUrl = bc.strat.url || jiraUrlForKey(bc.strat.key);
-      parts.push(breadcrumbLink(bc.strat.key, stratUrl, bc.strat.key + ' (' + overlayTicketLabel() + ')', bc.strat.validated !== false));
+      parts.push(breadcrumbLink(bc.strat.key, stratUrl, bc.strat.key + ' (' + ticketLabel() + ')', bc.strat.validated !== false));
     }
     if (bc.mr) parts.push(`<a href="${escapeHtml(bc.mr.url)}">${escapeHtml(bc.mr.id)}</a>`);
     else if (bc.prototype) parts.push(`<a href="${escapeHtml(bc.prototype.url)}">${escapeHtml(bc.prototype.label)}</a>`);
@@ -3163,7 +3155,7 @@ function buildTokens(opts = {}) {
     if (fallbackOutcomeKey) {
       parts.push(`<a href="${escapeHtml(jiraUrlForKey(fallbackOutcomeKey))}">${escapeHtml(fallbackOutcomeKey)} (Outcome)</a>`);
     }
-    parts.push(`<a href="${escapeHtml(jiraUrlForKey(protoId) || jiraUrl)}">${escapeHtml(protoId)} (${escapeHtml(overlayTicketLabel())})</a>`);
+    parts.push(`<a href="${escapeHtml(jiraUrlForKey(protoId) || jiraUrl)}">${escapeHtml(protoId)} (${escapeHtml(ticketLabel())})</a>`);
     if (journeyLog && journeyLog.prototype_url) {
       parts.push(`<a href="${escapeHtml(journeyLog.prototype_url)}">Prototype</a>`);
     }
@@ -3779,7 +3771,7 @@ function buildTokens(opts = {}) {
       `<svg viewBox="0 0 512 512" width="36" height="36" fill="var(--text-secondary)" style="opacity:0.4;margin-bottom:0.75rem"><path d="M32 32c17.7 0 32 14.3 32 32V400c0 8.8 7.2 16 16 16H480c17.7 0 32 14.3 32 32s-14.3 32-32 32H80c-44.2 0-80-35.8-80-80V64C0 46.3 14.3 32 32 32zM160 224c-17.7 0-32 14.3-32 32v64c0 17.7 14.3 32 32 32s32-14.3 32-32V256c0-17.7-14.3-32-32-32zm128-64v160c0 17.7 14.3 32 32 32s32-14.3 32-32V160c0-17.7-14.3-32-32-32s-32 14.3-32 32zm-64 64v96c0 17.7 14.3 32 32 32s32-14.3 32-32V224c0-17.7-14.3-32-32-32s-32 14.3-32 32z"/></svg><br>` +
       `<strong style="font-size:0.875rem;color:var(--text)">No usability scores yet</strong><br>` +
       `<span style="font-size:0.8125rem">Phase B (persona walkthroughs) did not produce dimension scores. To fix:</span><br>` +
-      `<span style="font-size:0.8125rem">1. Ensure <code>.context/usability-testing/</code> is cloned (set <code>USABILITY_TESTING_REPO</code> or overlay <code>context_repos.usability_testing</code>)</span><br>` +
+      `<span style="font-size:0.8125rem">1. Ensure <code>.context/usability-testing/</code> is cloned (set <code>USABILITY_TESTING_REPO</code> explicitly)</span><br>` +
       `<span style="font-size:0.8125rem">2. Re-run the eval (not in <code>review</code> mode) — Phase B runs automatically</span><br>` +
       `<span style="font-size:0.8125rem">3. If persona-results.json exists, run: <code>node scripts/validate-phase-b-output.js</code></span>` +
       `</div>`;
@@ -4008,7 +4000,7 @@ function buildTokens(opts = {}) {
 
   // Build link URLs
   const rfeKey = (extractState && extractState.rfe_key) || '';
-  const rfeUrl = rfeKey ? overlayJiraUrlForKey(rfeKey) : jiraUrl;
+  const rfeUrl = rfeKey ? configuredJiraUrlForKey(rfeKey) : jiraUrl;
 
   // Prototype URL — use the URL that was actually tested (local or hosted)
   const evalStateYaml = readEvalStateYaml();
@@ -4018,14 +4010,14 @@ function buildTokens(opts = {}) {
       ? extractState.breadcrumb.prototype.url
       : evalStateYaml.prototype_url || '';
 
-  const pagesBase = overlayPagesBaseUrl();
+  const pagesBase = configuredPagesBaseUrl();
   const mrNumber = readKnownMRs()[protoId];
-  const mrUrl = overlayMrUrl(mrNumber);
+  const mrUrl = configuredMrUrl(mrNumber);
   const protoDeployUrl = mrNumber && pagesBase
-    ? `${pagesBase.replace(/\/$/, '')}/${overlayMrBranchPattern().replace('{number}', mrNumber)}/`
+    ? `${pagesBase.replace(/\/$/, '')}/${configuredMrBranchPattern().replace('{number}', mrNumber)}/`
     : prototypeUrl;
 
-  const dashboardUrl = readProductOverlay().publish.dashboard_url || '';
+  const dashboardUrl = reportUrl(process.env.EVAL_DASHBOARD_URL);
   const dashboardHtml = dashboardUrl
     ? `<a href="${escapeHtml(dashboardUrl)}" style="font-size:0.75rem;color:var(--text-secondary);text-decoration:none;margin-right:0.5rem" title="Back to Dashboard" data-tour="dashboard">&larr; Dashboard</a>`
     : '';
@@ -4248,7 +4240,9 @@ function main() {
     if (normalized.usability_dimensions) {
       normalizeUsabilityDimensions(normalized.usability_dimensions);
     }
-    fs.writeFileSync(jlPath, JSON.stringify(normalized, null, 2), 'utf8');
+    if (reportInputs.mode === 'legacy') {
+      fs.writeFileSync(jlPath, JSON.stringify(normalized, null, 2), 'utf8');
+    }
   }
 
   const tokens = buildTokens();

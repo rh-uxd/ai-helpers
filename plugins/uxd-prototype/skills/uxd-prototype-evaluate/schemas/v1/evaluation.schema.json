@@ -1,0 +1,247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-helpers.uxd/schemas/v1/evaluation.schema.json",
+  "title": "UXD Prototype Evaluation result v1",
+  "type": "object",
+  "allOf": [
+    { "$ref": "shared.schema.json#/$defs/envelope" },
+    {
+      "type": "object",
+      "properties": {
+        "artifact_type": { "const": "evaluation" },
+        "status": { "type": "string", "enum": ["running", "passed", "needs-attention", "failed", "external-evidence-required", "cancelled"] },
+        "ac_results": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "properties": {
+              "ac_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+              "verdict": { "type": "string", "enum": ["PASS", "FAIL", "FLAGGED", "NOT_RUN"] },
+              "rationale": { "$ref": "shared.schema.json#/$defs/bounded_text" },
+              "evidence_ids": { "$ref": "shared.schema.json#/$defs/evidence_ids" },
+              "action_ids": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/identifier" }, "uniqueItems": true, "maxItems": 24 },
+              "evaluated_by": { "type": "string", "enum": ["journey", "source", "human"] },
+              "updated_at": { "$ref": "shared.schema.json#/$defs/timestamp" }
+            },
+            "required": ["ac_id", "verdict", "rationale", "evidence_ids", "action_ids", "evaluated_by", "updated_at"],
+            "additionalProperties": false
+          }
+        },
+        "journeys": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "$ref": "shared.schema.json#/$defs/identifier" },
+              "task_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+              "persona_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+              "ac_ids": { "type": "array", "items": {"$ref": "shared.schema.json#/$defs/identifier"}, "uniqueItems": true, "maxItems": 100 },
+              "source": { "$ref": "shared.schema.json#/$defs/bounded_text" },
+              "verdict": { "type": "string", "enum": ["PASS", "FAIL", "FLAGGED", "NOT_RUN"] },
+              "steps": {
+                "type": "array",
+                "maxItems": 100,
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                    "sequence": { "type": "integer", "minimum": 1, "maximum": 1000 },
+                    "invocation_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                    "action": { "type": "string", "enum": ["navigate", "click", "input", "select", "verify", "observe"] },
+                    "target": { "type": "string", "minLength": 1, "maxLength": 280 },
+                    "outcome": { "type": "string", "enum": ["success", "failure", "blocked", "partial"] },
+                    "evidence_ids": { "$ref": "shared.schema.json#/$defs/evidence_ids" },
+                    "note": { "$ref": "shared.schema.json#/$defs/bounded_text" }
+                  },
+                  "required": ["id", "sequence", "action", "target", "outcome", "evidence_ids", "note"],
+                  "additionalProperties": false
+                }
+              },
+              "execution": {
+                "type": "object",
+                "properties": {
+                  "status": { "enum": ["completed", "failed", "blocked", "incomplete", "not-run"] },
+                  "stop_reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
+                  "session_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                  "invocation_ids": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/identifier" }, "uniqueItems": true, "maxItems": 100 }
+                },
+                "required": ["status", "stop_reason", "session_id", "invocation_ids"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["id", "task_id", "persona_id", "ac_ids", "source", "verdict", "steps"],
+            "additionalProperties": false
+          }
+        },
+        "usability": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not-run", "completed"] },
+            "score": { "type": "number", "minimum": 0 },
+            "max_score": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+            "dimensions": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                  "label": { "type": "string", "minLength": 1, "maxLength": 280 },
+                  "score": { "type": "number", "minimum": 0 },
+                  "max_score": { "type": "integer", "minimum": 1 },
+                  "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+                  "persona_scores": {
+                    "type": "array",
+                    "maxItems": 32,
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "persona_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                        "score": { "type": "number", "minimum": 0 }
+                      },
+                      "required": ["persona_id", "score"],
+                      "additionalProperties": false
+                    }
+                  },
+                  "evidence_ids": { "$ref": "shared.schema.json#/$defs/evidence_ids" }
+                },
+                "required": ["id", "label", "score", "max_score", "confidence", "persona_scores", "evidence_ids"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": ["status", "score", "max_score", "dimensions"],
+          "allOf": [
+            {
+              "if": { "type": "object", "properties": { "status": { "const": "not-run" } }, "required": ["status"] },
+              "then": {
+                "type": "object",
+                "properties": {
+                  "score": { "const": 0 },
+                  "max_score": { "const": 0 },
+                  "dimensions": { "type": "array", "maxItems": 0 }
+                }
+              }
+            }
+          ],
+          "additionalProperties": false
+        },
+        "consistency": {
+          "type": "object",
+          "properties": {
+            "status": { "type": "string", "enum": ["not-run", "passed", "flagged", "failed", "degraded"] },
+            "guidelines_version": { "type": "string", "minLength": 1, "maxLength": 160 },
+            "guidelines_checked": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+            "screenshots_checked": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+            "source_checked": { "type": "boolean" },
+            "visual_checked": { "type": "boolean" },
+            "source_analysis": { "$ref": "consistency-source.schema.json" },
+            "findings": {
+              "type": "array",
+              "maxItems": 1000,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                  "origin": { "type": "string", "enum": ["source", "visual"] },
+                  "guideline_id": { "$ref": "#/$defs/guideline_id" },
+                  "guideline_title": { "type": "string", "minLength": 1, "maxLength": 280 },
+                  "category": { "type": "string", "minLength": 1, "maxLength": 80 },
+                  "severity": { "type": "string", "enum": ["error", "warning", "info"] },
+                  "verdict": { "type": "string", "enum": ["VIOLATION", "FLAGGED"] },
+                  "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+                  "property": { "type": "string", "maxLength": 280 },
+                  "value": { "type": "string", "maxLength": 1000 },
+                  "check_method": { "type": "string", "enum": ["automated", "automated_candidate", "visual"] },
+                  "file": { "$ref": "shared.schema.json#/$defs/relative_path" },
+                  "line": { "type": ["integer", "null"], "minimum": 1 },
+                  "evidence_ids": { "$ref": "shared.schema.json#/$defs/evidence_ids" },
+                  "description": { "type": "string", "minLength": 1, "maxLength": 1000 },
+                  "recommendation": { "$ref": "shared.schema.json#/$defs/recommendation" },
+                  "pf_doc_url": { "anyOf": [{ "$ref": "shared.schema.json#/$defs/url" }, { "type": "null" }] },
+                  "review_candidate": { "type": "boolean" }
+                },
+                "required": ["id", "origin", "guideline_id", "guideline_title", "category", "severity", "verdict", "confidence", "property", "value", "check_method", "evidence_ids", "description", "recommendation", "pf_doc_url", "review_candidate"],
+                "allOf": [
+                  {
+                    "if": { "type": "object", "properties": { "origin": { "const": "source" } }, "required": ["origin"] },
+                    "then": { "type": "object", "properties": { "file": {}, "line": {}, "severity": { "enum": ["error", "warning"] }, "check_method": { "enum": ["automated", "automated_candidate"] } }, "required": ["file", "line"] }
+                  },
+                  {
+                    "if": { "type": "object", "properties": { "origin": { "const": "visual" } }, "required": ["origin"] },
+                    "then": { "type": "object", "properties": { "evidence_ids": { "type": "array", "minItems": 1 }, "check_method": { "const": "visual" } } }
+                  },
+                  {
+                    "if": { "type": "object", "properties": { "review_candidate": { "const": true } }, "required": ["review_candidate"] },
+                    "then": { "type": "object", "properties": { "severity": { "enum": ["warning", "info"] }, "verdict": { "const": "FLAGGED" }, "confidence": { "const": "low" }, "check_method": { "enum": ["automated_candidate", "visual"] } } }
+                  }
+                ],
+                "additionalProperties": false
+              }
+            },
+            "coverage_count_method": { "const": "max-per-mode" },
+            "coverage_by_mode": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "$ref": "shared.schema.json#/$defs/non_negative_integer"
+                },
+                "visual": {
+                  "$ref": "shared.schema.json#/$defs/non_negative_integer"
+                }
+              },
+              "required": [
+                "source",
+                "visual"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": ["status", "guidelines_version", "guidelines_checked", "screenshots_checked", "source_checked", "visual_checked", "findings"],
+          "additionalProperties": false
+        },
+        "summary": {
+          "type": "object",
+          "properties": {
+            "ac_counts": { "$ref": "#/$defs/ac_counts" },
+            "consistency_counts": { "$ref": "#/$defs/consistency_counts" },
+            "journey_counts": { "$ref": "#/$defs/ac_counts" }
+          },
+          "required": ["ac_counts", "consistency_counts", "journey_counts"],
+          "additionalProperties": false
+        },
+        "heuristics": { "$ref": "heuristics.schema.json" }
+      },
+      "required": ["status", "ac_results", "journeys", "usability", "consistency", "summary"]
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "guideline_id": { "type": "string", "minLength": 1, "maxLength": 320, "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?::[A-Za-z0-9][A-Za-z0-9._-]*)?$" },
+    "ac_counts": {
+      "type": "object",
+      "properties": {
+        "pass": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+        "fail": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+        "flagged": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+        "not_run": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+        "total": { "$ref": "shared.schema.json#/$defs/non_negative_integer" }
+      },
+      "required": ["pass", "fail", "flagged", "not_run", "total"],
+      "additionalProperties": false
+    },
+    "consistency_counts": {
+      "type": "object",
+      "properties": {
+        "error": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+        "warning": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+        "info": { "$ref": "shared.schema.json#/$defs/non_negative_integer" },
+        "total": { "$ref": "shared.schema.json#/$defs/non_negative_integer" }
+      },
+      "required": ["error", "warning", "info", "total"],
+      "additionalProperties": false
+    }
+  }
+}

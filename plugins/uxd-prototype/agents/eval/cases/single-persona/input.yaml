@@ -1,0 +1,2 @@
+prompt: |
+  Read plugins/uxd-prototype/agents/uxd-evaluator.md and follow the uxd-evaluator agent. Prepare only a standalone walkthrough for my explicitly selected junior editor doing the create-project task. There is a setup-only administrator; do not test that role. Keep this one pair rather than adding a second persona. Tell me the missing revision, environment and consent inputs. No execution is authorized.

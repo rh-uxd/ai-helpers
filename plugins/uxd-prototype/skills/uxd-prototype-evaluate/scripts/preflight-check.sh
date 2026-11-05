@@ -65,10 +65,9 @@ fi
 
 # ── Consistency checker repo (optional) ───────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-OVERLAY_CONSISTENCY="$(node "${SCRIPT_DIR}/overlay-get.js" context_repos.consistency_checker 2>/dev/null || true)"
-CONSISTENCY_URL="${CONSISTENCY_CHECKER_REPO:-${OVERLAY_CONSISTENCY:-}}"
+CONSISTENCY_URL="${CONSISTENCY_CHECKER_REPO:-}"
 if [ -z "${CONSISTENCY_URL}" ]; then
-  check_warn "Consistency checker repo not configured (set CONSISTENCY_CHECKER_REPO or overlay context_repos.consistency_checker)"
+  check_warn "Consistency checker repo not configured (set CONSISTENCY_CHECKER_REPO)"
 elif timeout 10 git ls-remote --exit-code "${CONSISTENCY_URL}" HEAD > /dev/null 2>&1; then
   check_pass "Consistency checker repo reachable"
 else
