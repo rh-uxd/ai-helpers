@@ -1,0 +1,5 @@
+prompt: >-
+  Using the uxd-slides-export skill, the local deck for UIESTRAT-220 is
+  exported. The user now says "put this on Google Slides and also make a
+  Figma Slides file." Do not publish and do not run commands. Say what this
+  skill will and will not do.

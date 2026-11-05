@@ -15,6 +15,11 @@
       "description": "UXD skill routing — discover the right skills for research, design review, and prototyping workflows"
     },
     {
+      "name": "uxd-general",
+      "source": "./plugins/uxd-general",
+      "description": "General UXD artifacts — slide decks and other deliverables shared across research, design, and prototyping"
+    },
+    {
       "name": "uxd-design",
       "source": "./plugins/uxd-design",
       "description": "UX design workflow — Figma context, design evaluation, and implementation handoff"

@@ -1,0 +1,4 @@
+# Guidance for the AskUserQuestion auto-answerer (eval harness).
+instruction: >
+  If asked what the deck is for, who it is for, or what source to use,
+  say that information is not available yet. Do not invent a brief.

@@ -1,0 +1,95 @@
+name: uxd-slides-publish-eval
+description: >-
+  Evaluate uxd-slides-publish's target prompt, missing-deck stop, and the
+  rule that a dry run does not mark the deck published
+
+skill: uxd-general:uxd-slides-publish
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/uxd-general
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+inputs:
+  tools:
+    - match: Questions asked to the user via AskUserQuestion.
+      prompt: |
+        Answer based on the test case context in input.yaml and answers.yaml.
+        If the case is only asking where to publish, do not pick a target.
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains input.yaml and annotations.yaml.
+    Optional answers.yaml guides AskUserQuestion.
+    Cases must not create a remote deck.
+
+outputs:
+  - path: artifacts
+    schema: |
+      Judges check conversation text for the Google and Figma choice,
+      the missing-deck stop, and the published metadata contract.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: asks_publish_target
+    description: Asks Google Slides or Figma Slides and does not publish yet
+    if: "annotations.get('case_type') == 'asks-target'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      tool_calls = outputs.get("tool_calls") or []
+      for call in tool_calls:
+          text += "\n" + str(call.get("input", ""))
+
+      if not re.search(r"google slides", text, re.IGNORECASE):
+          return False, "Did not offer Google Slides"
+      if not re.search(r"figma slides", text, re.IGNORECASE):
+          return False, "Did not offer Figma Slides"
+
+      offers_pages = re.search(r"github pages|gitlab pages|vercel", text, re.IGNORECASE)
+      if offers_pages and not re.search(r"do not offer|not a publish target|not offer", text, re.IGNORECASE):
+          return False, "Offered a static host as the deck destination"
+
+      if re.search(r"--apply", text) and not re.search(r"do not|don't|not |after confirmation|only after", text, re.IGNORECASE):
+          return False, "Applied a Google write before a target was chosen"
+
+      if not re.search(r"published|canonical", text, re.IGNORECASE):
+          return False, "Did not describe how a successful publish is recorded"
+
+      return True, "Asked for a Google Slides or Figma Slides target"
+
+  - name: missing_deck_stops
+    description: Stops when the deck folder is missing and points at create
+    if: "annotations.get('case_type') == 'missing-deck'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      if not re.search(r"uxd-slides-create", text):
+          return False, "Did not send the user to uxd-slides-create"
+      if not re.search(r"metadata\.json", text) or not re.search(r"slides/", text):
+          return False, "Did not name the missing metadata.json or slides directory"
+      if re.search(r"--apply|figma\.com/slides/", text) and not re.search(r"do not|don't|not |stop|will not", text, re.IGNORECASE):
+          return False, "Published without a local deck"
+
+      return True, "Stopped for a missing deck"

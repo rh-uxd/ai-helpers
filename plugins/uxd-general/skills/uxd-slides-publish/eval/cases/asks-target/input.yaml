@@ -1,0 +1,6 @@
+prompt: >-
+  Using the uxd-slides-publish skill, the local deck at
+  .artifacts/slides-catalog-review is validated and the user has seen the
+  viewer. They say "share this." Do not publish and do not run commands.
+  Ask where the shared copy should go, and say what you will record after a
+  URL exists. Do not pick a target yourself.
