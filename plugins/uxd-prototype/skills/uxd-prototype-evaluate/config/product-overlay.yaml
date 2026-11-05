@@ -5,7 +5,7 @@
 # internal-ai-helpers plugin uxd-eval-config (auto-discovered). Optional:
 #   1. config/product-overlay.local.yaml (gitignored personal override), OR
 #   2. EVAL_OVERLAY_PATH / UXD_INTERNAL_HELPERS
-# Env vars (MLFLOW_TRACKING_URI, CONSISTENCY_CHECKER_REPO, …) still win.
+# Env vars (MLFLOW_TRACKING_URI, USABILITY_TESTING_REPO, …) still win.
 # See references/skill-overlays.md.
 
 product:
@@ -34,10 +34,9 @@ git:
   mr_url_style: "gitlab"      # gitlab | github — how MR/PR links are built
   diff_url_template: ""
 
-# Optional context git remotes. Empty = skip bootstrap (pipeline degrades).
-# Override with CONSISTENCY_CHECKER_REPO / USABILITY_TESTING_REPO env vars.
+# Optional usability context git remote. Empty = use bundled personas.
+# Override with the USABILITY_TESTING_REPO env var.
 context_repos:
-  consistency_checker: ""
   usability_testing: ""
 
 # MLflow tracking (opt-in). Empty = skip logging unless MLFLOW_TRACKING_URI is set.
@@ -50,13 +49,6 @@ publish:
   pages_base_url: ""
   jira_base_url: "https://issues.example.com/browse"
   dashboard_url: ""
-
-# Design system — PatternFly configuration for consistency checks
-design_system:
-  name: "PatternFly 6"
-  context_path: ".context/consistency-checker/"
-  guidelines_path: ".context/consistency-checker/guidelines/"
-  analyze_script: ".context/consistency-checker/scripts/analyze.py"
 
 # Personas — canonical catalogs live in the plugin; deep behavioral YAML from .context/usability-testing/
 personas:

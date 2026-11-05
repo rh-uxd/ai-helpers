@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Approved selected guideline snapshot 2.0",
+  "type": "object",
+  "required": ["schema_version", "kind", "workspace", "selection", "selection_sha256", "review_scope", "design_system", "repository_ref", "documents", "snapshot_sha256"],
+  "properties": {
+    "schema_version": {"const": "readme-guideline-snapshot-2.0.0"},
+    "kind": {"const": "selected_local_guideline_snapshot"},
+    "workspace": {"type": "string", "minLength": 1},
+    "selection": {"type": "object", "required": ["schema_version", "proposal", "approval", "model_approval", "sha256"], "properties": {"schema_version": {"const": "1.1.0"}}},
+    "selection_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "snapshot_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "review_scope": {"$ref": "#/$defs/codeScope"},
+    "design_system": {"type": "string", "minLength": 1},
+    "repository_ref": {"type": ["string", "null"]},
+    "documents": {"type": "array", "items": {"$ref": "#/$defs/document"}}
+  },
+  "$defs": {
+    "codeScope": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "directories", "files"],
+      "properties": {
+        "kind": {"const": "code_paths"},
+        "directories": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+        "files": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+      }
+    },
+    "guidelineScope": {
+      "type": "object", "required": ["kind"],
+      "properties": {"kind": {"enum": ["whole_document", "section"]}, "anchor": {"type": "string", "minLength": 1}},
+      "allOf": [{"if": {"properties": {"kind": {"const": "section"}}}, "then": {"required": ["anchor"]}}]
+    },
+    "document": {
+      "type": "object",
+      "required": ["id", "selection_id", "identity", "identity_kind", "path", "text", "sha256", "sources", "guideline_scope", "section_bounds", "design_system", "applicability_origin", "provenance"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1},
+        "identity": {"type": "string", "minLength": 1},
+        "identity_kind": {"enum": ["source_authored", "path_derived"]},
+        "path": {"type": "string", "minLength": 1},
+        "text": {"type": "string"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "sources": {"type": "array", "items": {"type": "string"}},
+        "guideline_scope": {"$ref": "#/$defs/guidelineScope"},
+        "section_bounds": {"type": "object", "required": ["kind", "start", "end"]},
+        "design_system": {"type": "string", "minLength": 1},
+        "applicability_origin": {"enum": ["source_authored", "inherited"]},
+        "provenance": {
+          "type": "object", "additionalProperties": false, "required": ["ref", "status", "sha256"],
+          "properties": {
+            "ref": {"type": ["string", "null"]},
+            "status": {"enum": ["verified_git_blob", "working_tree_content", "unverifiable_legacy_ref"]},
+            "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+          }
+        }
+      }
+    }
+  }
+}
