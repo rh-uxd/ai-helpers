@@ -35,28 +35,6 @@ jobs:
             -p 'fullsend_*_linux_amd64.tar.gz' -O - | tar xz
           sudo mv fullsend /usr/local/bin/
 
-      - name: Verify Jira access
-        env:
-          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
-        run: |
-          HTTP_CODE=$(curl -s -o /tmp/jira-response.json -w "%{http_code}" \
-            -u "${JIRA_USER_EMAIL}:${JIRA_TOKEN}" \
-            "${JIRA_BASE_URL}/rest/api/3/myself")
-          echo "Jira /myself returned HTTP ${HTTP_CODE}"
-          if [ "$HTTP_CODE" != "200" ]; then
-            echo "::error::Jira auth failed (HTTP ${HTTP_CODE}). Email length: ${#JIRA_USER_EMAIL}, Token length: ${#JIRA_TOKEN}"
-            cat /tmp/jira-response.json 2>/dev/null
-            exit 1
-          fi
-          jq -r '"Authenticated as: \(.displayName) (\(.emailAddress))"' /tmp/jira-response.json
-          JQL_CODE=$(curl -s -o /tmp/jira-jql.json -w "%{http_code}" \
-            -u "${JIRA_USER_EMAIL}:${JIRA_TOKEN}" \
-            "${JIRA_BASE_URL}/rest/api/3/search?jql=project%20%3D%20UXDOPS%20AND%20labels%20%3D%20%22repo%3Arh-uxd%2Fai-helpers%22&maxResults=5&fields=key,summary,labels")
-          echo "JQL search returned HTTP ${JQL_CODE}"
-          jq '{total: .total, issues: [.issues[] | {key: .key, summary: .fields.summary, labels: .fields.labels}]}' /tmp/jira-jql.json 2>/dev/null || cat /tmp/jira-jql.json
-
       - name: Poll Jira
         env:
           JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
