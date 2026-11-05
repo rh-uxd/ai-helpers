@@ -70,6 +70,11 @@
       "description": "PatternFly MCP server — component docs and design tokens via MCP"
     },
     {
+      "name": "pf-ci-cd",
+      "source": "./plugins/patternfly/pf-ci-cd",
+      "description": "PatternFly CI/CD workflows — release promotion, publishing verification, and deployment operations"
+    },
+    {
       "name": "pf-workshop",
       "source": "./plugins/patternfly/pf-workshop",
       "description": "PatternFly team tools — issue triage, release management, skill incubation",

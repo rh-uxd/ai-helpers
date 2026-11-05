@@ -1,0 +1,5 @@
+prompt: |
+  Offline simulation: do not execute anything. Use only this snapshot and skill/reference.
+  Promotion failed midway. Approved core 6.7.0 exists on npm, but charts 8.7.0 and docs 7.7.0 are missing.
+  Lerna already pushed the stable versioning commit S and its package tags. No GitHub aggregate release exists.
+  Can we rerun conventional graduation and bump to the next cycle immediately? Explain recovery gates.

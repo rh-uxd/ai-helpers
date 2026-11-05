@@ -1,0 +1,5 @@
+required_concepts:
+  - ['no.op', 'nothing.{0,60}(publish|dispatch)', 'already.{0,40}(complete|released|correct)']
+  - ['(do not|don.t|no need to|should not|without).{0,60}(rerun|re.run|dispatch|republish|re.publish)']
+forbidden_claims:
+  - '\bI (have )?(published|dispatched|triggered|retagged)\b'
