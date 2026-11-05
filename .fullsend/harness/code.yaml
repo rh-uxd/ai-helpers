@@ -1,0 +1,18 @@
+# Jira-specific routing overlay over the pinned upstream code harness.
+base: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/harness/code.yaml#sha256=8973a15fe53798c632d86c6d2e595a476bfb7cd2f9392961b63533e30d4f1e15
+
+# Code work requires an explicit, repository-routed handoff from Jira.
+trigger: >
+  event.source.system == "jira"
+    && event.entity.kind == "work_item"
+    && "repo:rh-uxd/ai-helpers" in event.state.labels
+    && event.state.labels.filter(label, label.startsWith("repo:")).size() == 1
+    && (
+      (event.transition.kind == "label_changed"
+        && event.transition.label.action == "added"
+        && event.transition.label.name == "ready-to-code")
+      ||
+      (event.transition.kind == "comment_added"
+        && has(event.transition.comment.command)
+        && event.transition.comment.command == "/fs-code")
+    )

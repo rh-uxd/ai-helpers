@@ -1,5 +1,5 @@
 # Thin ai-helpers overlay over the pinned upstream review harness.
-base: https://raw.githubusercontent.com/fullsend-ai/agents/16657d540187b16743c8693dc2ccc40366334430/harness/review.yaml#sha256=10a0d8a3c4f77ab89c4bd3cef5cead82d0680cc1f56965656a3c101aaf589a85
+base: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/harness/review.yaml#sha256=d3e79644c7d3361d8aafb643f94b34779c5779bcdb3a7a952b8b53ff2e14cfd9
 
 description: "Fullsend review with ai-helpers-specific augmentation"
 
@@ -9,6 +9,7 @@ skills:
   - skills/ai-helpers-review
 
 # Keep remote resource resolution explicit for the pinned base harness.
+allow_runtime_fetch: true
 allowed_remote_resources:
   - https://raw.githubusercontent.com/fullsend-ai/agents/
 
