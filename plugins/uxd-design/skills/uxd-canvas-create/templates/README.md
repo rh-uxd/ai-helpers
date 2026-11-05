@@ -4,6 +4,7 @@ If the user names one of these, read that folder's `context.md` and start from i
 
 | Request | Folder |
 |---|---|
+| Vision journey map with paired as-is and to-be frames | `vision-journey-map` |
 | Journey map, customer journey, or experience map | `journey-map` |
 | Service blueprint | `service-blueprint` |
 | User flow or task flow | `user-flow` |
