@@ -3,7 +3,7 @@
 // Reads extract-state.json and component-map.json (if exists) to check whether
 // ACs with backend keywords actually have UI surfaces in the prototype.
 //
-// Usage: node classify-ac-tier.js .artifacts/<KEY>/
+// Usage: node scripts/classification/classify-ac-tier.js .artifacts/<KEY>/
 // Output: writes .artifacts/<KEY>/tier-overrides.json with forced-T1 entries
 //
 // run-classification.js applies these overrides before its deterministic rules.
@@ -67,7 +67,7 @@ function buildOverrides(extractState, componentMap = null) {
 function main() {
   const artifactsDir = process.argv[2];
   if (!artifactsDir) {
-    console.error('Usage: node classify-ac-tier.js .artifacts/<KEY>/');
+    console.error('Usage: node scripts/classification/classify-ac-tier.js .artifacts/<KEY>/');
     process.exit(1);
   }
 

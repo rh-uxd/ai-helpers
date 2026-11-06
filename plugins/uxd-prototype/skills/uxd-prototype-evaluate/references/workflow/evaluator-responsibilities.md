@@ -170,12 +170,12 @@ parent-linked changes. Legacy runs need no invented retrospective planning data.
 The pending runtime supports selected Quick imports, standalone walkthrough
 imports, Full pause/unchanged continuation/finish, and one post-fix verification.
 It does not itself operate browser/model tools. The shared
-[walkthrough contract](walkthroughs.md) supports multiple actual invocation
+[walkthrough contract](../task-verification/task-walkthroughs.md) supports multiple actual invocation
 receipts per pair in bundle v2, including failed calls and unexecuted outcomes.
 Legacy v1 retains its single-completed-call limit. Do not collapse real calls.
 
 Shared structured decision synthesis is implemented for local chat and HTML:
-`scripts/evaluation-synthesis.js` builds one deterministic synthesis, and
+`scripts/reporting/evaluation-synthesis.js` builds one deterministic synthesis, and
 `node scripts/run-report.js --chat` plus the canonical HTML renderer present it. Publishing
 and hosted reports remain follow-up work. An
 installed source companion must match the modern policy/report contract; presence

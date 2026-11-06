@@ -3,8 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const { materializeTargets } = require('./legacy-artifact-adapter');
-const { validateDirectory } = require('./validate-canonical-artifacts');
+const { materializeTargets } = require('../artifacts/legacy-artifact-adapter');
+const { validateDirectory } = require('../validate-canonical-artifacts');
 
 const CANONICAL_FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
 const REPORT_TARGETS = ['csv', 'summary', 'consistency', 'extract', 'evidence', 'journey', 'actions', 'state'];

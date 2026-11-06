@@ -25,7 +25,7 @@ function escapeHtml(str) {
   return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-const { parseCSVLine } = require('./csv-utils');
+const { parseCSVLine } = require('./shared/csv-utils');
 
 function main() {
   if (!fs.existsSync(absEvalsDir)) {

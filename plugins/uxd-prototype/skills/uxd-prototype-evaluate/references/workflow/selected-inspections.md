@@ -5,7 +5,7 @@
 Ask for selected checks and a reviewed, frozen input packet. Supported checks:
 `classify` (default), `consistency-source`, `heuristic`, and `consistency-visual`.
 The last two use scoped browser/model inspection through the
-[judgment handoff](quick-judgment-bundle.md). Classification describes verification needs; it never
+[judgment handoff](../inspection-contracts/inspection-bundle.md). Classification describes verification needs; it never
 verifies behavior or turns a backend-only exclusion into PASS.
 
 The host confirms the key matches `extract.key`, the source snapshot and mapped
@@ -15,7 +15,7 @@ phases are allowed and recorded; persona discovery and fix loops are skipped.
 Reject unsupported selected checks rather than substituting a full evaluation.
 Walkthroughs require a separate explicit selection of the independent
 `uxd-prototype-walkthrough` skill or composed Full route, not legacy compatibility.
-Follow the [responsibility contract](evaluator-responsibilities.md): reuse known
+Follow the [responsibility contract](../workflow/evaluator-responsibilities.md): reuse known
 context and ask only missing, check-specific questions before new work.
 
 ## Reviewed packet

@@ -4,7 +4,7 @@
 
 Version 1 is a validated JSON and HTML report contract. The evaluator agent
 orchestrates Quick Checks, independent walkthroughs and composed Full Evaluation
-using [split-evaluation.md](split-evaluation.md). Older phase artifacts and
+using [split-evaluation.md](../workflow/split-evaluation.md). Older phase artifacts and
 conversion scripts remain migration tools for existing consumers, not an exposed
 combined-workflow route or an automatically scheduled phase graph.
 
@@ -86,7 +86,7 @@ support later reuse; they do not automatically skip model work across builds.
 ## Reports and synthesis
 
 Chat and HTML reports derive from one deterministic structured synthesis
-(`scripts/evaluation-synthesis.js`) built from the five validated canonical
+(`scripts/reporting/evaluation-synthesis.js`) built from the five validated canonical
 files:
 
 - Goal, evaluation strategy and source/build identity.
@@ -157,7 +157,7 @@ stay outside normative finding counts/actions. Canonical and legacy HTML expose
 both axes, gaps and review candidates instead of an unqualified pass.
 
 The run owns a durable `.artifacts/consistency/` report/manifest pair; see the
-[publication mapping](quick-checks.md#explicit-source-policy-and-replay).
+[publication mapping](../workflow/selected-inspections.md#explicit-source-policy-and-replay).
 Validation checks report readback, frozen text/metadata/provenance, membership and
 summary consistency, not just JSON shape. Legacy materialization retains
 `source_analysis` and copies its closure into the separate output. Choose a fresh

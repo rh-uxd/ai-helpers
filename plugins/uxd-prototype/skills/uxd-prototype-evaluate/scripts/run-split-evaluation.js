@@ -6,10 +6,10 @@ const fs = require('fs');
 const path = require('path');
 const { parseArgs } = require('util');
 const { spawnSync } = require('child_process');
-const C = require('./split-contract');
-const { buildDocuments } = require('./assemble-phase-a-canonical');
+const C = require('./artifacts/split-contract');
+const { buildDocuments } = require('./artifacts/assemble-phase-a-canonical');
 const { classifyCriterion } = require('./run-classification');
-const { buildOverrides } = require('./classify-ac-tier');
+const { buildOverrides } = require('./classification/classify-ac-tier');
 
 function seed(input, stage) {
   const bytes = fs.readFileSync(input);
@@ -66,14 +66,14 @@ function run(options) {
   let quickRoot;
   let quickTemp;
   try {
-    const planning = require('./evaluation-plan').preflight(options, parent, approval);
+    const planning = require('./workflow/evaluation-plan').preflight(options, parent, approval);
     // Validate the prepared cohort before selected Quick/browser/provider work.
     // Full without a cohort can finish after review, but cannot run walkthroughs.
     if (options.input && (route === 'walkthroughs' || route === 'full')) {
       const preflight = fs.mkdtempSync(path.join(path.dirname(path.resolve(options.output)), '.walkthrough-readiness-'));
       try {
         const prepared = seed(path.resolve(options.input), preflight);
-        if (route === 'walkthroughs' || prepared['brief.json'].intent.tasks.length || prepared['brief.json'].intent.personas.length) require('./walkthrough-contract').readiness(prepared);
+        if (route === 'walkthroughs' || prepared['brief.json'].intent.tasks.length || prepared['brief.json'].intent.personas.length) require('./task-verification/walkthrough-contract').readiness(prepared);
       } finally { fs.rmSync(preflight, { recursive: true, force: true }); }
     }
     if (route === 'quick' || (route === 'full' && !options['continue-from'])) {
@@ -128,7 +128,7 @@ function run(options) {
         if (options['continue-from'] && C.read(options['walkthrough-bundle']).phases?.some(p => Date.parse(p.measurement?.started_at) < Date.parse(approval.recorded_at))) throw new Error('Full walkthrough execution must follow its explicit review decision; do not splice prior standalone work');
         docs['state.json'].phases = docs['state.json'].phases.filter(p => !['journey', 'usability'].includes(p.name));
         if (options['continue-from']) inheritedPhaseCount = docs['state.json'].phases.length;
-        pairs = require('./walkthrough-contract').merge(docs, options['walkthrough-bundle'], stage);
+        pairs = require('./task-verification/walkthrough-contract').merge(docs, options['walkthrough-bundle'], stage);
       } else if (options['walkthrough-bundle']) throw new Error('Full Evaluation pauses after Quick Checks; continue from the reviewed checkpoint');
       const status = route === 'full' && !options['continue-from'] && !options['verify-from'] ? 'awaiting-review' : 'completed';
       const pass = options['verify-from'] ? 2 : 1;
@@ -163,7 +163,7 @@ function run(options) {
       const history = options['adapt-from'] ? [] : parent?.['state.json'].lifecycle.iterations || [];
       const current = { iteration: pass, phase: executeWalkthroughs ? 'b' : 'a', timestamp: new Date().toISOString(), ac_results: docs['evaluation.json'].ac_results.map(r => ({ ac_id: r.ac_id, verdict: r.verdict })) };
       state.lifecycle = { status: status === 'awaiting-review' ? 'running' : 'completed', current_phase: executeWalkthroughs ? 'journey' : 'classify', iteration: pass, max_iterations: 2, exit_reason: status === 'awaiting-review' ? 'pending' : pass === 2 ? 'max-iterations' : 'no-fix', iterations: [...history.filter(i => i.iteration !== pass || i.phase !== current.phase), current] };
-      require('./evaluation-plan').attach(planning, docs, stage, inheritedPhaseCount, parent?.['state.json']);
+      require('./workflow/evaluation-plan').attach(planning, docs, stage, inheritedPhaseCount, parent?.['state.json']);
       // Identification includes the persisted plan, not just executed selection.
       C.identify(docs, route, receipt);
       return docs;
@@ -172,7 +172,7 @@ function run(options) {
     // it launches no model work and never mutates the canonical files.
     let report = null;
     if (options.report) {
-      const rendered = require('./canonical-report').render(options.output);
+      const rendered = require('./reporting/canonical-report').render(options.output);
       report = { evaluation_report: rendered.outputs.evaluation_report, integrity: 'report-integrity.json', model_invoked: false };
     }
     return { run_id: docs['brief.json'].run_id, artifacts_dir: path.resolve(options.output), artifact_sha256: C.digest(options.output), ...docs['state.json'].workflow, ...(report ? { report } : {}), model_invoked: false };

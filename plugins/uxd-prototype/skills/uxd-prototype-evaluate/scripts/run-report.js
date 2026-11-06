@@ -53,13 +53,13 @@ function main() {
   if (['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'].some(name => fs.existsSync(path.join(artifactsDir, name)))) {
     if (chatMode) {
       // All five files plus linked receipts must validate before synthesis.
-      const documents = require('./split-contract').loadRun(artifactsDir);
-      const synthesis = require('./evaluation-synthesis');
+      const documents = require('./artifacts/split-contract').loadRun(artifactsDir);
+      const synthesis = require('./reporting/evaluation-synthesis');
       const markdown = synthesis.chatMarkdown(synthesis.build(documents));
       process.stdout.write(jsonMode ? `${JSON.stringify({ status: 'completed', mode: 'chat', model_invoked: false, chat_markdown: markdown })}\n` : `${markdown}\n`);
       return;
     }
-    const result = require('./canonical-report').render(artifactsDir);
+    const result = require('./reporting/canonical-report').render(artifactsDir);
     console.log(jsonMode ? JSON.stringify(result) : `Rendered canonical report: ${result.outputs.evaluation_report}`);
     return;
   }

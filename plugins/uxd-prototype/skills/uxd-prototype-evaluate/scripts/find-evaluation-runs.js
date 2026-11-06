@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { parseArgs } = require('util');
-const C = require('./split-contract');
+const C = require('./artifacts/split-contract');
 
 function discover(root, filters = {}) {
   const matches = []; const rejected = [];

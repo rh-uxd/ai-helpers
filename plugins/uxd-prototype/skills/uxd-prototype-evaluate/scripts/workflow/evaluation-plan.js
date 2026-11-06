@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const Ajv2020 = require('ajv/dist/2020');
 const addFormats = require('ajv-formats');
-const C = require('./split-contract');
+const C = require('../artifacts/split-contract');
 const assert = (ok, message) => { if (!ok) throw new Error(message); };
 const same = C.isDeepStrictEqual;
 const overCostCap = (value, cap) => cap !== null && value - cap > Number.EPSILON * Math.max(Number.MIN_VALUE, value, cap) * 4;
@@ -28,8 +28,8 @@ let validator;
 function validatePlan(plan, packetHash) {
   if (!validator) {
     const ajv = new Ajv2020({ allErrors: true, strict: true }); addFormats(ajv);
-    ajv.addSchema(C.read(path.resolve(__dirname, '../schemas/v1/shared.schema.json')));
-    validator = ajv.compile(C.read(path.resolve(__dirname, '../schemas/v1/evaluation-plan.schema.json')));
+    ajv.addSchema(C.read(path.resolve(__dirname, '../../schemas/v1/shared.schema.json')));
+    validator = ajv.compile(C.read(path.resolve(__dirname, '../../schemas/v1/evaluation-plan.schema.json')));
   }
   assert(validator(plan), `Invalid evaluation plan: ${JSON.stringify(validator.errors)}`);
   assert(plan.packet_sha256 === packetHash, 'Plan must bind the exact reviewed packet bytes');

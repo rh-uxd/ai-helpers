@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 
 /** Absolute path to this skill's root (…/uxd-prototype-evaluate). */
-const SKILL_ROOT = path.resolve(__dirname, '..');
+const SKILL_ROOT = path.resolve(__dirname, '../..');
 
 /**
  * True when `candidate` is inside the skill install dir (or equal to it).

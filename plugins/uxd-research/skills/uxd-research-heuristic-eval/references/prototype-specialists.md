@@ -21,11 +21,12 @@ Preserve page-wide evidence for hierarchy and bounded visible text for content;
 component crops alone cannot establish page hierarchy. No page-source fallback,
 accessibility scanners, auto-fixes or edits to a source UX spec.
 
-For Quick Checks, follow the host bundle contract at
-`plugins/uxd-prototype/skills/uxd-prototype-evaluate/references/quick-judgment-bundle.md`.
-Produce separate run-scoped outputs and model receipts, never shared canonical
-writes. Raw responses and the actual sanitized submitted context are retained;
-omit private reasoning and credentials. Unknown usage/cost stays null.
+When a host workflow invokes this profile, follow the scope and output contract
+supplied by the caller. Do not discover or read another plugin's internal files.
+Return separate run-scoped outputs and model receipts to the caller; the host
+owns validation and canonical writes. Raw responses and the actual sanitized
+submitted context are retained; omit private reasoning and credentials. Unknown
+usage/cost stays null.
 
 ## 2. Exactly three specialist inspections
 
@@ -67,9 +68,10 @@ Use `identified_by`, not majority/unanimous labels: different lens coverage is
 not a vote or confidence estimate. Any separate model synthesis invocation must
 be recorded as `heuristic-synthesis`; it is not an extra inspection pass.
 
-Return profile/framework, coverage, and findings using the Quick Checks heuristic
-result schema (`schemas/v1/heuristics.schema.json`). Each finding contains title,
-screen/state, factual observation, heuristic numbers, identifying lenses,
+Return profile/framework, coverage, and findings in the result contract supplied
+by a host caller, when present. For standalone use, use the fields described
+here without relying on a host plugin's schema files. Each finding contains
+title, screen/state, factual observation, heuristic numbers, identifying lenses,
 source/evidence IDs, `review_status: "unreviewed"`, optional suggested severity
 (null when unavailable), and dissent (empty string when none). No recommendation,
 aggregate score, AC PASS or production-readiness verdict.

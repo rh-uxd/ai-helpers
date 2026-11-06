@@ -424,9 +424,9 @@ function validateDocuments(documents) {
   validateSummaries(documents, errors);
   validateEvidenceBounds(documents, errors);
   validateCache(documents, errors);
-  try { require('./consistency-contract').validateCanonical(documents['evaluation.json'].consistency); }
+  try { require('./consistency/consistency-contract').validateCanonical(documents['evaluation.json'].consistency); }
   catch (error) { issue(errors, 'evaluation.json', '/consistency/source_analysis', 'source_contract', error.message); }
-  errors.push(...require('./split-contract').validateSplit(documents));
+  errors.push(...require('./artifacts/split-contract').validateSplit(documents));
   return errors;
 }
 
@@ -435,7 +435,7 @@ function validateDocuments(documents) {
 function validateDirectoryCore(artifactsDir) {
   const errors = [];
   let root;
-  try { root = require('./linked-artifact-contract').canonicalRoot(artifactsDir); }
+  try { root = require('./artifacts/linked-artifact-contract').canonicalRoot(artifactsDir); }
   catch (error) {
     issue(errors, '', '', 'unsafe_run_directory', error.message);
     return { root: null, documents: null, errors };
@@ -444,11 +444,11 @@ function validateDirectoryCore(artifactsDir) {
   if (errors.length > 0) return { root, documents: null, errors };
   const validationErrors = validateDocuments(documents);
   if (!validationErrors.length) {
-    try { require('./consistency-contract').validateCanonical(documents['evaluation.json'].consistency, root); }
+    try { require('./consistency/consistency-contract').validateCanonical(documents['evaluation.json'].consistency, root); }
     catch (error) { issue(validationErrors, 'evaluation.json', '/consistency/source_analysis', 'source_publication', error.message); }
-    try { require('./walkthrough-contract').validatePublished(documents, root); }
+    try { require('./task-verification/walkthrough-contract').validatePublished(documents, root); }
     catch (error) { issue(validationErrors, 'state.json', '/workflow', 'walkthrough_publication', error.message); }
-    try { require('./evaluation-plan').validatePublished(documents, root); }
+    try { require('./workflow/evaluation-plan').validatePublished(documents, root); }
     catch (error) { issue(validationErrors, 'state.json', '/planning', 'evaluation_plan', error.message); }
   }
   return { root, documents, errors: validationErrors };
@@ -458,7 +458,7 @@ function validateDirectory(artifactsDir, options = {}) {
   const result = validateDirectoryCore(artifactsDir);
   const schemaInvalid = result.errors.some(error => error.code.startsWith('schema_'));
   if (!options.skipLinkedArtifacts && result.documents && !schemaInvalid) {
-    result.errors.push(...require('./linked-artifact-contract').verifyLinkedArtifacts(result.root, result.documents));
+    result.errors.push(...require('./artifacts/linked-artifact-contract').verifyLinkedArtifacts(result.root, result.documents));
   }
   return { valid: result.errors.length === 0, errors: result.errors };
 }

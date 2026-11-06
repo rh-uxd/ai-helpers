@@ -19,7 +19,7 @@ const {
   resolveProjectRoot,
   resolveEvalGlobalDir,
   resolveKeyFromArtifactsDir,
-} = require('./resolve-root');
+} = require('./shared/resolve-root');
 
 const absArtifacts = path.resolve(artifactsDir);
 const projectRoot = resolveProjectRoot();

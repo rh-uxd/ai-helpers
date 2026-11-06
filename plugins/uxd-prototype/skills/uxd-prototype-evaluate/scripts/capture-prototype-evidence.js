@@ -13,7 +13,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { captureTargetedEvidence, DEFAULT_VIEWPORT } = require('./targeted-evidence');
+const { captureTargetedEvidence, DEFAULT_VIEWPORT } = require('./evidence/targeted-evidence');
 let chromium;
 try {
   ({ chromium } = require('@playwright/test'));

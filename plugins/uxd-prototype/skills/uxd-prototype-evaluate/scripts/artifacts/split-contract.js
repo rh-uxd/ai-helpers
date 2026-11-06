@@ -59,7 +59,7 @@ function copyReference(root, stage, reference) {
 
 function loadRun(root) {
   root = canonicalRoot(root);
-  const check = require('./validate-canonical-artifacts').validateDirectoryCore(root);
+  const check = require('../validate-canonical-artifacts').validateDirectoryCore(root);
   if (check.errors.length) throw new Error(`Invalid canonical run: ${JSON.stringify(check.errors)}`);
   const docs = check.documents;
   const linkedErrors = verifyLinkedArtifacts(root, docs);
@@ -101,7 +101,7 @@ function identify(docs, route, inputs) {
   // Include transitive local rules/validators, not just the entry-point scripts.
   // This is a conservative implementation fingerprint, not proof of host/model
   // context or permission to reuse prior evidence. Model receipts remain separate.
-  const skillRoot = path.resolve(__dirname, '..');
+  const skillRoot = path.resolve(__dirname, '../..');
   const skillsRoot = path.dirname(skillRoot);
   const dependencies = [];
   function collect(file) {
@@ -125,7 +125,14 @@ function identify(docs, route, inputs) {
 
 function counts(rows) {
   const result = { pass: 0, fail: 0, flagged: 0, not_run: 0, total: rows.length };
-  for (const row of rows) result[row.verdict.toLowerCase()] += 1;
+  const verdictKeys = { PASS: 'pass', FAIL: 'fail', FLAGGED: 'flagged', NOT_RUN: 'not_run' };
+  for (const row of rows) {
+    const verdict = row?.verdict;
+    if (typeof verdict !== 'string' || !Object.prototype.hasOwnProperty.call(verdictKeys, verdict)) {
+      throw new Error(`Unsupported verdict: ${String(verdict)}`);
+    }
+    result[verdictKeys[verdict]] += 1;
+  }
   return result;
 }
 

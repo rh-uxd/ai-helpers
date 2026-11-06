@@ -12,22 +12,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { buildOverrides, BACKEND_KEYWORDS, UI_EVIDENCE_KEYWORDS } = require('./classify-ac-tier');
-const { escapeCSVField } = require('./csv-utils');
-
-const args = process.argv.slice(2);
-const jsonMode = args.includes('--json');
-const artifactsArg = args.find(arg => !arg.startsWith('--'));
-if (require.main === module && !artifactsArg) {
-  console.error('Usage: node run-classification.js <artifacts-dir> [--json]');
-  process.exit(1);
-}
-
-const artifactsDir = artifactsArg ? path.resolve(artifactsArg) : '';
-const extractPath = path.join(artifactsDir, 'extract-state.json');
-const componentMapPath = path.join(artifactsDir, 'component-map.json');
-const overridesPath = path.join(artifactsDir, 'tier-overrides.json');
-const reportPath = path.join(artifactsDir, 'evaluation-report.csv');
+const { buildOverrides, BACKEND_KEYWORDS, UI_EVIDENCE_KEYWORDS } = require('./classification/classify-ac-tier');
+const { escapeCSVField } = require('./shared/csv-utils');
 
 const SUBJECTIVE_KEYWORDS = [
   'user-friendly', 'user friendly', 'intuitive', 'clear hierarchy',
@@ -111,6 +97,20 @@ function classifyCriterion(ac, forcedOverride) {
 }
 
 function main() {
+  const args = process.argv.slice(2);
+  const jsonMode = args.includes('--json');
+  const artifactsArg = args.find(arg => !arg.startsWith('--'));
+  if (!artifactsArg) {
+    console.error('Usage: node run-classification.js <artifacts-dir> [--json]');
+    process.exit(1);
+  }
+
+  const artifactsDir = path.resolve(artifactsArg);
+  const extractPath = path.join(artifactsDir, 'extract-state.json');
+  const componentMapPath = path.join(artifactsDir, 'component-map.json');
+  const overridesPath = path.join(artifactsDir, 'tier-overrides.json');
+  const reportPath = path.join(artifactsDir, 'evaluation-report.csv');
+
   if (!fs.existsSync(extractPath)) throw new Error(`Missing required input: ${extractPath}`);
   const extractState = readJson(extractPath);
   if (!Array.isArray(extractState.ac_list) || extractState.ac_list.length === 0) {

@@ -23,7 +23,7 @@ if (!fs.existsSync(csvPath)) {
   process.exit(1);
 }
 
-const { parseCSVLine } = require('./csv-utils');
+const { parseCSVLine } = require('./shared/csv-utils');
 
 const journeyLog = JSON.parse(fs.readFileSync(journeyPath, 'utf8'));
 const csvRaw = fs.readFileSync(csvPath, 'utf8');
