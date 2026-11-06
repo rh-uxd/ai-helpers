@@ -2,11 +2,11 @@
 
 The host performs authorized browser/model work; the local merger only validates
 and publishes supplied results. Use the same packet and producer bundle for both
-entry paths. Read [evaluator-responsibilities.md](evaluator-responsibilities.md).
+entry paths. Read [evaluator-responsibilities.md](../workflow/evaluator-responsibilities.md).
 
 ## Frozen preparation and readiness
 
-Start with the [Quick packet shape](quick-checks.md#reviewed-packet), but do
+Start with the [Quick packet shape](../workflow/selected-inspections.md#reviewed-packet), but do
 not run Quick for an independent walkthrough. `extract.ac_list` may be empty for
 research-only tasks. Add canonical `tasks`, `personas`, `environment`, `permissions`
 using `schemas/v1/brief.schema.json` and `split.schema.json`:
@@ -30,7 +30,7 @@ Reuse reviewed budget/limits/stops from the handoff notes; do not restart intake
 reload a persona catalog or inject navigation answers/prior findings. Ask only
 about missing, stale, contradictory or unsupported inputs. Changed intent needs
 new review, not edits to an immutable packet. Use
-[evaluation-planning.md](evaluation-planning.md) for persisted plans/changes and
+[evaluation-planning.md](../workflow/evaluation-planning.md) for persisted plans/changes and
 recorded budget checks. Neither contract sanitizes model context or schedules calls.
 
 The composer validates prepared tasks/environment before initial Full's selected

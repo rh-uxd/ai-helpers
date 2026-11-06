@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const Ajv2020 = require('ajv/dist/2020');
 const addFormats = require('ajv-formats');
-const C = require('./split-contract');
+const C = require('../artifacts/split-contract');
 const pairKey = p => JSON.stringify([p.task_id, p.persona_id]);
 const pairsFor = intent => intent.personas.flatMap(p => p.task_ids.map(task_id => ({ task_id, persona_id: p.id })));
 const samePairs = (a, b) => C.isDeepStrictEqual(a.map(pairKey).sort(), b.map(pairKey).sort());
@@ -16,7 +16,7 @@ function validateShape(bundle) {
   if (!schema) {
     const ajv = new Ajv2020({ allErrors: true, strict: true });
     addFormats(ajv);
-    const root = path.resolve(__dirname, '../schemas/v1');
+    const root = path.resolve(__dirname, '../../schemas/v1');
     for (const name of fs.readdirSync(root).filter(n => n.endsWith('.schema.json'))) ajv.addSchema(C.read(path.join(root, name)));
     schema = ajv.getSchema('https://ai-helpers.uxd/schemas/v1/walkthrough-bundle.schema.json');
   }
@@ -31,7 +31,7 @@ function readiness(docs) {
     for (const field of ['screen_ids', 'state_ids', 'role_ids']) requireThat(task[field].length, `Walkthrough task needs nonempty ${field}`);
   }
   for (const persona of intent.personas) requireThat(persona.role_id && persona.task_ids.length, 'Walkthrough persona needs an explicit role and selected tasks');
-  const errors = require('./validate-canonical-artifacts').validateDocuments(docs);
+  const errors = require('../validate-canonical-artifacts').validateDocuments(docs);
   requireThat(!errors.length, `Walkthrough readiness failed: ${JSON.stringify(errors)}`);
 }
 

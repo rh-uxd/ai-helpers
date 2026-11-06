@@ -17,8 +17,8 @@ creation, standalone consistency or generalist design reviews through evaluation
 - **Existing findings:** inspect validated canonical JSON and receipts without
   rerunning checks or changing a source spec.
 
-See [SKILL.md](SKILL.md), [onboarding](references/evaluator-onboarding.md), and the
-[execution contract](references/split-evaluation.md) for inputs and commands.
+See [SKILL.md](SKILL.md), [onboarding](references/workflow/evaluator-onboarding.md), and the
+[execution contract](references/workflow/split-evaluation.md) for inputs and commands.
 The old combined phase orchestrator is retired.
 
 ## Conditional setup

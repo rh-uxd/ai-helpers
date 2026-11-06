@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { validateDirectory } = require('./validate-canonical-artifacts');
-const { materializeTargets } = require('./legacy-artifact-adapter');
+const { materializeTargets } = require('./artifacts/legacy-artifact-adapter');
 
 const CANONICAL_FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
 const TARGETS = ['csv', 'summary', 'consistency', 'extract', 'evidence', 'journey', 'actions', 'state'];
@@ -134,7 +134,7 @@ function run(options) {
   try {
     for (const [filename, content] of serialized) fs.writeFileSync(path.join(stageDir, filename), content, 'utf8');
     if (options.targets.includes('consistency') && documents['evaluation.json'].consistency.source_analysis?.evaluator_publication) {
-      require('./split-contract').copyTree(path.join(canonicalDir, '.artifacts'), path.join(stageDir, '.artifacts'));
+      require('./artifacts/split-contract').copyTree(path.join(canonicalDir, '.artifacts'), path.join(stageDir, '.artifacts'));
     }
     validateDerivedFiles(stageDir, options.targets);
     atomicInstall(stageDir, outputDir);

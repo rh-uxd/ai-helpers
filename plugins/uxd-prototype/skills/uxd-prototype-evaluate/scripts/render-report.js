@@ -12,8 +12,8 @@ if (!artifactsDir) {
   process.exit(1);
 }
 
-const { resolveProjectRoot, resolveKeyFromArtifactsDir } = require('./resolve-root');
-const { loadReportInputs } = require('./report-inputs');
+const { resolveProjectRoot, resolveKeyFromArtifactsDir } = require('./shared/resolve-root');
+const { loadReportInputs } = require('./reporting/report-inputs');
 const absArtifacts = path.resolve(artifactsDir);
 const projectRoot = resolveProjectRoot();
 const templatePath = path.join(__dirname, '..', 'templates', 'evaluation-report.html');
@@ -284,7 +284,7 @@ function buildPersonaNameMap(personaResults, journeyLog) {
   }
 
   // Also try persona YAML files for names and roles
-  const contextDir = path.join(require('./resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
+  const contextDir = path.join(require('./shared/resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
   if (journeyLog && journeyLog.usability_dimensions && journeyLog.usability_dimensions.personas_evaluated) {
     for (const pid of journeyLog.usability_dimensions.personas_evaluated) {
       if (!nameMap[pid]) {
@@ -662,7 +662,7 @@ function escapeCSVField(str) {
   return str;
 }
 
-const { parseCSVLine } = require('./csv-utils');
+const { parseCSVLine } = require('./shared/csv-utils');
 
 // ---------------------------------------------------------------------------
 // Parse markdown sections
@@ -925,7 +925,7 @@ function buildPersonaWalkthroughsHtml() {
       `</div>`;
   }
 
-  const contextDir = path.join(require('./resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
+  const contextDir = path.join(require('./shared/resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
   const overlays = ud.persona_overlays || [];
   const thinkAloud = ud.think_aloud || {};
   const traces = thinkAloud.traces || [];
@@ -1275,7 +1275,7 @@ function buildPersonaWalkthroughData() {
 }
 
 function getPersonaMetadata(pid) {
-  const personaDir = path.join(require('./resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
+  const personaDir = path.join(require('./shared/resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
   const yamlPath = path.join(personaDir, `${pid}.yaml`);
   const meta = { role: '', experience: '', exploration: '', patience_level: '' };
   try {

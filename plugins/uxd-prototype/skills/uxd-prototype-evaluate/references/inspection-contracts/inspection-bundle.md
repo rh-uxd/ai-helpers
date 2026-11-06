@@ -33,15 +33,19 @@ consent, and the local merger does not execute browser/provider work.
    For one settled baseline state, the host may run
    `node scripts/capture-prototype-evidence.js <artifacts-dir> <prototype-url>`
    to produce `prototype-evidence.json`: the full-page screenshot, page facts and
-   ranked crops from the shared capture library `scripts/targeted-evidence.js`.
+   ranked crops from the shared capture library `scripts/evidence/targeted-evidence.js`.
    Launching that helper is browser activity — it needs the same approved
    `browser` permission — and yields one deterministic capture, not persona
    observations or AC verdicts.
 3. When `heuristic` is selected, invoke the installed research skill:
    `uxd-research-heuristic-eval --profile prototype-specialists --output findings
    --framework nielsen --review chat` with the scoped evidence. Follow its
-   specialist reference, not its generalist Step 1. Persist unreviewed draft
-   results before chat review; final reports remain opt-in.
+   specialist reference, not its generalist Step 1. Supply this consumer's
+   required result contract as caller-provided instructions; do not direct the
+   research skill to read evaluator files. Persist unreviewed draft results
+   before chat review; final reports remain opt-in. The evaluator owns result
+   validation and canonical import; the research skill returns only its
+   run-scoped output and receipts.
    If the research skill is unavailable, stop and name the `uxd-research` plugin
    prerequisite; do not substitute generalist passes or a different scoring skill.
 4. When both model checks are selected, supply the explicitly reviewed visual
@@ -53,7 +57,7 @@ consent, and the local merger does not execute browser/provider work.
    policy was checked. A separate model synthesis, if used, is recorded explicitly.
 5. For **visual-only**, use one `consistency-visual` model phase against that same
    bounded evidence. For explicitly selected PatternFly rules, use
-   `references/phases/eval-consistency.md` Step 2, but
+   `references/consistency/visual-check.md` Step 2, but
    write a separate result below; do not require journeys, append shared files,
    or enter the fix-queue step. Prefer relevant crop images; hierarchy needs page
    context. DOM alone is not visual evidence.
@@ -128,9 +132,10 @@ The merger normalizes offset timestamps to the canonical UTC `Z` representation
 without changing the retained raw bundle. Methodological coverage notes and
 visual descriptions are bounded to 1,000 characters so qualifiers are preserved.
 
-`results.heuristic` follows `schemas/v1/heuristics.schema.json`: Nielsen profile,
-14 lens coverage entries, candidate findings with source/evidence IDs and
-unreviewed status. No design recommendations or PF metadata are required.
+The evaluator validates the imported `evaluation.json.heuristics` against its
+own `schemas/v1/heuristics.schema.json`: Nielsen profile, 14 lens coverage
+entries, candidate findings with source/evidence IDs and unreviewed status. No
+design recommendations or PF metadata are required.
 The importer creates order-independent canonical IDs and preserves the original
 candidate-to-finding-to-action map in its context receipt.
 

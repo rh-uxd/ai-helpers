@@ -58,8 +58,8 @@ if (!report) {
   if (hasModernFields || report.source_analysis) {
     try {
       const publicationRoot = require('path').basename(abs) === 'checks' ? resolve(abs, '..') : abs;
-      if (hasModernFields) require('./consistency-contract').validatePublication(report, publicationRoot);
-      if (report.source_analysis) require('./consistency-contract').validatePublication(report.source_analysis, publicationRoot);
+      if (hasModernFields) require('./consistency/consistency-contract').validatePublication(report, publicationRoot);
+      if (report.source_analysis) require('./consistency/consistency-contract').validatePublication(report.source_analysis, publicationRoot);
       check('frozen source report contract and durable references', true, 'coverage, membership, candidates, manifest provenance and readback verified');
     } catch (error) { check('frozen source report contract and durable references', false, error.message); }
   }

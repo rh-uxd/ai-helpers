@@ -6,7 +6,7 @@
  * This module performs no filesystem, process, network, browser, or model work.
  */
 
-const { escapeCSVField } = require('./csv-utils');
+const { escapeCSVField } = require('../shared/csv-utils');
 
 function indexBy(records, key = 'id') {
   return new Map((records || []).map(record => [record[key], record]));

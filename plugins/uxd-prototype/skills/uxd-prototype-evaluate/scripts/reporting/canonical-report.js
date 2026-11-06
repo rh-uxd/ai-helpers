@@ -5,7 +5,7 @@
  * same synthesis object so they cannot disagree. */
 const fs = require('fs');
 const path = require('path');
-const C = require('./split-contract');
+const C = require('../artifacts/split-contract');
 const S = require('./evaluation-synthesis');
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const invocationCount = value => value === null || value === undefined ? 'Unknown' : value;

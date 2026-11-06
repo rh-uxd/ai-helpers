@@ -8,12 +8,12 @@ const path = require('path');
 const { parseArgs } = require('util');
 const { spawnSync } = require('child_process');
 const { classifyCriterion } = require('./run-classification');
-const { buildOverrides } = require('./classify-ac-tier');
-const { buildDocuments } = require('./assemble-phase-a-canonical');
+const { buildOverrides } = require('./classification/classify-ac-tier');
+const { buildDocuments } = require('./artifacts/assemble-phase-a-canonical');
 const { validateDirectory } = require('./validate-canonical-artifacts');
-const { importJudgments } = require('./quick-judgment-bundle');
-const compatibility = require('./consistency-compat');
-const { loadRun } = require('./split-contract');
+const { importJudgments } = require('./inspection-contracts/inspection-bundle');
+const compatibility = require('./consistency/consistency-compat');
+const { loadRun } = require('./artifacts/split-contract');
 
 const FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
 const CHECKS = ['classify', 'consistency-source', 'heuristic', 'consistency-visual'];
@@ -220,7 +220,7 @@ function main() {
     state.permissions = packet.permissions || Object.fromEntries(['browser', 'provider', 'prototype_edits', 'report', 'sharing'].map(name => [name, { status: 'not-requested', scope: '', recorded_at: start }]));
     state.identity.intent_key = hash(JSON.stringify({ source: context.source, extract, selected, tasks: brief.intent.tasks, personas: brief.intent.personas, environment: packet.environment, ...(context.consistency_selection ? { consistency_selection: context.consistency_selection } : {}), ...(packet.check_scope ? { check_scope: packet.check_scope } : {}) }));
     state.identity.build_key = hash(JSON.stringify({ revision: prototype.revision, base_ref: baseRef, changed_files: changedFiles, ...(judgments.evidenceHash ? { evidence: judgments.evidenceHash } : {}) }));
-    state.identity.evaluator_key = hash(JSON.stringify({ assembler: state.identity.evaluator_key, runner: hash(fs.readFileSync(__filename)), judgments: hash(fs.readFileSync(path.join(__dirname, 'quick-judgment-bundle.js'))), judgment_producers: judgments.receipts.map(receipt => receipt.producer), classifier: hash(fs.readFileSync(path.join(__dirname, 'run-classification.js'))), overrides: hash(fs.readFileSync(path.join(__dirname, 'classify-ac-tier.js'))), ...(workspace ? { analyzer: hash(fs.readFileSync(path.resolve(__dirname, '../../uxd-consistency-check/scripts/analyze.py'))) } : {}) }));
+    state.identity.evaluator_key = hash(JSON.stringify({ assembler: state.identity.evaluator_key, runner: hash(fs.readFileSync(__filename)), judgments: hash(fs.readFileSync(path.join(__dirname, 'inspection-contracts/inspection-bundle.js'))), judgment_producers: judgments.receipts.map(receipt => receipt.producer), classifier: hash(fs.readFileSync(path.join(__dirname, 'run-classification.js'))), overrides: hash(fs.readFileSync(path.join(__dirname, 'classification/classify-ac-tier.js'))), ...(workspace ? { analyzer: hash(fs.readFileSync(path.resolve(__dirname, '../../uxd-consistency-check/scripts/analyze.py'))) } : {}) }));
     state.identity.compound_key = hash(JSON.stringify({ intent_key: state.identity.intent_key, build_key: state.identity.build_key, evaluator_key: state.identity.evaluator_key }));
     state.cache.entry_key = state.identity.compound_key;
     const runId = `eval-quick-${crypto.randomUUID()}`;

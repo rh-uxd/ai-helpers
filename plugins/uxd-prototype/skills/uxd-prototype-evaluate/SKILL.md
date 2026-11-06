@@ -11,7 +11,7 @@ description: >-
 
 Conversational routing, planning, readiness, review checkpoints, synthesis and
 cross-skill handoffs follow the
-[responsibility contract](references/evaluator-responsibilities.md), including
+[responsibility contract](references/workflow/evaluator-responsibilities.md), including
 its current versus intended capabilities. This skill executes the selected
 evaluator work; it does not start the old combined phase orchestrator.
 
@@ -27,7 +27,7 @@ with canonical evidence/history, a composed review checkpoint, or review and
 verification of an existing evaluator run:
 
 - **Quick Checks:** selected classification, source consistency, specialist
-  heuristics or visual consistency. Follow [quick-checks.md](references/quick-checks.md).
+  heuristics or visual consistency. Follow [quick-checks.md](references/workflow/selected-inspections.md).
   No implicit personas or fixes.
 - **Agentic Walkthroughs:** use the independently callable sibling
   `uxd-prototype-walkthrough` skill for the exact approved task/persona pairs.
@@ -44,7 +44,7 @@ verification of an existing evaluator run:
 ## Inputs and prerequisites
 
 Use the reviewed packet described by the
-[shared execution contract](references/split-evaluation.md): source snapshot and
+[shared execution contract](references/workflow/split-evaluation.md): source snapshot and
 stable source IDs, exact prototype revision, selected check scope, and only the
 route-relevant environment/tasks/personas. Jira is not required for UX-spec inputs.
 
@@ -56,7 +56,7 @@ route-relevant environment/tasks/personas. Jira is not required for UX-spec inpu
   explain the missing dependency and stop that check; other routes do not need it.
   Source policy is opt-in: neutral selects no corpus. Review explicit design-system,
   namespaced local guideline inputs or frozen-manifest replay through the
-  [Quick contract](references/quick-checks.md#explicit-source-policy-and-replay).
+  [Quick contract](references/workflow/selected-inspections.md#explicit-source-policy-and-replay).
   Internal source differences are review candidates, not normative violations.
 - Browser/model work belongs to the host. Verify its served revision, settled
   captures, submitted context and actual result receipts, plus the designer's
@@ -86,7 +86,7 @@ selected checks without counting its work twice; unknown usage stays `null`.
 Each run owns `brief.json`, `evaluation.json`, `evidence.json`, `actions.json`,
 and `state.json`, plus hashed `inputs/`, `checks/` and evidence receipts. These
 are authoritative; old CSV projections cannot repair or overwrite them. See
-[canonical-artifacts.md](references/canonical-artifacts.md).
+[canonical-artifacts.md](references/artifacts/canonical-artifacts.md).
 
 Present a decision-focused chat summary by default: goal, planned versus actual
 coverage, prioritized evidence-linked findings, uncertainty and the next useful

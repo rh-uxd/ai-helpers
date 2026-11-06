@@ -203,7 +203,7 @@ Before authorized work, show a compact plan with all applicable fields resolved:
   result receipts, expected invocation count and limitations. New walkthrough
   producers use bundle v2: record every actual invocation, including failed calls;
   unexecuted outcomes have no fabricated call. Legacy v1 permits only one completed
-  invocation per pair. See the [walkthrough contract](walkthroughs.md#bundle-v2).
+  invocation per pair. See the [walkthrough contract](../task-verification/task-walkthroughs.md#bundle-v2).
 - **Estimate and limits:** reviewed goal/scope/budget and stopping conditions;
   model/browser work, expected duration/spend when known, and what
   is unknown. No made-up price or unknown-as-zero estimate; host-session cost is

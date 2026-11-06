@@ -6,9 +6,9 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { parseCSVLine } = require('./csv-utils');
+const { parseCSVLine } = require('../shared/csv-utils');
 const { materializeTargets } = require('./legacy-artifact-adapter');
-const { validateDirectory } = require('./validate-canonical-artifacts');
+const { validateDirectory } = require('../validate-canonical-artifacts');
 const { lookup, restore, store } = require('./xray-cache');
 
 const CANONICAL_FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
@@ -254,22 +254,21 @@ function buildDocuments(artifactsDir, cacheDecision, inputs = null) {
       crops: prototypeEvidence.crops || [],
     },
   });
-  const skillRoot = path.resolve(__dirname, '..');
+  const skillRoot = path.resolve(__dirname, '../..');
   const consistencyRoot = path.resolve(
     skillRoot, '..', 'uxd-consistency-check'
   );
   const evaluatorFiles = [
     ...filesUnder(path.join(skillRoot, 'schemas', 'v1')),
     ...filesUnder(path.join(skillRoot, 'config')),
-    ...filesUnder(path.join(skillRoot, 'references', 'phases')),
     ...[
-      'assemble-phase-a-canonical.js', 'legacy-artifact-adapter.js', 'csv-utils.js', 'linked-artifact-contract.js',
-      'xray-cache.js', 'split-contract.js', 'validate-canonical-artifacts.js', 'walkthrough-contract.js', 'evaluation-plan.js',
-      'consistency-compat.js', 'consistency-contract.js', 'validate-consistency.js',
+      'artifacts/assemble-phase-a-canonical.js', 'artifacts/legacy-artifact-adapter.js', 'shared/csv-utils.js', 'artifacts/linked-artifact-contract.js',
+      'artifacts/xray-cache.js', 'artifacts/split-contract.js', 'validate-canonical-artifacts.js', 'task-verification/walkthrough-contract.js', 'workflow/evaluation-plan.js',
+      'consistency/consistency-compat.js', 'consistency/consistency-contract.js', 'validate-consistency.js',
       ...(inputs
-        ? ['run-quick-checks.js', 'quick-judgment-bundle.js', 'run-classification.js', 'classify-ac-tier.js']
+        ? ['run-quick-checks.js', 'inspection-contracts/inspection-bundle.js', 'run-classification.js', 'classification/classify-ac-tier.js']
         : []),
-    ].map(name => path.join(__dirname, name)),
+    ].map(name => path.join(skillRoot, 'scripts', name)),
   ];
   const evaluatorInputs = [...new Set(evaluatorFiles)].sort().map(file => [
     path.relative(path.resolve(skillRoot, '..'), file), sha256(fs.readFileSync(file)),
@@ -348,7 +347,7 @@ function buildDocuments(artifactsDir, cacheDecision, inputs = null) {
   };
   if (consistencyReport.schema_version === '1.0.0' && consistencyReport.source === 'uxd-consistency-check') {
     consistency.source_analysis = JSON.parse(JSON.stringify(consistencyReport));
-    consistency.status = require('./consistency-compat').status(consistencyReport);
+    consistency.status = require('../consistency/consistency-compat').status(consistencyReport);
   }
   const evaluation = {
     ...envelope, artifact_type: 'evaluation', status: 'running', ac_results: acResults, journeys,
