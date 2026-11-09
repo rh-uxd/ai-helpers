@@ -24,6 +24,8 @@ function validateShape(bundle) {
 }
 
 function readiness(docs) {
+  // Require clear tasks, roles and personas before anyone starts work. A
+  // successful walkthrough means little if we guessed who did what.
   const intent = docs['brief.json'].intent;
   requireThat(intent.environment && intent.tasks.length && intent.personas.length && pairsFor(intent).length, 'Walkthroughs need explicit environment, tasks and selected personas');
   for (const task of intent.tasks) {
@@ -110,6 +112,8 @@ function validateBundle(docs, bundle, packetHash) {
   requireThat(v2 || bundle.inspection.revision_verified, 'Legacy walkthrough evidence needs browser revision verification');
   requireThat([...captures.keys()].every(id => owners.has(id)) && [...evidence.keys()].every(id => bundle.phases.some(p => p.evidence_ids.includes(id))), 'Unattributed walkthrough evidence');
   const seen = new Set();
+  // Finishing a persona's task does not automatically pass the related ACs.
+  // Each AC verdict needs evidence from a step that actually checked it.
   for (const result of bundle.ac_results || []) {
     const current = docs['evaluation.json'].ac_results.find(r => r.ac_id === result.ac_id);
     const criterion = intent.acceptance_criteria.find(ac => ac.id === result.ac_id);
@@ -126,6 +130,8 @@ function measurements(bundle) {
 }
 
 function merge(docs, bundleFile, stage) {
+  // Copy the host's results into a new temporary run. This does not open a
+  // browser, call a provider, edit the prototype or replace old evidence.
   readiness(docs);
   const bundle = C.read(bundleFile);
   const permissions = docs['state.json'].permissions;
@@ -158,6 +164,8 @@ function merge(docs, bundleFile, stage) {
 }
 
 function validatePublished(docs, root) {
+  // Check the saved inputs, selected task/persona pairs and results again when
+  // reading a run. Someone could have changed the files after import.
   const workflow = docs['state.json'].workflow;
   if (!workflow) return;
   const readReference = ref => JSON.parse(C.referenceBytes(root, ref));

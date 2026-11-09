@@ -3,7 +3,8 @@
  * validate-fix-loop.js
  *
  * Validates fix-log.json schema, iteration sequencing, and cross-references
- * against iteration-log.json for the eval-fix subskill.
+ * against iteration-log.json for legacy artifacts and local regression fixtures.
+ * This checks recorded edits; it never applies a fix or authorizes another pass.
  *
  * Usage:
  *   node validate-fix-loop.js <artifacts-dir> [--json]
@@ -47,6 +48,8 @@ log('\nfix-log.json:');
 const iterLog = readJson('iteration-log.json');
 const fixLog = readJson('fix-log.json');
 const iterCount = iterLog?.iterations?.length || 0;
+// Legacy iteration rules only; modern parent-bound approval and one-pass
+// verification limits belong to the split workflow/receipt validators.
 
 if (iterCount > 1 && !fixLog) {
   check('fix-log exists when iterations > 1', false,

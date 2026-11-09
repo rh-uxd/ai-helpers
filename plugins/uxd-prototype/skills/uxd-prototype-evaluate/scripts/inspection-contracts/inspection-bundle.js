@@ -35,6 +35,8 @@ function importJudgments({ bundlePath, packet, packetBytes, snapshot, stage, sel
   // Reusing verified supplied captures does not claim a new browser activity.
   if (bundle.inspection.method === 'browser' && packet.permissions?.browser?.status !== 'approved') throw new Error('Browser judgments require recorded browser approval');
   const copied = new Map();
+  // Copy only the evidence and receipts named in the bundle, after checking
+  // their hashes. Never overwrite another check's files with different bytes.
   function copyReference(reference) {
     if (!reference || !PORTABLE.test(reference.path || '') || !/^(evidence\/|checks\/model\/)/.test(reference.path)) throw new Error('Judgment files must be portable evidence/ or checks/model/ paths');
     const absolute = fs.realpathSync(path.join(root, reference.path));
@@ -90,6 +92,8 @@ function importJudgments({ bundlePath, packet, packetBytes, snapshot, stage, sel
   } else if ([...names].some(name => name.startsWith('heuristic-'))) throw new Error('Unselected heuristic phases are not allowed');
   if (wanted.some(check => !phases.some(phase => phase.checks.includes(check)))) throw new Error('Selected judgment has no producing model phase');
   const evaluation = documents['evaluation.json'];
+  // Add observations and things for a human to review, not AC pass decisions.
+  // Keep each finding linked to the check and evidence that produced it.
   const actions = documents['actions.json'].actions;
   const receipts = [];
   for (const check of wanted) {

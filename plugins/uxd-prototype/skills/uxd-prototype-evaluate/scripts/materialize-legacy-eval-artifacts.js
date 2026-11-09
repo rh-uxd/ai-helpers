@@ -70,6 +70,8 @@ function serializeOutputs(outputs) {
 }
 
 function validateOutputDirectory(outputDir, replace) {
+  // Replace only files this adapter owns. --replace must not delete unrelated
+  // files just because they happen to be in the output folder.
   if (!fs.existsSync(outputDir)) return;
   if (!fs.statSync(outputDir).isDirectory()) throw adapterError('output_not_directory', 'The output path exists and is not a directory.');
   const entries = fs.readdirSync(outputDir, { withFileTypes: true });
@@ -116,6 +118,8 @@ function atomicInstall(stageDir, outputDir) {
 }
 
 function run(options) {
+  // Check the JSON results first, then write only the requested old formats
+  // into a separate folder. Never add CSV back into the live run as authority.
   const started = process.hrtime.bigint();
   const canonicalDir = path.resolve(options.canonicalDir);
   const outputDir = path.resolve(options.outputDir);

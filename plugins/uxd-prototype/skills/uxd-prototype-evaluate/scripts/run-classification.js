@@ -43,6 +43,8 @@ function includesAny(text, keywords) {
 }
 
 function classifyCriterion(ac, forcedOverride) {
+  // Both runners use these same triage rules, in this order. Each caller
+  // should not have to guess how UI, backend and judgment-heavy ACs fit together.
   const text = String(ac.text || ac.criterion_text || '').trim();
   const normalized = text.toLowerCase();
   const references = Array.isArray(ac.references) ? ac.references.filter(Boolean) : [];
@@ -83,6 +85,8 @@ function classifyCriterion(ac, forcedOverride) {
   const hasBackendSignal = includesAny(normalized, BACKEND_KEYWORDS);
   const hasUISignal = includesAny(normalized, UI_EVIDENCE_KEYWORDS);
   if (hasBackendSignal && !hasUISignal) {
+    // This old PASS means "backend-only, excluded", not "we checked it".
+    // Modern Quick runs keep all classification-only AC verdicts as NOT_RUN.
     return {
       tier: 'T3', verdict: 'PASS',
       rationale: 'Backend-only — no UI component to evaluate. Noted for engineering.',
@@ -142,6 +146,8 @@ function main() {
   });
 
   const csv = [
+    // Running the CLI writes the old CSV format. The runners call
+    // classifyCriterion directly and build JSON results without reading CSV.
     '# ACCEPTANCE CRITERIA',
     'criterion_id,source,tier,criterion_text,verdict,rationale,evidence,fix_action,fix_file,human_action',
     ...rows,

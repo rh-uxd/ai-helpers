@@ -14,6 +14,8 @@ function ids(value, label) {
 const sameSet = (a, b) => equal([...a].sort(), [...b].sort());
 function coverageStatus(selected, evaluated) { return evaluated.length ? evaluated.length === selected.length ? 'evaluated' : 'partially_evaluated' : 'not_evaluated'; }
 function metadata(text) {
+  // Read only the simple metadata fields the producer saves. This is not a
+  // full YAML reader and does not execute instructions from guideline text.
   text = text.replace(/^\uFEFF/, '').replace(/\r\n/g, '\n');
   const result = {};
   if (text.startsWith('---\n')) {
@@ -41,6 +43,8 @@ function provenancePath(value) {
   return value;
 }
 function validateManifest(manifest) {
+  // Rebuild the rule details and version from saved text. That stops an edited
+  // summary from claiming it used a different set of rules.
   requireThat(manifest && ['1.0.0', '1.1.0'].includes(manifest.schema_version), 'Unsupported frozen manifest');
   requireThat(typeof manifest.design_system === 'string' && manifest.design_system.trim() && typeof manifest.workspace === 'string' && manifest.workspace.trim(), 'Missing frozen manifest provenance');
   requireThat(Array.isArray(manifest.documents) && Array.isArray(manifest.sources), 'Missing frozen documents/sources');
@@ -81,6 +85,8 @@ function validateManifest(manifest) {
   return manifest;
 }
 function validateReport(report) {
+  // Check rule coverage and comparisons between similar UI separately. Keep
+  // uncertain differences marked for review instead of calling them errors.
   requireThat(report.schema_version === '1.0.0' && report.source === 'uxd-consistency-check', 'Unsupported source report contract');
   const evaluated = ids(report.coverage?.evaluated_rules, 'Evaluated coverage');
   const unevaluated = ids(report.coverage?.unevaluated_rules, 'Unevaluated coverage');
@@ -128,6 +134,8 @@ function confined(root, relative) {
   return file;
 }
 function validatePublication(report, root) {
+  // Reopen the saved report and rule list to check they still match. Pointing
+  // at the producer's old workspace is not enough to keep evidence usable.
   validateReport(report);
   const published = report.evaluator_publication;
   const base = published ? root : report.workspace;

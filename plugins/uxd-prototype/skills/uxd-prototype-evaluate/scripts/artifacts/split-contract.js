@@ -1,5 +1,7 @@
 'use strict';
 
+// Read, check and save evaluation runs in one place. "publish" below just
+// saves a checked run locally; it does not push to Git or share a prototype.
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -58,6 +60,8 @@ function copyReference(root, stage, reference) {
 }
 
 function loadRun(root) {
+  // Check the JSON records and their linked files. Both must agree before a
+  // caller can trust this run or use its hash to record a review decision.
   root = canonicalRoot(root);
   const check = require('../validate-canonical-artifacts').validateDirectoryCore(root);
   if (check.errors.length) throw new Error(`Invalid canonical run: ${JSON.stringify(check.errors)}`);
@@ -86,6 +90,8 @@ function publish(output, build, finalize) {
 }
 
 function identify(docs, route, inputs) {
+  // Give the requested work, prototype inputs and evaluator code their own
+  // hashes so a changed build cannot pass itself off as the same evidence.
   const id = `eval-${route}-${crypto.randomUUID()}`;
   for (const doc of Object.values(docs)) {
     doc.run_id = id;
@@ -101,6 +107,7 @@ function identify(docs, route, inputs) {
   // Include transitive local rules/validators, not just the entry-point scripts.
   // This is a conservative implementation fingerprint, not proof of host/model
   // context or permission to reuse prior evidence. Model receipts remain separate.
+  // Exact script bytes include comments; comment-only edits also change this key.
   const skillRoot = path.resolve(__dirname, '../..');
   const skillsRoot = path.dirname(skillRoot);
   const dependencies = [];

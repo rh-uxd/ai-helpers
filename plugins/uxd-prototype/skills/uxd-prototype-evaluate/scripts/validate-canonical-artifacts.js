@@ -166,6 +166,8 @@ function validateIdentity(documents, errors) {
 }
 
 function validateReferences(documents, errors) {
+  // Schemas check field shapes; these joins check that IDs refer to the same
+  // criteria, tasks, evidence and actions across all five documents.
   const brief = documents['brief.json'];
   const evaluation = documents['evaluation.json'];
   const evidence = documents['evidence.json'];
@@ -416,6 +418,8 @@ function validateCache(documents, errors) {
 }
 
 function validateDocuments(documents) {
+  // Stop on schema errors before semantic checks dereference nested fields.
+  // Keep summary/evidence/identity checks separate so failures stay attributable.
   const errors = [];
   validateSchemas(documents, errors);
   if (errors.length > 0) return errors;
@@ -433,6 +437,8 @@ function validateDocuments(documents) {
 // skipLinkedArtifacts is for internal five-file staging/cache paths only;
 // CLI and consumer validation retain strict linked-closure checks by default.
 function validateDirectoryCore(artifactsDir) {
+  // Validate persisted workflow/plan/source receipts without recursing through
+  // loadRun. The public directory wrapper adds generic linked-file integrity.
   const errors = [];
   let root;
   try { root = require('./artifacts/linked-artifact-contract').canonicalRoot(artifactsDir); }

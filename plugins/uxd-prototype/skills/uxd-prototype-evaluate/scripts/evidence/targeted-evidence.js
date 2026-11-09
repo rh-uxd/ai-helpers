@@ -1,5 +1,7 @@
 'use strict';
 
+// Save a full browser frame and small crops around useful page elements.
+// This gives the host less image data to send; it does not judge the prototype.
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -132,6 +134,8 @@ function clipForBox(box, viewport, padding = 16) {
 }
 
 async function collectVisibleTargets(page, { focus = '', maxCrops = 6 } = {}) {
+  // Pick a few useful visible areas and controls. This is not a full-page
+  // audit, an accessibility test or proof that an AC passed.
   return page.evaluate(({ requestedFocus, requestedLimit }) => {
     const clean = value => String(value || '').replace(/\s+/g, ' ').trim();
     const focusText = clean(requestedFocus).toLowerCase();
@@ -243,6 +247,8 @@ async function captureStableRender(page, capture, { ready, settleMs = 150, timeo
 }
 
 async function captureTargetedEvidence(page, options = {}) {
+  // Save images only after the screenshot and page state agree. Keep failed
+  // attempts in memory so they do not leave misleading evidence on disk.
   const evidence = await captureStableRender(page, async () => {
     const evidence = await captureTargetedFrame(page, options);
     if (options.readState) evidence.page_state = await options.readState();

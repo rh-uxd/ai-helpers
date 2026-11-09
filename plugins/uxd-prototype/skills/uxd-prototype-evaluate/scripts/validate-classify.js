@@ -3,7 +3,7 @@
  * validate-classify.js
  *
  * Validates tier-overrides.json schema and cross-references against
- * extract-state.json AC list for the eval-classify subskill.
+ * extract-state.json AC list for legacy classification output.
  *
  * Usage:
  *   node validate-classify.js <artifacts-dir> [--json]
@@ -45,6 +45,8 @@ function readJson(filename) {
 log('\ntier-overrides.json:');
 
 const overrides = readJson('tier-overrides.json');
+// Accept historical wrapper/field aliases, then check tiers, duplicate IDs and
+// optional AC membership. None of these checks verifies prototype behavior.
 
 if (!overrides) {
   check('tier-overrides exists', false, 'file not found or invalid JSON');

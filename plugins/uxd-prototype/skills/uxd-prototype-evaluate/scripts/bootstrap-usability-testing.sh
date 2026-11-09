@@ -5,6 +5,8 @@
 # Repo URL is supplied explicitly through USABILITY_TESTING_REPO.
 #
 # Writes into the consumer project (UXD_PROJECT_ROOT), never into the skill install.
+# Optional network setup for external context, not persona/model execution.
+# An absent URL skips setup; it does not select or run a walkthrough cohort.
 
 set -euo pipefail
 

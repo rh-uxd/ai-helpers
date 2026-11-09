@@ -49,6 +49,8 @@ function main() {
   const reportRequested = values.report && !values['no-report'];
   if (!values.input || !values.output) throw new Error('Usage: run-quick-checks.js --input packet.json --output <new-run-dir> [--checks classify,consistency-source,heuristic,consistency-visual] [--judgment-bundle <file>] [--workspace <repo> --base-ref <commit>] [--report]');
   const selected = values.checks.split(',');
+  // Run only the checks the caller selected. Classification, source analysis
+  // and host-supplied judgments are not an automatic run-everything pipeline.
   if (!selected.length || new Set(selected).size !== selected.length || selected.some(check => !CHECKS.includes(check))) throw new Error(`Select only: ${CHECKS.join(', ')}`);
   const input = path.resolve(values.input);
   const packetBytes = fs.readFileSync(input);
@@ -107,6 +109,8 @@ function main() {
     consistencySelection = compatibility.selection(packet, values, workspace);
   }
   const stage = fs.mkdtempSync(path.join(path.dirname(output), '.quick-checks-'));
+  // Save the exact inputs and each check's receipts in a temporary folder.
+  // Install the finished run only after the combined results pass validation.
   const start = new Date().toISOString();
   try {
     fs.mkdirSync(path.join(stage, 'inputs'));
@@ -157,6 +161,7 @@ function main() {
     }
     for (const receipt of context.checks) receipt.output_sha256 = hash(fs.readFileSync(path.join(stage, receipt.output)));
     const { documents } = buildDocuments(stage, { decision: 'bypass', invalidated_by: ['cache_bypassed'] }, {
+      // Reuse the builder without running its old file-conversion/cache CLI.
       extract: { key: extract.key, title: extract.title, ac_list: extract.ac_list, extracted_at: start },
       delta: { changed_files: changedFiles }, consistency,
       evidence: { prototype_url: prototype.url, captured_at: start }, rows,
@@ -198,6 +203,8 @@ function main() {
       });
     }
     const judgments = importJudgments({ bundlePath: values['judgment-bundle'], packet, packetBytes, snapshot, stage, selected, documents });
+    // Keep the host's model receipts and usage. This script combines those
+    // results locally; it does not make the model calls itself.
     if (evaluation.consistency.source_analysis) evaluation.consistency.status = compatibility.status(evaluation.consistency.source_analysis, evaluation.consistency.findings);
     context.checks.push(...judgments.receipts);
     if (judgments.phases.length) {
@@ -219,6 +226,8 @@ function main() {
     const state = documents['state.json'];
     state.permissions = packet.permissions || Object.fromEntries(['browser', 'provider', 'prototype_edits', 'report', 'sharing'].map(name => [name, { status: 'not-requested', scope: '', recorded_at: start }]));
     state.identity.intent_key = hash(JSON.stringify({ source: context.source, extract, selected, tasks: brief.intent.tasks, personas: brief.intent.personas, environment: packet.environment, ...(context.consistency_selection ? { consistency_selection: context.consistency_selection } : {}), ...(packet.check_scope ? { check_scope: packet.check_scope } : {}) }));
+    // Hash the inputs and code, not just the prototype URL. The same URL could
+    // serve different content next time.
     state.identity.build_key = hash(JSON.stringify({ revision: prototype.revision, base_ref: baseRef, changed_files: changedFiles, ...(judgments.evidenceHash ? { evidence: judgments.evidenceHash } : {}) }));
     state.identity.evaluator_key = hash(JSON.stringify({ assembler: state.identity.evaluator_key, runner: hash(fs.readFileSync(__filename)), judgments: hash(fs.readFileSync(path.join(__dirname, 'inspection-contracts/inspection-bundle.js'))), judgment_producers: judgments.receipts.map(receipt => receipt.producer), classifier: hash(fs.readFileSync(path.join(__dirname, 'run-classification.js'))), overrides: hash(fs.readFileSync(path.join(__dirname, 'classification/classify-ac-tier.js'))), ...(workspace ? { analyzer: hash(fs.readFileSync(path.resolve(__dirname, '../../uxd-consistency-check/scripts/analyze.py'))) } : {}) }));
     state.identity.compound_key = hash(JSON.stringify({ intent_key: state.identity.intent_key, build_key: state.identity.build_key, evaluator_key: state.identity.evaluator_key }));

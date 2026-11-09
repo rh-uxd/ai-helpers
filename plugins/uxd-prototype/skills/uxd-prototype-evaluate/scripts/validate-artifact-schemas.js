@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
- * Validate pipeline artifact schemas before report generation.
- * Catches schema drift between skill outputs and downstream consumers
- * (render-report.js, validate-pipeline-output.js).
+ * Check legacy artifact shapes before the retained report template renders.
+ * These hand-written compatibility checks are not canonical JSON Schema
+ * validation; modern runs use validate-canonical-artifacts.js.
  *
  * Usage: node validate-artifact-schemas.js .artifacts/<KEY>/
  * Exit code 0 = all pass, 1 = failures found.
@@ -27,6 +27,8 @@ function readJson(filename) {
 }
 
 const results = [];
+// Missing optional legacy files are skipped below. Passing here establishes
+// shape compatibility only, not a complete evaluation or verified coverage.
 
 function log(...args) { if (!jsonMode) console.log(...args); }
 

@@ -73,6 +73,8 @@ function coverage(docs) {
 }
 
 function outcomes(docs) {
+  // Keep AC checks, inspection findings and persona task results separate.
+  // A green result in one does not make the others pass.
   const evaluation = docs['evaluation.json'];
   const brief = docs['brief.json'];
   const actions = docs['actions.json'];
@@ -188,6 +190,8 @@ function prioritizedFindings(result) {
 }
 
 function uncertainty(docs, result, coverageView) {
+  // Show skipped checks and stopped work alongside findings. Finishing a run
+  // does not mean we checked everything or found no problems.
   const items = [];
   for (const ac of result.ac.results.filter(r => r.verdict === 'NOT_RUN')) items.push(`Acceptance criterion ${ac.ac_id} is NOT_RUN (unverified).`);
   for (const ac of result.ac.results.filter(r => r.verdict === 'FLAGGED')) items.push(`Acceptance criterion ${ac.ac_id} is FLAGGED and needs human review.`);
@@ -207,6 +211,8 @@ function uncertainty(docs, result, coverageView) {
 }
 
 function usageView(docs) {
+  // Use saved parent/new-call totals when available. Older child runs can
+  // include their parent's calls, so adding them again would double-count.
   const state = docs['state.json'];
   const planning = state.planning;
   if (planning) {
@@ -293,6 +299,8 @@ function invocationText(usage) {
 }
 
 function chatMarkdown(synthesis) {
+  // Format the same summary used by HTML. Keep decisions in build() so chat
+  // and the report do not grow separate rules for what passed.
   const lines = [];
   const s = synthesis;
   lines.push(`# Evaluation summary — ${s.run.title}`);

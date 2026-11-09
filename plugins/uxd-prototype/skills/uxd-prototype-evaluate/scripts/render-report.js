@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Keep older report layouts and file formats working. run-report.js sends
+// modern JSON runs to reporting/canonical-report.js instead. Put new evaluator
+// decisions in shared synthesis, not in this old template renderer.
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
@@ -308,6 +311,8 @@ function resolvePersonaName(nameMap, rawId) {
 }
 
 function readFileOr(filePath, fallback) {
+  // Use checked JSON converted in memory when available. For other paths,
+  // fall back to the extra files the old report format expects.
   if (path.dirname(path.resolve(filePath)) === absArtifacts) {
     const virtual = reportInputs.virtualFiles.get(path.basename(filePath));
     if (virtual !== undefined) return virtual;
@@ -588,6 +593,8 @@ function buildFullCsv(csvRaw, journeyLog, passCount, failCount, flaggedCount, ex
 }
 
 function buildSummaryJson() {
+  // Make the old CSV-based summary for older tools, not proof that ACs passed.
+  // Modern reports keep NOT_RUN and show what was actually checked.
   const protoId = extractPrototypeId();
   const csvRaw = readFileOr(path.join(absArtifacts, 'evaluation-report.csv'), '');
   const journeyLog = readJsonOr(path.join(absArtifacts, 'journey-log.json'), null);
@@ -2924,6 +2931,8 @@ function registerScreenshot(filename, narration, stepContext, screenshots, ssSta
 }
 
 function buildTokens(opts = {}) {
+  // Collect template values from the old file formats. These fallbacks support
+  // the old UI; add new checks to shared synthesis instead of growing this list.
   const protoId = extractPrototypeId();
   const csvRaw = readFileOr(opts.csvPath || path.join(absArtifacts, 'evaluation-report.csv'), '');
   const journeyLog = readJsonOr(opts.journeyLogPath || path.join(absArtifacts, 'journey-log.json'), null);
@@ -4232,7 +4241,8 @@ function main() {
     process.exit(1);
   }
 
-  // Pre-normalize journey-log.json in place to fix common schema drift
+  // The old format is cleaned up and written back to journey-log.json. JSON
+  // conversions stay in memory; rendering old reports is not a read-only check.
   const jlPath = path.join(absArtifacts, 'journey-log.json');
   const jlRaw = readJsonOr(jlPath, null);
   if (jlRaw) {

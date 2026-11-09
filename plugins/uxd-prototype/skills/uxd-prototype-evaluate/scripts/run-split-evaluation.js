@@ -12,6 +12,8 @@ const { classifyCriterion } = require('./run-classification');
 const { buildOverrides } = require('./classification/classify-ac-tier');
 
 function seed(input, stage) {
+  // Set up a standalone walkthrough from reviewed inputs without running
+  // Quick checks. Use classification for tiers, not proof that an AC passed.
   const bytes = fs.readFileSync(input);
   const packet = JSON.parse(bytes);
   if (!packet.source?.id || !packet.source.revision || !['jira', 'ux-spec'].includes(packet.source.kind) || !packet.prototype?.revision || !packet.prototype.url || !packet.extract?.key || !Array.isArray(packet.extract.ac_list)) throw new Error('A reviewed source/prototype/extract packet is required');
@@ -77,6 +79,8 @@ function run(options) {
       } finally { fs.rmSync(preflight, { recursive: true, force: true }); }
     }
     if (route === 'quick' || (route === 'full' && !options['continue-from'])) {
+      // Reuse Quick for Full's first pass instead of building another runner.
+      // After review, the walkthrough step copies this saved checkpoint.
       if (!options.input) throw new Error('A reviewed --input packet is required');
       quickTemp = fs.mkdtempSync(path.join(path.dirname(path.resolve(options.output)), '.quick-input-'));
       quickRoot = path.join(quickTemp, 'run');
@@ -123,6 +127,8 @@ function run(options) {
       let pairs = [];
       let inheritedPhaseCount = options['continue-from'] ? docs['state.json'].phases.length : 0;
       const executeWalkthroughs = route === 'walkthroughs' || Boolean(options['continue-from'] && approval.purpose === 'continue-walkthroughs') || Boolean(options['verify-from'] && parent['state.json'].workflow.selected_pairs.length);
+      // Having a results bundle does not let us skip Full's review pause.
+      // Accept walkthrough results only when this route selected walkthroughs.
       if (executeWalkthroughs) {
         if (!options['walkthrough-bundle']) throw new Error('Selected walkthroughs require --walkthrough-bundle');
         if (options['continue-from'] && C.read(options['walkthrough-bundle']).phases?.some(p => Date.parse(p.measurement?.started_at) < Date.parse(approval.recorded_at))) throw new Error('Full walkthrough execution must follow its explicit review decision; do not splice prior standalone work');

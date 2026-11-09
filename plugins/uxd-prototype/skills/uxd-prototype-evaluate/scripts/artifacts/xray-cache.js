@@ -1,5 +1,7 @@
 'use strict';
 
+// Keep old assembler results in a five-file cache. Do not use it for modern
+// Quick/Full runs: it cannot restore the extra evidence and receipts they need.
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -34,6 +36,8 @@ function entryDirectory(cacheRoot, identity) {
 }
 
 function validateEntry(entryDir, expectedIdentity) {
+  // A matching key is not enough. Check the saved files and their contents,
+  // then reject runs that need receipts this cache does not keep.
   const manifestPath = path.join(entryDir, 'manifest.json');
   if (!fs.existsSync(manifestPath)) return { valid: false, reason: 'missing_manifest' };
   let manifest;
@@ -74,6 +78,8 @@ function lookup(cacheRoot, expectedIdentity, previousIdentity = null) {
 }
 
 function store(cacheRoot, canonicalDir) {
+  // Prepare and check the entry in a temporary folder before saving it.
+  // Check existing entries instead of replacing their evidence.
   const source = path.resolve(canonicalDir);
   // This compatibility cache intentionally omits legacy linked-file closures.
   const validation = validateDirectory(source, { skipLinkedArtifacts: true });
@@ -118,6 +124,8 @@ function store(cacheRoot, canonicalDir) {
 }
 
 function restore(cacheRoot, expectedIdentity, destination) {
+  // Do not replace existing evaluation files. Leave other files alone and
+  // clean up this attempt's copies if restoring the entry fails.
   const hit = lookup(cacheRoot, expectedIdentity);
   if (hit.decision !== 'hit') return hit;
   const target = path.resolve(destination);

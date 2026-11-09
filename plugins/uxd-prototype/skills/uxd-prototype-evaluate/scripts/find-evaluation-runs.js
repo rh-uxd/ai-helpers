@@ -8,9 +8,13 @@ const { parseArgs } = require('util');
 const C = require('./artifacts/split-contract');
 
 function discover(root, filters = {}) {
+  // List saved runs without picking the newest or running anything again.
+  // Include rejected folders so broken evidence does not quietly disappear.
   const matches = []; const rejected = [];
   let visited = 0;
   function visit(directory, depth) {
+    // ponytail: search a bounded local folder tree, not a background index;
+    // choose a smaller root if limits are reached rather than adding a service.
     if (depth > 8 || ++visited > 10000) throw new Error('Discovery bound exceeded; select a narrower artifact root');
     if (fs.existsSync(path.join(directory, 'brief.json'))) {
       try {

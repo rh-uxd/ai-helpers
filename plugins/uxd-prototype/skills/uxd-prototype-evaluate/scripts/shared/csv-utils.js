@@ -1,5 +1,8 @@
 'use strict';
 
+// Legacy CSV compatibility only; canonical evaluation uses typed JSON.
+// ponytail: parse one physical record, not multiline CSV; replace the reader
+// only if a consumer needs quoted records spanning multiple lines.
 function parseCSVLine(line) {
   const result = [];
   let current = '';

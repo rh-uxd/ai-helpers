@@ -68,6 +68,8 @@ function main() {
   if (missing.length > 0) throw new Error(`Missing required artifacts: ${missing.join(', ')}`);
 
   const started = process.hrtime.bigint();
+  // Check old file formats before using the old report template. Modern runs
+  // return above and never reach this fallback.
   runBundled('validate-classify.js', ['--json']);
   runBundled('validate-artifact-schemas.js', ['--json']);
   runBundled('render-report.js');
