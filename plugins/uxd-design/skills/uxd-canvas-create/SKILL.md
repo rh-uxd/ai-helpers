@@ -70,14 +70,27 @@ Follow the locations reference. Journey maps, blueprints, and affinity maps stay
 4. If the source is a Miro URL, read that board or one frame and preserve every widget id before editing. Confirm before creating a board, writing widgets, or deleting items. Fit the board's content into the template when the user asked for one of those types.
 5. Read [JSON Canvas fields and extensions](references/canvas-schema.md) before authoring unfamiliar node types or presentation extensions.
 6. Write the working model with stable ids such as `phase-discover-actions`. Copy widget ids onto `miroId` in any snapshot. After a new board write, store the ids the create call returns.
-7. Copy local files into `assets/` and use relative paths. Do not embed credentials, authenticated URLs, or inaccessible local absolute paths.
-8. Validate any `canvas.json` you write:
+7. For a completed paired vision map, run the research coverage check below before handing it to the narrative stage.
+8. Copy local files into `assets/` and use relative paths. Do not embed credentials, authenticated URLs, or inaccessible local absolute paths.
+9. Validate any `canvas.json` you write:
 
 ```bash
 node "${CLAUDE_SKILL_DIR}/scripts/validate-canvas.mjs" <path-to-canvas.json>
 ```
 
 Fix every error. Review warnings for overlaps, dense text, and edge routing rather than dismissing them automatically.
+
+### Vision map research coverage check
+
+After the team confirms both journey-map frames, compare the mapped As-Is pains and needs, and the To-Be assumptions and support opportunities, with existing findings from `uxd-research-insights`.
+
+- Start from the preliminary, stage-by-stage coverage and `Research gap:` notes in the brief's map starters. Revisit those notes against the completed map, correcting statuses and adding gaps raised by team edits; avoid repeating the same lookup or duplicating unchanged notes.
+- Use findings already gathered for the brief when available. If none were gathered and the skill is installed and authorized, search for relevant findings. Do not treat missing search results as proof that no research exists.
+- Judge only whether the available findings are relevant to and cover the mapped claims. Mark coverage as supported, partial, or not found; keep citations and `[E#]` links traceable.
+- Identify unsupported pains, needs, and future-state claims. Keep future claims labeled `[A#]` and list focused research questions that could address material gaps.
+- Do not launch new research or block the workflow. The team may proceed with gaps visible as assumptions.
+- Return the same concise coverage summary and gaps in the written handoff, and add them to a clearly labeled **Research Coverage & Gaps** area on the Miro board. Preserve both journey-map frames and their content. Show the proposed notes and confirm before writing them to an existing board.
+- Save the written handoff as `.artifacts/journey-map-research-check.md` beside the brief, or `.artifacts/{ID}/journey-map-research-check.md` when an ID is known. Include the Miro URL, coverage judgments, linked findings, assumptions, and suggested research questions.
 
 ## Craft rules
 
@@ -94,6 +107,7 @@ Fix every error. Review warnings for overlaps, dense text, and edge routing rath
 - The structure answers the stated communication goal. A requested journey map, blueprint, flow, affinity map, or mind map still follows its template.
 - A vision journey map keeps matching As-Is and To-Be phases, actor, and scenario; evidence and assumptions remain distinguishable.
 - A vision map uses the brief's separate As-Is and To-Be map-shaped Journey starters as a draft, not a decision. Preserve the playbook's lanes, matching stage columns, stable step labels, and evidence trail while the team edits and confirms the Miro frames.
+- At vision map completion, existing research coverage and gaps are checked against the map and recorded both on the board and in the written handoff; unknowns remain labeled as assumptions and do not block progress.
 - Placeholder template copy is gone. Research-derived claims trace to the supplied sources, and assumptions are labeled.
 - Local canvases pass the validator: unique ids, positive dimensions, resolved edges, readable labels, no unintended overlap, and local assets resolve.
 - A Miro write names the board URL. Updates reuse existing widget ids. Deletions were confirmed item by item.

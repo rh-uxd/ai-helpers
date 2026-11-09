@@ -75,6 +75,7 @@ The process has five phases. Use the matching skills in sequence; this playbook 
 - A description of the target user and their current experience
 - Stakeholders who need to align on the problem and what they care about
 - For vision work, two provisional Journey map starters—As-Is and To-Be—each using the playbook's map lanes as rows and 3–5 matched `S#` journey stages as columns
+- Preliminary, stage-by-stage research coverage and gap notes in the starters' **Evidence & assumptions** lanes, based on relevant findings from `uxd-research-insights`
 
 When the team needs product integration details, inspect the identified workspace separately. The brief may include a separate, optional Project Context section for verified details; leave unknown fields open and keep implementation context out of the problem statement.
 
@@ -120,7 +121,7 @@ Print or share the findings so workshop participants can reference them directly
 
 **Time:** 60-90 min
 
-**Output → Vision Brief:** The top pain-reliever connections suggest which future capabilities to explore. Keep the problem statement focused on the current user condition; the jobs-to-be-done help define the target user, and unaddressed gaps help set scope. For vision work, draft two separate provisional Journey map starters in the brief: one As-Is and one To-Be. Each uses the playbook's map lanes as rows and the same 3–5 `S#` stages as columns. These tables seed the mapping workshop without making the To-Be a decision.
+**Output → Vision Brief:** The top pain-reliever connections suggest which future capabilities to explore. Keep the problem statement focused on the current user condition; the jobs-to-be-done help define the target user, and unaddressed gaps help set scope. For vision work, draft two separate provisional Journey map starters in the brief: one As-Is and one To-Be. Each uses the playbook's map lanes as rows and the same 3–5 `S#` stages as columns. Use `uxd-research-insights` findings to add a preliminary coverage status and `Research gap:` question by stage in the **Evidence & assumptions** lane. Mark unsupported claims as assumptions. The journey-map completion check revisits and updates these notes after the team edits the map.
 
 ---
 
@@ -135,9 +136,10 @@ Print or share the findings so workshop participants can reference them directly
 - User actions, touchpoints, screens or artifacts, mindsets, emotions, pain points, evidence, assumptions, and support opportunities
 - A To-Be path grounded in realistic capabilities and the agreed time horizon
 - 3-5 prototype screens marked directly in the To-Be **Screens & Artifacts** row, with reference patterns and open questions
+- A research coverage and gaps summary, recorded on the board and in the written handoff
 - The Miro board URL, which stays the shared source for the narrative and prototype steps
 
-**How long:** 90-120 min, with follow-up time if the map surfaces evidence gaps
+**How long:** 90-120 min, with follow-up time for the research coverage check
 
 **Before the session:**
 - Bring the approved problem brief and research, tickets, analytics, or observations that support it.
@@ -185,8 +187,9 @@ The server is added to your global Codex configuration. Treat the authorization 
 5. **Co-create the To-Be (25 min).** Keep the same actor, scenario, and phases. Describe the user's actions, product response, proposed screens, and support. Leave unresolved or new friction visible.
 6. **Compare the frames (10 min).** Walk each stage from As-Is to To-Be. Check that the future response addresses a mapped pain and remains credible for the horizon.
 7. **Mark prototype screens and annotate the handoff (15 min).** Identify the 3-5 screens that carry the story. In the To-Be **Screens & Artifacts** row, label each screen `[P1]` through `[P5]` and retain its journey stage and `S#` labels. Reuse the same `[P#]` when one screen spans multiple stages. On the screen's existing map note, add a relevant product screen or pattern to reference and any open questions. The Actions, Touchpoints, and Mindsets & Needs rows already hold the related journey context. Detailed component mapping happens in Phase 4, once the target workspace and design system are known.
+8. **Check research coverage and gaps (15-20 min).** Use findings already gathered through `uxd-research-insights`. If none were gathered and the skill is available and authorized, look for relevant existing findings. Compare the research with mapped As-Is pains and needs and the To-Be assumptions and opportunities. Mark each as supported, partially supported, or not found; preserve sources and `[E#]` links. Treat unsupported claims as `[A#]` assumptions and list focused questions that further research could answer. Record the same concise summary both in a clearly labeled Miro area and `.artifacts/journey-map-research-check.md` (or `.artifacts/{ID}/journey-map-research-check.md`). Do not treat missing search results as proof that research does not exist, launch new research automatically, or block the workflow.
 
-**Output → Narrative and Prototype:** Keep the edited Miro URL and the screen markers and notes in the To-Be **Screens & Artifacts** row. In Phase 3, pass the brief and board to `uxd-experience-narrative-create`. In Phase 4, pass the same board and finished narrative to `uxd-prototype-create`.
+**Output → Narrative and Prototype:** Keep the edited Miro URL, screen markers, research coverage summary, and gaps. Journey mapping is the recommended step after the brief; if an equivalent reviewed paired map already exists, use it and proceed to the research coverage check. In Phase 3, pass the brief and board to `uxd-experience-narrative-create` for a storyboard draft. In Phase 4, pass the same board, edited storyboard, and finished narrative to `uxd-prototype-create`.
 
 **Common mistakes:**
 - Filling the As-Is with AI-generated assumptions instead of the available evidence
@@ -200,17 +203,18 @@ The server is added to your global Codex configuration. Treat the authorization 
 
 **Skill:** `uxd-experience-narrative-create`
 
-**What you'll do:** Turn the reviewed brief and paired journey map into a readable story. The map holds the team's detailed journey; the narrative makes the before-and-after experience easy to understand and share.
+**What you'll do:** Use the brief and paired journey maps to create an editable To-Be storyboard in Miro. After the team edits it, use the same skill again to write the final narrative prose and prototype handoff.
 
 **Key outputs:**
 - A named user and concrete scene grounded in the brief and map
 - As-Is beats that retain the mapped actions, touchpoints, screens, pains, and evidence
-- A clear change and To-Be beats drawn from the mapped support opportunities
+- A To-Be storyboard frame, seeded from the map and edited by the team in Miro
+- A clear change and To-Be beats drawn from the edited storyboard and mapped support opportunities
 - A 3-5 screen breakdown and prototype handoff linked to the Miro board
 
 **How long:** About 1 day
 
-**How to use it:** Give `uxd-experience-narrative-create` the brief and edited Miro URL. It reads the board directly and writes the final prose and screen breakdown. It preserves `[E#]` and `[A#]` markers, asks about material conflicts, and does not edit the board. If the Miro connection is unavailable, provide a JSON Canvas snapshot or export of both frames.
+**How to use it:** First give `uxd-experience-narrative-create` the brief and edited Miro URL. It reads both maps, drafts a To-Be storyboard using As-Is pains and needs as context, and—after showing you the draft and getting your confirmation—adds it as a separate frame on the same board. It does not change either map. If direct Miro writing is unavailable, it returns a Miro-ready storyboard for manual transfer. Edit the storyboard with your partners in Miro. Then use the skill again to read the edited storyboard and write the final prose and screen breakdown. It preserves `[E#]` and `[A#]` markers and asks about material conflicts.
 
 The narrative should answer these questions (from Julie Zhuo's North Star framework):
 - When would this person encounter this experience?
@@ -225,7 +229,7 @@ The narrative should answer these questions (from Julie Zhuo's North Star framew
 - Dropping touchpoints, evidence, assumptions, or support responses from the prototype handoff
 - Inventing routes; include routes only after checking the target workspace
 
-**Output → Prototype:** Review the narrative, then give `uxd-prototype-create` both the Miro URL and the final narrative. The map supplies the detailed journey context; the narrative supplies the readable story.
+**Output → Prototype:** Give `uxd-prototype-create` the Miro URL and final narrative. The board supplies the agreed journey, research gaps, and edited storyboard; the narrative supplies the readable story and screen handoff.
 
 ---
 
@@ -299,7 +303,7 @@ Run this as a quick working session before starting the build to bridge the narr
 
 **Skill:** `uxd-experience-review`
 
-**What you'll do:** Evaluate the prototype against quality criteria, identify gaps, and recommend refinements before sharing with stakeholders. The designer selects which changes to make; `uxd-prototype-create` applies those changes, then the updated experience is reviewed.
+**What you'll do:** Check whether the prototype and story are coherent with the brief, paired maps, edited storyboard, and any supplied product principles. Recommend refinements before sharing with stakeholders. This review assesses the proposed experience; it does not measure downstream alignment, roadmap decisions, or adoption. The designer selects which changes to make; `uxd-prototype-create` applies those changes, then the updated experience is reviewed.
 
 **Key outputs:**
 - A quality assessment of narrative clarity, problem grounding, the change demonstrated, outcome, feasibility, and visual credibility
@@ -319,7 +323,7 @@ Use the `uxd-experience-review` scorecard:
 - **Feasibility:** Could a product team see a path to what is shown within the stated time horizon?
 - **Visual credibility:** Does it look like the target product? Judge against its design system, theming, and neighboring screens.
 
-As a cross-check alongside the six ratings, compare the prototype with the reviewed To-Be map: confirm it carries the intended stages, touchpoints, screens, and support opportunities, and explain any deliberate differences.
+As a cross-check alongside the six ratings, assess internal coherence across the brief, paired maps, edited storyboard, narrative, and prototype. Confirm the prototype carries the intended To-Be stages, touchpoints, screens, pains, and support opportunities; represent research findings, assumptions, and gaps accurately; and consider supplied product principles when available. Explain deliberate differences. The review assesses the proposed experience and does not claim to measure stakeholder alignment, roadmap decisions, adoption, or other downstream impact.
 
 When prototype code changed, follow the target repository's documented lint and build commands if available. If the project maintains a design log, record the review outcome and decisions in its established location; do not create a new logging convention.
 
@@ -416,13 +420,13 @@ The playbook is supported by these skills. Names below follow the repository's c
 |-------|-------|-------------|--------|
 | Optional research lookup | Pre-work | Retrieves evidence or participant quotes when an approved source and lookup skill are available | Optional; use supplied evidence otherwise |
 | `uxd-problem-brief-create` | 1. Define | Frames the current problem, affected person, evidence, desired outcome, and scope | `uxd-workshop` plugin |
-| `uxd-canvas-create` | 2. Map | Creates a paired As-Is/To-Be vision journey map on one Miro board | `uxd-design` plugin |
-| `uxd-experience-narrative-create` | 3. Story | Turns the brief and reviewed map into final prose and a screen breakdown | `uxd-workshop` plugin |
-| `uxd-prototype-create` | 4. Build | Creates an interactive prototype from the map and narrative | `uxd-prototype` plugin |
+| `uxd-canvas-create` | 2. Map | Creates a paired As-Is/To-Be vision journey map and checks research coverage and gaps | `uxd-design` plugin |
+| `uxd-experience-narrative-create` | 3. Story | Drafts a Miro-editable To-Be storyboard, then turns the edited board into final prose and a screen breakdown | `uxd-workshop` plugin |
+| `uxd-prototype-create` | 4. Build | Creates an interactive prototype from the paired maps, edited storyboard, and final narrative | `uxd-prototype` plugin |
 | `uxd-prototype-evaluate` | Optional validation | Evaluates a prototype against a Jira story's acceptance criteria and usability | `uxd-prototype` plugin; requires Jira context and a reachable prototype or workspace |
-| `uxd-experience-review` | 5. Review | Judges whether the prototype carries the problem and prepares a stakeholder demo | `uxd-workshop` plugin |
+| `uxd-experience-review` | 5. Review | Checks coherence with the brief, maps, storyboard, and supplied product principles; prepares a stakeholder demo | `uxd-workshop` plugin |
 
-The brief grounds the problem, the paired Miro map keeps the team's current and future journey visible, and the narrative turns that map into a story. Prototype creation receives both the board and prose; experience review recommends changes and prepares the result for stakeholders. The designer selects refinements for prototype creation to apply, then the updated experience is reviewed. Optional ticket-based evaluation is a separate check when a Jira story exists.
+The brief grounds the problem, the paired Miro map keeps the team's current and future journey visible, and the map-completion check records research coverage and gaps both on the board and in the written handoff. The narrative skill drafts an editable storyboard in Miro; after the team edits it, the skill finalizes the prose. Prototype creation receives the board and prose; experience review checks coherence and fit, recommends changes, and prepares the result for stakeholders. The designer selects refinements for prototype creation to apply, then the updated experience is reviewed. Optional ticket-based evaluation is a separate check when a Jira story exists.
 
 ### Adapting to a target workspace
 

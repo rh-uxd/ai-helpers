@@ -2,17 +2,17 @@
 name: uxd-experience-narrative-create
 version: 0.1.0
 description: >-
-  Turn a problem brief and paired vision journey map into a clear experience
-  narrative and prototype-ready screen breakdown. Use when finalizing a future-
-  state story from a Miro journey map.
+  Turn a problem brief and paired vision journey map into an editable Miro
+  storyboard, then finalize it as an experience narrative and prototype-ready
+  screen breakdown. Use for storyboard drafting or narrative finalization.
 audience: "UX designers"
-inputs: "A problem brief, a completed as-is/to-be journey map, and optional target codebase"
-outputs: "An experience narrative and structured prototype handoff"
+inputs: "A problem brief, a completed as-is/to-be journey map, an optional edited Miro storyboard, and optional target codebase"
+outputs: "A Miro-editable To-Be storyboard, final experience narrative, and structured prototype handoff"
 ---
 
 # Experience Narrative
 
-Turn an agreed paired journey map into readable story prose and a concrete prototype handoff. The journey map preserves the co-created detail; the narrative makes the experience easy to understand and share. This skill does not edit the map or build the prototype.
+Use this skill in two passes. First, turn the agreed paired journey map into an editable To-Be storyboard on the same Miro board. After the designer and partners edit that storyboard, use the skill again to read those edits and write the final narrative and prototype handoff. Preserve the paired journey map as the source; add a storyboard frame without rewriting either map.
 
 ## Inputs
 
@@ -23,25 +23,26 @@ Turn an agreed paired journey map into readable story prose and a concrete proto
 | Persona reference | No | Persona cards in the target project or an installed plugin, when they match the brief |
 | Target codebase | No | Only to learn real navigation. Skip routes when no codebase is available. |
 
-If no brief exists, ask the user to run `uxd-problem-brief-create` or provide the brief. If a vision map is missing, ask them to create it with `uxd-canvas-create` before writing the narrative. Do not silently replace the agreed map with a new, unreviewed story.
+If no brief exists, ask the user to run `uxd-problem-brief-create` or provide the brief. If a vision map is missing, ask them to create it with `uxd-canvas-create`. Do not silently replace the agreed map with a new, unreviewed story.
 
 ## Miro access
 
-When given a Miro URL, read the board directly through the available Miro connection. Follow the Miro read guidance in `uxd-canvas-create`; use the map as read-only source material and preserve its URL and frame names. Do not create, update, or delete board widgets from this skill. If the board cannot be read, ask for a JSON Canvas snapshot or an export of both frames and state the access limitation. Do not claim to have reviewed content that was not available.
+When given a Miro URL, read the paired maps directly through the available Miro connection and follow the Miro read/write guidance in `uxd-canvas-create`. In the storyboard pass, show the proposed content and receive the designer's confirmation before adding a clearly labeled storyboard frame to the same board. Never alter or delete either journey-map frame. In the finalization pass, read the designer-edited storyboard and do not overwrite it. If direct Miro writing is unavailable, provide a Miro-ready storyboard in the artifact and say it needs to be transferred manually. If the board cannot be read, ask for a JSON Canvas snapshot or exports and state the access limitation.
 
 ## Outputs
 
-Write `.artifacts/experience-narrative.md` beside the brief. When an id is known, write `.artifacts/{ID}/experience-narrative.md` instead. Include the journey-map URL or local source path in the document so the prototype step can trace the handoff.
+The storyboard pass writes `.artifacts/storyboard-draft.md` beside the brief (or `.artifacts/{ID}/storyboard-draft.md`) and adds the storyboard to Miro after confirmation. The map stage writes research coverage to `.artifacts/journey-map-research-check.md` (or `.artifacts/{ID}/journey-map-research-check.md`). The finalization pass writes `.artifacts/experience-narrative.md` (or `.artifacts/{ID}/experience-narrative.md`). Link the brief, paired map, research check, and edited storyboard so the prototype step can trace the handoff.
 
 ## Arguments
 
 $ARGUMENTS
 
-Parse as: `[path-to-brief] [--journey-map <miro-url-or-canvas-path>] [--workspace <path>] [--horizon <time>] [--id <work-item-id>]`
+Parse as: `[path-to-brief] [--journey-map <miro-url-or-canvas-path>] [--stage draft-storyboard|finalize-narrative] [--workspace <path>] [--horizon <time>] [--id <work-item-id>]`
 
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--journey-map` | none | Miro URL or local JSON Canvas path |
+| `--stage` | infer from board state | `draft-storyboard` creates an editable storyboard; `finalize-narrative` reads an edited storyboard and writes final prose and handoff |
 | `--workspace` | none | Codebase whose navigation the screen list should follow |
 | `--horizon` | from brief/map | Time horizon for a future experience, such as 6–12 months |
 | `--id` | none | Work item id for the artifact path |
@@ -62,23 +63,44 @@ Carry `[E#]` evidence references and source links into the relevant beats. Keep 
 
 Use the time horizon and capabilities already recorded in the brief or map. Ask only for missing information that changes whether the future experience is credible. Describe each capability as something the person can do, and keep its readiness visible: committed, being explored, or aspirational. Do not invent a horizon or capability list.
 
-## Step 4: Set the scene
+## Step 4: Draft the To-Be storyboard (first pass)
+
+Use the paired maps to draft a future-state storyboard. Build its beats from the To-Be stages and actions; use As-Is pains, needs, and evidence to make the change and contrast clear. Do not create a separate As-Is storyboard unless the designer asks for one.
+
+Keep the storyboard compact and editable. Include:
+
+- Beat and mapped `S#` stage
+- User action and touchpoint
+- Current pain or need carried forward from the As-Is map
+- Proposed screen or artifact and product response
+- Support opportunity and intended change
+- Emotion or mindset, with `[E#]` and `[A#]` references
+
+Show the draft before writing to Miro. With confirmation, add a new storyboard frame to the same board and preserve the two journey-map frames. Save a Miro-ready markdown copy. If Miro writing is unavailable, return the copy for manual transfer and explain that limitation. Ask the designer and partners to edit the storyboard in Miro before finalization.
+
+Write the draft from [references/storyboard-template.md](references/storyboard-template.md). Stop after sharing the draft and asking the designer to edit it; do not produce final narrative prose in this pass.
+
+## Step 5: Read the edited storyboard and set the scene (second pass)
+
+When `--stage finalize-narrative` is selected, or when an edited storyboard already exists and the designer asks to finalize, read the storyboard from Miro. Treat the team's edits as the source for the narrative. If there is no storyboard frame yet, finish the storyboard pass first.
 
 Establish who, when, and what is at stake using the brief and map. Reuse a matching persona when available; otherwise use a specific synthetic person and label them as synthetic. Write a 2–3 sentence scene-setter without adding unsupported context.
 
-## Step 5: Write the As-Is story
+## Step 6: Write the As-Is story
 
 Turn the map's As-Is stages into 3–5 concrete beats. Each beat should retain the mapped user action, touchpoint, screen or artifact, mindset, emotion, and pain that matter to the story. Cite evidence near the claim; label assumptions. The map is already the team's working hypothesis, so ask only about material contradictions or gaps rather than repeating the workshop.
 
-## Step 6: Define the change
+## Step 7: Define the change
 
 Use a mapped support opportunity and an enabling capability from the brief to identify the pivot. State what the person does, what the product or service does in response, and which pain changes. Keep the pivot credible for the stated horizon; do not add an unapproved capability.
 
-## Step 7: Write the To-Be story and payoff
+## Step 8: Write the To-Be story and payoff
+
+Use the edited storyboard as the primary structure for the To-Be prose. Preserve its sequence and user actions; retain mapped pains, needs, and opportunities as context.
 
 Mirror the As-Is stages so the change is easy to compare. Use the To-Be map's actions, touchpoints, proposed screens, and support responses. Make any unresolved or new friction visible. Close on the desired outcome from the brief and show what the person can now accomplish.
 
-## Step 8: Create the prototype handoff
+## Step 9: Create the prototype handoff
 
 Select the 3–5 screens or views needed to tell the story. Preserve all map steps in the handoff, even when multiple steps share one screen. For each screen, include:
 
@@ -92,13 +114,14 @@ Select the 3–5 screens or views needed to tell the story. Preserve all map ste
 
 Do not invent routes. The prototype skill receives both this narrative and the source journey map, so retain a link to the board instead of copying the entire board into prose.
 
-## Step 9: Write and review the narrative
+## Step 10: Write and review the narrative
 
-Write from [references/template.md](references/template.md). Read it back to the designer and ask whether the story stays faithful to both frames, whether assumptions are clear, and whether the screen handoff preserves what should be prototyped. Revise the prose without silently changing the source map.
+Write final prose from [references/template.md](references/template.md). Read it back to the designer and ask whether it stays faithful to both maps and the edited storyboard, whether assumptions are clear, and whether the screen handoff preserves what should be prototyped. Revise prose without silently changing the source board.
 
 ## Quality checks
 
 - The story uses the same actor, scenario, and stages as the paired map
+- The storyboard was reviewed and edited by the team before final prose is written
 - As-Is beats trace to evidence or remain labeled assumptions
 - To-Be beats reflect mapped opportunities and capabilities from the brief
 - Touchpoints, screens, actions, pain points, and support responses survive in the prototype handoff

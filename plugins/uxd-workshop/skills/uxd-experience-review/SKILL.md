@@ -6,7 +6,7 @@ description: >-
   and draft the stakeholder demo. Use when reviewing a story-driven prototype
   or preparing to show an experience.
 audience: "UX designers"
-inputs: "A problem brief, an experience narrative, a prototype, and a paired vision map when available"
+inputs: "A problem brief, an experience narrative, a prototype, a paired vision map when available, and optional product principles"
 outputs: "A review scorecard, improvement list, and presentation plan"
 ---
 
@@ -45,7 +45,7 @@ Read the brief, narrative, paired journey map when this is a vision, and the pro
 
 When a server is already running, or the project documents how to start one, use that. If the prototype gates the experience behind a flag, scenario, or query parameter, enable it the way that project does. Do not assume a package script, port, or flag file.
 
-## Step 2: Scorecard
+## Step 2: Scorecard and internal fit
 
 Rate each dimension **Strong**, **Adequate**, or **Needs work**, with a short assessment tied to something you actually saw.
 
@@ -55,6 +55,15 @@ Rate each dimension **Strong**, **Adequate**, or **Needs work**, with a short as
 4. **Outcome** — Does the after deliver the desired outcome from the brief, and is that outcome worth showing?
 5. **Feasibility** — Could an engineer see a path to what was shown? When the narrative states a time horizon, judge against that horizon.
 6. **Visual credibility** — Does it look like the product it extends? Realistic data, not placeholder copy. Judge against the design system that project uses. When that system is PatternFly, check that components, spacing, and theming match neighboring screens. When it is not, do not apply PatternFly rules.
+
+Then make an internal-coherence check across the artifacts:
+
+- Does the prototype address the problem and desired user outcome in the brief?
+- Do the narrative and prototype follow the edited storyboard and the paired map's To-Be stages, screens, touchpoints, pains, and support opportunities?
+- Are research findings, assumptions, and unresolved gaps represented accurately?
+- When product principles or a product vision are provided, does the experience fit them? Cite the principle and observed evidence; do not invent criteria.
+
+This review judges the quality and consistency of the proposed experience. Do not claim to measure stakeholder alignment, roadmap decisions, adoption, or other downstream impact.
 
 ## Step 3: Improvements
 
@@ -86,6 +95,7 @@ After selected refinements have been applied, review the updated experience. If 
 ## Quality checks
 
 - All six dimensions are rated from the artifacts, not from the pitch
+- The report includes an explicit internal-coherence check and does not claim downstream impact
 - For a vision, the review checks whether the prototype reflects the mapped To-Be stages, screens, touchpoints, and support opportunities; explain deliberate differences
 - Improvements name a screen and a change
 - The report distinguishes recommendations from designer-selected refinements and records the handoff to `uxd-prototype-create`
