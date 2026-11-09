@@ -2,9 +2,9 @@
   {
     "name": "0xmortuex/claude-code-skills",
     "url": "https://github.com/0xmortuex/claude-code-skills",
-    "description": "A curated pack of 16 Claude Code skills for the unglamorous work that ships software - ship-it, readme-forge, security-sweep, git-rescue, devlog, and more. Each one researched first: only problems no prominent existing skill solves. No 40-skill kitchen sink.",
+    "description": "A curated pack of 46 Claude Code skills for the unglamorous work that ships software - ship-it, readme-forge, security-sweep, git-rescue, devlog, and more. Each one researched first: only problems no prominent existing skill solves.",
     "files": [
-      "BACKLOG.md"
+      "docs/backlog-archive-2026-q3.md"
     ]
   },
   {
@@ -46,7 +46,13 @@
       "data/skill-repos.part87.search-provenance.json",
       "data/upstream-commit-tree-bindings-2026-10-23.json",
       "data/discovery/2026-11-01/baseline-identities.json",
-      "data/discovery/2026-11-02/baseline-identities.json"
+      "data/discovery/2026-11-02/baseline-identities.json",
+      "data/discovery/2026-11-03/baseline-identities.json",
+      "data/discovery/2026-11-05/baseline-identities.json",
+      "data/discovery/2026-11-06/baseline-identities.json",
+      "data/discovery/2026-11-07/baseline-identities.json",
+      "data/discovery/2026-11-08/baseline-identities.json",
+      "data/discovery/2026-11-09/baseline-identities.json"
     ]
   },
   {

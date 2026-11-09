@@ -373,5 +373,21 @@
     "files": [
       ".mcp.json"
     ]
+  },
+  {
+    "name": "takumibv/design-system-sandbox",
+    "url": "https://github.com/takumibv/design-system-sandbox",
+    "description": "",
+    "files": [
+      "ads-ct-schedule/docs/design-system-ai-survey.md"
+    ]
+  },
+  {
+    "name": "yichen1yu/Cross-organization-sharing",
+    "url": "https://github.com/yichen1yu/Cross-organization-sharing",
+    "description": "Cross-org sharing flows",
+    "files": [
+      ".cursor/mcp.json"
+    ]
   }
 ]
