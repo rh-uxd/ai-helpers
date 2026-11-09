@@ -181,7 +181,7 @@ function prioritizedFindings(result) {
     recommendation: null,
     review: f.review_status,
     evidence_ids: f.evidence_ids,
-    rank: (UNIFIED_SEVERITY[f.severity] ?? 4) * 4 + (REVIEW_RANK[f.review_status] ?? 3),
+    rank: (UNIFIED_SEVERITY[f.suggested_severity] ?? 4) * 4 + (REVIEW_RANK[f.review_status] ?? 3),
   }));
   return [...consistency, ...heuristics].sort((a, b) => a.rank - b.rank || a.id.localeCompare(b.id))
     .map(({ rank, ...finding }) => finding);
@@ -195,7 +195,7 @@ function uncertainty(docs, result, coverageView) {
   for (const finding of result.heuristics?.findings.filter(f => f.review_status === 'unreviewed') || []) items.push(`Heuristic finding ${finding.id} is unreviewed.`);
   for (const finding of result.heuristics?.findings.filter(f => f.review_status === 'dismissed') || []) items.push(`Heuristic finding ${finding.id} was dismissed by review; it is retained, not deleted.`);
   for (const journey of result.journeys.filter(j => j.verdict === 'NOT_RUN')) items.push(`Walkthrough ${journey.task_id}/${journey.persona_id} is NOT_RUN.`);
-  for (const journey of result.journeys.filter(j => ['blocked', 'incomplete', 'failed'].includes(j.execution_status))) items.push(`Walkthrough ${journey.task_id}/${journey.persona_id} ended ${j.execution_status}: ${journey.stop_reason}`);
+  for (const journey of result.journeys.filter(j => ['blocked', 'incomplete', 'failed'].includes(j.execution_status))) items.push(`Walkthrough ${journey.task_id}/${journey.persona_id} ended ${journey.execution_status}: ${journey.stop_reason}`);
   for (const step of coverageView.planned_steps?.filter(s => s.status === 'not-run') || []) items.push(`Planned step ${step.step_id} (${step.check}) did not run.`);
   for (const step of coverageView.planned_steps?.filter(s => s.status === 'failed') || []) items.push(`Planned step ${step.step_id} (${step.check}) failed.`);
   if (result.consistency.status === 'degraded') items.push('Source consistency ran degraded: partial coverage does not establish compliance.');
