@@ -46,6 +46,8 @@ function assertSupportedUrl(rawUrl) {
 }
 
 async function main() {
+  // This opens a real browser and saves baseline images and page details.
+  // The host needs browser permission first; taking a screenshot is not a pass.
   const artifactsDir = path.resolve(artifactsArg);
   const url = assertSupportedUrl(prototypeUrl);
   const screenshotRelative = 'screenshots/journey-baseline.png';
@@ -64,6 +66,8 @@ async function main() {
     await page.waitForLoadState('networkidle', { timeout: 5000 }).catch(() => null);
 
     const readState = () => page.evaluate(() => {
+      // Keep the heading/control lists short and limited to visible elements.
+      // Saved text and images help later checks; they do not prove full coverage.
       const clean = value => String(value || '').replace(/\s+/g, ' ').trim();
       const visible = element => {
         const style = window.getComputedStyle(element);

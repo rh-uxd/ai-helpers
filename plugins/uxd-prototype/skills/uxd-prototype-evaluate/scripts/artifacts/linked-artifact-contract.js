@@ -1,5 +1,7 @@
 'use strict';
 
+// After checking the JSON, check the files it points to. A path is not evidence
+// unless the file stays inside this run and matches its saved hash.
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
@@ -103,6 +105,8 @@ function verifyLinkedArtifacts(root, docs) {
   }
 
   const state = docs['state.json'];
+  // Follow the files named by each receipt, not everything in the directory.
+  // Full runs can keep both workflow receipts and Quick check receipts.
   const workflow = state?.workflow;
   if (workflow) {
     const receiptRef = { path: workflow.receipt_path, sha256: workflow.receipt_sha256 };
@@ -145,6 +149,8 @@ function verifyLinkedArtifacts(root, docs) {
   }
 
   const source = docs['brief.json']?.intent?.source_input;
+  // Check saved source text and images too. A matching hash tells us the file
+  // has not changed; it does not prove the producer's observations were right.
   if (source) verify({ path: source.snapshot_path, sha256: source.sha256 }, 'brief.json/intent/source_input/snapshot');
   for (const [index, capture] of (docs['evidence.json']?.captures || []).entries()) {
     if (capture.raw_image) verify(capture.raw_image, `evidence.json/captures/${index}/raw_image`);

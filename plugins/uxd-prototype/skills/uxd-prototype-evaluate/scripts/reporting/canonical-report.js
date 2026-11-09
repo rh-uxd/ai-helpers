@@ -31,6 +31,8 @@ function render(directory) {
     coverageLines.push(`Reviewed envelope: ${goal.allowed_checks.join(', ')} · ${goal.limits.max_model_invocations === null ? 'no invocation cap' : `max ${goal.limits.max_model_invocations} invocations`} · ${goal.limits.max_cost_usd === null ? 'no cost cap' : `max $${goal.limits.max_cost_usd}`}`);
   } else coverageLines.push(goal.note);
   const sections = [
+    // Use the same summary as chat. The detailed tables show saved records;
+    // they do not make their own decisions about what passed.
     ['Goal and strategy', list(coverageLines)],
     ['Coverage: planned versus executed', synthesis.coverage.planned_steps
       ? table(['Step', 'Check', 'Status', 'Reason'], synthesis.coverage.planned_steps.map(step => [step.step_id, step.check, step.status, step.reason]))
@@ -62,6 +64,8 @@ function render(directory) {
     ['Phases', table(['Phase', 'Status', 'Model', 'Cost USD'], state.phases.map(p => [p.name, p.status, p.model || 'Local', p.llm_cost_usd === null ? 'Unknown' : p.llm_cost_usd]))],
   ];
   const images = new Map();
+  // Include each image path once and keep the report's total image size bounded.
+  // Embed only checked image files, not scripts, remote images or active SVGs.
   for (const capture of docs['evidence.json'].captures) if (capture.raw_image) images.set(capture.raw_image.path, capture.raw_image);
   for (const item of docs['evidence.json'].items) if (item.image) images.set(item.image.path, item.image);
   let imageBytes = 0;

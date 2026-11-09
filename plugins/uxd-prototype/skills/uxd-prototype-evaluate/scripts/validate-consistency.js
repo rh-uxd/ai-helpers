@@ -3,7 +3,7 @@
  * validate-consistency.js
  *
  * Validates consistency-report.json schema, summary math, and violation
- * field structure for the eval-consistency subskill.
+ * field structure for retained report consumers; it does not run the checker.
  *
  * Usage:
  *   node validate-consistency.js <artifacts-dir> [--json]
@@ -56,6 +56,8 @@ if (!report) {
   const hasSource = report.source === 'uxd-consistency-check' || isLegacy;
   const hasModernFields = ['schema_version', 'coverage', 'guideline_context', 'internal_consistency', 'guideline_consistency', 'guideline_manifest', 'evaluator_publication'].some(key => Object.hasOwn(report, key));
   if (hasModernFields || report.source_analysis) {
+    // Modern source reports must satisfy the frozen provenance contract even
+    // when presented through this older compatibility validator.
     try {
       const publicationRoot = require('path').basename(abs) === 'checks' ? resolve(abs, '..') : abs;
       if (hasModernFields) require('./consistency/consistency-contract').validatePublication(report, publicationRoot);

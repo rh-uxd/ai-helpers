@@ -38,6 +38,8 @@ function buildOverrides(extractState, componentMap = null) {
   const uiEnhancements = (extractState.feature_context?.ui_enhancements || '').toLowerCase();
 
   for (const ac of extractState.ac_list || []) {
+    // If there is a UI to check, do not dismiss the AC just because it mentions
+    // the backend. Changing its tier still does not mean the AC has passed.
     const criterionId = ac.criterion_id || ac.id;
     const text = (ac.text || ac.criterion_text || '').toLowerCase();
     const hasBackendKeyword = BACKEND_KEYWORDS.some(kw => text.includes(kw));

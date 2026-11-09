@@ -2,8 +2,9 @@
 /**
  * validate-report-rendering.js
  *
- * Unit test: given pipeline artifacts, runs render-report.js and asserts
- * the output HTML contains all expected sections and data.
+ * Legacy rendering regression: runs render-report.js and compares the resulting
+ * HTML with historical sidecar fields. This writes report outputs and may
+ * normalize legacy journey data; it is not a read-only canonical validator.
  *
  * Catches: data that exists in JSON artifacts but fails to render in the HTML
  * due to field name mismatches, missing template placeholders, or broken lookups.
@@ -37,6 +38,8 @@ function check(name, condition, detail) {
 }
 
 // ─── Step 1: Render the report ───────────────────────────────────────────────
+// This implementation always renders; it does not parse a --skip-render flag.
+// Keep it outside modern canonical validation and import-only callers.
 const renderScript = join(__dirname, '..', 'scripts', 'render-report.js');
 try {
   execSync(`node "${renderScript}" "${absArtifacts}" --note="test-render"`, {

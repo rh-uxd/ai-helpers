@@ -25,6 +25,8 @@ function legacyExitReason(reason) {
 }
 
 function buildContext(documents) {
+  // Look up each ID once and translate it to the fields older tools expect.
+  // Keeping that translation here saves every caller from doing it again.
   const brief = documents['brief.json'];
   const evaluation = documents['evaluation.json'];
   const evidence = documents['evidence.json'];
@@ -71,6 +73,8 @@ function buildContext(documents) {
 }
 
 function toLegacyCsv(documents) {
+  // Old CSV shows NOT_RUN as a blank cell, so it loses some meaning. Keep the
+  // JSON verdicts as the source of truth, especially when deciding to publish.
   const context = buildContext(documents);
   const { brief, evaluation, actionById, evidencePaths } = context;
   const lines = [
@@ -344,6 +348,8 @@ function toLegacyJourney(documents) {
 }
 
 function toLegacySuggestions(documents) {
+  // Keep suggested fixes separate from fixes already made. Converting these
+  // records does not apply a fix or give anyone permission to do so.
   const context = buildContext(documents);
   return context.actions.actions
     .filter(action => action.kind === 'fix' && !['applied', 'validated'].includes(action.status))
@@ -467,6 +473,8 @@ function toLegacyEvalState(documents) {
 }
 
 function materializeTargets(documents, targets) {
+  // Return only the formats the caller asked for. The CLI writes them to disk;
+  // the old report reader can use the same results without writing files.
   const outputs = new Map();
   for (const target of targets) {
     if (target === 'csv') outputs.set('evaluation-report.csv', toLegacyCsv(documents));

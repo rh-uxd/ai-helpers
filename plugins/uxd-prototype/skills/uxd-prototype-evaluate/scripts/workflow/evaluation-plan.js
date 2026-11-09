@@ -1,5 +1,8 @@
 'use strict';
 
+// Match the reviewed plan to what actually ran, including work from parent
+// runs. This checks receipts and adds up usage; it does not call providers or
+// stop a host from spending money before those calls happen.
 const fs = require('fs');
 const path = require('path');
 const Ajv2020 = require('ajv/dist/2020');
@@ -26,6 +29,8 @@ function priorUsage(parentState) {
 }
 let validator;
 function validatePlan(plan, packetHash) {
+  // Steps may depend only on earlier steps. That keeps this a simple ordered
+  // list instead of building a general-purpose workflow engine.
   if (!validator) {
     const ajv = new Ajv2020({ allErrors: true, strict: true }); addFormats(ajv);
     ajv.addSchema(C.read(path.resolve(__dirname, '../../schemas/v1/shared.schema.json')));
@@ -49,6 +54,8 @@ function validatePlan(plan, packetHash) {
 }
 
 function preflight(options, parent, approval) {
+  // Continuing keeps the same inputs; verification checks a changed build;
+  // adapting changes the plan. None should quietly approve extra work.
   if (options['continue-from']) {
     const selected = parent['state.json'].quick_checks?.selected || [];
     if (options.checks !== undefined) assert(same(options.checks.split(','), selected), 'Continuation cannot change check selection; use --adapt-from with a reviewed plan change');
@@ -110,6 +117,8 @@ function preflight(options, parent, approval) {
 }
 
 function execution(plan, docs) {
+  // Match each planned check to its recorded calls and evidence. A check can
+  // finish without proving that every AC or task succeeded.
   const phases = docs['state.json'].phases;
   return plan.steps.map(step => {
     const indexes = phases.flatMap((p, i) => {
@@ -130,6 +139,8 @@ function execution(plan, docs) {
 }
 
 function stateFor(prepared, docs, inherited) {
+  // Add this run's new calls to the parent's usage once, not once per child.
+  // Known spend can already exceed a cap even if some costs are still missing.
   const own = usage(docs['state.json'].phases.slice(inherited));
   const total = combine(prepared.prior_usage, own); const limits = prepared.plan.limits;
   const exceeded = limits.max_model_invocations !== null && total.model_invocations > limits.max_model_invocations || overCostCap(total.known_cost_usd, limits.max_cost_usd);

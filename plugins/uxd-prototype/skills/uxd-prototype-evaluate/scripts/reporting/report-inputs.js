@@ -1,5 +1,7 @@
 'use strict';
 
+// Let the old renderer read checked JSON as if it were using the old files.
+// Keep those conversions in memory instead of rewriting the saved results.
 const fs = require('fs');
 const path = require('path');
 
@@ -19,6 +21,8 @@ function loadReportInputs(artifactsDir) {
   const root = path.resolve(artifactsDir);
   const present = CANONICAL_FILES.filter(filename => fs.existsSync(path.join(root, filename)));
   if (!present.length) return { mode: 'legacy', documents: null, virtualFiles: new Map(), imagePaths: [] };
+  // If any of the five JSON files exists, require a complete valid set.
+  // Do not hide missing files by falling back to old CSV results.
   if (present.length !== CANONICAL_FILES.length) {
     throw reportError('partial_canonical_input', `Canonical report input is incomplete: found ${present.length}/${CANONICAL_FILES.length} files`);
   }
@@ -31,6 +35,8 @@ function loadReportInputs(artifactsDir) {
     JSON.parse(fs.readFileSync(path.join(root, filename), 'utf8')),
   ]));
   if (documents['evaluation.json'].heuristics) {
+    // The old template cannot show specialist findings, so stop instead of
+    // dropping them. run-report.js uses the newer HTML renderer for these runs.
     throw reportError('heuristic_html_not_supported', 'Legacy HTML projection does not render typed specialist findings. Use the Quick Checks summary/integrity receipt instead.');
   }
   const mapped = materializeTargets(documents, REPORT_TARGETS);

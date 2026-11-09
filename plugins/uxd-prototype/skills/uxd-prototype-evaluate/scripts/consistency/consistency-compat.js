@@ -10,6 +10,8 @@ const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const write = (file, value) => fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
 
 function selection(packet, options, workspace) {
+  // Keep the rules the user selected. Stop if the CLI and saved inputs disagree
+  // rather than quietly checking against a different set of rules.
   const supplied = packet.consistency || {};
   const fields = { design_system: 'design-system', design_system_version: 'design-system-version', guidelines: 'guidelines', guideline_manifest: 'guideline-manifest' };
   for (const key of Object.keys(supplied)) if (!(key in fields)) throw new Error(`Unknown consistency selection: ${key}`);
@@ -39,6 +41,9 @@ function selection(packet, options, workspace) {
 }
 
 function analyze({ workspace, stage, analyzer, baseRef, selected, command }) {
+  // Unlike the report validators, this function runs the optional checker.
+  // Use a temporary folder, check the result, then copy the report and its
+  // saved rule sources into the new evaluation run.
   const root = path.join(workspace, '.artifacts');
   const existed = fs.existsSync(root);
   if (existed && (fs.lstatSync(root).isSymbolicLink() || !fs.statSync(root).isDirectory())) throw new Error('Workspace .artifacts must be a real directory');
@@ -73,6 +78,7 @@ function analyze({ workspace, stage, analyzer, baseRef, selected, command }) {
   }
 }
 function status(report, findings = report.source_mode?.violations || []) {
+  // Finding nothing is not a pass if some rules or comparisons were skipped.
   if (findings.some(f => f.severity === 'error')) return 'failed';
   if (report.degraded || !report.source_mode?.ran || !report.coverage?.evaluated_rules.length || report.coverage.unevaluated_rules.length || report.internal_consistency?.status !== 'evaluated') return 'degraded';
   if (findings.length || report.internal_consistency.findings.length) return 'flagged';

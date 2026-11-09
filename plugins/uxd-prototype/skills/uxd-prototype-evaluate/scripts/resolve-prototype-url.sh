@@ -100,6 +100,8 @@ find_open_port() {
 # ── Start local server ────────────────────────────────────────────────────────
 
 start_server() {
+  # This fallback starts a persistent server, and npx may fetch sirv if absent.
+  # The caller owns setup/network approval and cleanup of the returned PID.
   local serve_dir="$1"
   local spa_flag="$2"
   local port="$3"

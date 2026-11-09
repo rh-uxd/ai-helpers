@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 
+// Build the old hosted-report index for publish-report.sh. Its CSV and journey
+// numbers help people browse reports; they are not current acceptance checks.
 const fs = require('fs');
 const path = require('path');
 
@@ -45,6 +47,8 @@ function main() {
   const rows = [];
 
   for (const key of reportDirs) {
+    // Make one row per hosted prototype folder and add up the display stats.
+    // This does not find or validate the evaluator's saved JSON runs.
     const dir = path.join(absEvalsDir, key);
     totalEvals++;
 

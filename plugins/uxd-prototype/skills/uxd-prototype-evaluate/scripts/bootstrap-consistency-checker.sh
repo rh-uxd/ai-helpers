@@ -6,6 +6,8 @@
 # Repo URL is supplied explicitly through CONSISTENCY_CHECKER_REPO.
 #
 # Writes into the consumer project (UXD_PROJECT_ROOT), never into the skill install.
+# Optional legacy network setup, not the modern Quick companion lookup.
+# Clone/checkout changes local context; invoke only with separate setup approval.
 
 set -euo pipefail
 

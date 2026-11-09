@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 'use strict';
 
-/** Assemble the deterministic Phase A artifacts into the canonical five files. */
+// Build the five JSON files used by Quick and split evaluation. Running this
+// file directly uses the older Phase A conversion/cache path, not Full.
 
 const crypto = require('crypto');
 const fs = require('fs');
@@ -198,6 +199,8 @@ function buildDocuments(artifactsDir, cacheDecision, inputs = null) {
   if ((!inputs && !rows.length) || rows.length !== extract.ac_list.length) throw new Error('Classified AC count does not match extract-state.json');
 
   const createdAt = timestamp(prototypeEvidence.captured_at || extract.extracted_at);
+  // Turn old AC IDs and tiers into the IDs used by the five JSON files. The
+  // runners replace old defaults with the inputs the user actually reviewed.
   const acIdBySource = new Map();
   const acceptanceCriteria = rows.map(row => {
     const id = identifier(row.criterion_id, 'ac');
@@ -255,6 +258,8 @@ function buildDocuments(artifactsDir, cacheDecision, inputs = null) {
     },
   });
   const skillRoot = path.resolve(__dirname, '../..');
+  // Hash the schemas, rules and available companion files so cached results
+  // do not get reused after the code or rules that made them have changed.
   const consistencyRoot = path.resolve(
     skillRoot, '..', 'uxd-consistency-check'
   );
@@ -305,6 +310,8 @@ function buildDocuments(artifactsDir, cacheDecision, inputs = null) {
     : buildEvidence(prototypeEvidence, envelope);
 
   const actions = [];
+  // A blank classification result becomes NOT_RUN. Writing these files does
+  // not check the prototype in a browser; the runners add that evidence later.
   const acResults = rows.map(row => {
     const actionIds = [];
     if (row.human_action) {
@@ -384,6 +391,8 @@ function loadDocuments(directory) {
 }
 
 function compareLegacyParity(artifactsDir, documents) {
+  // For the old CLI, convert back and compare key fields with the original
+  // files. This checks the conversion; it does not rerun the evaluation.
   const projected = materializeTargets(documents, ['csv', 'consistency', 'evidence']);
   const originalRows = parseAcceptanceRows(path.join(artifactsDir, 'evaluation-report.csv'));
   const projectedTemp = path.join(artifactsDir, `.phase-a-parity-${process.pid}.csv`);
@@ -424,10 +433,8 @@ function install(stage, artifactsDir) {
 }
 
 function installLegacyActionArtifacts(artifactsDir, documents) {
-  // eval-fix consumes the legacy suggestions during the same pipeline run.
-  // Materialize them from canonical actions after every cache path so the
-  // static phase graph has a deterministic producer rather than relying on a
-  // stale artifact from a prior run.
+  // Refresh the old suggestions and fix log whether or not the cache was used.
+  // These are file conversions, not edits to the prototype.
   const projected = materializeTargets(documents, ['actions']);
   for (const [filename, value] of projected) {
     const destination = path.join(artifactsDir, filename);
