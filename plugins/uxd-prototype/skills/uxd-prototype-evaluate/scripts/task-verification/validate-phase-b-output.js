@@ -14,7 +14,7 @@
  * If any check fails, it FIXES the data in-place (reads persona-results.json
  * to reconstruct the correct format) and prints a warning.
  * 
- * Usage: node validate-phase-b-output.js <artifacts-dir>
+ * Usage: node scripts/task-verification/validate-phase-b-output.js <artifacts-dir>
  * Repair/skip paths exit 0; usage and uncaught read/parse failures can fail.
  */
 
@@ -23,7 +23,7 @@ const { join } = require('path');
 
 const artifactsDir = process.argv[2];
 if (!artifactsDir) {
-  console.error('Usage: node validate-phase-b-output.js <artifacts-dir>');
+  console.error('Usage: node scripts/task-verification/validate-phase-b-output.js <artifacts-dir>');
   process.exit(1);
 }
 

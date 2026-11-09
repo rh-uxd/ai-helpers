@@ -7,13 +7,13 @@ const fs = require('fs');
 const path = require('path');
 
 const SCRIPT_DIR = __dirname;
-const SKILL_ROOT = path.resolve(SCRIPT_DIR, '..');
+const SKILL_ROOT = path.resolve(SCRIPT_DIR, '../..');
 const TEMPLATE_PATH = path.join(SKILL_ROOT, 'templates', 'report-index.html');
 
 const evalsDir = process.argv[2];
 if (!evalsDir) {
-  console.error('Usage: node generate-dashboard.js <evals-directory>');
-  console.error('  e.g. node generate-dashboard.js /path/to/pages-repo/public/evals');
+  console.error('Usage: node scripts/reporting/generate-dashboard.js <evals-directory>');
+  console.error('  e.g. node scripts/reporting/generate-dashboard.js /path/to/pages-repo/public/evals');
   process.exit(1);
 }
 
@@ -27,7 +27,7 @@ function escapeHtml(str) {
   return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-const { parseCSVLine } = require('./shared/csv-utils');
+const { parseCSVLine } = require('../shared/csv-utils');
 
 function main() {
   if (!fs.existsSync(absEvalsDir)) {

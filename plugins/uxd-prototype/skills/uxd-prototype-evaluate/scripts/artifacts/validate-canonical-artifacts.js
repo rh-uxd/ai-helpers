@@ -5,7 +5,7 @@
  * Validate the five canonical UXD evaluation artifacts.
  *
  * Usage:
- *   node validate-canonical-artifacts.js <eval-dir> [--json]
+ *   node scripts/artifacts/validate-canonical-artifacts.js <eval-dir> [--json]
  *
  * This validator is intentionally model-free. JSON Schema validates each
  * document while the cross-artifact checks validate references, summaries,
@@ -41,7 +41,7 @@ const PROHIBITED_KEYS = new Set([
   'transcript',
   'think_aloud',
 ]);
-const SCHEMAS_DIR = path.resolve(__dirname, '..', 'schemas', 'v1');
+const SCHEMAS_DIR = path.resolve(__dirname, '../..', 'schemas', 'v1');
 
 function issue(errors, artifact, pathSuffix, code, message) {
   errors.push({
@@ -428,9 +428,9 @@ function validateDocuments(documents) {
   validateSummaries(documents, errors);
   validateEvidenceBounds(documents, errors);
   validateCache(documents, errors);
-  try { require('./consistency/consistency-contract').validateCanonical(documents['evaluation.json'].consistency); }
+  try { require('../consistency/consistency-contract').validateCanonical(documents['evaluation.json'].consistency); }
   catch (error) { issue(errors, 'evaluation.json', '/consistency/source_analysis', 'source_contract', error.message); }
-  errors.push(...require('./artifacts/split-contract').validateSplit(documents));
+  errors.push(...require('./split-contract').validateSplit(documents));
   return errors;
 }
 
@@ -441,7 +441,7 @@ function validateDirectoryCore(artifactsDir) {
   // loadRun. The public directory wrapper adds generic linked-file integrity.
   const errors = [];
   let root;
-  try { root = require('./artifacts/linked-artifact-contract').canonicalRoot(artifactsDir); }
+  try { root = require('./linked-artifact-contract').canonicalRoot(artifactsDir); }
   catch (error) {
     issue(errors, '', '', 'unsafe_run_directory', error.message);
     return { root: null, documents: null, errors };
@@ -450,11 +450,11 @@ function validateDirectoryCore(artifactsDir) {
   if (errors.length > 0) return { root, documents: null, errors };
   const validationErrors = validateDocuments(documents);
   if (!validationErrors.length) {
-    try { require('./consistency/consistency-contract').validateCanonical(documents['evaluation.json'].consistency, root); }
+    try { require('../consistency/consistency-contract').validateCanonical(documents['evaluation.json'].consistency, root); }
     catch (error) { issue(validationErrors, 'evaluation.json', '/consistency/source_analysis', 'source_publication', error.message); }
-    try { require('./task-verification/walkthrough-contract').validatePublished(documents, root); }
+    try { require('../task-verification/walkthrough-contract').validatePublished(documents, root); }
     catch (error) { issue(validationErrors, 'state.json', '/workflow', 'walkthrough_publication', error.message); }
-    try { require('./workflow/evaluation-plan').validatePublished(documents, root); }
+    try { require('../workflow/evaluation-plan').validatePublished(documents, root); }
     catch (error) { issue(validationErrors, 'state.json', '/planning', 'evaluation_plan', error.message); }
   }
   return { root, documents, errors: validationErrors };
@@ -464,7 +464,7 @@ function validateDirectory(artifactsDir, options = {}) {
   const result = validateDirectoryCore(artifactsDir);
   const schemaInvalid = result.errors.some(error => error.code.startsWith('schema_'));
   if (!options.skipLinkedArtifacts && result.documents && !schemaInvalid) {
-    result.errors.push(...require('./artifacts/linked-artifact-contract').verifyLinkedArtifacts(result.root, result.documents));
+    result.errors.push(...require('./linked-artifact-contract').verifyLinkedArtifacts(result.root, result.documents));
   }
   return { valid: result.errors.length === 0, errors: result.errors };
 }
@@ -474,7 +474,7 @@ function main() {
   const jsonMode = args.includes('--json');
   const artifactsDir = args.find(arg => !arg.startsWith('--'));
   if (!artifactsDir) {
-    const message = 'Usage: node validate-canonical-artifacts.js <eval-dir> [--json]';
+    const message = 'Usage: node scripts/artifacts/validate-canonical-artifacts.js <eval-dir> [--json]';
     if (jsonMode) process.stdout.write(`${JSON.stringify({ valid: false, errors: [{ path: '', code: 'usage', message }] })}\n`);
     else process.stderr.write(`${message}\n`);
     process.exitCode = 2;

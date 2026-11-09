@@ -20,7 +20,7 @@ Each evaluation run uses these five authoritative JSON files in its `eval/` dire
 | `actions.json` | Proposed/applied fixes and explicit human handoffs. It cannot trigger publication. |
 | `state.json` | Lifecycle, phase measurements, and compound cache identity. |
 
-Schemas are in `schemas/v1/`. Run `node scripts/validate-canonical-artifacts.js <eval-dir> --json` before a canonical artifact is consumed or cached.
+Schemas are in `schemas/v1/`. Run `node scripts/artifacts/validate-canonical-artifacts.js <eval-dir> --json` before a canonical artifact is consumed or cached.
 
 ## CSV retirement decision
 
@@ -40,7 +40,7 @@ refuses a destination named `eval`, and fails on existing files unless
 `--replace` is used with an adapter-only directory.
 
 ```bash
-node scripts/materialize-legacy-eval-artifacts.js \
+node scripts/artifacts/materialize-legacy-eval-artifacts.js \
   --canonical-dir <canonical-eval-directory> \
   --output-dir <separate-compatibility-directory> \
   --targets csv,summary,consistency,extract,evidence,journey,actions,state \
@@ -77,7 +77,7 @@ separate, explicit host actions.
 
 For historical artifact conversion, `assemble-phase-a-canonical.js` remains
 available; its legacy producers/readers have not been removed. The direct
-`render-report.js` projection is also legacy-only. Do not use those paths to
+`scripts/reporting/render-report.js` projection is also legacy-only. Do not use those paths to
 fill missing results in a new split run.
 
 The split route bypasses cache restore/store. Identity and finding discovery

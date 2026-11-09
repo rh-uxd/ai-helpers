@@ -149,7 +149,7 @@ publish_pages() {
   # Regenerate the data.json for the React dashboard
   # Always use local generate-dashboard.js — remote generate-data.cjs has a
   # variable shadowing bug (html module vs html string variable on line 89).
-  node "$(dirname "$0")/generate-dashboard.js" "$REPORTS_PATH"
+  node "$(dirname "$0")/reporting/generate-dashboard.js" "$REPORTS_PATH"
 
   # Copy leaderboard if it exists (sibling to index.html for navigation)
   local LEADERBOARD="${EVAL_GLOBAL_DIR:+$EVAL_GLOBAL_DIR/pain-leaderboard.html}"
@@ -212,7 +212,7 @@ publish_branch() {
   inject_prototype_bar "evals/$PROTO_KEY/index.html"
 
   # Regenerate index
-  node "$(dirname "$0")/generate-dashboard.js" "$BRANCH_DIR/evals"
+  node "$(dirname "$0")/reporting/generate-dashboard.js" "$BRANCH_DIR/evals"
 
   git add -A
   if git diff --cached --quiet; then

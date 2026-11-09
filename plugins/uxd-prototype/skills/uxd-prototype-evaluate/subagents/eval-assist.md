@@ -120,7 +120,7 @@ without requiring Quick Checks.
 
 ## Run history and avoiding repeated work
 
-Use `find-evaluation-runs.js` only under the supplied consumer artifact root. Read
+Use `scripts/artifacts/find-evaluation-runs.js` only under the supplied consumer artifact root. Read
 validated `brief.json`, `state.json`, `evaluation.json`, `evidence.json` and
 `actions.json` plus linked receipts, not chat memory or a CSV ledger, to establish
 what ran, when and against which inputs. Show prior run IDs, check/pair status,

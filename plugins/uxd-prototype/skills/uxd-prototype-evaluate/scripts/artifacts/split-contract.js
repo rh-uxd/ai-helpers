@@ -63,7 +63,7 @@ function loadRun(root) {
   // Check the JSON records and their linked files. Both must agree before a
   // caller can trust this run or use its hash to record a review decision.
   root = canonicalRoot(root);
-  const check = require('../validate-canonical-artifacts').validateDirectoryCore(root);
+  const check = require('./validate-canonical-artifacts').validateDirectoryCore(root);
   if (check.errors.length) throw new Error(`Invalid canonical run: ${JSON.stringify(check.errors)}`);
   const docs = check.documents;
   const linkedErrors = verifyLinkedArtifacts(root, docs);

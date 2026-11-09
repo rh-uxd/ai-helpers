@@ -7,10 +7,10 @@ const fs = require('fs');
 const path = require('path');
 const { parseArgs } = require('util');
 const { spawnSync } = require('child_process');
-const { classifyCriterion } = require('./run-classification');
+const { classifyCriterion } = require('./classification/run-classification');
 const { buildOverrides } = require('./classification/classify-ac-tier');
 const { buildDocuments } = require('./artifacts/assemble-phase-a-canonical');
-const { validateDirectory } = require('./validate-canonical-artifacts');
+const { validateDirectory } = require('./artifacts/validate-canonical-artifacts');
 const { importJudgments } = require('./inspection-contracts/inspection-bundle');
 const compatibility = require('./consistency/consistency-compat');
 const { loadRun } = require('./artifacts/split-contract');
@@ -142,7 +142,7 @@ function main() {
         human_action: result.humanAction,
       }));
       phases.push(phase('classify', 'completed', checkStart, Date.now() - started));
-      context.checks.push({ check: 'classify', producer: 'run-classification.js/classifyCriterion', output: 'checks/classify.json', input: 'inputs/packet.json', normalization: 'All AC verdicts remain NOT_RUN, including backend-only exclusions.' });
+      context.checks.push({ check: 'classify', producer: 'classification/run-classification.js/classifyCriterion', output: 'checks/classify.json', input: 'inputs/packet.json', normalization: 'All AC verdicts remain NOT_RUN, including backend-only exclusions.' });
     } else {
       rows = extract.ac_list.map(ac => ({ criterion_id: ac.criterion_id, source: source.kind === 'jira' ? 'jira' : 'user', tier: ac.tier || 'T1', criterion_text: ac.text, verdict: '', rationale: 'Not verified; classification was not selected.' }));
     }
@@ -153,7 +153,7 @@ function main() {
       const analyzer = path.resolve(__dirname, '../../uxd-consistency-check/scripts/analyze.py');
       const analyzed = compatibility.analyze({ workspace, stage, analyzer, baseRef, selected: consistencySelection, command });
       context.consistency_selection = analyzed.selected;
-      command(process.execPath, [path.join(__dirname, 'validate-consistency.js'), path.join(stage, 'checks'), '--json'], stage);
+      command(process.execPath, [path.join(__dirname, 'consistency/validate-consistency.js'), path.join(stage, 'checks'), '--json'], stage);
       assertWorkspace();
       consistency = readJson(path.join(stage, 'checks/consistency-report.json'));
       phases.push(phase('consistency-source', 'completed', checkStart, Date.now() - started));
@@ -229,7 +229,7 @@ function main() {
     // Hash the inputs and code, not just the prototype URL. The same URL could
     // serve different content next time.
     state.identity.build_key = hash(JSON.stringify({ revision: prototype.revision, base_ref: baseRef, changed_files: changedFiles, ...(judgments.evidenceHash ? { evidence: judgments.evidenceHash } : {}) }));
-    state.identity.evaluator_key = hash(JSON.stringify({ assembler: state.identity.evaluator_key, runner: hash(fs.readFileSync(__filename)), judgments: hash(fs.readFileSync(path.join(__dirname, 'inspection-contracts/inspection-bundle.js'))), judgment_producers: judgments.receipts.map(receipt => receipt.producer), classifier: hash(fs.readFileSync(path.join(__dirname, 'run-classification.js'))), overrides: hash(fs.readFileSync(path.join(__dirname, 'classification/classify-ac-tier.js'))), ...(workspace ? { analyzer: hash(fs.readFileSync(path.resolve(__dirname, '../../uxd-consistency-check/scripts/analyze.py'))) } : {}) }));
+    state.identity.evaluator_key = hash(JSON.stringify({ assembler: state.identity.evaluator_key, runner: hash(fs.readFileSync(__filename)), judgments: hash(fs.readFileSync(path.join(__dirname, 'inspection-contracts/inspection-bundle.js'))), judgment_producers: judgments.receipts.map(receipt => receipt.producer), classifier: hash(fs.readFileSync(path.join(__dirname, 'classification/run-classification.js'))), overrides: hash(fs.readFileSync(path.join(__dirname, 'classification/classify-ac-tier.js'))), ...(workspace ? { analyzer: hash(fs.readFileSync(path.resolve(__dirname, '../../uxd-consistency-check/scripts/analyze.py'))) } : {}) }));
     state.identity.compound_key = hash(JSON.stringify({ intent_key: state.identity.intent_key, build_key: state.identity.build_key, evaluator_key: state.identity.evaluator_key }));
     state.cache.entry_key = state.identity.compound_key;
     const runId = `eval-quick-${crypto.randomUUID()}`;

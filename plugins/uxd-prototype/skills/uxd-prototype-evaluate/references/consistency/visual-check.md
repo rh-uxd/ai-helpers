@@ -1,13 +1,13 @@
 # eval-consistency
 
-Runs PatternFly design consistency checks against the prototype using vendored guidelines from `.context/consistency-checker/` (cloned automatically by `bootstrap-consistency-checker.sh`).
+Runs PatternFly design consistency checks against the prototype using vendored guidelines from `.context/consistency-checker/` (cloned by `scripts/consistency/bootstrap-consistency-checker.sh` when explicitly invoked).
 
 **Before skipping — verify the checker is truly unavailable:**
 
 1. Resolve the project root: `PROJECT_ROOT="${UXD_PROJECT_ROOT:-$(node -e "console.log(require('${CLAUDE_SKILL_DIR}/scripts/shared/resolve-root').resolveProjectRoot())" 2>/dev/null || git rev-parse --show-toplevel 2>/dev/null || pwd)}"`
 2. Check: `ls ${PROJECT_ROOT}/.context/consistency-checker/guidelines/*.md 2>/dev/null | wc -l`
 3. If count > 0: the checker IS bootstrapped. Proceed to Step 1. Do NOT write a skip report.
-4. If count == 0: run `bash "${CLAUDE_SKILL_DIR}/scripts/bootstrap-consistency-checker.sh"`, then re-check.
+4. If count == 0: run `bash "${CLAUDE_SKILL_DIR}/scripts/consistency/bootstrap-consistency-checker.sh"`, then re-check.
 5. Only write `{"skipped": true, "reason": "consistency-checker not bootstrapped"}` if the re-check STILL finds zero guideline `.md` files.
 
 "Network unreachable" is NOT a valid skip reason when guideline files already exist on disk from a prior clone.

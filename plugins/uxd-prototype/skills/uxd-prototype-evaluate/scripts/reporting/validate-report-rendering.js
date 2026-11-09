@@ -10,7 +10,7 @@
  * due to field name mismatches, missing template placeholders, or broken lookups.
  *
  * Usage:
- *   node validate-report-rendering.js <artifacts-dir>
+ *   node scripts/reporting/validate-report-rendering.js <artifacts-dir>
  *
  * Exit codes:
  *   0 = all checks pass
@@ -23,7 +23,7 @@ const { execSync } = require('child_process');
 
 const artifactsDir = process.argv[2];
 if (!artifactsDir) {
-  console.error('Usage: node validate-report-rendering.js <artifacts-dir>');
+  console.error('Usage: node scripts/reporting/validate-report-rendering.js <artifacts-dir>');
   process.exit(1);
 }
 
@@ -40,11 +40,11 @@ function check(name, condition, detail) {
 // ─── Step 1: Render the report ───────────────────────────────────────────────
 // This implementation always renders; it does not parse a --skip-render flag.
 // Keep it outside modern canonical validation and import-only callers.
-const renderScript = join(__dirname, '..', 'scripts', 'render-report.js');
+const renderScript = join(__dirname, 'render-report.js');
 try {
   execSync(`node "${renderScript}" "${absArtifacts}" --note="test-render"`, {
     stdio: ['pipe', 'pipe', 'pipe'],
-    cwd: join(__dirname, '..', '..', '..', '..')
+    cwd: join(__dirname, '..', '..', '..', '..', '..')
   });
 } catch (e) {
   check('Report Renders Without Error', false, `render-report.js crashed: ${e.stderr ? e.stderr.toString().slice(0, 200) : e.message}`);

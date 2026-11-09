@@ -5,7 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { parseArgs } = require('util');
-const C = require('./artifacts/split-contract');
+const C = require('./split-contract');
 
 function discover(root, filters = {}) {
   // List saved runs without picking the newest or running anything again.
@@ -72,7 +72,7 @@ function discover(root, filters = {}) {
 if (require.main === module) {
   try {
     const { values } = parseArgs({ options: Object.fromEntries(['root', 'key', 'source', 'revision'].map(k => [k, { type: 'string' }])) });
-    if (!values.root) throw new Error('Usage: find-evaluation-runs.js --root <artifact-root> [--key KEY --source SPEC --revision build]');
+    if (!values.root) throw new Error('Usage: scripts/artifacts/find-evaluation-runs.js --root <artifact-root> [--key KEY --source SPEC --revision build]');
     process.stdout.write(`${JSON.stringify(discover(values.root, values))}\n`);
   } catch (error) { process.stderr.write(`${error.message}\n`); process.exitCode = 1; }
 }

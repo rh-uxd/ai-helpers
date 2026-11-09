@@ -8,7 +8,7 @@
 #   [Future] HTML prototype from uxd-prototype-create — standalone HTML file
 #
 # Usage:
-#   bash resolve-prototype-url.sh <URL> <WORKSPACE> <ARTIFACTS_DIR> [PORT]
+#   bash scripts/evidence/resolve-prototype-url.sh <URL> <WORKSPACE> <ARTIFACTS_DIR> [PORT]
 #
 # Outputs (stdout, one per line):
 #   RESOLVED_URL=<url>
@@ -21,7 +21,7 @@
 
 set -euo pipefail
 
-URL="${1:?Usage: resolve-prototype-url.sh <URL> <WORKSPACE> <ARTIFACTS_DIR> [PORT]}"
+URL="${1:?Usage: scripts/evidence/resolve-prototype-url.sh <URL> <WORKSPACE> <ARTIFACTS_DIR> [PORT]}"
 WORKSPACE="${2:-}"
 ARTIFACTS_DIR="${3:-}"
 PORT="${4:-9000}"

@@ -130,6 +130,6 @@ node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
 
 Alternatively record `purpose: complete-without-walkthroughs` and omit the bundle.
 The parent remains immutable. Completion records the import, not universal success.
-Use `validate-canonical-artifacts.js <run-dir> --json` for readback validation.
+Use `node scripts/artifacts/validate-canonical-artifacts.js <run-dir> --json` for readback validation.
 Keep task outcomes, AC verification, unknown usage and coverage gaps distinct in
 chat. HTML/shared synthesis is not in this package.

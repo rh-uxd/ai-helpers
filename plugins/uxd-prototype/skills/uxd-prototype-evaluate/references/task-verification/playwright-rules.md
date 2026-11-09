@@ -14,7 +14,7 @@ npx sirv dist --port 3333 --single
 npx sirv dist --port 3333
 ```
 
-**Automated:** `scripts/resolve-prototype-url.sh` handles SPA detection and `--single` automatically during pipeline setup. If you are writing a manual/ad-hoc Playwright script outside the pipeline, apply these rules yourself.
+**Automated:** `scripts/evidence/resolve-prototype-url.sh` handles SPA detection and `--single` when explicitly invoked. If you are writing a manual/ad-hoc Playwright script without that helper, apply these rules yourself.
 
 **Detection rule:** If `dist/index.html` contains a `<base href` tag, any `<script>` tags with absolute paths (`/vendor.js`), or a `<div id="root">` mount point, the prototype is an SPA and requires `--single`.
 

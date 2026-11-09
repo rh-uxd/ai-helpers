@@ -13,7 +13,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${UXD_PROJECT_ROOT:-}"
 if [ -z "$PROJECT_ROOT" ]; then
-  PROJECT_ROOT="$(node -e "console.log(require('${SCRIPT_DIR}/shared/resolve-root').resolveProjectRoot())" 2>/dev/null || pwd)"
+  PROJECT_ROOT="$(node -e "console.log(require('${SCRIPT_DIR}/../shared/resolve-root').resolveProjectRoot())" 2>/dev/null || pwd)"
 fi
 
 USABILITY_REPO="${USABILITY_TESTING_REPO:-}"
