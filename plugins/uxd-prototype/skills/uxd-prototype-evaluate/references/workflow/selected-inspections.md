@@ -66,7 +66,7 @@ unselected phases. Source-only runs do not silently classify retained criteria.
 ## Local invocation
 
 Pin the consumer root; create the `eval/runs/` parent if absent. Pick a fresh
-run path. Do not use full `pipeline-setup.sh`, `--fresh`, or reset/cleanup helpers.
+run path. Do not use retired setup helpers, `--fresh`, or reset/cleanup helpers.
 
 ```bash
 node "${EVALUATOR_SKILL_DIR}/scripts/run-quick-checks.js" \
