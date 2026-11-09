@@ -11,7 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { validateDirectory } = require('./validate-canonical-artifacts');
-const { materializeTargets } = require('./artifacts/legacy-artifact-adapter');
+const { materializeTargets } = require('./legacy-artifact-adapter');
 
 const CANONICAL_FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
 const TARGETS = ['csv', 'summary', 'consistency', 'extract', 'evidence', 'journey', 'actions', 'state'];
@@ -47,7 +47,7 @@ function parseArgs(argv) {
     else throw adapterError('unknown_argument', `Unknown argument: ${arg}`);
   }
   if (!options.canonicalDir || !options.outputDir || !options.targets?.length) {
-    throw adapterError('usage', 'Usage: materialize-legacy-eval-artifacts.js --canonical-dir <dir> --output-dir <dir> --targets <csv,...> [--replace] [--json]');
+    throw adapterError('usage', 'Usage: scripts/artifacts/materialize-legacy-eval-artifacts.js --canonical-dir <dir> --output-dir <dir> --targets <csv,...> [--replace] [--json]');
   }
   const unknownTargets = options.targets.filter(target => !TARGETS.includes(target));
   if (unknownTargets.length) throw adapterError('unknown_target', `Unknown adapter target(s): ${unknownTargets.join(', ')}`);
@@ -94,7 +94,7 @@ function validateDerivedFiles(stageDir, targets) {
     if (!csv.includes(required)) throw adapterError('invalid_derived_csv', 'Derived CSV is missing the acceptance-criteria header.');
   }
   if (targets.includes('consistency')) {
-    const result = spawnSync(process.execPath, [path.join(__dirname, 'validate-consistency.js'), stageDir, '--json'], { encoding: 'utf8' });
+    const result = spawnSync(process.execPath, [path.join(__dirname, '../consistency/validate-consistency.js'), stageDir, '--json'], { encoding: 'utf8' });
     if (result.status !== 0) {
       throw adapterError('invalid_derived_consistency', 'Derived consistency report failed the legacy validator.', (result.stdout || result.stderr || '').trim());
     }
@@ -138,7 +138,7 @@ function run(options) {
   try {
     for (const [filename, content] of serialized) fs.writeFileSync(path.join(stageDir, filename), content, 'utf8');
     if (options.targets.includes('consistency') && documents['evaluation.json'].consistency.source_analysis?.evaluator_publication) {
-      require('./artifacts/split-contract').copyTree(path.join(canonicalDir, '.artifacts'), path.join(stageDir, '.artifacts'));
+      require('./split-contract').copyTree(path.join(canonicalDir, '.artifacts'), path.join(stageDir, '.artifacts'));
     }
     validateDerivedFiles(stageDir, options.targets);
     atomicInstall(stageDir, outputDir);

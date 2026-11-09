@@ -45,7 +45,7 @@ of onboarding. JSON permission records cannot grant human consent.
 
 Fresh consumer-owned runs contain `brief.json`, `evaluation.json`, `evidence.json`,
 `actions.json` and `state.json`, plus hashed input/evidence/result receipts.
-Use `scripts/validate-canonical-artifacts.js` to validate them. Reports are opt-in:
+Use `scripts/artifacts/validate-canonical-artifacts.js` to validate them. Reports are opt-in:
 `scripts/run-report.js` renders derived canonical HTML; it does not publish.
 Never overwrite a prior run or use legacy CSV to repair canonical results.
 

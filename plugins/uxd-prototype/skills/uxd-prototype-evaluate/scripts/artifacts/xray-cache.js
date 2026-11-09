@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-const { validateDirectory } = require('../validate-canonical-artifacts');
+const { validateDirectory } = require('./validate-canonical-artifacts');
 
 const CANONICAL_FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
 

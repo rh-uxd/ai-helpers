@@ -70,10 +70,10 @@ function main() {
   const started = process.hrtime.bigint();
   // Check old file formats before using the old report template. Modern runs
   // return above and never reach this fallback.
-  runBundled('validate-classify.js', ['--json']);
-  runBundled('validate-artifact-schemas.js', ['--json']);
-  runBundled('render-report.js');
-  const renderingValidation = JSON.parse(runBundled('validate-report-rendering.js', ['--skip-render']));
+  runBundled('classification/validate-classify.js', ['--json']);
+  runBundled('artifacts/validate-artifact-schemas.js', ['--json']);
+  runBundled('reporting/render-report.js');
+  const renderingValidation = JSON.parse(runBundled('reporting/validate-report-rendering.js', ['--skip-render']));
   const durationMs = Number(process.hrtime.bigint() - started) / 1e6;
   const reportPath = path.join(artifactsDir, 'evaluation-report.html');
   const summaryPath = path.join(artifactsDir, 'evaluation-summary.json');

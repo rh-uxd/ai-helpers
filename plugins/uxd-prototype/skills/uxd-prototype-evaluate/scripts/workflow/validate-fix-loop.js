@@ -7,7 +7,7 @@
  * This checks recorded edits; it never applies a fix or authorizes another pass.
  *
  * Usage:
- *   node validate-fix-loop.js <artifacts-dir> [--json]
+ *   node scripts/workflow/validate-fix-loop.js <artifacts-dir> [--json]
  *
  * Exit codes:
  *   0 = all checks pass
@@ -20,7 +20,7 @@ const { join, resolve } = require('path');
 const jsonMode = process.argv.includes('--json');
 const artifactsDir = process.argv.filter(a => a !== '--json')[2];
 if (!artifactsDir) {
-  console.error('Usage: node validate-fix-loop.js <artifacts-dir> [--json]');
+  console.error('Usage: node scripts/workflow/validate-fix-loop.js <artifacts-dir> [--json]');
   process.exit(1);
 }
 

@@ -6,7 +6,7 @@
  * field structure for retained report consumers; it does not run the checker.
  *
  * Usage:
- *   node validate-consistency.js <artifacts-dir> [--json]
+ *   node scripts/consistency/validate-consistency.js <artifacts-dir> [--json]
  *
  * Exit codes:
  *   0 = all checks pass
@@ -19,7 +19,7 @@ const { join, resolve } = require('path');
 const jsonMode = process.argv.includes('--json');
 const artifactsDir = process.argv.filter(a => a !== '--json')[2];
 if (!artifactsDir) {
-  console.error('Usage: node validate-consistency.js <artifacts-dir> [--json]');
+  console.error('Usage: node scripts/consistency/validate-consistency.js <artifacts-dir> [--json]');
   process.exit(1);
 }
 
@@ -60,8 +60,8 @@ if (!report) {
     // when presented through this older compatibility validator.
     try {
       const publicationRoot = require('path').basename(abs) === 'checks' ? resolve(abs, '..') : abs;
-      if (hasModernFields) require('./consistency/consistency-contract').validatePublication(report, publicationRoot);
-      if (report.source_analysis) require('./consistency/consistency-contract').validatePublication(report.source_analysis, publicationRoot);
+      if (hasModernFields) require('./consistency-contract').validatePublication(report, publicationRoot);
+      if (report.source_analysis) require('./consistency-contract').validatePublication(report.source_analysis, publicationRoot);
       check('frozen source report contract and durable references', true, 'coverage, membership, candidates, manifest provenance and readback verified');
     } catch (error) { check('frozen source report contract and durable references', false, error.message); }
   }

@@ -96,7 +96,7 @@ Active state on the page: `?state=<id>` (default when absent: `default`). Runtim
 
 **Prototype URL note:** Do not leave `views.prototype` as `http://localhost:…` in published builds. Sync clears localhost URLs; the bar also ignores them when the current host is not localhost and falls back to the session return URL / `<base href>`.
 
-**Eval page chrome:** The helper, `copy-eval-for-pages.sh`, and `render-report.js` embed the standalone Prototype Bar into evaluation HTML so Prototype|Eval stays available above the report. Clicking Prototype returns via `views.prototype`, else the session return URL stashed when leaving the prototype, else `document.referrer`.
+**Eval page chrome:** The helper, `copy-eval-for-pages.sh`, and the evaluator's `scripts/reporting/render-report.js` embed the standalone Prototype Bar into evaluation HTML so Prototype|Eval stays available above the report. Clicking Prototype returns via `views.prototype`, else the session return URL stashed when leaving the prototype, else `document.referrer`.
 
 ## Who writes it
 

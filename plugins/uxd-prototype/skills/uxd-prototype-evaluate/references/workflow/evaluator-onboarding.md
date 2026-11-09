@@ -74,7 +74,7 @@ A typical intake is adaptive, not a fixed questionnaire:
 ## Check run history before new work
 
 When the consumer project/artifact root is known, use
-`node scripts/find-evaluation-runs.js --root <artifact-root>` from the resolved
+`node scripts/artifacts/find-evaluation-runs.js --root <artifact-root>` from the resolved
 evaluator directory, optionally filtering by key/source/revision. Ask for the
 root if absent; never scan arbitrary workspaces. The helper reads and validates
 canonical JSON and linked receipts; it does not execute checks or restore a cache.

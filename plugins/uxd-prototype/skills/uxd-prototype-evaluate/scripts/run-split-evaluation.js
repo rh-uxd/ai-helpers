@@ -8,7 +8,7 @@ const { parseArgs } = require('util');
 const { spawnSync } = require('child_process');
 const C = require('./artifacts/split-contract');
 const { buildDocuments } = require('./artifacts/assemble-phase-a-canonical');
-const { classifyCriterion } = require('./run-classification');
+const { classifyCriterion } = require('./classification/run-classification');
 const { buildOverrides } = require('./classification/classify-ac-tier');
 
 function seed(input, stage) {

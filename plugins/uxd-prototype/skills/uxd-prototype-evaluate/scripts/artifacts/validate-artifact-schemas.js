@@ -4,7 +4,7 @@
  * These hand-written compatibility checks are not canonical JSON Schema
  * validation; modern runs use validate-canonical-artifacts.js.
  *
- * Usage: node validate-artifact-schemas.js .artifacts/<KEY>/
+ * Usage: node scripts/artifacts/validate-artifact-schemas.js .artifacts/<KEY>/
  * Exit code 0 = all pass, 1 = failures found.
  */
 
@@ -14,7 +14,7 @@ const { join, resolve } = require('path');
 const jsonMode = process.argv.includes('--json');
 const artifactsDir = process.argv.filter(a => a !== '--json')[2];
 if (!artifactsDir) {
-  console.error('Usage: node validate-artifact-schemas.js .artifacts/<KEY>/ [--json]');
+  console.error('Usage: node scripts/artifacts/validate-artifact-schemas.js .artifacts/<KEY>/ [--json]');
   process.exit(1);
 }
 

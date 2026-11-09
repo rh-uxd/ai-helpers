@@ -10,16 +10,16 @@ const { execSync } = require('child_process');
 
 const artifactsDir = process.argv[2];
 if (!artifactsDir) {
-  console.error('Usage: node ${CLAUDE_SKILL_DIR}/scripts/render-report.js <artifacts-dir>');
-  console.error('  e.g. node ${CLAUDE_SKILL_DIR}/scripts/render-report.js .artifacts/PROJ-298/eval/');
+  console.error('Usage: node ${CLAUDE_SKILL_DIR}/scripts/reporting/render-report.js <artifacts-dir>');
+  console.error('  e.g. node ${CLAUDE_SKILL_DIR}/scripts/reporting/render-report.js .artifacts/PROJ-298/eval/');
   process.exit(1);
 }
 
-const { resolveProjectRoot, resolveKeyFromArtifactsDir } = require('./shared/resolve-root');
-const { loadReportInputs } = require('./reporting/report-inputs');
+const { resolveProjectRoot, resolveKeyFromArtifactsDir } = require('../shared/resolve-root');
+const { loadReportInputs } = require('./report-inputs');
 const absArtifacts = path.resolve(artifactsDir);
 const projectRoot = resolveProjectRoot();
-const templatePath = path.join(__dirname, '..', 'templates', 'evaluation-report.html');
+const templatePath = path.join(__dirname, '../..', 'templates', 'evaluation-report.html');
 const reportInputs = loadReportInputs(absArtifacts);
 
 // ---------------------------------------------------------------------------
@@ -287,7 +287,7 @@ function buildPersonaNameMap(personaResults, journeyLog) {
   }
 
   // Also try persona YAML files for names and roles
-  const contextDir = path.join(require('./shared/resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
+  const contextDir = path.join(require('../shared/resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
   if (journeyLog && journeyLog.usability_dimensions && journeyLog.usability_dimensions.personas_evaluated) {
     for (const pid of journeyLog.usability_dimensions.personas_evaluated) {
       if (!nameMap[pid]) {
@@ -669,7 +669,7 @@ function escapeCSVField(str) {
   return str;
 }
 
-const { parseCSVLine } = require('./shared/csv-utils');
+const { parseCSVLine } = require('../shared/csv-utils');
 
 // ---------------------------------------------------------------------------
 // Parse markdown sections
@@ -932,7 +932,7 @@ function buildPersonaWalkthroughsHtml() {
       `</div>`;
   }
 
-  const contextDir = path.join(require('./shared/resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
+  const contextDir = path.join(require('../shared/resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
   const overlays = ud.persona_overlays || [];
   const thinkAloud = ud.think_aloud || {};
   const traces = thinkAloud.traces || [];
@@ -1282,7 +1282,7 @@ function buildPersonaWalkthroughData() {
 }
 
 function getPersonaMetadata(pid) {
-  const personaDir = path.join(require('./shared/resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
+  const personaDir = path.join(require('../shared/resolve-root').resolveProjectRoot(), '.context', 'usability-testing', 'personas');
   const yamlPath = path.join(personaDir, `${pid}.yaml`);
   const meta = { role: '', experience: '', exploration: '', patience_level: '' };
   try {
@@ -2171,7 +2171,7 @@ function buildSmartComplianceTab(reason) {
   html += `<div class="card card-flat" style="margin:0 0 1.5rem">`;
   html += `<p style="font-weight:700;margin:0 0 0.25rem;color:var(--status-warning)">Automated Compliance Check Not Available</p>`;
   html += `<p class="small" style="margin:0">${escapeHtml(reason || 'consistency-checker not bootstrapped')}</p>`;
-  html += `<p class="small muted" style="margin:0.5rem 0 0">Set <code>CONSISTENCY_CHECKER_REPO</code> explicitly, then re-run <code>bootstrap-consistency-checker.sh</code>.</p>`;
+  html += `<p class="small muted" style="margin:0.5rem 0 0">Set <code>CONSISTENCY_CHECKER_REPO</code> explicitly, then re-run <code>scripts/consistency/bootstrap-consistency-checker.sh</code>.</p>`;
   html += `</div>`;
 
   const componentMap = readJsonOr(path.join(absArtifacts, 'component-map.json'), null);
@@ -2963,7 +2963,7 @@ function buildTokens(opts = {}) {
       'accessibility_inclusion': 'Accessibility & Inclusion'
     };
     const dimensions = Object.entries(DIMS).map(([id, name]) => ({
-      id, name, composite_score: 'N/A', note: 'Dimension scores not yet consolidated — run validate-phase-b-output.js or re-run Phase B Step 8', scores: {}
+      id, name, composite_score: 'N/A', note: 'Dimension scores not yet consolidated — run scripts/task-verification/validate-phase-b-output.js or re-run Phase B Step 8', scores: {}
     }));
     const personaOverlays = pr.map(entry => ({
       persona: entry.persona, persona_name: entry.persona_name || null,
@@ -3782,7 +3782,7 @@ function buildTokens(opts = {}) {
       `<span style="font-size:0.8125rem">Phase B (persona walkthroughs) did not produce dimension scores. To fix:</span><br>` +
       `<span style="font-size:0.8125rem">1. Ensure <code>.context/usability-testing/</code> is cloned (set <code>USABILITY_TESTING_REPO</code> explicitly)</span><br>` +
       `<span style="font-size:0.8125rem">2. Re-run the eval (not in <code>review</code> mode) — Phase B runs automatically</span><br>` +
-      `<span style="font-size:0.8125rem">3. If persona-results.json exists, run: <code>node scripts/validate-phase-b-output.js</code></span>` +
+      `<span style="font-size:0.8125rem">3. If persona-results.json exists, run: <code>node scripts/task-verification/validate-phase-b-output.js</code></span>` +
       `</div>`;
   }
 

@@ -4,7 +4,7 @@
 /**
  * Deterministically classify Jira acceptance criteria for prototype evaluation.
  *
- * Usage: node run-classification.js <artifacts-dir> [--json]
+ * Usage: node scripts/classification/run-classification.js <artifacts-dir> [--json]
  *
  * All implementation imports are resolved from this script's directory. The
  * caller may run it from any working directory.
@@ -12,8 +12,8 @@
 
 const fs = require('fs');
 const path = require('path');
-const { buildOverrides, BACKEND_KEYWORDS, UI_EVIDENCE_KEYWORDS } = require('./classification/classify-ac-tier');
-const { escapeCSVField } = require('./shared/csv-utils');
+const { buildOverrides, BACKEND_KEYWORDS, UI_EVIDENCE_KEYWORDS } = require('./classify-ac-tier');
+const { escapeCSVField } = require('../shared/csv-utils');
 
 const SUBJECTIVE_KEYWORDS = [
   'user-friendly', 'user friendly', 'intuitive', 'clear hierarchy',
@@ -105,7 +105,7 @@ function main() {
   const jsonMode = args.includes('--json');
   const artifactsArg = args.find(arg => !arg.startsWith('--'));
   if (!artifactsArg) {
-    console.error('Usage: node run-classification.js <artifacts-dir> [--json]');
+    console.error('Usage: node scripts/classification/run-classification.js <artifacts-dir> [--json]');
     process.exit(1);
   }
 

@@ -9,7 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { parseCSVLine } = require('../shared/csv-utils');
 const { materializeTargets } = require('./legacy-artifact-adapter');
-const { validateDirectory } = require('../validate-canonical-artifacts');
+const { validateDirectory } = require('./validate-canonical-artifacts');
 const { lookup, restore, store } = require('./xray-cache');
 
 const CANONICAL_FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
@@ -268,10 +268,10 @@ function buildDocuments(artifactsDir, cacheDecision, inputs = null) {
     ...filesUnder(path.join(skillRoot, 'config')),
     ...[
       'artifacts/assemble-phase-a-canonical.js', 'artifacts/legacy-artifact-adapter.js', 'shared/csv-utils.js', 'artifacts/linked-artifact-contract.js',
-      'artifacts/xray-cache.js', 'artifacts/split-contract.js', 'validate-canonical-artifacts.js', 'task-verification/walkthrough-contract.js', 'workflow/evaluation-plan.js',
-      'consistency/consistency-compat.js', 'consistency/consistency-contract.js', 'validate-consistency.js',
+      'artifacts/xray-cache.js', 'artifacts/split-contract.js', 'artifacts/validate-canonical-artifacts.js', 'task-verification/walkthrough-contract.js', 'workflow/evaluation-plan.js',
+      'consistency/consistency-compat.js', 'consistency/consistency-contract.js', 'consistency/validate-consistency.js',
       ...(inputs
-        ? ['run-quick-checks.js', 'inspection-contracts/inspection-bundle.js', 'run-classification.js', 'classification/classify-ac-tier.js']
+        ? ['run-quick-checks.js', 'inspection-contracts/inspection-bundle.js', 'classification/run-classification.js', 'classification/classify-ac-tier.js']
         : []),
     ].map(name => path.join(skillRoot, 'scripts', name)),
   ];

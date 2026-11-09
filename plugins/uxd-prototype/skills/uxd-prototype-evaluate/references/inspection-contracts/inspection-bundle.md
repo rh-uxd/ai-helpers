@@ -31,7 +31,7 @@ consent, and the local merger does not execute browser/provider work.
    Retain canonical crops/full-page/DOM items with explicit capture IDs; never
    map a new state to the first baseline capture for convenience.
    For one settled baseline state, the host may run
-   `node scripts/capture-prototype-evidence.js <artifacts-dir> <prototype-url>`
+   `node scripts/evidence/capture-prototype-evidence.js <artifacts-dir> <prototype-url>`
    to produce `prototype-evidence.json`: the full-page screenshot, page facts and
    ranked crops from the shared capture library `scripts/evidence/targeted-evidence.js`.
    Launching that helper is browser activity — it needs the same approved

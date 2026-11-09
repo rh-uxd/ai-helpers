@@ -33,7 +33,7 @@ function readiness(docs) {
     for (const field of ['screen_ids', 'state_ids', 'role_ids']) requireThat(task[field].length, `Walkthrough task needs nonempty ${field}`);
   }
   for (const persona of intent.personas) requireThat(persona.role_id && persona.task_ids.length, 'Walkthrough persona needs an explicit role and selected tasks');
-  const errors = require('../validate-canonical-artifacts').validateDocuments(docs);
+  const errors = require('../artifacts/validate-canonical-artifacts').validateDocuments(docs);
   requireThat(!errors.length, `Walkthrough readiness failed: ${JSON.stringify(errors)}`);
 }
 

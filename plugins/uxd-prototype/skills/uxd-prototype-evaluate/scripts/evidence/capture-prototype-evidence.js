@@ -5,7 +5,7 @@
  * Capture portable visual evidence for a structured evaluator phase.
  *
  * Usage:
- *   node capture-prototype-evidence.js <artifacts-dir> <prototype-url> [--json]
+ *   node scripts/evidence/capture-prototype-evidence.js <artifacts-dir> <prototype-url> [--json]
  *
  * The output JSON stores screenshot paths relative to the artifacts directory.
  * The caller may run this script from any working directory.
@@ -13,7 +13,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { captureTargetedEvidence, DEFAULT_VIEWPORT } = require('./evidence/targeted-evidence');
+const { captureTargetedEvidence, DEFAULT_VIEWPORT } = require('./targeted-evidence');
 let chromium;
 try {
   ({ chromium } = require('@playwright/test'));
@@ -28,7 +28,7 @@ const positional = args.filter(arg => !arg.startsWith('--'));
 const [artifactsArg, prototypeUrl] = positional;
 
 if (!artifactsArg || !prototypeUrl) {
-  console.error('Usage: node capture-prototype-evidence.js <artifacts-dir> <prototype-url> [--json]');
+  console.error('Usage: node scripts/evidence/capture-prototype-evidence.js <artifacts-dir> <prototype-url> [--json]');
   process.exit(1);
 }
 
