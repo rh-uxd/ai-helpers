@@ -19,7 +19,7 @@
 
 const { readFileSync, existsSync } = require('fs');
 const { join } = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 const artifactsDir = process.argv[2];
 if (!artifactsDir) {
@@ -42,7 +42,7 @@ function check(name, condition, detail) {
 // Keep it outside modern canonical validation and import-only callers.
 const renderScript = join(__dirname, 'render-report.js');
 try {
-  execSync(`node "${renderScript}" "${absArtifacts}" --note="test-render"`, {
+  execFileSync(process.execPath, [renderScript, absArtifacts, '--note=test-render'], {
     stdio: ['pipe', 'pipe', 'pipe'],
     cwd: join(__dirname, '..', '..', '..', '..', '..')
   });

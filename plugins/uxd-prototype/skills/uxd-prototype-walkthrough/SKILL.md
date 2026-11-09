@@ -9,13 +9,11 @@ description: Run selected task and persona browser walkthroughs with revision-bo
 Run only the reviewed task/persona pairs. Resolve the sibling
 `uxd-prototype-evaluate` skill directory and read its
 `references/task-verification/task-walkthroughs.md` for the packet, evidence bundle and local merger.
-Require that skill and its Node.js dependencies; do not silently substitute the
-legacy full evaluator if it is unavailable.
 Follow the [responsibility contract](../uxd-prototype-evaluate/references/workflow/evaluator-responsibilities.md)
 and the applicable entry path below. Ask only about unresolved context.
 Do not rerun an exact-context walkthrough merely to review its findings.
 
-## Independent or evaluator-prepared entry
+## Inputs
 
 - **Independent:** prepare only missing source/build, environment, task and audience
   details. Suggest catalog profiles only if a reviewed cohort is missing. Confirm
@@ -72,17 +70,21 @@ Do not rerun an exact-context walkthrough merely to review its findings.
    spec edits and sharing require separate requests. HTML reporting is not part of
    this package; retain canonical results rather than invoking the legacy evaluator.
 
-## Requirements and output
+## Requirements
 
 Requires Node.js 18+, the sibling evaluator's installed dependencies, and an
-authorized browser/model tool in the host assistant. No direct provider SDK or
-credential lookup is bundled here.
+authorized browser/model tool in the host assistant. Do not silently substitute
+the legacy full evaluator if the sibling skill is unavailable. No direct provider
+SDK or credential lookup is bundled here.
 The importer supports multiple actual invocation receipts per pair in bundle v2;
 legacy v1 accepts one completed call per pair only. Never collapse multiple calls
 into one receipt or fabricate measurements. Session/evidence attribution is
 validated; the host must independently ensure context isolation and truthful receipts.
 
-Output: an immutable run directory containing `brief.json`, `evaluation.json`,
-`evidence.json`, `actions.json`, `state.json`, plus linked input/evidence receipts.
+## Outputs
+
+Independent execution produces an immutable run directory containing `brief.json`,
+`evaluation.json`, `evidence.json`, `actions.json`, `state.json`, plus linked
+input/evidence receipts.
 Retain the exact run path for review. Full composition consumes the producer
 bundle through its checkpoint, not a completed standalone run.
