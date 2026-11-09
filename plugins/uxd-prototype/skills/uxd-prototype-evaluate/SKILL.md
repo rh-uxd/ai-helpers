@@ -111,7 +111,7 @@ cd "${UXD_PROJECT_ROOT}"
 
 Stop if Chromium install fails; do not start Playwright without it.
 
-Context repos (`.context/consistency-checker/`, `.context/usability-testing/`) bootstrap on first run when `CONSISTENCY_CHECKER_REPO` / `USABILITY_TESTING_REPO` (or overlay `context_repos`) are set; otherwise those phases degrade. Product overlay: [references/skill-overlays.md](references/skill-overlays.md).
+Consistency uses the `uxd-consistency-check` sibling shipped in this same `uxd-prototype` plugin distribution. No separate checker repository or clone/bootstrap is needed. `UXD_CONSISTENCY_CHECKER_DIR` is an optional absolute-path override only for deliberately separate installations. Evaluate **product design guidelines only**, never a combined PF/product audit or PF fallback. For indexed sources, follow [eval-consistency](references/phases/eval-consistency.md) and consume confirmed staging with `scripts/run-consistency-selection.py`: preserve exact review scope, currentness and separate manual evidence. Explicitly authorized repeated `--guidelines [NAMESPACE=]PATH` inputs remain supported. Discovery, `approved` policy status and framework dependencies never authorize adoption; `--design-system` is metadata only. Without selected guidance, no policy or peer audit runs and no compliance pass is implied. If the bundled sibling is missing, record consistency as unavailable and restore or update the combined plugin; no substitute audit runs. Use the checker's [designer report template](../uxd-consistency-check/references/designer-report-template.md) for human summaries. Usability context independently bootstraps into `.context/usability-testing/` when `USABILITY_TESTING_REPO` (or overlay `context_repos.usability_testing`) is set; otherwise Phase B uses bundled personas. Product overlay: [references/skill-overlays.md](references/skill-overlays.md).
 
 **Personas:** `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml` + overlays. Deep YAML from `.context/usability-testing/`. Internal study URLs: `node ${CLAUDE_SKILL_DIR}/scripts/overlay-get.js --knowledge-persona <id>` when internal-ai-helpers is present.
 
@@ -158,7 +158,8 @@ Do not improvise the loop from this overview — follow [references/orchestratio
 | Prototype URL unreachable | Fall back to workspace `dist/` via `resolve-prototype-url.sh`; fail clearly if neither exists |
 | eval-fix produces no changes | Stop Phase A; proceed to Phase B |
 | Dev server crashes after fix | Stop Phase A; note suspect files; proceed to Phase B |
-| Missing `.context/` | Phase A degrades (token-check fallback); Phase B uses bundled personas |
+| Missing selected checker | Record consistency as unavailable; restore/update the combined plugin, or use the absolute-path override only for a deliberately separate checker installation; no substitute audit |
+| Missing usability-testing `.context/` | Phase B uses bundled personas |
 
 ## What's Next
 
@@ -188,7 +189,7 @@ After each run, offer: fix a specific issue, explain a finding, re-run, or accep
 | [orchestration.md](references/orchestration.md) | Running a full eval |
 | [phases/eval-extract.md](references/phases/eval-extract.md) | Jira context, ACs, MR delta |
 | [phases/eval-classify.md](references/phases/eval-classify.md) | AC tier classification |
-| [phases/eval-consistency.md](references/phases/eval-consistency.md) | PatternFly checks |
+| [phases/eval-consistency.md](references/phases/eval-consistency.md) | Selected product-guideline checks |
 | [phases/eval-journey.md](references/phases/eval-journey.md) | Phase A Playwright |
 | [phases/eval-fix.md](references/phases/eval-fix.md) | Applying fixes |
 | [phases/eval-hint.md](references/phases/eval-hint.md) | Navigation hints |

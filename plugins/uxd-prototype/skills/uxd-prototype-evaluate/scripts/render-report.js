@@ -412,6 +412,16 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;');
 }
 
+function localEvidenceHref(workspace, value, lineStart, lineEnd) {
+  if (typeof value !== 'string' || !value || !workspace) return '';
+  const root = path.resolve(workspace);
+  const target = path.resolve(root, value);
+  if (target !== root && !target.startsWith(root + path.sep)) return '';
+  const relative = path.relative(absArtifacts, target).split(path.sep)
+    .map(segment => segment === '..' ? segment : encodeURIComponent(segment)).join('/');
+  return relative + (lineStart ? `#L${lineStart}${lineEnd && lineEnd !== lineStart ? `-L${lineEnd}` : ''}` : '');
+}
+
 function renderInlineMarkdown(escaped) {
   return escaped
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -2158,7 +2168,7 @@ function renderFixCard(fix, journeyLog, mode) {
   }
 
   if (fix.pf_doc_url) {
-    html += `<a href="${escapeHtml(fix.pf_doc_url)}" target="_blank" class="small" style="display:block;margin-top:0.25rem">PatternFly docs</a>`;
+    html += `<a href="${escapeHtml(fix.pf_doc_url)}" target="_blank" class="small" style="display:block;margin-top:0.25rem">Guideline source</a>`;
   }
 
   html += `</div>`;
@@ -2181,49 +2191,11 @@ function buildSmartComplianceTab(reason) {
 
   html += `<div class="card card-flat" style="margin:0 0 1.5rem">`;
   html += `<p style="font-weight:700;margin:0 0 0.25rem;color:var(--status-warning)">Automated Compliance Check Not Available</p>`;
-  html += `<p class="small" style="margin:0">${escapeHtml(reason || 'consistency-checker not bootstrapped')}</p>`;
-  html += `<p class="small muted" style="margin:0.5rem 0 0">Set <code>context_repos.consistency_checker</code> in the product overlay (or <code>CONSISTENCY_CHECKER_REPO</code>), then re-run <code>bootstrap-consistency-checker.sh</code>.</p>`;
+  html += `<p class="small" style="margin:0">${escapeHtml(reason || 'Product-guideline checks were not evaluated')}</p>`;
+  html += `<p class="small muted" style="margin:0.5rem 0 0">This evaluator distribution includes the sibling <code>uxd-consistency-check</code> skill. Restore or update the combined plugin if it is missing; for a deliberately separate installation, set <code>UXD_CONSISTENCY_CHECKER_DIR</code> to its absolute skill-directory path. Select product guidance, then rerun evaluation. No substitute audit is run.</p>`;
   html += `</div>`;
 
-  const componentMap = readJsonOr(path.join(absArtifacts, 'component-map.json'), null);
-  const journeyLog = readJsonOr(path.join(absArtifacts, 'journey-log.json'), null);
-
-  html += `<h3 style="font-size:0.875rem;margin:1.25rem 0 0.35rem">Checks performed when enabled</h3>`;
-  html += `<ul class="small muted" style="margin:0 0 1rem;padding-left:1.25rem;line-height:1.8">`;
-  html += `<li>Hardcoded color values vs <code>--pf-t-*</code> design tokens</li>`;
-  html += `<li>Custom spacing vs PatternFly spacing tokens</li>`;
-  html += `<li>Icon imports, sizing, and accessibility labels</li>`;
-  html += `<li>Deprecated PF class names and incorrect component nesting</li>`;
-  html += `<li>Missing aria attributes, roles, and focus management</li>`;
-  html += `<li>Typography vs PF type scale</li>`;
-  html += `</ul>`;
-
-  if (componentMap && componentMap.components && componentMap.components.length > 0) {
-    html += `<h3 style="font-size:0.9375rem;margin:1.5rem 0 0.5rem">Detected PatternFly Components</h3>`;
-    html += `<p class="small muted" style="margin:0 0 0.75rem">These PF components were identified in the prototype and would be checked for guideline compliance:</p>`;
-    html += `<div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:1rem">`;
-    const seen = new Set();
-    for (const c of componentMap.components) {
-      const name = c.component || c.name || c;
-      if (seen.has(name)) continue;
-      seen.add(name);
-      html += `<span class="badge" style="background:rgba(0,102,204,0.08);color:var(--link);font-size:0.7rem;padding:0.2rem 0.5rem">${escapeHtml(String(name))}</span>`;
-    }
-    html += `</div>`;
-  }
-
-  if (journeyLog && journeyLog.journeys) {
-    const screenshotCount = new Set();
-    for (const j of journeyLog.journeys) {
-      if (j.screenshots) j.screenshots.forEach(s => screenshotCount.add(s));
-    }
-    if (screenshotCount.size > 0) {
-      html += `<div class="card card-compact" style="margin:1rem 0">`;
-      html += `<p class="small" style="margin:0"><strong>${screenshotCount.size} screenshots captured</strong> during persona walkthroughs. `;
-      html += `When enabled, the visual mode compares these against PF layout guidelines, spacing, and color usage.</p>`;
-      html += `</div>`;
-    }
-  }
+  html += `<p class="small muted">Only explicitly selected product guidelines with supported checks are evaluated. Unsupported or prose-only rules remain unevaluated. Visual review requires separate authorization and evidence.</p>`;
 
   return html;
 }
@@ -2310,7 +2282,77 @@ function buildChangesTabHtml() {
   return html;
 }
 
+function buildSelectionEvidenceHtml() {
+  const selection = readJsonOr(path.join(absArtifacts, 'consistency-selection.json'), null);
+  if (!selection) return '';
+  let html = `<h3>Selected product guidance</h3><p class="small">Selection currentness: ${escapeHtml(selection.currentness || 'unknown')}</p>`;
+  html += `<p class="small muted">Frozen readiness applies to pinned local bytes, not remote freshness. Model review requires separate authorization.</p>`;
+  const evidence = Array.isArray(selection.manual_evidence) ? selection.manual_evidence : [];
+  if (evidence.length) {
+    html += `<h4>Separate manual evidence</h4><ul>`;
+    for (const item of evidence) html += `<li>${escapeHtml(item.source_id || '')}: ${escapeHtml(item.status || 'unevaluated')} — ${escapeHtml(item.reason || '')}</li>`;
+    html += `</ul><p class="small muted">These items do not add deterministic checks or passes.</p>`;
+  }
+  for (const link of (Array.isArray(selection.links) ? selection.links : [])) {
+    // Only consumer-local relative links produced by the receipt consumer.
+    const href = typeof link.href === 'string' ? link.href : '';
+    if (!href || /^(?:[a-z][a-z0-9+.-]*:|\/|\\)/i.test(href)) continue;
+    html += `<p class="small"><a href="${escapeHtml(href)}">${escapeHtml(link.title || 'Selected evidence')}</a></p>`;
+  }
+  return html;
+}
+
 function buildConsistencyHtml() {
+  return buildSelectionEvidenceHtml() + buildDeterministicConsistencyHtml() + buildLlmConsistencyHtml();
+}
+
+function buildLlmConsistencyHtml() {
+  const report = readJsonOr(path.join(absArtifacts, 'llm-consistency-report.json'), null);
+  if (!report) return '';
+  if (report.report_type !== 'product_guideline_llm_review' || report.method !== 'llm'
+      || !Array.isArray(report.reviews) || !report.coverage || !report.coverage.statuses) {
+    return `<h3>LLM semantic review</h3><p class="muted small">Review artifact is invalid or unavailable; no result is treated as passing.</p>`;
+  }
+  const counts = report.coverage.statuses;
+  let html = `<h3>LLM semantic review</h3>`;
+  if (report.schema_version !== '1.1.0') html += `<p class="small"><strong>Legacy evidence:</strong> approved code/section scope and revision provenance were not established by the repaired contract. Replay only; no new fix authorization.</p>`;
+  if (report.approved_scope) html += `<p class="small">Approved code scope: <code>${escapeHtml(JSON.stringify(report.approved_scope))}</code></p>`;
+  const frozenHref = localEvidenceHref(report.workspace, report.guideline_manifest, null, null);
+  if (frozenHref) html += `<p class="small"><a href="${escapeHtml(frozenHref)}">Frozen guideline evidence</a> retains original bytes and hashes when original-path links are no longer available.</p>`;
+  html += `<p class="small">Model: ${escapeHtml(report.model || 'unknown')}; source ref: ${escapeHtml(report.guideline_ref || 'unknown')}.</p>`;
+  html += `<p class="small muted">${counts.violation || 0} violations; ${counts.no_issue_found || 0} LLM “no issue found”; ${counts.uncertain || 0} uncertain; ${counts.unsupported || 0} unsupported; ${counts.unavailable || 0} unavailable; ${counts.not_applicable || 0} not applicable.</p>`;
+  if (report.summary?.disagreements) html += `<p class="small"><strong>${escapeHtml(report.summary.disagreements)} independent verifier disagreement(s)</strong> remain unresolved.</p>`;
+  html += `<p class="small muted">LLM judgments are separate from deterministic checks and do not create deterministic passes. Uncertain, unsupported, unavailable, and not-applicable rules are not compliance evidence.</p>`;
+  const proposals = readJsonOr(path.join(absArtifacts, 'fix-proposals.json'), null);
+  if (proposals && proposals.artifact_type === 'guideline_rooted_fix_proposals') {
+    html += `<p class="small"><a href="fix-proposals.json">Validated fix-proposal handoff</a> — not applied; human approval pending (${(proposals.proposals || []).length} proposals).</p>`;
+  }
+  for (const review of report.reviews) {
+    const status = String(review.status || 'unavailable');
+    html += `<details class="consistency-finding consistency-finding-warning"><summary>${escapeHtml(review.guideline_id || 'unknown rule')} — ${escapeHtml(status)} (${escapeHtml(review.confidence || 'unknown')} confidence)</summary>`;
+    const guideline = review.guideline || {};
+    const ruleHref = localEvidenceHref(report.workspace, guideline.path, null, null);
+    const guidelineUrl = ruleHref && guideline.anchor ? `${ruleHref}#${encodeURIComponent(guideline.anchor)}` : ruleHref;
+    if (guidelineUrl) html += `<p class="small"><a href="${escapeHtml(guidelineUrl)}">${escapeHtml(guideline.path)}${guideline.heading ? ` — ${escapeHtml(guideline.heading)}` : ''}</a> · ${escapeHtml(guideline.ref_status || 'legacy_unverified_ref')} · ${escapeHtml(guideline.ref || 'no verified repository ref')} · SHA-256 ${escapeHtml(guideline.sha256 || '')}</p>`;
+    if (guideline.selected_scope) html += `<p class="small">Selected guideline scope: <code>${escapeHtml(JSON.stringify(guideline.selected_scope))}</code></p>`;
+    if (review.applicability) html += `<p class="small">Applicability from metadata: ${escapeHtml(review.applicability.outcome)} (selected ${escapeHtml(review.applicability.selected)}; document ${escapeHtml(review.applicability.document)}).</p>`;
+    if (guideline.quote) html += `<blockquote class="small">${escapeHtml(guideline.quote)}</blockquote>`;
+    const evidence = review.source_evidence;
+    if (evidence && evidence.file) {
+      const evidenceHref = localEvidenceHref(report.workspace, evidence.file, evidence.line_start, evidence.line_end);
+      if (evidenceHref) html += `<p class="small"><a href="${escapeHtml(evidenceHref)}">${escapeHtml(evidence.file)}:${escapeHtml(evidence.line_start)}${evidence.line_end !== evidence.line_start ? `-${escapeHtml(evidence.line_end)}` : ''}</a></p>`;
+      if (evidence.excerpt) html += `<pre class="small"><code>${escapeHtml(evidence.excerpt)}</code></pre>`;
+    }
+    if (review.rationale) html += `<p class="small">${escapeHtml(review.rationale)}</p>`;
+    if (review.disagreement) html += `<p class="small"><strong>Verifier disagreement:</strong> primary ${escapeHtml(review.disagreement.reviewer_status || '')}; verifier ${escapeHtml(review.disagreement.verifier_status || '')}; ${escapeHtml(review.disagreement.resolution || 'unresolved')}.</p>`;
+    if (review.suggested_fix) html += `<p class="consistency-suggestion">Proposed: ${escapeHtml(review.suggested_fix)}</p>`;
+    if (Array.isArray(review.limitations) && review.limitations.length) html += `<p class="small muted">Limitations: ${escapeHtml(review.limitations.join('; '))}</p>`;
+    html += `</details>`;
+  }
+  return html;
+}
+
+function buildDeterministicConsistencyHtml() {
   const report = readJsonOr(path.join(absArtifacts, 'consistency-report.json'), null);
   if (!report) return buildSmartComplianceTab();
 
@@ -2336,6 +2378,25 @@ function buildConsistencyHtml() {
       : (Array.isArray(report.findings) ? report.findings : []);
   let html = '';
 
+  // Additive checker coverage is independent of legacy guideline-group counts.
+  const incomplete = report.coverage?.incomplete_rules || {};
+  if (Object.keys(incomplete).length) {
+    html += `<h3>Incomplete deterministic coverage</h3><p class="small">Unsupported JavaScript/JSX syntax is not a deterministic pass.</p><ul>`;
+    for (const [identity, state] of Object.entries(incomplete)) html += `<li>${escapeHtml(identity)}: ${escapeHtml(state.reason || 'incomplete')} — ${escapeHtml((state.files || []).join(', '))}</li>`;
+    html += `</ul>`;
+  }
+  if (report.guideline_consistency) {
+    const coverage = report.guideline_consistency;
+    html += `<h3>Guideline consistency</h3><p class="small">${escapeHtml(coverage.status || 'not_evaluated')}</p>`;
+    html += `<p class="small muted">Design-system baseline: ${escapeHtml(coverage.baseline?.status || 'not_evaluated')}; workspace/product guidance: ${escapeHtml(coverage.workspace?.status || 'not_evaluated')}.</p>`;
+  }
+  if (report.internal_consistency) {
+    const internal = report.internal_consistency;
+    const candidates = Array.isArray(internal.findings) ? internal.findings.length : 0;
+    html += `<h3>Internal consistency</h3><p class="small">${escapeHtml(internal.status || 'not_evaluated')}; ${candidates} review candidates.</p>`;
+    html += `<p class="small muted">${escapeHtml(internal.reason || '')}</p>`;
+  }
+
   // Summary stats
   html += `<div class="consistency-summary">`;
   html += `<div class="consistency-stat"><span class="consistency-stat-n">${summary.total_guidelines_checked || 0}</span><span class="consistency-stat-l">Checked</span></div>`;
@@ -2345,7 +2406,9 @@ function buildConsistencyHtml() {
   html += `</div>`;
 
   if (!violations.length) {
-    html += `<p class="muted small">No violations found in MR-scoped files.</p>`;
+    html += report.guideline_consistency?.status === 'not_evaluated'
+      ? `<p class="muted small">Guideline consistency was not evaluated; no compliance pass is claimed.</p>`
+      : `<p class="muted small">No violations found in scoped files for the evaluated checks.</p>`;
     return html;
   }
 
@@ -2362,6 +2425,7 @@ function buildConsistencyHtml() {
     .sort((a, b) => b.count - a.count);
   const quickFixes = allQuickFixes.slice(0, 3);
   const extraQuickFixes = allQuickFixes.slice(3);
+  const onlyCandidates = violations.every(item => item.review_candidate === true);
 
   // Actionable one-liner
   if (quickFixes.length > 0) {
@@ -2369,11 +2433,13 @@ function buildConsistencyHtml() {
     const topFiles = [...topFix.files];
     const topArea = topFiles[0] ? topFiles[0].replace('src/app/', '').replace('src/', '').replace(/\/[^/]+$/, '') : '';
     const coveragePct = violations.length > 0 ? Math.round((topFix.count / violations.length) * 100) : 0;
-    html += `<p class="small" style="margin:0 0 0.75rem"><strong>Fix ${quickFixes.length} top violations${topArea ? ' in ' + escapeHtml(topArea) : ''}</strong> to resolve ${coveragePct}% of issues.</p>`;
+    html += onlyCandidates
+      ? `<p class="small"><strong>Review ${violations.length} source candidate(s).</strong> These are not confirmed violations; syntax coverage is incomplete.</p>`
+      : `<p class="small" style="margin:0 0 0.75rem"><strong>Fix ${quickFixes.length} top violations${topArea ? ' in ' + escapeHtml(topArea) : ''}</strong> to resolve ${coveragePct}% of issues.</p>`;
   }
 
-  html += `<h3>Quick Fixes</h3>`;
-  html += `<p class="small muted" style="margin:-0.25rem 0 0.5rem">Ranked by number of violations eliminated</p>`;
+  html += onlyCandidates ? `<h3>Review candidates</h3>` : `<h3>Quick Fixes</h3>`;
+  html += `<p class="small muted" style="margin:-0.25rem 0 0.5rem">${onlyCandidates ? 'Ranked by candidate count; no confirmed violation count' : 'Ranked by number of violations eliminated'}</p>`;
 
   for (const qf of quickFixes) {
     const sevTag = qf.severity === 'error'
@@ -2387,7 +2453,7 @@ function buildConsistencyHtml() {
     html += `</div>`;
     if (qf.suggestion) {
       html += `<p class="consistency-suggestion">${escapeHtml(qf.suggestion)}`;
-      if (qf.pf_doc_url) html += ` <a href="${escapeHtml(qf.pf_doc_url)}" target="_blank" style="font-size:0.7rem;margin-left:0.3rem">PatternFly docs &rarr;</a>`;
+      if (qf.pf_doc_url) html += ` <a href="${escapeHtml(qf.pf_doc_url)}" target="_blank" style="font-size:0.7rem;margin-left:0.3rem">Guideline source &rarr;</a>`;
       html += `</p>`;
     }
     html += `<p class="consistency-guideline">${qf.files.size} file${qf.files.size > 1 ? 's' : ''}: ${[...qf.files].slice(0, 3).map(f => '<code>' + escapeHtml(f.replace('src/app/', '').replace('src/', '')) + '</code>').join(', ')}${qf.files.size > 3 ? ' +' + (qf.files.size - 3) + ' more' : ''}</p>`;
@@ -2407,7 +2473,7 @@ function buildConsistencyHtml() {
       html += `</div>`;
       if (qf.suggestion) {
         html += `<p class="consistency-suggestion">${escapeHtml(qf.suggestion)}`;
-        if (qf.pf_doc_url) html += ` <a href="${escapeHtml(qf.pf_doc_url)}" target="_blank" style="font-size:0.7rem;margin-left:0.3rem">PatternFly docs &rarr;</a>`;
+        if (qf.pf_doc_url) html += ` <a href="${escapeHtml(qf.pf_doc_url)}" target="_blank" style="font-size:0.7rem;margin-left:0.3rem">Guideline source &rarr;</a>`;
         html += `</p>`;
       }
       html += `</div>`;
@@ -2427,7 +2493,7 @@ function buildConsistencyHtml() {
   const pages = Object.entries(byPage).sort((a, b) => b[1].length - a[1].length);
 
   html += `<h3 style="margin-top:1.5rem">By Page</h3>`;
-  html += `<p class="small muted" style="margin:-0.25rem 0 0.5rem">Violations grouped by component area</p>`;
+  html += `<p class="small muted" style="margin:-0.25rem 0 0.5rem">${onlyCandidates ? 'Review candidates grouped by component area' : 'Violations grouped by component area'}</p>`;
 
   for (const [page, pvs] of pages) {
     const errorCount = pvs.filter(v => v.severity === 'error').length;
@@ -2506,12 +2572,13 @@ function buildFixHistoryNarrative() {
 function buildComplianceNarrative() {
   const cr = readJsonOr(path.join(absArtifacts, 'consistency-report.json'), null);
   if (!cr || cr.skipped) {
-    return `<p class="appendix-narrative">Automated compliance checks are not yet configured for this prototype. The section below describes what would be checked and shows detected PF components.</p>`;
+    return `<p class="appendix-narrative">Product-guideline checks were not evaluated. No compliance pass is implied.</p>`;
   }
   const violations = (cr.source_mode && cr.source_mode.violations) ? cr.source_mode.violations.length : 0;
   const checked = (cr.summary && cr.summary.total_guidelines_checked) ? cr.summary.total_guidelines_checked : 0;
-  if (!violations) return `<p class="appendix-narrative">All ${checked} PatternFly guidelines checked — no violations found.</p>`;
-  return `<p class="appendix-narrative">${violations} PatternFly guideline violation${violations !== 1 ? 's' : ''} found across ${checked} guidelines checked.</p>`;
+  if (!checked) return `<p class="appendix-narrative">No product guidelines were evaluated. No compliance pass is implied.</p>`;
+  if (!violations) return `<p class="appendix-narrative">${checked} selected product guidelines checked — no source violations found.</p>`;
+  return `<p class="appendix-narrative">${violations} product guideline violation${violations !== 1 ? 's' : ''} found across ${checked} guidelines checked.</p>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -3474,7 +3541,7 @@ function buildTokens(opts = {}) {
               block += `<details id="${detailId}" class="sa-detail"><summary style="display:none"></summary><div class="sa-detail-body">`;
               if (cf.file) block += `<div class="sa-location"><code>${escapeHtml((cf.file || '').replace('src/app/', '').replace('src/', '') + (cf.line ? ':' + cf.line : ''))}</code></div>`;
               if (cf.suggestion) block += `<p class="sa-fix"><strong>Fix:</strong> ${escapeHtml(cf.suggestion)}</p>`;
-              if (cf.pf_doc_url) block += `<a href="${escapeHtml(cf.pf_doc_url)}" target="_blank" class="sa-doc-link">PatternFly documentation &rarr;</a>`;
+              if (cf.pf_doc_url) block += `<a href="${escapeHtml(cf.pf_doc_url)}" target="_blank" class="sa-doc-link">Guideline source &rarr;</a>`;
               block += `</div></details></div>`;
             }
             if (cResult.shell.length) {

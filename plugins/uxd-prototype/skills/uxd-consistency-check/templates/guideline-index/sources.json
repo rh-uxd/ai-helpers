@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0.0",
+  "product": null,
+  "release": null,
+  "sources": [
+    {
+      "id": "example-controls",
+      "rule_ids": [],
+      "title": "Controls",
+      "topic": "controls",
+      "scope": "settings forms (illustrative; replace before use)",
+      "owner": null,
+      "authority": null,
+      "policy_status": "draft",
+      "locator": {"kind": "local", "path": "rules/controls.md"},
+      "examples": [{"kind": "local", "path": "examples/controls.tsx"}],
+      "assets": [{"kind": "local", "path": "assets/controls.png"}]
+    }
+  ]
+}

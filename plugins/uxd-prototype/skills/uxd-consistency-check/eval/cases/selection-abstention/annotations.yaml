@@ -1,0 +1,16 @@
+{
+  "case_type": "selection-abstention",
+  "strict_expected": {
+    "status": "not_evaluated",
+    "selected_source_ids": [],
+    "qualified_rule_ids": [],
+    "locator": null,
+    "approval_required": false,
+    "fallback_approval_required": false,
+    "model_approval_required": false,
+    "deterministic_passes": 0,
+    "policy_mode": "product_design_guidelines_only",
+    "peer_audit": false,
+    "next_action": "request_selection"
+  }
+}

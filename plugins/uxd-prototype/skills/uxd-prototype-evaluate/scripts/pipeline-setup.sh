@@ -165,15 +165,15 @@ python3 "${EVAL_ROOT}/scripts/eval_state.py" set "${ARTIFACTS}/eval-state.yaml" 
 echo "SOURCE_AVAILABLE=${SOURCE_AVAILABLE}"
 echo "SOURCE_DIR=${SOURCE_DIR}"
 
-# ── Context repos (consistency-checker + usability-testing) ───────────
+# ── Local checker availability; usability context remains separate ───
 CONSISTENCY_AVAILABLE="false"
-if [ -d "${PROJECT_ROOT}/.context/consistency-checker/guidelines" ] && \
-   [ -n "$(ls "${PROJECT_ROOT}/.context/consistency-checker/guidelines/"*.md 2>/dev/null)" ]; then
-  CONSISTENCY_AVAILABLE="true"
+if CHECKER_STATUS="$(bash "${EVAL_ROOT}/scripts/bootstrap-consistency-checker.sh" 2>&1)"; then
+  printf '%s\n' "$CHECKER_STATUS"
+  case "$CHECKER_STATUS" in
+    *"CONSISTENCY_AVAILABLE=true"*) CONSISTENCY_AVAILABLE="true" ;;
+  esac
 else
-  bash "${EVAL_ROOT}/scripts/bootstrap-consistency-checker.sh" && \
-    CONSISTENCY_AVAILABLE="true" || \
-    echo "WARNING: consistency-checker bootstrap failed"
+  printf 'Consistency checker availability check failed: %s\n' "$CHECKER_STATUS" >&2
 fi
 
 python3 "${EVAL_ROOT}/scripts/eval_state.py" set "${ARTIFACTS}/eval-state.yaml" \

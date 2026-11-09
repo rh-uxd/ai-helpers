@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "UXD frozen guideline manifest v1 (legacy 1.0 and namespaced 1.1)",
+  "type": "object",
+  "required": ["schema_version", "workspace", "design_system", "version", "sources", "documents"],
+  "properties": {
+    "schema_version": {"enum": ["1.0.0", "1.1.0"]},
+    "workspace": {"type": "string"},
+    "design_system": {"type": "string", "minLength": 1},
+    "version": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "sources": {"type": "array", "items": {"type": "object", "required": ["kind", "location", "document_ids"], "properties": {"kind": {"enum": ["baseline", "workspace", "explicit"]}, "namespace": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"}, "location": {"type": "string", "minLength": 1}, "document_ids": {"type": "array", "items": {"type": "string"}}}}},
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "title", "category", "severity", "check", "parameters", "text", "sha256", "version", "sources", "kind", "source_url", "retrieved_at", "design_system"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*(?::[A-Za-z0-9][A-Za-z0-9._-]*)?$"},
+          "original_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+          "namespace": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"},
+          "title": {"type": "string", "minLength": 1},
+          "category": {"type": "string", "minLength": 1},
+          "severity": {"enum": ["error", "warning"]},
+          "check": {"type": ["string", "null"]},
+          "parameters": {"type": "object", "required": ["required_class"], "properties": {"required_class": {"type": ["string", "null"]}}},
+          "text": {"type": "string", "minLength": 1},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "version": {"type": "string", "minLength": 1},
+          "sources": {"type": "array", "items": {"type": "string"}},
+          "kind": {"enum": ["baseline", "workspace", "explicit"]},
+          "source_url": {"type": ["string", "null"]},
+          "retrieved_at": {"type": ["string", "null"]},
+          "design_system": {"type": "string", "minLength": 1}
+        }
+      }
+    }
+  },
+  "allOf": [{
+    "if": {"properties": {"schema_version": {"const": "1.1.0"}}},
+    "then": {"properties": {
+      "sources": {"items": {"required": ["namespace"], "properties": {"document_ids": {"uniqueItems": true}}}},
+      "documents": {"items": {"required": ["original_id", "namespace"], "properties": {
+        "id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*:[A-Za-z0-9][A-Za-z0-9._-]*$"}
+      }}}
+    }},
+    "else": {"properties": {"documents": {"items": {"properties": {
+      "id": {"pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"}
+    }}}}}
+  }]
+}

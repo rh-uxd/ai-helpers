@@ -1,12 +1,8 @@
 # Eval Pipeline Settings
-# Configuration specific to the eval pipeline (design system context and usability testing).
+# Configuration specific to the eval pipeline and usability testing.
 
-# --- Design System ---
-design_system:
-  name: PatternFly
-  version: "6"
-  docs_url: https://www.patternfly.org/
-  context_path: .context/design-system/
+# Product guidelines are selected explicitly through the installed sibling
+# uxd-consistency-check; no design-system clone or default policy is configured.
 
 # --- Usability Testing Integration ---
 # Cloned automatically by bootstrap-usability-testing.sh when a git URL is set
