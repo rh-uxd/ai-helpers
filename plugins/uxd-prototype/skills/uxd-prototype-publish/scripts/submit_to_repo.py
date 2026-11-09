@@ -18,6 +18,7 @@ Usage:
         [--pages-base-url https://pages.example.com] \
         [--pages-timeout 600] \
         [--jira-comment-id 12345] \
+        [--eval-run /path/to/canonical-run] [--include-eval-report] [--force] \
         [--dry-run]
 
 Output (JSON to stdout):
@@ -38,11 +39,14 @@ Output (JSON to stdout):
     }
 """
 
+import hashlib
 import json
 import os
+from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 import time
 
 
@@ -136,45 +140,157 @@ def collect_eval_and_bar_files(workspace_path, rfe_key):
     return extras
 
 
-def read_review_score(rfe_key):
-    """Read eval / review summary for MR description.
+def prepare_eval_report(rfe_key, run, workspace_path, revision, digest):
+    """Attach only a freshly rendered canonical report, after the source gate.
 
-    Prefers Playwright eval CSV (PASS/FAIL/FLAGGED counts). Falls back to
-    legacy reviews/summary.md total_score + verdict.
-    Returns (score_or_summary, verdict) where score may be a short string
-    for CSV-based evals (e.g. "8/10 PASS") or an int for legacy rubrics.
+    Bar/runtime and HTML-entry changes belong in the evaluated source commit.
+    No dirty-path exemptions: even a pre-copied report must pass the source gate.
     """
-    csv_path = f'.artifacts/{rfe_key}/eval/evaluation-report.csv'
-    if os.path.isfile(csv_path):
-        pass_n = fail_n = flagged_n = 0
-        with open(csv_path) as f:
-            for line in f:
-                upper = line.upper()
-                # Count AC verdict cells; skip header / section markers
-                if ',PASS,' in upper or upper.rstrip().endswith(',PASS'):
-                    pass_n += 1
-                elif ',FAIL,' in upper or upper.rstrip().endswith(',FAIL'):
-                    fail_n += 1
-                elif ',FLAGGED,' in upper or upper.rstrip().endswith(',FLAGGED'):
-                    flagged_n += 1
-        total = pass_n + fail_n + flagged_n
-        if total:
-            summary = f'{pass_n}/{total} PASS, {fail_n} FAIL, {flagged_n} FLAGGED'
-            verdict = 'eval-pass' if fail_n == 0 else 'needs-attention'
-            return summary, verdict
+    workspace = Path(workspace_path).resolve()
+    run = Path(run).resolve()
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]*', rfe_key):
+        raise ValueError('Invalid prototype key for report destination')
+    if run == workspace or workspace in run.parents:
+        raise ValueError('Keep the canonical report run outside the source workspace')
+    renderer = (Path(__file__).resolve().parents[2] / 'uxd-prototype-evaluate'
+                / 'scripts' / 'run-report.js')
+    result = subprocess.run(
+        ['node', str(renderer), str(run), '--json'],
+        capture_output=True, text=True, timeout=30,
+    )
+    if result.returncode:
+        raise ValueError('Canonical report rendering failed: '
+                         + result.stderr.strip()[-2000:])
+    rendered = json.loads(result.stdout)
+    if rendered.get('mode') != 'canonical' or rendered.get('artifact_sha256') != digest:
+        raise ValueError('Rendered report does not match the selected canonical run')
+    html = run / 'evaluation-report.html'
+    integrity = run / 'report-integrity.json'
+    for file in (html, integrity):
+        if file.is_symlink() or not file.is_file():
+            raise ValueError('Report artifacts must be regular files')
+    manifest = json.loads(integrity.read_text(encoding='utf-8'))
+    content = html.read_bytes()
+    html_hash = 'sha256:' + hashlib.sha256(content).hexdigest()
+    if manifest.get('artifact_sha256') != digest or manifest.get('html_sha256') != html_hash:
+        raise ValueError('Report integrity does not match canonical artifacts/HTML')
 
-    path = f'.artifacts/{rfe_key}/reviews/summary.md'
-    if not os.path.isfile(path):
+    # Rendering is local, but source may have changed while it ran. Check again
+    # before creating the single allowed derived attachment in the workspace.
+    if (run_git(['rev-parse', 'HEAD'], cwd=workspace) != revision
+            or run_git(['status', '--porcelain', '--untracked-files=all'], cwd=workspace)):
+        raise ValueError('Report attachment requires a clean workspace at the evaluated revision')
+    target = workspace / 'public' / 'evals' / rfe_key / 'index.html'
+    for entry in (*reversed(target.parents), target):
+        if entry == workspace or workspace in entry.parents:
+            if entry.is_symlink() or (entry.exists() and
+                    not (entry.is_file() if entry == target else entry.is_dir())):
+                raise ValueError('Report destination must use regular files/directories')
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(dir=target.parent, prefix='.eval-', delete=False) as temporary:
+        temporary_path = Path(temporary.name)
+        try:
+            temporary.write(content)
+            temporary.close()
+            os.replace(temporary_path, target)
+        finally:
+            temporary_path.unlink(missing_ok=True)
+    return html_hash
+
+
+def read_review_score(rfe_key, eval_run=None, workspace_path=None, force=False,
+                      include_report=False):
+    """Summarize a selected, validated canonical run; never infer PASS from CSV.
+
+    Node and the sibling evaluator's declared dependencies are prerequisites.
+    Its loader validates schemas and linked receipts before returning any data.
+    No discovery of a newest run, legacy fallback, model call or publication.
+    Explicit include_report attaches derived HTML only after evidence/source gates.
+    """
+    run = Path(eval_run or f'.artifacts/{rfe_key}/eval').absolute()
+    canonical = ('brief.json', 'evaluation.json', 'evidence.json',
+                 'actions.json', 'state.json')
+    if eval_run is None and not any(os.path.lexists(run / name)
+                                    for name in canonical):
+        if include_report:
+            raise ValueError('A canonical run is required to include its report')
         return None, None
 
-    with open(path) as f:
-        content = f.read()
+    contract = (Path(__file__).resolve().parents[2] / 'uxd-prototype-evaluate'
+                / 'scripts' / 'artifacts' / 'split-contract.js')
+    # Return only publication-relevant fields, read through the canonical loader.
+    script = """
+const C = require(process.argv[1]);
+const docs = C.loadRun(process.argv[2]);
+const brief = docs['brief.json'];
+const state = docs['state.json'];
+process.stdout.write(JSON.stringify({
+  run_id: brief.run_id, prototype_key: brief.prototype_key,
+  revision: brief.intent.scope.source_ref, source: brief.intent.source_input,
+  workflow_status: state.workflow?.status || state.lifecycle.status,
+  selected_checks: state.quick_checks?.selected || [],
+  scope: {
+    route: state.workflow?.route || brief.intent.stage,
+    ac_ids: brief.intent.acceptance_criteria.map(ac => ac.id),
+    task_persona_pairs: state.workflow?.selected_pairs || brief.intent.personas.flatMap(
+      p => p.task_ids.map(task_id => ({ task_id, persona_id: p.id }))),
+    inspection: brief.intent.check_scope || null,
+  },
+  walkthrough_verified: Boolean(state.workflow?.selected_pairs.length),
+  ac_results: docs['evaluation.json'].ac_results,
+  artifact_sha256: C.digest(process.argv[2]),
+}));
+"""
+    result = subprocess.run(
+        ['node', '-e', script, str(contract), str(run)],
+        capture_output=True, text=True, timeout=30,
+    )
+    if result.returncode:
+        raise ValueError('Canonical evaluation validation failed: '
+                         + result.stderr.strip()[-2000:])
+    data = json.loads(result.stdout)
+    if data['prototype_key'] != rfe_key:
+        raise ValueError('Selected evaluation belongs to another prototype')
+    if data['workflow_status'] != 'completed' or not data.get('source'):
+        raise ValueError('Select a completed run with frozen source context; '
+                         'finish Full review before publishing')
+    if workspace_path:
+        head = run_git(['rev-parse', 'HEAD'], cwd=workspace_path)
+        dirty = run_git(['status', '--porcelain', '--untracked-files=all'],
+                        cwd=workspace_path)
+        if head != data['revision'] or dirty:
+            raise ValueError('Evaluation does not match a clean workspace '
+                             'at its reviewed prototype revision')
 
-    score_match = re.search(r'total_score:\s*(\d+)', content)
-    verdict_match = re.search(r'verdict:\s*"?([^"\n]+)"?', content)
-    score = int(score_match.group(1)) if score_match else None
-    verdict = verdict_match.group(1).strip() if verdict_match else None
-    return score, verdict
+    counts = {name: 0 for name in ('PASS', 'FAIL', 'FLAGGED', 'NOT_RUN')}
+    for row in data['ac_results']:
+        counts[row['verdict']] += 1
+    total = sum(counts.values())
+    if counts['FAIL'] and not force:
+        raise ValueError('Evaluation has failed ACs; review them and explicitly '
+                         'select --force to publish without claiming success')
+    verified = (total > 0 and counts['PASS'] == total
+                and data['walkthrough_verified']
+                and all(row['evaluated_by'] == 'journey' and row['evidence_ids']
+                        for row in data['ac_results']))
+    summary = (f"{counts['PASS']}/{total} PASS, {counts['FAIL']} FAIL, "
+               f"{counts['FLAGGED']} FLAGGED, {counts['NOT_RUN']} NOT_RUN; "
+               f"run {data['run_id']} @ {data['revision']}; "
+               f"source {data['source']['id']} @ {data['source']['revision']}; "
+               f"selected checks {','.join(data['selected_checks']) or 'none'}; "
+               f"scope {json.dumps(data['scope'], sort_keys=True)}; "
+               f"canonical {data['artifact_sha256']}")
+    if not verified:
+        print('Warning: AC coverage is failed, incomplete or absent; '
+              'this run is not verified AC success.', file=sys.stderr)
+    if include_report:
+        if not workspace_path:
+            raise ValueError('Report attachment requires the evaluated source workspace')
+        report_hash = prepare_eval_report(
+            rfe_key, run, workspace_path, data['revision'], data['artifact_sha256'],
+        )
+        summary += f'; derived report public/evals/{rfe_key}/index.html {report_hash}'
+    return summary, 'eval-pass' if verified else 'needs-attention'
 
 
 def read_metadata(rfe_key):
@@ -429,11 +545,11 @@ def build_mr_description(rfe_key, title, score, verdict, changeset_files):
     sections.append('|---|---|')
     sections.append(f'| **Decisions** | {mode_label} |')
     if score is not None:
-        status_label = 'pass' if verdict and 'pass' in str(verdict) else 'needs attention'
-        if isinstance(score, str):
-            sections.append(f'| **Eval** | {score} ({status_label}) |')
-        else:
-            sections.append(f'| **Eval / rubric** | {score} ({status_label}) |')
+        status_label = ('verified selected ACs' if verdict == 'eval-pass'
+                        else 'needs attention / unverified')
+        sections.append(f'| **Eval** | {score} ({status_label}) |')
+    else:
+        sections.append('| **Eval** | Not evaluated — no verified AC claim |')
     if mode == 'human':
         human_review_label = 'Yes — design decisions were reviewed by a human'
     elif mode == 'auto':
@@ -721,6 +837,9 @@ def main():
     jira_comment_id = None
     upstream_flag = None
     target_branch_flag = None
+    eval_run = None
+    include_eval_report = False
+    force = False
 
     i = 1
     while i < len(sys.argv):
@@ -742,6 +861,15 @@ def main():
             i += 1
         elif arg == '--dry-run':
             dry_run = True
+            i += 1
+        elif arg == '--eval-run' and i + 1 < len(sys.argv):
+            eval_run = sys.argv[i + 1]
+            i += 2
+        elif arg == '--include-eval-report':
+            include_eval_report = True
+            i += 1
+        elif arg == '--force':
+            force = True
             i += 1
         elif arg == '--pages-base-url' and i + 1 < len(sys.argv):
             pages_base_url = sys.argv[i + 1]
@@ -783,7 +911,29 @@ def main():
     if not title:
         title = rfe_key
 
-    score, verdict = read_review_score(rfe_key)
+    try:
+        score, verdict = read_review_score(
+            rfe_key, eval_run=eval_run, workspace_path=workspace_path,
+            force=force or dry_run,
+            include_report=include_eval_report and not dry_run,
+        )
+    except (OSError, ValueError, subprocess.SubprocessError) as error:
+        print(f'Error: {error}', file=sys.stderr)
+        sys.exit(1)
+    if score is None:
+        if not (force or dry_run):
+            print('Error: select a canonical --eval-run, or explicitly use '
+                  '--force to publish without evaluated AC coverage.',
+                  file=sys.stderr)
+            sys.exit(1)
+        print('Warning: no canonical evaluation selected; no eval-pass claim.',
+              file=sys.stderr)
+        if include_eval_report:
+            print('Error: a canonical run is required to include its report.', file=sys.stderr)
+            sys.exit(1)
+    if dry_run and include_eval_report:
+        print('[DRY RUN] Would render/attach the selected canonical report after '
+              'the clean-source gate; no report files written.', file=sys.stderr)
 
     env = os.environ.copy()
     if no_ssl_verify:
@@ -825,9 +975,11 @@ def main():
                          cwd=workspace_path, env=env,
                          dry_run=dry_run, allow_failure=True)
         if result is None and not dry_run:
-            run_git(['checkout', branch_name], cwd=workspace_path, env=env)
-            print(f'Branch {branch_name} already existed, checked out.',
+            print(f'Error: cannot create {branch_name}. If it already exists, '
+                  'check it out and verify/evaluate that source revision before '
+                  'submission; refusing to switch revisions after validation.',
                   file=sys.stderr)
+            sys.exit(1)
 
     # --- Step 3: Stage changeset files + Prototype Bar / eval Pages assets ---
     files_to_add = []
@@ -884,7 +1036,7 @@ def main():
     push_remote = workflow_info['push_remote']
 
     push_output = run_git(
-        ['push', '-u', push_remote, branch_name, '--force-with-lease'],
+        ['push', '-u', push_remote, branch_name],
         cwd=workspace_path, env=env, dry_run=dry_run,
     )
 
@@ -945,7 +1097,8 @@ def main():
             if workflow_info['workflow'] == 'fork':
                 print('Attempting auto-recovery: ensuring branch is on fork...',
                       file=sys.stderr)
-                run_git(['push', '-u', 'origin', branch_name, '--force'],
+                # Never overwrite a divergent remote branch as "recovery".
+                run_git(['push', '-u', 'origin', branch_name],
                         cwd=workspace_path, env=env, allow_failure=True)
                 time.sleep(5)
                 verification = verify_mr(mr_url, workflow_info,

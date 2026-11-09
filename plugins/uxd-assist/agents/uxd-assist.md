@@ -40,12 +40,15 @@ When the user asks to create, iterate on, evaluate, export, or publish a prototy
 | Skill | What it does |
 |-------|-------------|
 | `/uxd-prototype:uxd-prototype-create` | Create or refine a UX prototype from a ticket, Figma design, or idea |
-| `/uxd-prototype:uxd-prototype-evaluate` | Validate a prototype against Jira ACs and run usability walkthroughs. Key flags: `--no-fix` (findings only), `--no-report` (chat summary), `--max-iterations=N`, `--fresh` (clean re-run) |
+| `uxd-evaluator` agent (`uxd-prototype`) | Recommend the smallest evaluation scope, prepare inputs and review existing canonical findings; routing does not authorize execution |
+| `/uxd-prototype:uxd-prototype-evaluate` | Selected Quick Checks or Full Evaluation from reviewed Jira/UX-spec inputs; Full pauses after Quick before separately approved walkthroughs. Classification is triage, not AC verification |
+| `/uxd-prototype:uxd-prototype-walkthrough` | Independently callable browser walkthroughs for the exact reviewed task/persona pairs; no preceding Quick Checks required |
 | `/uxd-prototype:uxd-prototype-export` | Export pages/journey states as static HTML, component tree, or PF implementation spec; install Prototype Bar |
 | `/uxd-prototype:uxd-prototype-publish` | Publish a prototype to a git repo, GitHub Pages, GitLab Pages, or Vercel |
 
 **When to use evaluate vs. design heuristics:**
-- `/uxd-prototype:uxd-prototype-evaluate` — running prototype with a Jira ticket (AC verdicts + usability scores)
+- `uxd-evaluator` / `/uxd-prototype:uxd-prototype-evaluate` — source-linked checks, composed evaluation or existing-results review; Jira is optional when a reviewed UX-spec snapshot is supplied. Select only needed work; no implicit personas, fixes, reports or publishing.
+- `/uxd-prototype:uxd-prototype-walkthrough` — task completion/discoverability for selected personas, distinct from explicit AC verification or human participant research. Browser/provider work needs scoped approval.
 - `/uxd-research:uxd-evaluate-design-heuristics` — static design (Figma, screenshot, or mockup) without a Jira ticket
 
 ## Synthesis guidance

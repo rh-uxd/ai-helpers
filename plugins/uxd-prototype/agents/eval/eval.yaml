@@ -5,12 +5,12 @@ execution:
   mode: case
   arguments: "{prompt}"
 runner:
-  type: codex
+  type: claude-code
   plugin_dirs:
     - plugins/uxd-prototype
 models:
-  skill: gpt-6-sol
-  judge: gpt-6-luna
+  skill: claude-opus-4-6
+  judge: claude-sonnet-5
 permissions:
   allow: []
   deny:
