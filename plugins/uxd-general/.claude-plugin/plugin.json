@@ -1,0 +1,7 @@
+{
+  "name": "uxd-general",
+  "description": "General UXD artifacts — slide decks and other deliverables shared across research, design, and prototyping",
+  "author": { "name": "UXD Team" },
+  "repository": "https://github.com/rh-uxd/ai-helpers",
+  "license": "Apache-2.0"
+}

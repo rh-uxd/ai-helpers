@@ -1,0 +1,88 @@
+name: uxd-slides-export-eval
+description: >-
+  Evaluate uxd-slides-export's multi-file HTML viewer and the boundary that
+  export does not publish
+
+skill: uxd-general:uxd-slides-export
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/uxd-general
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains input.yaml and annotations.yaml.
+    Cases ask for the export contract. They must not publish.
+
+outputs:
+  - path: artifacts
+    schema: |
+      Judges check conversation text for the viewer files and the refusal
+      to publish from this skill.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: default_html_contract
+    description: Describes separate HTML, CSS, and JavaScript plus the manifest
+    if: "annotations.get('case_type') == 'default-html'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+
+      for token in ("index.html", "assets/default.css", "assets/custom.css", "viewer.js", "deck.json", "export-manifest.json"):
+          if not re.search(re.escape(token), text):
+              return False, f"Export contract missing {token}"
+
+      separate = re.search(
+          r"do not inline|not inline|separate|css and javascript stay",
+          text,
+          re.IGNORECASE,
+      )
+      if not separate:
+          return False, "Did not keep CSS and JavaScript as separate files"
+
+      if not re.search(r"into the deck|same directory|deck directory", text, re.IGNORECASE):
+          return False, "Did not write the viewer into the deck directory"
+
+      return True, "Described the multi-file local viewer"
+
+  - name: export_does_not_publish
+    description: Sends Google Slides and Figma Slides to the publish skill
+    if: "annotations.get('case_type') == 'no-publish'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      if not re.search(r"uxd-slides-publish", text):
+          return False, "Did not point publish at uxd-slides-publish"
+      if not re.search(r"google slides", text, re.IGNORECASE) or not re.search(r"figma slides", text, re.IGNORECASE):
+          return False, "Did not name both publish targets as out of scope for export"
+
+      applied = re.search(r"--apply|mark-published", text)
+      if applied and not re.search(r"do not|don't|not |will not|won't", text, re.IGNORECASE):
+          return False, "Published from the export skill"
+
+      return True, "Left publishing to uxd-slides-publish"

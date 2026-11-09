@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>__TITLE__</title>
+  <link rel="stylesheet" href="./viewer.css">
+  <link rel="stylesheet" href="./assets/default.css">
+__CUSTOM_CSS__
+</head>
+<body class="__TEMPLATE_CLASS__">
+  <div class="banner" id="banner" hidden></div>
+  <header class="chrome">
+    <p class="chrome-title" id="deck-title"></p>
+    <div class="chrome-controls">
+      <button type="button" id="prev">Previous</button>
+      <p class="chrome-count" id="count" aria-live="polite">1 / 1</p>
+      <button type="button" id="next">Next</button>
+      <button type="button" id="notes-toggle" aria-pressed="false">Notes</button>
+      <button type="button" id="present" aria-pressed="false">Present</button>
+    </div>
+  </header>
+  <main class="stage">
+    <div class="viewport" id="viewport" aria-live="polite"></div>
+  </main>
+  <div class="progress" id="progress"></div>
+  <aside class="notes" id="notes" hidden>
+    <h2>Speaker notes</h2>
+    <p id="notes-body"></p>
+  </aside>
+  <script id="deck-data" type="application/json">__DECK_JSON__</script>
+  <script src="./viewer.js"></script>
+</body>
+</html>

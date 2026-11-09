@@ -1,0 +1,7 @@
+.template-research-readout .slide-quote {
+  background: #f5f5f5;
+}
+
+.template-research-readout .slide-quote blockquote {
+  max-width: 18ch;
+}

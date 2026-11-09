@@ -1,0 +1,134 @@
+name: uxd-slides-create-eval
+description: >-
+  Evaluate uxd-slides-create's template choice, deck folder contract, and
+  the rule that a missing brief stops authoring
+
+skill: uxd-general:uxd-slides-create
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/uxd-general
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+inputs:
+  tools:
+    - match: Questions asked to the user via AskUserQuestion.
+      prompt: |
+        Answer based on the test case context in input.yaml and answers.yaml.
+        If answers.yaml says not to supply the missing brief, do not invent one.
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: case_type for conditional judges
+    - Optional answers.yaml for AskUserQuestion auto-answer guidance
+    Cases ask the skill to plan the deck. They must not publish.
+
+outputs:
+  - path: artifacts
+    schema: |
+      Judges check conversation text for the template sequence, local file
+      layout, and the decision to ask before inventing a brief.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: research_readout_uses_template
+    description: Plans a local research readout from the template and file contract
+    if: "annotations.get('case_type') == 'research-readout'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+
+      if not re.search(r"research-readout", text):
+          return False, "Did not start from the research-readout template"
+
+      for part in ("question", "method", "findings", "recommendations"):
+          if not re.search(part, text, re.IGNORECASE):
+              return False, f"Research readout sequence missing {part}"
+
+      if not re.search(r"content\.md", text) or not re.search(r"metadata\.json", text):
+          return False, "Did not describe content.md and metadata.json"
+      if not re.search(r"\.artifacts/slides-", text):
+          return False, "Did not place the deck under .artifacts/slides-"
+      if not re.search(r"validate-slides", text):
+          return False, "Did not validate the deck"
+
+      published = re.search(r"--apply|mark-published|figma\.com/slides", text, re.IGNORECASE)
+      if published and not re.search(r"do not|don't|not |will not|won't|only when", text, re.IGNORECASE):
+          return False, "Published while planning a local deck"
+
+      return True, "Planned a local research readout from the template"
+
+  - name: asks_for_missing_brief
+    description: Asks for a missing goal, audience, or source before authoring
+    if: "annotations.get('case_type') == 'asks-missing-brief'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      tool_calls = outputs.get("tool_calls") or []
+      for call in tool_calls:
+          text += "\n" + str(call.get("input", ""))
+      asked_via_tool = any(c.get("name") == "AskUserQuestion" for c in tool_calls)
+      asks = asked_via_tool or re.search(
+          r"(what|who|which|goal|audience|source|brief).{0,40}\?",
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      if not asks:
+          return False, "Did not ask for the missing brief"
+      if not re.search(r"google slides", text, re.IGNORECASE):
+          return False, "Did not offer Google Slides"
+      if not re.search(r"figma slides", text, re.IGNORECASE):
+          return False, "Did not offer Figma Slides"
+      if not re.search(r"local|on your machine", text, re.IGNORECASE):
+          return False, "Did not offer a local deck"
+
+      type_directives = re.findall(r"<!--\s*type:", text, re.IGNORECASE)
+      if len(type_directives) >= 3:
+          return False, "Wrote a deck before the brief was clear"
+
+      return True, "Asked for the missing brief before authoring"
+
+  - name: shared_destination_keeps_local_deck
+    description: A Figma or Google request still authors the local deck, then hands off to publish
+    if: "annotations.get('case_type') == 'wants-shared-copy'"
+    check: |
+      import re
+
+      text = outputs.get("conversation", "")
+      if not re.search(r"\.artifacts/slides-", text):
+          return False, "Did not keep a local deck under .artifacts/slides-"
+      if not re.search(r"content\.md", text) or not re.search(r"metadata\.json", text):
+          return False, "Did not describe the local slide files"
+      if not re.search(r"uxd-slides-publish", text):
+          return False, "Did not continue into uxd-slides-publish"
+      if not re.search(r"figma slides", text, re.IGNORECASE):
+          return False, "Did not name Figma Slides as the shared copy"
+      if re.search(r"skip the local|without a local deck|only in figma", text, re.IGNORECASE):
+          return False, "Skipped the local deck"
+
+      return True, "Planned a local deck and a Figma Slides handoff"
