@@ -1,0 +1,6 @@
+prompt: |
+  Offline simulation: do not execute anything. Read only the skill/reference if needed.
+  Run promotion again for train 6.7.0? All approved versions (core 6.7.0, charts 8.7.0, docs 7.7.0)
+  already exist and have correct latest tags. Package tags and registry gitHead agree on stable commit S.
+  Aggregate release v6.7.0 also exists at S and has correct notes. CI is green.
+  State whether anything should be published, retagged, or dispatched now.
