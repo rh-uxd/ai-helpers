@@ -26,7 +26,7 @@ Family: **create → evaluate → publish** (optional export along the way). Pip
 | Input | Required | Source |
 |-------|----------|--------|
 | What to prototype (Jira URL/key, Figma link, description, or idea) | **Yes** | User; skill asks if omitted |
-| Vision journey map | No; recommended for vision work | Miro board URL or local JSON Canvas, paired with the final narrative |
+| Vision journey map and storyboard | No; recommended for vision work | Miro board URL or local JSON Canvas, paired with the edited storyboard and final narrative |
 | Final narrative | No; recommended for vision work | Narrative document or user-provided text |
 | Workspace (`--workspace`) | No | Local path, git URL, or `standalone` (default) |
 | Push destination (`--target`) | No | `none` unless publishing |
@@ -90,7 +90,7 @@ Ask only for missing information; honor answers and flags already supplied. Ask 
 
 > Share a Jira ticket, a Figma link, a feature description, or a rough idea.
 
-For vision work, share the edited paired journey map (Miro URL or local canvas) and the final narrative. The map and narrative are complementary sources: the map carries the agreed steps, touchpoints, screens, pains, evidence, assumptions, and support opportunities; the narrative carries the readable story and emotional arc.
+For vision work, share the edited paired journey map and storyboard (Miro URL or local canvas) and the final narrative. The board carries the agreed steps, touchpoints, screens, pains, research gaps, evidence, assumptions, support opportunities, and team-edited storyboard; the narrative carries the readable story and emotional arc.
 
 When following the UX Vision Playbook and the user has not specified otherwise, recommend `--decisions human` and `--depth normal`. Explain that `human` supports choosing together on the decision page or in a chat walkthrough. At normal depth, expect roughly 4–7 meaningful design decisions when genuine tradeoffs exist; never invent decisions to fill that range. Respect an explicit user preference or project constraint.
 
@@ -127,9 +127,9 @@ Describe the actual feature, starting point, design-choice approach, and relevan
 
 ## Step 1: Read the source material
 
-When the source includes a paired vision journey map, read both the As-Is and To-Be frames before planning the prototype. For a Miro URL, read the board directly through the Miro connection and follow the read guidance in `uxd-canvas-create`; do not write to the board. If the connection is unavailable, ask for a JSON Canvas snapshot or an export of both frames and say what could not be read. Do not claim to have reviewed inaccessible map content.
+When the source includes a paired vision journey map, read the As-Is and To-Be frames, the research coverage/gaps notes, and the edited storyboard before planning the prototype. For a Miro URL, read the board directly through the Miro connection and follow the read guidance in `uxd-canvas-create`; do not write to the board. If the connection is unavailable, ask for a JSON Canvas snapshot or exports of the maps and storyboard and say what could not be read. Do not claim to have reviewed inaccessible board content.
 
-Use the final narrative for the story and the team-edited map for structured journey details. The map is authoritative for mapped actions, touchpoints, screen candidates, pains, opportunities, evidence, and assumptions. If the two sources conflict on the actor, scope, stage order, or a key interaction, ask the designer which to follow before generating. Do not replace a reviewed map with an AI-only interpretation.
+Use the final narrative for the story, the team-edited map for structured journey details, and the team-edited storyboard for the agreed story beats. The map is authoritative for mapped actions, touchpoints, screen candidates, pains, opportunities, research gaps, evidence, and assumptions. If these sources conflict on the actor, scope, stage order, or a key interaction, ask the designer which to follow before generating. Do not replace reviewed Miro content with an AI-only interpretation.
 
 ### Jira and other source lookup
 
@@ -159,10 +159,11 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/frontmatter.py" set "artifacts/{ID}/rfe-sna
 
 Parse from the RFE: user stories, acceptance criteria, personas/roles, key entities, flows, and page states.
 
-When a vision journey map and narrative are available, derive the prototype journeys from both:
+When a vision journey map, edited storyboard, and narrative are available, derive the prototype journeys from all three:
 
 - Use the map's To-Be frame to preserve the agreed stages, user actions, touchpoints, screen candidates, support opportunities, and evidence/assumption markers.
 - Use the narrative to establish the scene, pivot, emotional arc, and payoff. Include As-Is screens only when the designer wants the current-state contrast in the prototype.
+- Use the edited storyboard to preserve the agreed To-Be beat sequence and its mapped As-Is pains and needs. The final narrative can clarify the story but must not silently change the board's decisions.
 - Group map steps that belong on one screen without dropping their order. Each `journeys.json` step needs a real or verified route; screen candidates are not permission to invent routes.
 - Preserve the map's stable `S#` labels in journey step names or descriptions, in the same order. When several mapped steps share a screen, keep each label visible rather than merging away the team's sequence.
 - A human-reviewed map is user-provided context; use `source: "user"` for its journey entries. Keep unsupported details in `metadata.json` as assumptions.

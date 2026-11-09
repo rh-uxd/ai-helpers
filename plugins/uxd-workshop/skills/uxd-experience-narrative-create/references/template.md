@@ -3,6 +3,8 @@
 ## Source
 - **Problem brief:** [path or link]
 - **Journey map:** [Miro URL or local canvas path]
+- **Edited To-Be storyboard:** [Miro frame or section]
+- **Research coverage and gaps:** [written handoff or Miro area]
 - **Map reviewed:** [date or iteration, if known]
 
 ## Enabling Context
