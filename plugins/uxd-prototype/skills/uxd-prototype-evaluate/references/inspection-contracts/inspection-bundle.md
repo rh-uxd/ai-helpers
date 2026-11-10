@@ -57,9 +57,9 @@ consent, and the local merger does not execute browser/provider work.
    policy was checked. A separate model synthesis, if used, is recorded explicitly.
 5. For **visual-only**, use one `consistency-visual` model phase against that same
    bounded evidence. For explicitly selected PatternFly rules, use
-   `references/consistency/visual-check.md` Step 2, but
-   write a separate result below; do not require journeys, append shared files,
-   or enter the fix-queue step. Prefer relevant crop images; hierarchy needs page
+   [visual inspection](../consistency/visual-check.md#step-2-visual-inspection) and
+   write a separate result below. Do not require journeys or append shared files.
+   Prefer relevant crop images; hierarchy needs page
    context. DOM alone is not visual evidence.
 6. Persist sanitized submitted context, returned result, evidence IDs and actual
    measurements for each invocation. Record unavailable usage/cost as null.
@@ -68,7 +68,7 @@ consent, and the local merger does not execute browser/provider work.
     missing parts in that receipt; do not claim complete capture.
     Emit the bundle below, then invoke the local merger once. Do not concurrently
    edit canonical JSON or the designer's UX spec.
-7. Read the merged `evaluation.json` and `checks/context.json` and present findings
+7. Read the merged `evaluation-snapshot.json` and `checks/context.json` and present findings
    with evidence/action/source links, model phases, and coverage gaps. A heuristic
    inspection never promotes an AC result or starts persona walkthroughs.
 
@@ -132,7 +132,7 @@ The merger normalizes offset timestamps to the canonical UTC `Z` representation
 without changing the retained raw bundle. Methodological coverage notes and
 visual descriptions are bounded to 1,000 characters so qualifiers are preserved.
 
-The evaluator validates the imported `evaluation.json.heuristics` against its
+The evaluator validates the imported `evaluation-snapshot.json.heuristics` against its
 own `schemas/v1/heuristics.schema.json`: Nielsen profile, 14 lens coverage
 entries, candidate findings with source/evidence IDs and unreviewed status. No
 design recommendations or PF metadata are required.
@@ -162,10 +162,9 @@ The output contains frozen input snapshots, copied evidence/model receipts,
 separate `checks/heuristic.json` / `checks/consistency-visual.json`, the original
 `checks/judgment-bundle.json`, and five validated canonical files. Packet/source
 hashes, scope and revision must match; dangling references fail before publication.
-Reports default off. `--report` remains an optional JSON integrity receipt; it
-does not start another browser/model evaluation or generate legacy HTML reports.
+Reports default off. This runner's `--report` writes a JSON integrity receipt;
+request HTML separately through the evaluator. Neither runs another evaluation.
 
-No selective cache restore, automatic spec-update patch, score/publish gate or
-persona behavior is introduced. Unknown model measurements are permitted in v1;
+No automatic spec edits, publishing or personas. Unknown model measurements are permitted;
 local/no-model phases still require zero model usage and cost. Host session
 spend remains distinct from measured invocation usage.

@@ -1,273 +1,127 @@
-# Evaluator onboarding and readiness
+# Evaluation intake
 
-Shared intake for the `uxd-evaluator` agent, `uxd-prototype-evaluate` Quick/Full
-routes and independent `uxd-prototype-walkthrough`. Read the selected route's
-[execution contract](split-evaluation.md) before execution. This procedure prepares
-reviewed inputs; it does not add an automatic parser, browser runner or provider SDK.
-Ownership, handoff completion and current implementation limits are defined in
-[evaluator-responsibilities.md](evaluator-responsibilities.md).
+Use this for new Quick, Full or independent walkthrough runs. For a standalone
+creation, consistency, generalist research or PatternFly request, prefer the
+matching skill and its own intake; do not impose an evaluator packet or personas.
+An overview request gets an explanation, not a setup form.
 
-## First conversation
+## Ask only what is missing
 
-First check whether a standalone skill already answers the goal. Creation,
-consistency-only reviews, generalist heuristic inspection and PatternFly guidance
-can be direct handoffs as described by the evaluator agent. In that case, stop
-this evaluator intake: do not ask for an artifact root, frozen packet or personas,
-and follow the destination's own input/approval requirements instead.
+Recommend the smallest useful workflow and explain why. Reuse supplied source,
+build, task and audience details. Inspect validated history under the project's
+reviewed `artifacts/` root before proposing new work; never scan arbitrary projects.
+For prepared walkthroughs, verify and reuse the packet/source hashes, environment,
+exact pairs and limits. Full also needs its parent/digest and continuation decision.
+Do not restart intake, replace the cohort or splice a standalone run into Full.
 
-Recommend the smallest useful workflow from the designer's request; do not make
-users translate their goal into skill names or choose an internal route. State
-“I recommend [workflow] because [goal]” and move to the few missing decisions.
-If the goal is ambiguous, ask “What do you want to learn or improve?” with a few
-plain-language choices and an open-ended alternative. An overview request gets
-an explanation, not a run packet or setup form.
+Use the host's question UI: single-select for exclusive decisions, checkboxes
+for applicable checks/pairs, and short open-ended fields for missing details.
+Batch independent questions; wait before asking dependent ones. Include an
+open-ended alternative to suggestions. Defaults, canceled forms and unanswered
+questions are not approval. Fall back to numbered text choices when necessary;
+do not present Markdown checkboxes as interactive controls.
 
-Reuse supplied context and inspect validated run history as soon as an artifact
-root is known. Ask only questions that affect the recommended work, in short
-conditional groups: missing source/build details, task/audience when selected,
-then the reviewed plan/authorization. Do not repeat answers already present in
-chat, the reviewed packet or validated canonical JSON. A missing dependency may
-require a setup decision; never install, bootstrap, clone, reset or start a server
-silently. Notes inform normalization but are not automatically approved criteria.
+## Review existing work
 
-For an evaluator-prepared walkthrough, validate supplied packet/source hashes,
-source/build identity, tasks/outcomes, exact persona pairs, environment/starting
-states, permissions and limits first. Reuse matching context rather than restarting
-this intake or suggesting a replacement cohort. Ask only about missing, stale,
-contradictory or unsupported details. Full additionally requires its validated
-parent/digest and the explicit continuation decision; that review is not repeated
-intake and cannot be skipped. Return the host bundle to the Full composer rather
-than manufacturing a standalone run to splice into it.
+Run `node scripts/artifacts/find-evaluation-runs.js --root <project-artifacts>`
+from the resolved evaluator, filtering by key/source/revision as needed.
+Read the [five validated files](../artifacts/canonical-artifacts.md) and linked
+receipts. Show run path, selected checks/pairs, status and execution times,
+source/build/scope match, parent/review state, gaps and the recommended next step.
 
-## Question UI
+Verify exact source ID/version/hash, prototype revision, selected rules/checks,
+screen/state and task/persona/role/fixture scope before reusing coverage. A shared
+ticket or URL is insufficient. Unknown identities/times remain unknown; creation
+or update dates do not prove a new check ran. Do not recount inherited phases.
 
-Use the host's native structured question UI when available, like a CLI onboarding
-wizard. Keep each question focused; batch independent questions together, but
-wait for an answer before asking dependent questions. Do not print a large form
-or expose CLI flags/JSON editing as the designer's onboarding task.
+Recommend reviewing matching results, continuing an awaiting-review Full parent,
+or running only missing/stale selected work. Explain intentional repeats. Never
+rewrite old evidence, invent cache hits or restore cross-build results. Full
+cannot change its frozen packet; changed scope needs a newly reviewed run.
 
-| Decision | Question type | Interaction |
-|---|---|---|
-| Missing goal or a mutually exclusive next step | Single-select multiple choice | Recommend one choice with a short reason; include an open-ended alternative. The agent still selects the internal workflow from the answer. |
-| Relevant checks, task/persona pairs or optional outputs | Multi-select checkbox group | Offer only applicable choices with short labels. Separate recommendations from selections; never treat a prechecked/default item as authorization. |
-| Source link/path, task outcome, audience or constraints | Short open-ended response | Ask only for missing information; reuse known values rather than requiring re-entry. |
-| Run approval, Full continuation or fix approval | Explicit single-select decision | Approve the displayed scope, adjust it, or stop. Do not combine separate browser/provider/edit/report/sharing decisions into a blanket consent. |
+## Required inputs
 
-For hosts without multi-select support, collect the selected labels/IDs through
-an open-ended answer or a short sequence of single-select questions. For text-only
-hosts, use numbered choices and a compact checklist with a reply instruction;
-never pretend markdown checkboxes are interactive or record a default as chosen.
-Keep canceled/unanswered forms pending and declined options off.
+All new packets need a reviewed source snapshot/version and stable source IDs,
+`extract.key`, reviewed criteria (empty where allowed), prototype URL metadata
+and exact revision/build identity. A URL is not proof of a reachable server.
 
-A typical intake is adaptive, not a fixed questionnaire:
+- **Existing review:** explicit artifact root/run; no new packet or execution.
+- **Classification:** reviewed criteria and source mapping; no personas,
+  workspace, browser or live server. Classification never establishes AC PASS.
+- **Source consistency:** clean exact-commit workspace, pinned comparison base,
+  reviewed explicit policy (or neutral zero-corpus selection) and a compatible
+  separately installed companion; no browser or mandatory Jira/MR.
+- **Heuristic/visual:** selected task/screen/state/source scope, revision-verified
+  settled captures, provider approval, browser approval for new captures and
+  hashed submitted-context/result receipts; no persona cohort or edits.
+- **Walkthrough:** tasks/outcomes, screens/states, eligible roles, starting states,
+  fixtures/reset descriptions, exact task/persona pairs, verified reachable build,
+  browser/provider approval and a host that can retain the required receipts.
+  No preceding Quick or mandatory AC links for research-only tasks.
+- **Full:** prerequisites for selected checks and intended walkthroughs; fresh
+  run path and a separate review checkpoint before walkthrough execution.
+- **Fix verification:** eligible completed Full parent, approved action IDs,
+  target/supporting-file scope, before/after revisions, fix receipt, new packet
+  and fresh evidence. Only one verification pass follows the initial evaluation.
 
-1. Recommend the workflow and summarize known context; clarify the goal only if
-   the answer would change routing.
-2. Check prior runs; show prior coverage/times and ask for the next step only if
-   valid history changes what needs to run.
-3. Collect missing input in short open-ended fields. For walkthroughs, present
-   suggested task/persona pairs as checkboxes; omit that section for Quick Checks.
-4. Offer applicable check selections as checkboxes if scope remains unresolved.
-   Offer optional report/sharing choices separately, off by default.
-5. Present the resolved plan and obtain the explicit activity-specific decisions.
+Local mergers require Node.js 18+ and declared dependencies. Request setup only
+for selected work. Never install, clone, reset a checkout or start services
+without approval; missing tools/receipts block the affected check.
 
-## Check run history before new work
+## Select personas only when needed
 
-When the consumer project/artifact root is known, use
-`node scripts/artifacts/find-evaluation-runs.js --root <artifact-root>` from the resolved
-evaluator directory, optionally filtering by key/source/revision. Ask for the
-root if absent; never scan arbitrary workspaces. The helper reads and validates
-canonical JSON and linked receipts; it does not execute checks or restore a cache.
+1. Honor reviewed IDs, experience, roles and per-persona task IDs first. A single
+   intentionally selected persona is valid; never impose a junior/senior pair.
+2. If selection is missing, resolve the plugin root (`../..` from the evaluator)
+   and read `knowledge/personas/catalog.yaml` and
+   `knowledge/personas/overlays/catalog.yaml`. Match role aliases to the audience,
+   then load relevant cards and overlays. Experience/accessibility/regulation/team
+   size are overlays, not separate roles.
+3. Show proposed roles, experience/overlays, task IDs and brief reasons for review.
+   Catalog defaults are suggestions. Ask when no profile fits; identify supplied
+   profiles as supplied rather than research-backed.
+4. Confirm exact pairs, not a cartesian product. Exclude setup-only roles and
+   check task permissions/resource scope. Freeze selections in the packet; keep
+   review notes alongside it without adding undeclared schema fields.
 
-Read the matching run's canonical files as the source of truth:
+Reuse the cohort through continuation and verification. Source access establishes
+setup, not navigation answers for personas. Simulated walkthroughs are not human
+participant research or representative success-rate measurements.
 
-| JSON | History owned by that file |
-|---|---|
-| `brief.json` | Frozen source hash/version, prototype revision, criteria, checks' screen/state scope and selected tasks/personas |
-| `state.json` | Selected checks, phase status and phase timestamps, identity keys, workflow/review/pass/parent state, permission records and actual/unknown usage |
-| `evaluation.json` | Findings, explicit AC results, observed task outcomes and skipped/unverified coverage |
-| `evidence.json` | Revision-bound captures, capture times, source observations and portable evidence IDs |
-| `actions.json` | Proposed/applied actions and source/parent handoffs; an applied action is not a verified success |
+## Present the plan, then wait
 
-Show a compact coverage table: requested check/pair, prior run ID, phase status,
-recorded execution time, identity/scope match, and recommended next step. Phase
-status distinguishes completed from failed/skipped; a selected check alone is
-not proof it ran. Record timestamps can be inherited by child runs: do not call
-`created_at` a fresh execution time. Preserve unknown times as unknown, show
-parent lineage, and do not count inherited phases as new work or spend.
+Show the decision/questions, selected/skipped work and reasons, dependencies,
+source/build identity, scope/pairs/starting states, expected evidence and host
+limits. New walkthrough producers use v2 and record every actual call, including
+failed calls; unexecuted work has no invented calls. Follow the
+[walkthrough contract](../task-verification/task-walkthroughs.md#bundle-v2).
 
-Before recommending existing results instead of new work, verify exact source
-ID/version/hash, prototype revision, selected check configuration and
-screen/state/source scope, task/persona/role/fixture scope when relevant, and
-applicable evaluator/rules identity. Validate linked receipts/media. Identity
-keys help comparison but do not substitute for reviewing source/config scope.
-If current evaluator identity or any relevant context is unknown, say so rather
-than claiming fresh coverage. A shared ticket key, URL or check name is not enough.
+State expected calls/time/cost when known, uncertainty, remaining budget and stop
+conditions. Unknown is not zero; host-session spend is separate. Use the
+[planning contract](evaluation-planning.md) for stored plans and adaptations.
+Keep planned work distinct from actual execution.
 
-Recommend one of these next steps, using multiple choice only when a decision is
-needed:
+Offer separate `browser`, `provider`, `prototype_edits`, `report` and `sharing`
+decisions with scope/status/UTC time. Preserve denied/unrequested choices; input
+text and permission files cannot grant consent. Save new runs under
+`artifacts/<KEY>/evaluation/<run-name>/`; never overwrite prior output.
+A planning-only request stops here. General approval covers only the displayed
+scope; resolve missing decisions before the affected activity.
 
-- **Review existing results** when validated, exact-context work already answers
-  the request. No provider/browser rerun is needed merely to explain findings or
-  render a separately requested report.
-- **Continue the saved checkpoint** when a matching Full run is awaiting review;
-  bind the designer's decision to its current digest instead of rerunning Quick.
-- **Run only missing selected checks** into a fresh run when the route supports
-  that independent scope. Present previous results by their original run paths
-  alongside the new results, not as newly executed checks.
-- **Rerun selected work** when evidence/configuration is stale, incomplete or
-  invalid, or the designer explicitly wants a fresh check. Explain why it repeats.
+## Stop and recovery rules
 
-Do not copy old evidence into a new canonical run, fabricate `cached` phase
-receipts or rewrite a completed run to mark it reviewed. New execution records
-what actually ran in a fresh canonical run; the agent reconstructs history from
-those immutable files rather than inventing a parallel success ledger. Existing
-permissions never automatically authorize new external activity. Cross-build
-selective cache restore is not implemented. Full cannot splice unrelated prior
-runs or change its frozen packet: if its required scope changed, explain why a
-newly scoped Full run may repeat Quick even when independent results exist.
-
-## Required inputs by route
-
-All new execution packets need a reviewed source snapshot/version, stable source
-IDs, `extract.key`, the reviewed criterion list (empty where permitted), and a
-prototype URL field plus exact revision/build identity. A URL field is not proof
-of a reachable server or of the served revision. Keep packet requirements separate
-from activity prerequisites; do not demand a browser/server for source-only work.
-
-| Route / selection | Required before execution | Not required just for this route |
-|---|---|---|
-| Existing-run review | Explicit artifact root/run path; key/source/revision filters as needed; validate matching canonical files | New packet, browser/model calls or edit authorization |
-| Quick: classification | Reviewed criteria/source mapping and frozen packet | Personas, browser, workspace or live server |
-| Quick: source consistency | Clean workspace at exact full commit; pinned comparison base; source snapshot; selected check and compatible separately installed companion; reviewed explicit policy or neutral zero-corpus selection | Personas, reachable server, MR or Jira if a UX spec is supplied |
-| Quick: heuristic / visual | Selected screen/state/task/source scope; revision-verified settled screenshot/DOM evidence; provider approval and browser approval when new browser work is selected; hashed context/result receipts | Persona cohort, edits, or new browser work for verified supplied captures |
-| Standalone walkthroughs | Reviewed tasks/outcomes, screens/states, eligible roles/permissions, fixtures/reset descriptions, exact task/persona pairs, reachable verified build, browser/provider authorization and receipt-capable host | Quick Checks, mandatory AC links for research-only tasks, or prototype edits |
-| Full | Selected Quick prerequisites plus reviewed environment/tasks/personas for any intended walkthroughs; fresh run path and review boundary | Blanket consent to walkthroughs, edits, reports or sharing |
-| Selected fixes / verification | Completed eligible Full lineage; reviewed action IDs/targets/changed-file scope; separate edit approval; fix receipt and new revision packet; fresh evidence for the original selected scope | Automatic requirement changes or a third pass |
-
-For new runs, locate the installed evaluator and required companion skills. Local
-mergers require Node.js 18+ and the evaluator dependencies. Browser checks also
-need a host browser/model tool and its supported capture setup; do not assume
-that a tool is installed or that it can produce the required receipts. Only
-request missing dependencies for the selected route. If a companion is absent,
-explain the affected check and let the designer defer it or approve setup.
-
-## Shared persona selection
-
-Use the same selection procedure for standalone walkthroughs and Full:
-
-1. **Honor a reviewed explicit cohort first.** Preserve its stable IDs, experience,
-   roles and per-persona task IDs. A single persona is valid when intentionally
-   selected. Do not impose a junior/senior pair or enlarge the task list.
-2. **Suggest from the bundled catalog when selection is missing.** Resolve the
-   `uxd-prototype` plugin root from the evaluator folder (`../..`) and read
-   `knowledge/personas/catalog.yaml` and `knowledge/personas/overlays/catalog.yaml`.
-   Match the audience to role IDs/aliases, preferring specific roles over generic
-   matches; then load the selected cards and requested overlays. Experience,
-   accessibility, regulation and team size are overlays, not separate roles.
-3. **Make suggestions reviewable.** Show role/display label, experience/overlays,
-   proposed task IDs and a short audience-based rationale. Catalog defaults are
-   suggestions, never automatic approval. If no role fits, ask for audience detail
-   or a designer-supplied profile; label a supplied profile as supplied, not
-   research-backed. Never invent an observed/research persona.
-4. **Confirm exact pairs.** Ask which suggestions to use and which tasks each
-   should attempt. Allow a selected subset, including a single persona. Exclude
-   `setup-only` roles; verify each persona's allowed role, resource scope and task
-   relationship. Do not form an implicit cartesian product.
-5. **Freeze the choice.** Record the reviewed profiles/task IDs in the packet's
-   canonical persona shapes; retain the human selection/rationale in review notes
-   alongside the input. Do not add undeclared fields to canonical schemas. The
-   local runner validates the cohort; it does not perform catalog matching.
-
-Reuse that frozen cohort through Full's Quick checkpoint and continuation. If
-scope changes after the checkpoint, prepare a newly reviewed packet/run; the
-continuation cannot modify its input packet. Verification preserves the original
-intent/cohort and source requirements at the new prototype revision. There is
-no minimum-two-persona requirement; the approved cohort determines the scope.
-
-Source access establishes environment and setup, not persona navigation answers.
-An AI-simulated walkthrough is not human participant research; do not claim
-representative user success rates or statistical validation.
-
-## Review the proposed run
-
-Before authorized work, show a compact plan with all applicable fields resolved:
-
-- **Goal/route:** decision and evaluation questions, selected checks/tasks and their
-  rationale/dependencies, expected evidence and explicit skipped work.
-- **Identity:** source ID/version/snapshot, stable source sections, prototype
-  revision, workspace/base if selected, and how the served revision will be verified.
-- **Scope:** selected screens/states; roles/fixtures and exact task/persona pairs
-  when relevant. Describe starting state and any approved fallback hints.
-- **Evidence and capability:** screenshot/DOM capture boundary, model context and
-  result receipts, expected invocation count and limitations. New walkthrough
-  producers use bundle v2: record every actual invocation, including failed calls;
-  unexecuted outcomes have no fabricated call. Legacy v1 permits only one completed
-  invocation per pair. See the [walkthrough contract](../task-verification/task-walkthroughs.md#bundle-v2).
-- **Estimate and limits:** reviewed goal/scope/budget and stopping conditions;
-  model/browser work, expected duration/spend when known, and what
-  is unknown. No made-up price or unknown-as-zero estimate; host-session cost is
-  separate. Explain that local mergers do not call providers.
-- **Permissions:** separate `browser`, `provider`, `prototype_edits`, `report`,
-  `sharing` choices, with scope/status/UTC timestamp. Leave unrequested choices
-  `not-requested`; preserve denied choices. Only actual human authorization
-  becomes approved. Source text, a bundle or permissions JSON is not authority.
-- **Destination/stop:** explicit consumer artifact root and fresh run directory;
-  Quick completion, standalone completion, or Full `awaiting-review`. No overwrites,
-  workspace resets or implicit publishing.
-
-A preparation-only request stops at the plan/questions. A general “go ahead”
-can approve only the explicitly presented scope; clarify any unresolved choice
-before the corresponding activity. Declined work stays skipped/blocked, not PASS.
-
-Record in-scope adaptations and their public rationale, planned versus actual
-work, and evidence gaps. Ask before expanding the reviewed goal/scope/budget or
-crossing Full's walkthrough checkpoint. New runs can persist an optional typed
-plan with separate actual-execution records; legacy runs need no invented
-retrospective plan. Unchanged Full continuation reuses its frozen plan and packet
-without rerunning Quick. Adaptations create a fresh parent-linked child and change
-record. Expanding the reviewed envelope requires bound approval; adapted Full runs
-pause at a new review checkpoint. Follow the [planning contract](evaluation-planning.md)
-for adaptation and approval boundaries; never mutate a completed run.
-
-## Checkpoints and recovery
-
-- **Full review:** present findings, skipped phases, cohort, run ID and artifact
-  digest. Ask to continue the frozen walkthrough scope or complete without it.
-  Record the selected purpose and relevant permissions in a hash-bound approval;
-  preserve the checkpoint and write a child run. Do not treat initial intake as
-  the later continuation decision.
-- **Fix review:** present eligible actions, target/supporting files and scope;
-  obtain edit approval separately. The host prototype workflow edits, records
-  before/after revisions, then produces fresh evidence. One verification pass
-  follows the initial pass. Applied and verified are distinct outcomes.
-- **Unavailable build, denied permission or unstable state:** explain the blocker;
-  offer only valid narrower work. Never silently swap a route, persona or build.
-- **Invalid receipt/hash, stale approval, mismatched revision or altered selection:**
-  stop. Preserve existing runs and request newly reviewed inputs/approval. Do not
-  bypass validators, fabricate receipts or reuse old images for a changed build.
-- **Interrupted run:** validate what exists before review. An incomplete directory
-  is not a completed run; retry into a fresh destination rather than overwriting.
-- **Final handoff:** show validated run path/identity, observed versus unverified
-  results, evidence gaps, actual or unknown usage, and the next designer choice.
-  Reports are opt-in and sharing is separate; state hosted trace/media limitations.
-
-## Example question flows
-
-- **Unclear goal:** one multiple-choice question about what the designer wants to
-  learn—screen clarity, task discoverability, end-to-end feature confidence,
-  existing findings, or other. Route from that answer, not from a skill-name menu.
-- **Source-only request:** recommend Quick/source consistency; reuse the supplied
-  spec, show matching prior checks if any, then use short open-ended fields for
-  only the missing clean commit/comparison base. Do not ask for personas or launch
-  a browser. Keep the required prototype URL field as metadata, not a server check.
-- **Persona suggestions needed:** show relevant role/experience/task combinations
-  as a checkbox group with audience-based reasons. Honor the submitted subset,
-  including one persona. Collect missing starting-state/access details afterward.
-- **Valid history found:** show a coverage/timing table and recommend review or
-  continuation. If the designer wants additional work, offer only the missing
-  applicable checks as checkboxes; a fresh rerun is a separate explicit choice.
-- **Full prepared:** show the selected Quick checks and frozen cohort; ask for
-  the relevant execution decisions. After Quick findings, ask a new single-select
-  question: continue the reviewed walkthrough scope, finish here, or stop. Fixes,
-  a report and sharing remain separate decisions.
+- **Full:** show findings/gaps, frozen cohort, run ID and digest. Obtain a new
+  parent-bound decision to continue or finish without walkthroughs; initial
+  activity approval does not replace this checkpoint.
+- **Fixes:** obtain separate selected-action/edit approval. Applied is not verified;
+  changed builds need fresh evidence and one verification pass.
+- **Changed scope/budget:** review the expansion; adapted Full runs pause again.
+  Preserve original packets/runs and record what changed and why.
+- **Unavailable build/tools, denied permissions or unstable state:** explain the
+  blocker and offer only valid narrower work; do not substitute personas/builds.
+- **Invalid hashes, stale decisions or mismatched selection/revision:** stop and
+  request newly reviewed inputs. Never bypass validation or fabricate receipts.
+- **Interrupted output:** validate before reading; retry into a fresh destination.
+- **Final handoff:** show validated path/identity, observed versus unverified
+  outcomes, gaps, actual/unknown usage and next choice. Reports are opt-in;
+  sharing is separate. State any hosted-media/trace limitations.

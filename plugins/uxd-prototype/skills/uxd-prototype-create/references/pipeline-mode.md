@@ -89,7 +89,7 @@ When `--target` is a git URL, normalize `target` to `repo` and store the URL in 
   --output <fresh-run-directory> --checks <selected-checks>`; choose `full`
   instead only for the reviewed checkpointed composition. Walkthroughs are also
   independently callable; no implicit persona cohort is added.
-- Validate `brief.json`, `evaluation.json`, `evidence.json`, `actions.json` and
+- Validate `pe-context.json`, `evaluation-snapshot.json`, `evidence.json`, `actions.json` and
   `state.json` plus linked receipts before decisions. Source-only checks do not
   probe a server; selected browser work needs separate authorization and a
   verified served revision. A classification-only run leaves ACs unverified.

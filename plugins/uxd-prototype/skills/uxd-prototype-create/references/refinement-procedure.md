@@ -21,7 +21,7 @@ Use the user’s requested changes and any existing `uxd-prototype-evaluate` out
 
 | Artifact | Use |
 |----------|-----|
-| Selected run's `brief.json` / `evaluation.json` | Frozen requirements/scope and distinct AC, task, consistency and heuristic results |
+| Selected run's `pe-context.json` / `evaluation-snapshot.json` | Frozen requirements/scope and distinct AC, task, consistency and heuristic results |
 | Selected run's `evidence.json` / linked receipts | Revision-bound observations supporting findings |
 | Selected run's `actions.json` | Proposed evidence-backed actions, not permission to edit |
 | Selected run's `state.json` | Workflow review state, selected/skipped coverage and pass/history |
@@ -47,7 +47,7 @@ pipeline settings do not authorize a third pass or restart the evaluator's limit
 
 Start with the user’s requested changes. When applying eval artifacts, prioritize:
 
-1. **FAIL acceptance criteria** — from validated `evaluation.json` and linked proposed actions/evidence
+1. **FAIL acceptance criteria** — from validated `evaluation-snapshot.json` and linked proposed actions/evidence
 2. **Consistency / source violations** — high-confidence suggestions
 3. **Task/persona findings** — from recorded canonical journeys and observations (if selected)
 
