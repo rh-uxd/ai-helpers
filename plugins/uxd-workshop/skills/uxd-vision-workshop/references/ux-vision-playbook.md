@@ -71,7 +71,7 @@ For pilot testing in ChatGPT, use the local repository copy as the source of tru
 
 Start with this prompt and fill in whatever you know:
 
-> For this pilot, use the local `ux-visiontype-playbook` repository as the source of truth. Read `ux-visiontype-playbook/agents/uxd-vision-orchestrator.md` and use only matching skill files under `ux-visiontype-playbook/skills/` in that repository. Do not use installed ChatGPT skills with the same or similar names; those may be older versions. I'm working on a UX vision for [product area or user problem]. I want to get to a shareable vision prototype. I already have [research, brief, map, concept, prototype, or other artifacts]. I still need help with [open question or next outcome]. My constraints are [time, workspace, collaborators, or other constraints]. Help me choose a useful next step and explain what it will produce.
+> For this pilot, use the local `ux-visiontype-playbook` repository as the source of truth. Read and follow `ux-visiontype-playbook/agents/uxd-vision-orchestrator.md`. For problem briefs, storyboards/narratives, and experience reviews, follow only the matching skill files under `ux-visiontype-playbook/skills/`. Do not use installed ChatGPT skills with the same or similar names; those may be older versions. Journey mapping and prototype creation are separate capabilities outside this checkout; use them only if available and useful. I'm working on a UX vision for [product area or user problem]. I want to get to a shareable vision prototype. I already have [research, brief, map, concept, prototype, or other artifacts]. I still need help with [open question or next outcome]. My constraints are [time, workspace, collaborators, or other constraints]. Help me choose a useful next step and explain what it will produce.
 
 You can also ask for a specific task directly, for example: “I already have a brief and journey map. Help me turn them into a clickable vision prototype.” Start from the context you provide rather than restarting the playbook.
 
@@ -94,7 +94,7 @@ Use the route below when you want step-by-step guidance. The destination remains
 - A description of the target user and their current experience
 - Stakeholders who need to align on the problem and what they care about
 - For vision work, two provisional Journey map starters—As-Is and To-Be—each using the playbook's map lanes as rows and 3–5 matched `S#` journey stages as columns
-- Preliminary, stage-by-stage research coverage and gap notes in the starters' **Evidence & assumptions** lanes, based on relevant findings from `uxd-research-insights`
+- A separate **Research Coverage & Gaps** row in both starters, with stage-by-stage statuses and focused questions based on available findings; keep evidence and assumptions in their own row
 
 When the team needs product integration details, inspect the identified workspace separately. The brief may include a separate, optional Project Context section for verified details; leave unknown fields open and keep implementation context out of the problem statement.
 
@@ -140,7 +140,7 @@ Print or share the findings so workshop participants can reference them directly
 
 **Time:** 60-90 min
 
-**If you continue to a journey map:** The top pain-reliever connections suggest future capabilities to explore. Keep the problem statement focused on the current user condition; the jobs-to-be-done help define the target user, and unaddressed gaps help set scope. When a paired map will help, draft separate provisional As-Is and To-Be Journey starters in the brief using the playbook's lanes and matching 3–5 `S#` stages. Use `uxd-research-insights` findings for preliminary coverage and `Research gap:` questions by stage in the **Evidence & assumptions** lane. Mark unsupported claims as assumptions. Revisit these notes if the team completes the journey map.
+**If you continue to a journey map:** The top pain-reliever connections suggest future capabilities to explore. Keep the problem statement focused on the current user condition; the jobs-to-be-done help define the target user, and unaddressed gaps help set scope. When a paired map will help, draft separate provisional As-Is and To-Be Journey starters in the brief using the playbook's lanes and matching 3–5 `S#` stages. Use `uxd-research-insights` findings for preliminary coverage and `Research gap:` questions by stage in a separate **Research Coverage & Gaps** row. Keep this distinct from **Evidence & assumptions**, which records `[E#]` sources and `[A#]` hypotheses. Revisit coverage if the team completes the journey map.
 
 ---
 
@@ -197,6 +197,7 @@ The server is added to your global Codex configuration. Treat the authorization 
 | **Emotions** | Evidence-based or labeled assumed feelings | The intended emotional change, with assumptions labeled |
 | **Pain & friction** | Current delay, effort, risk, or breakdown | Remaining friction and any new risk |
 | **Evidence & assumptions** | `[E#]` sources and `[A#]` claims to validate | Keep the same source trail; mark future-state hypotheses as assumptions |
+| **Research Coverage & Gaps** | Stage-level coverage status and focused research question where coverage is partial or not found | Coverage of underlying user needs versus evidence for proposed future behavior; keep future claims labeled as assumptions |
 | **Support & opportunities** | Where a product or team could help | The concrete product or service response that helps |
 
 **How to run it:**
@@ -208,7 +209,7 @@ The server is added to your global Codex configuration. Treat the authorization 
 5. **Refine the To-Be (25 min).** Keep the same actor, scenario, and phases. Describe the user's actions, product response, proposed screens, and support. Leave unresolved or new friction visible.
 6. **Compare the frames (10 min).** Walk each stage from As-Is to To-Be. Check that the future response addresses a mapped pain and remains credible for the horizon.
 7. **Mark prototype screens and annotate the handoff (15 min).** Identify the 3-5 screens that carry the story. In the To-Be **Screens & Artifacts** row, label each screen `[P1]` through `[P5]` and retain its journey stage and `S#` labels. Reuse the same `[P#]` when one screen spans multiple stages. On the screen's existing map note, add a relevant product screen or pattern to reference and any open questions. The Actions, Touchpoints, and Mindsets & Needs rows already hold the related journey context. Detailed component mapping happens in Phase 4, once the target workspace and design system are known.
-8. **Check research coverage and gaps (15-20 min).** Use findings already gathered through `uxd-research-insights`. If none were gathered and the skill is available and authorized, look for relevant existing findings. Compare the research with mapped As-Is pains and needs and the To-Be assumptions and opportunities. Mark each as supported, partially supported, or not found; preserve sources and `[E#]` links. Treat unsupported claims as `[A#]` assumptions and list focused questions that further research could answer. Record the same concise summary both in a clearly labeled Miro area and `.artifacts/journey-map-research-check.md` (or `.artifacts/{ID}/journey-map-research-check.md`). Do not treat missing search results as proof that research does not exist, launch new research automatically, or block the workflow.
+8. **Check research coverage and gaps (15-20 min).** Use findings already gathered through `uxd-research-insights`. If none were gathered and the skill is available and authorized, look for relevant existing findings. Compare the research with mapped As-Is pains and needs and the To-Be assumptions and opportunities. Mark each as supported, partially supported, or not found; preserve sources and `[E#]` links. Treat unsupported claims as `[A#]` assumptions and list focused questions that further research could answer. Update the dedicated **Research Coverage & Gaps** row in both map frames and save the same concise summary to `.artifacts/journey-map-research-check.md` (or `.artifacts/{ID}/journey-map-research-check.md`). A Miro summary area may supplement this row but must not replace it. Do not treat missing search results as proof that research does not exist, launch new research automatically, or block the workflow.
 
 **If you continue to a storyboard or prototype:** Carry forward the reviewed map, screen markers, research coverage summary, and gaps. When an equivalent reviewed paired map already exists, do not repeat the workshop; check its evidence coverage if needed. Give the map and relevant brief to the narrative capability for a storyboard draft, or directly to prototype creation when that best fits the work.
 
@@ -226,7 +227,7 @@ The server is added to your global Codex configuration. Treat the authorization 
 
 **When it helps:** Use this activity when the experience needs a clearer story or when the team needs to align on the future journey before prototyping. Reuse or refine an existing storyboard or narrative when it already communicates the experience.
 
-**What you'll do:** Use available problem context and journey artifacts to create an editable To-Be storyboard in Miro. Keep the storyboard simple: a setup followed by concise story cards in stage order, with one blank screen/artifact drop zone directly beneath each card for designers to add screens or sketches. The drop-zone row is part of the storyboard only; never add it to the As-Is or To-Be journey maps. The designer can edit the storyboard alone or with partners, then use the same skill again to write final narrative prose and a prototype handoff. If the team already has an agreed story, carry it forward and fill only missing details.
+**What you'll do:** Use available problem context and journey artifacts to create an editable To-Be storyboard in Miro. Keep it simple: a setup followed by concise story cards in stage order, with one blank screen/artifact drop zone directly beneath each card for designers to add screens or sketches. Keep these drop zones in the storyboard only, not on the journey maps. The designer can edit it alone or with partners, then use the same skill again to write final narrative prose and a prototype handoff. If the team already has an agreed story, carry it forward and fill only missing details.
 
 **Useful outputs when shaping the narrative:**
 - A named user and concrete scene grounded in the available problem context and evidence
@@ -441,17 +442,17 @@ Keep the vision in an isolated branch or workspace, following the target project
 
 ## Skill Reference
 
-The `uxd-vision-orchestrator` agent helps adapt the route to the designer's context. The skills below are capabilities it or the designer can use where they help; they do not define a required order. For the local plugin, invoke its workflow skills as `/ux-visiontype-playbook:uxd-problem-brief-create`, `/ux-visiontype-playbook:uxd-experience-narrative-create`, and `/ux-visiontype-playbook:uxd-experience-review`. When using the upstream `uxd-workshop` plugin, use that plugin's namespace instead.
+The orchestrator guidance adapts the route to the designer's context. The skills below are capabilities to use where they help; they do not define a required order. For the ChatGPT pilot, follow the local files under `skills/` and do not invoke installed versions of the same skills. The map and prototype capabilities come from separate `uxd-design` and `uxd-prototype` sources and are not part of this local update.
 
 | Skill | Phase | What It Does | Source |
 |-------|-------|-------------|--------|
 | Optional research lookup | Pre-work | Retrieves evidence or participant quotes when an approved source and lookup skill are available | Optional; use supplied evidence otherwise |
-| `uxd-problem-brief-create` | 1. Define | Frames the current problem, affected person, evidence, desired outcome, and scope | `uxd-workshop` plugin |
+| `uxd-problem-brief-create` | 1. Define | Frames the current problem, affected person, evidence, desired outcome, and scope | Local: `skills/uxd-problem-brief-create/SKILL.md` |
 | `uxd-canvas-create` | 2. Map | Creates a paired As-Is/To-Be vision journey map and checks research coverage and gaps | `uxd-design` plugin |
-| `uxd-experience-narrative-create` | 3. Story | Drafts a Miro-editable To-Be storyboard, then turns the edited board into final prose and a screen breakdown | `uxd-workshop` plugin |
+| `uxd-experience-narrative-create` | 3. Story | Drafts a Miro-editable To-Be storyboard, then turns the edited board into final prose and a screen breakdown | Local: `skills/uxd-experience-narrative-create/SKILL.md` |
 | `uxd-prototype-create` | 4. Build | Creates an interactive prototype from the available problem context, designs, maps, storyboard, and narrative | `uxd-prototype` plugin |
 | `uxd-prototype-evaluate` | Optional validation | Evaluates a prototype against a Jira story's acceptance criteria and usability | `uxd-prototype` plugin; requires Jira context and a reachable prototype or workspace |
-| `uxd-experience-review` | 5. Review | Checks coherence with available problem framing, evidence, design artifacts, and supplied product principles; prepares a stakeholder demo | `uxd-workshop` plugin |
+| `uxd-experience-review` | 5. Review | Checks coherence with available problem framing, evidence, design artifacts, and supplied product principles; prepares a stakeholder demo | Local: `skills/uxd-experience-review/SKILL.md` |
 
 When the designer follows the full recommended route, the brief frames the problem, the paired map makes the current and future journey visible, and the map-completion check records research coverage and gaps. The narrative skill can draft an editable storyboard in Miro and then finalize the prose. Prototype creation uses whichever of these artifacts are available and relevant. Experience review checks coherence and fit when a review is useful; selected refinements can be applied and reviewed again. Optional ticket-based evaluation is a separate check when a Jira story exists.
 

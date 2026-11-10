@@ -87,7 +87,7 @@ If the brief supports a future-state vision, use the agreed user, situation, evi
 - Give corresponding stage columns the same stable `S#` label, stage name, and order in both tables.
 - In As-Is, describe current behavior and needs; cite evidence as `[E#]` and label unverified claims `[A#]`.
 - In To-Be, describe possible future behavior and support; tie it to a capability and horizon already supplied, and mark future-state claims `[A#]` until the team confirms them. Note remaining or new friction, or leave it open.
-- In both tables' `Evidence & assumptions` lane, include `[E#]` sources and a preliminary coverage note for each stage: supported, partial, or no relevant finding found. Where coverage is partial or absent, mark the unsupported user problem or need `[A#]` and add a concise `Research gap:` question. Do not imply that existing research predicts or validates a future design.
+- In `Evidence & assumptions`, cite `[E#]` sources and label hypotheses `[A#]`. In a separate `Research Coverage & Gaps` row in both tables, include a preliminary coverage status for each stage: supported, partial, or no relevant finding found. Where coverage is partial or absent, mark the unsupported user problem or need `[A#]` and add a concise `Research gap:` question. Do not imply that existing research predicts or validates a future design.
 - Keep it an outline, not polished narrative, a feature specification, or a screen-by-screen plan. Leave missing evidence, capabilities, or horizon as open questions; do not invent them.
 - If the future horizon or enabling capabilities are missing, ask for them as separate context. They do not belong in the problem statement.
 
@@ -107,6 +107,6 @@ Read it back. Revise until the statement has no solution in it, evidence and ass
 - Evidence and assumptions are labeled
 - Scope is one situation
 - At least one stakeholder is named by role, with what they care about
-- For vision briefs, the provisional Journey starter has separate As-Is and To-Be tables using the playbook's map lanes; matching stage columns and `S#` labels; separate Evidence & assumptions and Research coverage & gaps rows with stage-level statuses and gap questions; linked `[E#]` source references; and definitions for the `[A#]` assumptions used
+- For vision briefs, the provisional Journey starter has separate As-Is and To-Be tables using the playbook's map lanes; matching stage columns and `S#` labels; separate Evidence & assumptions and Research Coverage & Gaps rows with stage-level statuses and gap questions; linked `[E#]` source references; and definitions for the `[A#]` assumptions used
 
 When this brief supports a future-state vision, pass both provisional Journey map starters and the available research findings to `uxd-canvas-create` to seed the matching Miro frames. After the team edits and confirms the map, check research coverage and gaps and record them both on the board and in the written handoff. Then give the brief and paired map to `uxd-experience-narrative-create` to draft an editable storyboard; after the team edits it, use that skill again to write final prose. Keep enabling capabilities and the time horizon separate from the problem statement. For other experience stories, the narrative skill can start directly from the brief.
