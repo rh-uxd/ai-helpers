@@ -1,5 +1,7 @@
 # UX Vision Playbook
 
+Playbook slides: [Google Slides](https://docs.google.com/presentation/d/1OhbzYPRvo74dErlV8kYoPzWpbmdpdjKBUncxRRFr9hg/edit?usp=sharing)
+
 A flexible guide for designers to create UX vision prototypes that show how new capabilities can be incorporated into great product experiences — grounded in real user problems, aspirational but near-term, and shareable as interactive prototypes. It offers a recommended route and activities to use where they help; start from the work you already have.
 
 ---
@@ -65,15 +67,15 @@ The five phases below form a recommended route, not a required sequence. Start f
 
 ### Working with the UX Vision Orchestrator
 
-After installing the UX Vision plugin, start a normal conversation about your vision work. There is no slash command to invoke; the `uxd-vision-orchestrator` agent activates from the context of the request.
+For pilot testing in ChatGPT, use the local repository copy as the source of truth. Open the product project folder in ChatGPT desktop Work, then tell ChatGPT to read `ux-visiontype-playbook/agents/uxd-vision-orchestrator.md` and use only the matching skill files under `ux-visiontype-playbook/skills/`. Explicitly tell it not to use installed skills with the same names, since those may be older versions. The repository README has copyable setup steps and a starter prompt.
 
 Start with this prompt and fill in whatever you know:
 
-> I'm working on a UX vision for [product area or user problem]. I want to get to a shareable vision prototype. I already have [research, brief, map, concept, prototype, or other artifacts]. I still need help with [open question or next outcome]. My constraints are [time, workspace, collaborators, or other constraints]. Help me choose a useful next step and explain what it will produce.
+> For this pilot, use the local `ux-visiontype-playbook` repository as the source of truth. Read `ux-visiontype-playbook/agents/uxd-vision-orchestrator.md` and use only matching skill files under `ux-visiontype-playbook/skills/` in that repository. Do not use installed ChatGPT skills with the same or similar names; those may be older versions. I'm working on a UX vision for [product area or user problem]. I want to get to a shareable vision prototype. I already have [research, brief, map, concept, prototype, or other artifacts]. I still need help with [open question or next outcome]. My constraints are [time, workspace, collaborators, or other constraints]. Help me choose a useful next step and explain what it will produce.
 
-You can also ask for a specific task directly, for example: “I already have a brief and journey map. Help me turn them into a clickable vision prototype.” The orchestrator should use the context you provide rather than restart the playbook.
+You can also ask for a specific task directly, for example: “I already have a brief and journey map. Help me turn them into a clickable vision prototype.” Start from the context you provide rather than restarting the playbook.
 
-The `uxd-vision-orchestrator` agent helps choose a useful next move based on the project context. It may suggest one to three actions, explaining what each would produce and why it may help. You can accept, change, skip, or revisit a suggestion.
+The orchestrator guidance helps choose a useful next move based on the project context. It may suggest one to three actions, explaining what each would produce and why it may help. You can accept, change, skip, or revisit a suggestion.
 
 The orchestrator treats skills as capabilities, not required stages. It keeps evidence, assumptions, decisions, and open questions visible as work moves between artifacts. It can also help prepare a partner conversation or async review; collaboration can improve the work but does not block progress.
 
