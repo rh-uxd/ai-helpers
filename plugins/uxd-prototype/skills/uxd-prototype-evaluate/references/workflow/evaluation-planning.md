@@ -4,6 +4,10 @@ The evaluator owns the plan; producers perform only selected work. Prepare a
 concise public plan before new execution, using the user's existing decisions
 and frozen context rather than restarting intake. Record questions and rationale,
 not private model reasoning. Plans do not grant consent or prove execution.
+After presenting the proposed plan and receiving the relevant human decision,
+`uxd-evaluator` writes the approved plan data to `plan.json` using the schema below.
+There is no separate plan-generator command: the split runner validates and stores
+the supplied JSON; it does not infer or author the designer's plan.
 
 ## Plan v1
 

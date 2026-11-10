@@ -19,6 +19,21 @@
 
 const PRIORITY_RANK = { blocking: 0, high: 1, normal: 2, low: 3 };
 const REVIEW_RANK = { confirmed: 0, unreviewed: 1, dismissed: 2 };
+const AC_VERDICT_LABELS = {
+  PASS: 'PASS — explicitly verified',
+  FAIL: 'FAIL — observed counterevidence',
+  FLAGGED: 'FLAGGED — uncertain',
+  NOT_RUN: 'NOT_RUN — not tested',
+};
+const TASK_OUTCOME_LABELS = {
+  PASS: 'completed',
+  FAIL: 'failed',
+  FLAGGED: 'uncertain',
+  NOT_RUN: 'not tried',
+};
+
+function acVerdictLabel(verdict) { return AC_VERDICT_LABELS[verdict] || 'unknown'; }
+function taskOutcomeLabel(verdict) { return TASK_OUTCOME_LABELS[verdict] || 'uncertain'; }
 
 const LIMITATIONS = [
   'Classification is triage, not verification; NOT_RUN means unverified.',
@@ -86,7 +101,9 @@ function outcomes(docs) {
       results: evaluation.ac_results.map(r => ({
         ac_id: r.ac_id,
         verdict: r.verdict,
+        criterion_text: acById.get(r.ac_id)?.text || 'Criterion text unavailable.',
         source_id: acById.get(r.ac_id)?.source_id || null,
+        rationale: r.rationale,
         evaluated_by: r.evaluated_by || null,
         evidence_ids: r.evidence_ids,
         action_ids: r.action_ids,
@@ -142,6 +159,7 @@ function outcomes(docs) {
       task_id: j.task_id,
       persona_id: j.persona_id,
       verdict: j.verdict,
+      task_outcome: taskOutcomeLabel(j.verdict),
       execution_status: j.execution?.status || null,
       stop_reason: j.execution?.stop_reason || null,
       steps: j.steps.length,
@@ -340,11 +358,16 @@ function chatMarkdown(synthesis) {
   lines.push('## Outcomes');
   const ac = s.outcomes.ac.counts;
   lines.push(`- Acceptance criteria: ${ac.pass} pass / ${ac.fail} fail / ${ac.flagged} flagged / ${ac.not_run} NOT_RUN (${ac.total} total)`);
+  for (const result of s.outcomes.ac.results) {
+    lines.push(`  - \`${result.ac_id}\` (${result.source_id || 'no source ID'}) — **${acVerdictLabel(result.verdict)}**: ${result.criterion_text}`);
+    lines.push(`    ${result.rationale}`);
+    lines.push(`    Evidence IDs in \`pe-evidence.json\`: ${result.evidence_ids.length ? result.evidence_ids.join(', ') : 'none linked'}`);
+  }
   const cc = s.outcomes.consistency.counts;
   lines.push(`- Consistency: ${s.outcomes.consistency.status} — ${cc.error} error / ${cc.warning} warning / ${cc.info} info`);
   if (s.outcomes.heuristics) lines.push(`- Heuristics: ${s.outcomes.heuristics.findings.length} findings (${s.outcomes.heuristics.findings.filter(f => f.review_status === 'unreviewed').length} unreviewed); coverage ${s.outcomes.heuristics.assessed}/${s.outcomes.heuristics.coverage_total} assessed`);
   else lines.push('- Heuristics: not selected');
-  if (s.outcomes.journeys.length) for (const journey of s.outcomes.journeys) lines.push(`- Walkthrough ${journey.task_id}/${journey.persona_id}: ${journey.verdict}${journey.execution_status ? ` (execution ${journey.execution_status})` : ''}`);
+  if (s.outcomes.journeys.length) for (const journey of s.outcomes.journeys) lines.push(`- Task outcome — ${journey.task_id}/${journey.persona_id}: **${journey.task_outcome}**${journey.execution_status ? ` (execution ${journey.execution_status})` : ''}`);
   else lines.push('- Walkthroughs: none selected');
   lines.push(`- Usability: ${s.outcomes.usability.status === 'completed' ? `${s.outcomes.usability.score} / ${s.outcomes.usability.max_score}` : 'not evaluated'}`);
   lines.push('');
@@ -368,4 +391,4 @@ function chatMarkdown(synthesis) {
   return lines.join('\n');
 }
 
-module.exports = { build, chatMarkdown };
+module.exports = { build, chatMarkdown, acVerdictLabel, taskOutcomeLabel };

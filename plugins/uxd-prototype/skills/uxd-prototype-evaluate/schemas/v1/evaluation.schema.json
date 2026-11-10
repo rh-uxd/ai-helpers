@@ -21,7 +21,12 @@
               "rationale": { "$ref": "shared.schema.json#/$defs/bounded_text" },
               "evidence_ids": { "$ref": "shared.schema.json#/$defs/evidence_ids" },
               "action_ids": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/identifier" }, "uniqueItems": true, "maxItems": 24 },
-              "evaluated_by": { "type": "string", "enum": ["journey", "source", "human"] },
+              "evaluated_by": {
+                "anyOf": [
+                  { "type": "string", "enum": ["journey", "source", "human"] },
+                  { "type": "null" }
+                ]
+              },
               "updated_at": { "$ref": "shared.schema.json#/$defs/timestamp" }
             },
             "required": ["ac_id", "verdict", "rationale", "evidence_ids", "action_ids", "evaluated_by", "updated_at"],
@@ -64,10 +69,25 @@
                 "properties": {
                   "status": { "enum": ["completed", "failed", "blocked", "incomplete", "not-run"] },
                   "stop_reason": { "type": "string", "minLength": 1, "maxLength": 1000 },
-                  "session_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                  "session_id": {
+                    "anyOf": [
+                      { "$ref": "shared.schema.json#/$defs/identifier" },
+                      { "type": "null" }
+                    ]
+                  },
                   "invocation_ids": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/identifier" }, "uniqueItems": true, "maxItems": 100 }
                 },
                 "required": ["status", "stop_reason", "session_id", "invocation_ids"],
+                "allOf": [
+                  {
+                    "if": { "type": "object", "properties": { "invocation_ids": { "type": "array", "minItems": 1 } }, "required": ["invocation_ids"] },
+                    "then": { "type": "object", "properties": { "session_id": { "$ref": "shared.schema.json#/$defs/identifier" } } }
+                  },
+                  {
+                    "if": { "type": "object", "properties": { "status": { "const": "not-run" } }, "required": ["status"] },
+                    "then": { "type": "object", "properties": { "invocation_ids": { "type": "array", "maxItems": 0 } } }
+                  }
+                ],
                 "additionalProperties": false
               }
             },

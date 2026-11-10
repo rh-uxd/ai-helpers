@@ -107,7 +107,9 @@ context so the designer is not asked to re-enter packet or run details.
 5. **Proposed run:** show questions, check rationale/dependencies, selected/skipped
    work, source/build identity, cohort, expected evidence, reviewed scope/budget,
    estimate or explicit uncertainty, fresh artifact destination, stopping conditions,
-   and separate browser/provider/edit/report/sharing choices.
+   and separate browser/provider/edit/report/sharing choices. After the designer
+   reviews the plan, write its approved public fields to `plan.json` using the
+   evaluation-plan schema; the runner validates this file but does not generate it.
    Proceed only after the relevant human decision is recorded.
 
 For evaluator-prepared walkthroughs, pass the reviewed packet and source bytes/

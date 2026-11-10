@@ -7,6 +7,7 @@ set -euo pipefail
 # Usage:
 #   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/evaluation/full-1/
 #   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/evaluation/full-1/ --mode=branch
+#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh .artifacts/PROJ-298/eval/ --legacy
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -17,18 +18,21 @@ INDEX_TEMPLATE="$PROJECT_ROOT/templates/report-index.html"
 
 ARTIFACTS_DIR=""
 MODE=""
+LEGACY=0
 
 for arg in "$@"; do
   case "$arg" in
     --mode=*) MODE="${arg#--mode=}" ;;
+    --legacy) LEGACY=1 ;;
     -*) echo "Unknown flag: $arg" >&2; exit 1 ;;
     *) ARTIFACTS_DIR="$arg" ;;
   esac
 done
 
 if [[ -z "$ARTIFACTS_DIR" ]]; then
-  echo "Usage: publish-report.sh <artifacts-dir> [--mode=pages|branch]" >&2
-  echo "  e.g. publish-report.sh artifacts/PROJ-298/evaluation/full-1/" >&2
+  echo "Usage: publish-report.sh <run-dir> [--mode=pages|branch] [--legacy]" >&2
+  echo "  canonical: publish-report.sh artifacts/PROJ-298/evaluation/full-1/" >&2
+  echo "  legacy:    publish-report.sh .artifacts/PROJ-298/eval/ --legacy" >&2
   exit 1
 fi
 
@@ -39,6 +43,14 @@ if [[ ! -f "$REPORT_FILE" ]]; then
   echo "Error: No evaluation-report.html found in $ARTIFACTS_DIR" >&2
   exit 1
 fi
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "Error: Node.js is required to validate report publication input." >&2
+  exit 1
+fi
+VALIDATE_ARGS=("$ARTIFACTS_DIR")
+if [[ "$LEGACY" -eq 1 ]]; then VALIDATE_ARGS+=(--legacy); fi
+node "$SCRIPT_DIR/reporting/validate-publish-input.js" "${VALIDATE_ARGS[@]}"
 
 # Find the prototype key, not the individual run name.
 KEY_DIR="$ARTIFACTS_DIR"

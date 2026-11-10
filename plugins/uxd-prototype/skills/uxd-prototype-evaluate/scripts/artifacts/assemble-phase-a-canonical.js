@@ -325,11 +325,16 @@ function buildDocuments(artifactsDir, cacheDecision, inputs = null) {
         handoff: { requires_user_invocation: true, skill: 'uxd-prototype-evaluate', payload: {} },
       });
     }
-    const verdict = ['PASS', 'FAIL', 'FLAGGED'].includes(row.verdict) ? row.verdict : 'NOT_RUN';
+    // CSV rows carry legacy classification labels, not evidence-backed
+    // verification receipts. Preserve the legacy CSV file as-is, but never
+    // promote its PASS/FAIL/FLAGGED value into the canonical result.
+    const hasUnverifiedLegacyVerdict = ['PASS', 'FAIL', 'FLAGGED'].includes(row.verdict);
     return {
-      ac_id: acIdBySource.get(row.criterion_id), verdict,
-      rationale: bounded(row.rationale, 280, verdict === 'NOT_RUN' ? 'Pending evaluation.' : 'Deterministic classification result.'),
-      evidence_ids: [], action_ids: actionIds, evaluated_by: 'source', updated_at: createdAt,
+      ac_id: acIdBySource.get(row.criterion_id), verdict: 'NOT_RUN',
+      rationale: hasUnverifiedLegacyVerdict
+        ? 'Legacy CSV outcome has no canonical evidence-backed verification receipt; treated as not tested.'
+        : bounded(row.rationale, 280, 'Pending evaluation.'),
+      evidence_ids: [], action_ids: actionIds, evaluated_by: null, updated_at: createdAt,
     };
   });
 
@@ -399,7 +404,9 @@ function compareLegacyParity(artifactsDir, documents) {
   fs.writeFileSync(projectedTemp, projected.get('evaluation-report.csv'));
   let projectedRows;
   try { projectedRows = parseAcceptanceRows(projectedTemp); } finally { fs.rmSync(projectedTemp, { force: true }); }
-  const rowView = rows => rows.map(row => ({ id: row.criterion_id, tier: row.tier, verdict: row.verdict, human_action: row.human_action }));
+  // Classification metadata is round-tripped, but a legacy CSV verdict is not
+  // imported into canonical verification. The original CSV remains untouched.
+  const rowView = rows => rows.map(row => ({ id: row.criterion_id, tier: row.tier, human_action: row.human_action }));
   if (stableJson(rowView(originalRows)) !== stableJson(rowView(projectedRows))) throw new Error('Canonical AC projection does not match the legacy classification contract');
   const originalConsistency = readJson(path.join(artifactsDir, 'consistency-report.json'));
   const projectedConsistency = projected.get('consistency-report.json');

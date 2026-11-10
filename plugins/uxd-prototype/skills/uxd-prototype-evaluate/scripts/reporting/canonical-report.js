@@ -9,9 +9,19 @@ const C = require('../artifacts/split-contract');
 const S = require('./evaluation-synthesis');
 const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const invocationCount = value => value === null || value === undefined ? 'Unknown' : value;
+const SAFE_HTML = Symbol('safe-html');
+const safeHtml = value => ({ [SAFE_HTML]: value });
+const cell = value => value && value[SAFE_HTML] !== undefined ? value[SAFE_HTML] : escape(value);
+const evidenceLinks = ids => safeHtml(ids.length
+  ? ids.map(id => `<a href="#evidence-${escape(id)}">${escape(id)}</a>`).join(', ')
+  : '—');
 function table(headers, rows) {
   if (!rows.length) return '';
-  return `<table><thead><tr>${headers.map(h => `<th>${escape(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${escape(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  return `<table><thead><tr>${headers.map(h => `<th>${escape(h)}</th>`).join('')}</tr></thead><tbody>${rows.map(row => `<tr>${row.map(value => `<td>${cell(value)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+function tableWithEvidenceAnchors(headers, rows, ids) {
+  if (!rows.length) return '';
+  return `<table><thead><tr>${headers.map(h => `<th>${escape(h)}</th>`).join('')}</tr></thead><tbody>${rows.map((row, index) => `<tr${ids[index] ? ` id="evidence-${escape(ids[index])}"` : ''}>${row.map(value => `<td>${cell(value)}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
 }
 function list(items) {
   if (!items.length) return '';
@@ -51,16 +61,16 @@ function render(directory) {
       : '<p>No proposed actions; review findings directly.</p>'],
     ['Usability', table(['Status', 'Overall score'], [[evaluation.usability.status, evaluation.usability.status === 'completed' ? `${evaluation.usability.score} / ${evaluation.usability.max_score}` : 'Not evaluated']])],
     ['Usability dimensions', table(['ID', 'Dimension', 'Score', 'Confidence', 'Persona scores', 'Evidence'], evaluation.usability.dimensions.map(d => [d.id, d.label, `${d.score} / ${d.max_score}`, d.confidence, d.persona_scores.map(p => `${p.persona_id}: ${p.score}`).join('\n'), d.evidence_ids.join(', ')]))],
-    ['Acceptance criteria', table(['ID', 'Source', 'Criterion', 'Verdict', 'Evaluated by', 'Evidence'], brief.intent.acceptance_criteria.map(ac => { const result = evaluation.ac_results.find(r => r.ac_id === ac.id); return [ac.id, ac.source_id, ac.text, result.verdict, result.evaluated_by, result.evidence_ids.join(', ')]; }))],
+    ['Acceptance criteria', table(['ID', 'Source', 'Criterion', 'Requirement verdict', 'Rationale', 'Evidence IDs'], brief.intent.acceptance_criteria.map(ac => { const result = evaluation.ac_results.find(r => r.ac_id === ac.id); return [ac.id, ac.source_id, ac.text, S.acVerdictLabel(result.verdict), result.rationale, evidenceLinks(result.evidence_ids)]; }))],
     ['Consistency', table(['ID', 'Origin', 'Severity', 'Finding', 'Location', 'Recommendation', 'Review', 'Evidence'], evaluation.consistency.findings.map(f => [f.id, f.origin, f.severity, f.description, f.file ? (f.line ? `${f.file}:${f.line}` : f.file) : f.evidence_ids.join(', '), f.recommendation, f.review_candidate ? 'Unreviewed candidate' : f.verdict, f.evidence_ids.join(', ')]))],
     ['Guideline consistency', evaluation.consistency.source_analysis ? table(['Design system', 'Status', 'Frozen manifest', 'Evaluated rules', 'Unevaluated rules'], [[evaluation.consistency.source_analysis.design_system.id, evaluation.consistency.source_analysis.guideline_consistency.status, evaluation.consistency.source_analysis.guideline_manifest, evaluation.consistency.source_analysis.coverage.evaluated_rules.join('\n'), evaluation.consistency.source_analysis.coverage.unevaluated_rules.join('\n')]]) : ''],
     ['Internal consistency', evaluation.consistency.source_analysis ? table(['Status', 'Coverage note', 'Review candidates (not normative violations)'], [[evaluation.consistency.source_analysis.internal_consistency.status, evaluation.consistency.source_analysis.internal_consistency.reason, evaluation.consistency.source_analysis.internal_consistency.findings.map(f => `${f.file}:${f.line_start} — ${f.description}`).join('\n')]]) : ''],
     ['Heuristics', table(['ID', 'Finding', 'Severity', 'Screen / state', 'Observation', 'Review', 'Evidence'], (evaluation.heuristics?.findings || []).map(f => [f.id, f.title, f.suggested_severity || 'unrated', `${f.screen_id} / ${f.state_id}`, f.observation, f.review_status, f.evidence_ids.join(', ')]))],
     ['Heuristic coverage', table(['Lens', 'Heuristic', 'Status', 'Scope note'], (evaluation.heuristics?.coverage || []).map(c => [c.lens, c.heuristic_id, c.status, c.note]))],
-    ['Walkthroughs', table(['Journey', 'Task', 'Persona', 'Outcome', 'Execution', 'Stop reason', 'Steps'], evaluation.journeys.map(j => [j.id, j.task_id, j.persona_id, j.verdict, j.execution?.status || '—', j.execution?.stop_reason || '—', j.steps.map(s => `${s.sequence}. ${s.action}: ${s.target} — ${s.outcome} (${s.evidence_ids.join(', ')})`).join('\n')]))],
+    ['Walkthroughs', table(['Journey', 'Task', 'Persona', 'Task outcome', 'Execution', 'Stop reason', 'Steps'], evaluation.journeys.map(j => [j.id, j.task_id, j.persona_id, S.taskOutcomeLabel(j.verdict), j.execution?.status || '—', j.execution?.stop_reason || '—', j.steps.map(s => `${s.sequence}. ${s.action}: ${s.target} — ${s.outcome} (${s.evidence_ids.join(', ')})`).join('\n')]))],
     ['Actions', table(['ID', 'Kind', 'Status', 'Origin', 'Recommendation'], docs['pe-actions.json'].actions.map(a => [a.id, a.kind, a.status, a.source.origin_run_id ? `${a.source.origin_run_id} / ${a.source.origin_action_id}` : a.source.ac_id || a.source.finding_id || a.source.evidence_ids.join(', '), a.recommendation]))],
-    ['Browser evidence', table(['ID', 'Capture', 'Screen / state', 'Revision', 'Kind', 'Subject'], docs['pe-evidence.json'].items.map(e => { const capture = docs['pe-evidence.json'].captures.find(c => c.id === e.capture_id); return [e.id, e.capture_id, `${capture.screen_id || ''} / ${capture.state_id || ''}`, capture.source_ref || brief.intent.scope.source_ref, e.kind, e.subject.name]; }))],
-    ['Source evidence', table(['ID', 'Path', 'Line', 'Availability', 'Revision', 'SHA-256'], (docs['pe-evidence.json'].source_items || []).map(e => [e.id, e.path, e.line, e.availability, e.revision, e.sha256]))],
+    ['Browser evidence', tableWithEvidenceAnchors(['ID', 'Capture', 'Screen / state', 'Revision', 'Kind', 'Subject'], docs['pe-evidence.json'].items.map(e => { const capture = docs['pe-evidence.json'].captures.find(c => c.id === e.capture_id); return [e.id, e.capture_id, `${capture.screen_id || ''} / ${capture.state_id || ''}`, capture.source_ref || brief.intent.scope.source_ref, e.kind, e.subject.name]; }), docs['pe-evidence.json'].items.map(e => e.id))],
+    ['Source evidence', tableWithEvidenceAnchors(['ID', 'Path', 'Line', 'Availability', 'Revision', 'SHA-256'], (docs['pe-evidence.json'].source_items || []).map(e => [e.id, e.path, e.line, e.availability, e.revision, e.sha256]), (docs['pe-evidence.json'].source_items || []).map(e => e.id))],
     ['Phases', table(['Phase', 'Status', 'Model', 'Cost USD'], state.phases.map(p => [p.name, p.status, p.model || 'Local', p.llm_cost_usd === null ? 'Unknown' : p.llm_cost_usd]))],
   ];
   const images = new Map();
