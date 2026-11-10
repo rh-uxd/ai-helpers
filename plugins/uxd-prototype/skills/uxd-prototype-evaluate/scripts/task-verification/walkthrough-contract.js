@@ -119,7 +119,10 @@ function validateBundle(docs, bundle, packetHash) {
     const criterion = intent.acceptance_criteria.find(ac => ac.id === result.ac_id);
     requireThat(current && !seen.has(result.ac_id) && result.evaluated_by === 'journey' && result.evidence_ids.length, 'Explicit AC check is invalid or duplicated'); seen.add(result.ac_id);
     requireThat(!['PASS', 'FAIL'].includes(result.verdict) || criterion.verification_mode === 'ui', 'Browser evidence cannot verify non-UI criteria');
-    requireThat(bundle.journeys.some(j => j.ac_ids.includes(result.ac_id) && result.evidence_ids.every(id => j.steps.some(s => s.evidence_ids.includes(id) && s.action === 'verify'))), 'AC verdict lacks task-linked explicit verification evidence');
+    const verifySteps = bundle.journeys.filter(j => j.ac_ids.includes(result.ac_id)).flatMap(j => j.steps).filter(s => s.action === 'verify');
+    requireThat(result.evidence_ids.every(id => verifySteps.some(step => step.evidence_ids.includes(id))), 'AC verdict lacks task-linked explicit verification evidence');
+    const expectedOutcome = result.verdict === 'PASS' ? 'success' : result.verdict === 'FAIL' ? 'failure' : null;
+    if (expectedOutcome) requireThat(result.evidence_ids.every(id => verifySteps.some(step => step.evidence_ids.includes(id) && step.outcome === expectedOutcome)), 'PASS/FAIL must match the observed outcome of every linked explicit verification step');
   }
   for (const action of bundle.proposed_actions || []) requireThat(action.kind === 'fix' && action.status === 'proposed' && action.handoff?.requires_user_invocation === true && action.source.evidence_ids.length && bundle.ac_results?.some(r => r.ac_id === action.source.ac_id && r.verdict === 'FAIL' && r.action_ids.includes(action.id) && action.source.evidence_ids.every(id => r.evidence_ids.includes(id))), 'Proposed fix must link an explicitly failed AC and its observed evidence');
   return pairs;

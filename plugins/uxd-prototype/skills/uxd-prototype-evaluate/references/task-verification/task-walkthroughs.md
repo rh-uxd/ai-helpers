@@ -79,7 +79,9 @@ Write an isolated `bundle.json`, validated by `walkthrough-bundle.schema.json`:
   actual `stop_reason`, including limit, interruption, denied/unavailable activity.
 - Optional `ac_results`: explicit criterion checks, `evaluated_by: journey`,
   task-linked evidence from an observed **verify** step. Only UI criteria can
-  PASS/FAIL on browser evidence. Task success alone leaves ACs NOT_RUN.
+  PASS when every linked verify observation succeeds; use FAIL only when the
+  explicit verification observes a counterexample. Mixed, blocked or partial
+  verification is FLAGGED. Task success alone leaves ACs NOT_RUN.
 - Optional `proposed_actions`: canonical proposed fix actions linked to explicit
   failed AC checks/evidence; `handoff.requires_user_invocation: true`. No edits run.
 

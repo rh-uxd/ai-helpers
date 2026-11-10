@@ -210,6 +210,32 @@ function validateReferences(documents, errors) {
     assertResolved(errors, 'pe-evaluation-snapshot.json', `/ac_results/${index}/ac_id`, result.ac_id, acIds, 'Acceptance criterion');
     assertResolvedAll(errors, 'pe-evaluation-snapshot.json', `/ac_results/${index}/evidence_ids`, result.evidence_ids, evidenceIds, 'Evidence item');
     assertResolvedAll(errors, 'pe-evaluation-snapshot.json', `/ac_results/${index}/action_ids`, result.action_ids, actionIds, 'Action');
+    if (['PASS', 'FAIL'].includes(result.verdict)) {
+      if (result.evaluated_by === 'source') {
+        issue(errors, 'pe-evaluation-snapshot.json', `/ac_results/${index}/evaluated_by`, 'source_classification_not_verification', 'Source classification cannot establish a verified AC verdict.');
+      } else if (!['journey', 'human'].includes(result.evaluated_by)) {
+        issue(errors, 'pe-evaluation-snapshot.json', `/ac_results/${index}/evaluated_by`, 'missing_verifier', 'PASS/FAIL requires an explicit verifier; classification and planned work are not verification.');
+      }
+      if (!result.evidence_ids.length) {
+        issue(errors, 'pe-evaluation-snapshot.json', `/ac_results/${index}/evidence_ids`, 'missing_verification_evidence', 'PASS/FAIL requires evidence linked to the explicit verification.');
+      }
+    }
+    if (result.evaluated_by === 'journey' && result.verdict !== 'NOT_RUN') {
+      const criterion = brief.intent.acceptance_criteria.find(ac => ac.id === result.ac_id);
+      const expectedOutcome = result.verdict === 'PASS' ? 'success' : result.verdict === 'FAIL' ? 'failure' : null;
+      const verifySteps = evaluation.journeys
+        .filter(journey => journey.ac_ids.includes(result.ac_id))
+        .flatMap(journey => journey.steps)
+        .filter(step => step.action === 'verify');
+      const linked = result.evidence_ids.length > 0 && result.evidence_ids.every(id => (
+        evidenceById.has(id) && verifySteps.some(step => step.evidence_ids.includes(id)
+          && (!expectedOutcome || step.outcome === expectedOutcome))
+      ));
+      if (!linked) issue(errors, 'pe-evaluation-snapshot.json', `/ac_results/${index}`, 'missing_explicit_verification', 'Journey AC results need task-linked browser evidence from an explicit verification step whose observed outcome supports the verdict.');
+      if (['PASS', 'FAIL'].includes(result.verdict) && criterion?.verification_mode !== 'ui') {
+        issue(errors, 'pe-evaluation-snapshot.json', `/ac_results/${index}`, 'browser_non_ui_verification', 'Browser walkthroughs cannot verify non-UI acceptance criteria.');
+      }
+    }
   }
   for (const acId of acIds) {
     if (!resultAcIds.has(acId)) {

@@ -39,7 +39,7 @@ function phase(name, status, start, duration = 0) {
 
 function main() {
   const { values } = parseArgs({ options: {
-    input: { type: 'string' }, output: { type: 'string' }, checks: { type: 'string', default: 'classify' },
+    input: { type: 'string' }, output: { type: 'string' }, checks: { type: 'string' },
     workspace: { type: 'string' }, 'base-ref': { type: 'string' }, report: { type: 'boolean', default: false },
     'no-report': { type: 'boolean', default: false },
     'judgment-bundle': { type: 'string' },
@@ -47,11 +47,12 @@ function main() {
     guidelines: { type: 'string', multiple: true }, 'guideline-manifest': { type: 'string' },
   } });
   const reportRequested = values.report && !values['no-report'];
-  if (!values.input || !values.output) throw new Error('Usage: run-quick-checks.js --input packet.json --output <new-run-dir> [--checks classify,consistency-source,heuristic,consistency-visual] [--judgment-bundle <file>] [--workspace <repo> --base-ref <commit>] [--report]');
-  const selected = values.checks.split(',');
+  if (typeof values.checks !== 'string' || !values.checks.trim()) throw new Error(`Select at least one check with --checks: ${CHECKS.join(', ')}`);
+  const selected = values.checks.split(',').map(check => check.trim());
+  if (!selected.length || selected.some(check => !check) || new Set(selected).size !== selected.length || selected.some(check => !CHECKS.includes(check))) throw new Error(`Select only: ${CHECKS.join(', ')}`);
+  if (!values.input || !values.output) throw new Error('Usage: run-quick-checks.js --input packet.json --output <new-run-dir> --checks classify,consistency-source,heuristic,consistency-visual [--judgment-bundle <file>] [--workspace <repo> --base-ref <commit>] [--report]');
   // Run only the checks the caller selected. Classification, source analysis
   // and host-supplied judgments are not an automatic run-everything pipeline.
-  if (!selected.length || new Set(selected).size !== selected.length || selected.some(check => !CHECKS.includes(check))) throw new Error(`Select only: ${CHECKS.join(', ')}`);
   const input = path.resolve(values.input);
   const packetBytes = fs.readFileSync(input);
   const packet = JSON.parse(packetBytes);

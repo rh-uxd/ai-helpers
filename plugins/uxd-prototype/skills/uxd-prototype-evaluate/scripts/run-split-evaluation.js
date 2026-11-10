@@ -55,6 +55,7 @@ function run(options) {
   if (parentRoot) {
     parent = C.loadRun(parentRoot);
     if (!options['adapt-from'] && route !== 'full') throw new Error('Continuation/verification requires the Full route');
+    if ((options['continue-from'] || options['verify-from']) && !options.approval) throw new Error('Full continuation/verification requires a separate --approval decision');
     // The host records the human decision; a receipt cannot grant authority.
     // Bind it to the reviewed bytes so edits invalidate that decision's snapshot.
     if (!options['adapt-from'] || options.approval) {
@@ -69,6 +70,8 @@ function run(options) {
   let quickTemp;
   try {
     const planning = require('./workflow/evaluation-plan').preflight(options, parent, approval);
+    const startsQuickChecks = route === 'quick' || (route === 'full' && !options['continue-from']);
+    if (startsQuickChecks && (typeof options.checks !== 'string' || !options.checks.trim())) throw new Error('Select Quick checks explicitly with --checks, or provide a reviewed --plan that selects them');
     // Validate the prepared cohort before selected Quick/browser/provider work.
     // Full without a cohort can finish after review, but cannot run walkthroughs.
     if (options.input && (route === 'walkthroughs' || route === 'full')) {
@@ -84,7 +87,7 @@ function run(options) {
       if (!options.input) throw new Error('A reviewed --input packet is required');
       quickTemp = fs.mkdtempSync(path.join(path.dirname(path.resolve(options.output)), '.quick-input-'));
       quickRoot = path.join(quickTemp, 'run');
-      const args = [path.join(__dirname, 'run-quick-checks.js'), '--input', options.input, '--output', quickRoot, '--checks', options.checks || 'classify'];
+      const args = [path.join(__dirname, 'run-quick-checks.js'), '--input', options.input, '--output', quickRoot, '--checks', options.checks];
       for (const key of ['workspace', 'base-ref', 'judgment-bundle', 'design-system', 'design-system-version', 'guideline-manifest']) if (options[key]) args.push(`--${key}`, options[key]);
       for (const value of options.guidelines || []) args.push('--guidelines', value);
       const result = spawnSync(process.execPath, args, { encoding: 'utf8', timeout: 180000 });
