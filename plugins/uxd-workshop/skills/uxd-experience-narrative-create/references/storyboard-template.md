@@ -14,7 +14,7 @@
 
 ## Story beats
 
-Use one short beat per mapped To-Be stage. Keep the map's S# labels and left-to-right order. Write one or two sentences for each moment. Include the user action and what changes. Pull in an As-Is pain or need only when it clarifies the story. Avoid repeating field headings such as action, touchpoint, screen, opportunity, mindset, or emotion in every beat.
+Use one short beat per mapped To-Be stage. Keep the map's `S#` labels and left-to-right order. Write one or two sentences for each moment. Include the user action and what changes. Pull in an As-Is pain or need only when it clarifies the story. Avoid repeating field headings such as action, touchpoint, screen, opportunity, mindset, or emotion in every beat.
 
 | Stage | Narrative beat | Screens / artifacts (designer adds) |
 |---|---|---|
