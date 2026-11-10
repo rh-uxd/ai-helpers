@@ -2,8 +2,8 @@
 name: uxd-prototype-evaluate
 version: 0.1.0
 description: >-
-  Run selected Quick Checks or composed Full Evaluation from reviewed Jira or
-  UX-spec inputs, with canonical evidence, explicit checkpoints and optional reports.
+  Run selected Quick Checks or composed Full Evaluation from Jira or reviewed
+  written requirements, with canonical evidence, explicit checkpoints and optional reports.
   Use for source-linked prototype verification and review of existing findings.
 ---
 
@@ -12,8 +12,7 @@ description: >-
 Conversational routing, planning, readiness, review checkpoints, synthesis and
 cross-skill handoffs follow the
 [responsibility contract](references/workflow/evaluator-responsibilities.md), including
-its current versus intended capabilities. This skill executes the selected
-evaluator work; it does not start the old combined phase orchestrator.
+its ownership and execution limits. This skill executes only the selected work.
 
 ## Choose only the needed work
 
@@ -39,14 +38,15 @@ verification of an existing evaluator run:
   Fixes require separate authorization and allow one post-fix verification pass.
 - **Existing results:** discover validated canonical JSON and linked receipts.
   Recommend reviewing applicable findings or selected missing work; do not rerun,
-  import old evidence, edit a spec or publish implicitly.
+  import old evidence, edit requirements or publish implicitly.
 
 ## Inputs and prerequisites
 
 Use the reviewed packet described by the
 [shared execution contract](references/workflow/split-evaluation.md): source snapshot and
 stable source IDs, exact prototype revision, selected check scope, and only the
-route-relevant environment/tasks/personas. Jira is not required for UX-spec inputs.
+route-relevant environment/tasks/personas. Jira is not required when reviewed
+written requirements are supplied.
 
 - Local runtime requires Node.js and the dependencies declared in `package.json`.
   Dependency installation is setup work requiring approval, not automatic intake.
@@ -68,7 +68,9 @@ route-relevant environment/tasks/personas. Jira is not required for UX-spec inpu
 ## Execute the approved route
 
 Run from the resolved evaluator skill directory, using consumer-owned absolute
-input/output paths. Each output must be a fresh run directory:
+input/output paths. Save outputs under the project's
+`artifacts/<KEY>/evaluation/<run-name>/`; each run directory must be new.
+Dates live in the JSON fields, not the filenames:
 
 ```bash
 node scripts/run-split-evaluation.js --route quick --input <reviewed-packet.json> --output <fresh-run-directory> --checks <selected-checks> [--report]
@@ -83,9 +85,10 @@ selected checks without counting its work twice; unknown usage stays `null`.
 
 ## Outputs and completion
 
-Each run owns `brief.json`, `evaluation.json`, `evidence.json`, `actions.json`,
-and `state.json`, plus hashed `inputs/`, `checks/` and evidence receipts. These
-are authoritative; old CSV projections cannot repair or overwrite them. See
+Each run owns `pe-context.json`, `pe-evaluation-snapshot.json`, `pe-evidence.json`, `pe-actions.json`,
+and `pe-state.json`, plus hashed `inputs/`, `checks/` and evidence receipts. These
+are authoritative. Each JSON starts with UTC `created_at` and `updated_at`; completed
+runs are immutable, so follow-up work writes a fresh run. See
 [canonical-artifacts.md](references/artifacts/canonical-artifacts.md).
 
 Present a decision-focused chat summary by default: goal, planned versus actual

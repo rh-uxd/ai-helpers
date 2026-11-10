@@ -15,7 +15,7 @@ const { importJudgments } = require('./inspection-contracts/inspection-bundle');
 const compatibility = require('./consistency/consistency-compat');
 const { loadRun } = require('./artifacts/split-contract');
 
-const FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
+const FILES = ['pe-context.json', 'pe-evaluation-snapshot.json', 'pe-evidence.json', 'pe-actions.json', 'pe-state.json'];
 const CHECKS = ['classify', 'consistency-source', 'heuristic', 'consistency-visual'];
 const hash = value => `sha256:${crypto.createHash('sha256').update(value).digest('hex')}`;
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
@@ -166,7 +166,7 @@ function main() {
       delta: { changed_files: changedFiles }, consistency,
       evidence: { prototype_url: prototype.url, captured_at: start }, rows,
     });
-    const brief = documents['brief.json'];
+    const brief = documents['pe-context.json'];
     brief.intent.tasks = packet.tasks || []; brief.intent.personas = packet.personas || [];
     if (packet.environment) brief.intent.environment = packet.environment;
     brief.intent.stage = rows.length ? 'complete' : brief.intent.tasks.length || brief.intent.personas.length || selected.some(check => ['heuristic', 'consistency-visual'].includes(check)) ? 'quick-checks' : 'consistency-source';
@@ -175,9 +175,9 @@ function main() {
     brief.intent.scope.source_mode = workspace ? 'workspace' : 'remote-only';
     brief.intent.scope.source_ref = prototype.revision;
     brief.intent.acceptance_criteria.forEach((ac, index) => { ac.source_id = extract.ac_list[index].source_id; });
-    const evaluation = documents['evaluation.json'];
+    const evaluation = documents['pe-evaluation-snapshot.json'];
     if (workspace) {
-      documents['evidence.json'].source_items = [];
+      documents['pe-evidence.json'].source_items = [];
       for (const finding of evaluation.consistency.findings.filter(f => f.origin === 'source')) {
         const file = path.resolve(workspace, finding.file);
         if (!file.startsWith(`${workspace}${path.sep}`)) throw new Error('Source evidence path escapes workspace');
@@ -187,7 +187,7 @@ function main() {
         const id = `source-${hash(JSON.stringify([finding.file, finding.line, finding.id])).slice(7, 31)}`;
         // Missing-file findings are evidence of absence at this revision; null
         // is not the hash of an invented empty file or a browser observation.
-        documents['evidence.json'].source_items.push({ id, path: finding.file, line: finding.line, revision: prototype.revision, availability: present ? 'present' : 'absent', sha256: present ? hash(fs.readFileSync(real)) : null, observation: finding.description });
+        documents['pe-evidence.json'].source_items.push({ id, path: finding.file, line: finding.line, revision: prototype.revision, availability: present ? 'present' : 'absent', sha256: present ? hash(fs.readFileSync(real)) : null, observation: finding.description });
         finding.evidence_ids.push(id);
       }
     }
@@ -196,7 +196,7 @@ function main() {
     else if (!evaluation.consistency.source_checked || !evaluation.consistency.guidelines_checked) evaluation.consistency.status = 'degraded';
     else if (!rows.length && evaluation.consistency.status === 'passed') evaluation.status = 'passed';
     for (const finding of evaluation.consistency.findings.filter(item => !item.review_candidate)) {
-      documents['actions.json'].actions.push({
+      documents['pe-actions.json'].actions.push({
         id: `action-${finding.id}`, kind: 'human-followup', status: 'proposed', priority: 'normal', confidence: finding.confidence,
         source: { ac_id: null, finding_id: finding.id, evidence_ids: finding.evidence_ids }, recommendation: finding.recommendation,
         result: { changed_files: [] }, handoff: { requires_user_invocation: true, skill: 'uxd-prototype-evaluate', payload: {} },
@@ -218,12 +218,12 @@ function main() {
       })),
       findings: evaluation.consistency.findings.filter(finding => finding.origin === 'source').map((finding, index) => ({
         check_output: 'checks/consistency-report.json', output_index: index, finding_id: finding.id,
-        action_ids: documents['actions.json'].actions.filter(action => action.source.finding_id === finding.id).map(action => action.id),
+        action_ids: documents['pe-actions.json'].actions.filter(action => action.source.finding_id === finding.id).map(action => action.id),
         evidence_ids: finding.evidence_ids,
       })),
     };
     writeJson(stage, 'checks/context.json', context);
-    const state = documents['state.json'];
+    const state = documents['pe-state.json'];
     state.permissions = packet.permissions || Object.fromEntries(['browser', 'provider', 'prototype_edits', 'report', 'sharing'].map(name => [name, { status: 'not-requested', scope: '', recorded_at: start }]));
     state.identity.intent_key = hash(JSON.stringify({ source: context.source, extract, selected, tasks: brief.intent.tasks, personas: brief.intent.personas, environment: packet.environment, ...(context.consistency_selection ? { consistency_selection: context.consistency_selection } : {}), ...(packet.check_scope ? { check_scope: packet.check_scope } : {}) }));
     // Hash the inputs and code, not just the prototype URL. The same URL could
@@ -233,8 +233,10 @@ function main() {
     state.identity.compound_key = hash(JSON.stringify({ intent_key: state.identity.intent_key, build_key: state.identity.build_key, evaluator_key: state.identity.evaluator_key }));
     state.cache.entry_key = state.identity.compound_key;
     const runId = `eval-quick-${crypto.randomUUID()}`;
+    const updatedAt = new Date().toISOString();
     for (const document of Object.values(documents)) {
       document.run_id = runId; document.producer = { name: 'uxd-prototype-evaluate-quick-checks', version: '1' };
+      document.updated_at = updatedAt;
     }
     state.lifecycle = { status: 'completed', current_phase: selected.includes('heuristic') ? 'heuristic' : selected.includes('classify') ? 'classify' : 'consistency', iteration: 0, max_iterations: 1, exit_reason: 'no-fix', iterations: [] };
     state.quick_checks = { selected, context_path: 'checks/context.json', context_sha256: hash(fs.readFileSync(path.join(stage, 'checks/context.json'))), report_requested: reportRequested };
@@ -252,7 +254,8 @@ function main() {
     if (reportRequested) {
       // An integrity receipt, not the legacy full-evaluation HTML report.
       state.phases.push(phase('integrity-report', 'completed', validationStart, Date.now() - Date.parse(validationStart)));
-      writeJson(stage, 'state.json', state);
+      state.updated_at = new Date().toISOString();
+      writeJson(stage, 'pe-state.json', state);
       const finalValidation = validateDirectory(stage);
       if (!finalValidation.valid) throw new Error(`Integrity state rejected: ${JSON.stringify(finalValidation.errors)}`);
       writeJson(stage, 'integrity-report.json', { run_id: runId, valid: true, checked_at: new Date().toISOString(), artifacts: FILES.map(filename => ({ path: filename, sha256: hash(fs.readFileSync(path.join(stage, filename))) })), summary: evaluation.summary, heuristic_findings: evaluation.heuristics?.findings.length || 0 });

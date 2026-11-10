@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const { isDeepStrictEqual } = require('util');
 const { canonicalRoot, verifyLinkedArtifacts } = require('./linked-artifact-contract');
-const FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
+const FILES = ['pe-context.json', 'pe-evaluation-snapshot.json', 'pe-evidence.json', 'pe-actions.json', 'pe-state.json'];
 const hash = value => `sha256:${crypto.createHash('sha256').update(value).digest('hex')}`;
 const read = file => {
   if (fs.statSync(file).size > 16 * 1024 * 1024) throw new Error('JSON artifact exceeds 16 MiB');
@@ -93,15 +93,17 @@ function identify(docs, route, inputs) {
   // Give the requested work, prototype inputs and evaluator code their own
   // hashes so a changed build cannot pass itself off as the same evidence.
   const id = `eval-${route}-${crypto.randomUUID()}`;
+  const updatedAt = new Date().toISOString();
   for (const doc of Object.values(docs)) {
     doc.run_id = id;
+    doc.updated_at = updatedAt;
     doc.producer = { name: 'uxd-prototype-evaluate-split', version: '0.1.0' };
   }
-  const state = docs['state.json'];
-  const intent = structuredClone(docs['brief.json'].intent);
+  const state = docs['pe-state.json'];
+  const intent = structuredClone(docs['pe-context.json'].intent);
   delete intent.scope.source_ref; delete intent.scope.changed_files; delete intent.scope.prototype_url;
   if (intent.evaluation_plan) { delete intent.evaluation_plan.packet_sha256; delete intent.evaluation_plan.reviewed_at; }
-  const sourceAnalysis = docs['evaluation.json']?.consistency.source_analysis;
+  const sourceAnalysis = docs['pe-evaluation-snapshot.json']?.consistency.source_analysis;
   state.identity.intent_key = hash(JSON.stringify({ ...intent, ...(sourceAnalysis ? { consistency_selection: { design_system: sourceAnalysis.design_system, manifest_version: sourceAnalysis.guidelines_version, context: sourceAnalysis.guideline_context } } : {}) }));
   state.identity.build_key = hash(JSON.stringify(inputs));
   // Include transitive local rules/validators, not just the entry-point scripts.
@@ -144,11 +146,10 @@ function counts(rows) {
 }
 
 function validateSplit(docs) {
-  // Optional split fields preserve legacy v1 readers; when present, their IDs
-  // must resolve across documents rather than merely satisfy individual schemas.
+  // Check cross-file references as well as each document's shape.
   const errors = [];
-  const add = message => errors.push({ path: 'brief.json/intent/environment', code: 'split_contract', message });
-  const brief = docs['brief.json'].intent;
+  const add = message => errors.push({ path: 'pe-context.json/intent/environment', code: 'split_contract', message });
+  const brief = docs['pe-context.json'].intent;
   const env = brief.environment;
   if (env) {
     const maps = {};
@@ -175,7 +176,7 @@ function validateSplit(docs) {
         }
       }
     }
-    for (const capture of docs['evidence.json'].captures) {
+    for (const capture of docs['pe-evidence.json'].captures) {
       if (capture.screen_id) refs([capture.screen_id], 'screens');
       if (capture.state_id) {
         refs([capture.state_id], 'states');
@@ -183,13 +184,13 @@ function validateSplit(docs) {
       }
     }
   }
-  for (const item of docs['evidence.json'].source_items || []) {
+  for (const item of docs['pe-evidence.json'].source_items || []) {
     if (item.revision !== brief.scope.source_ref) add('Source evidence revision mismatch');
     if ((item.availability === 'present') !== (item.sha256 !== null)) add('Source evidence hash must distinguish present and absent files');
   }
-  const workflow = docs['state.json'].workflow;
+  const workflow = docs['pe-state.json'].workflow;
   if (workflow) {
-    for (const action of docs['actions.json'].actions) {
+    for (const action of docs['pe-actions.json'].actions) {
       if (action.source.origin_run_id && (action.source.origin_run_id !== workflow.parent_run_id || !action.source.origin_action_id)) add('Applied action origin must identify the parent run and action');
     }
     const unique = new Set();
@@ -198,8 +199,8 @@ function validateSplit(docs) {
       if (unique.has(key)) add('Duplicate selected task/persona pair'); unique.add(key);
       if (!brief.personas.some(p => p.id === pair.persona_id && p.task_ids.includes(pair.task_id))) add('Selected pair outside frozen brief');
     }
-    if (workflow.route !== 'quick' && docs['evaluation.json'].journeys.some(j => !unique.has(`${j.task_id}:${j.persona_id}`))) add('Journey outside selected pairs');
-    if (workflow.route !== 'quick') for (const result of docs['evaluation.json'].ac_results) {
+    if (workflow.route !== 'quick' && docs['pe-evaluation-snapshot.json'].journeys.some(j => !unique.has(`${j.task_id}:${j.persona_id}`))) add('Journey outside selected pairs');
+    if (workflow.route !== 'quick') for (const result of docs['pe-evaluation-snapshot.json'].ac_results) {
       if (['PASS', 'FAIL'].includes(result.verdict) && !result.evidence_ids.length) add('Verified AC requires evidence');
     }
     if (workflow.selected_pairs.length) {

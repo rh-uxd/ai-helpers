@@ -21,9 +21,9 @@ context and ask only missing, check-specific questions before new work.
 ## Reviewed packet
 
 The input packet is JSON. `source.snapshot_path` resolves relative to the packet.
-It points to the original Jira payload or UX spec; the runner copies its bytes
+It points to the original Jira payload or written requirements; the runner copies its bytes
 and hashes them. `extract` is the human-reviewed normalization, not an automatic
-spec parser. Preserve each source section ID without renumbering after revisions.
+requirements parser. Preserve each source section ID without renumbering after revisions.
 
 ```json
 {
@@ -111,19 +111,19 @@ may leave an incomplete new directory that must not be consumed without validati
    normalization, and explicit local-only or actual host-model context.
    `state.quick_checks` links and hashes this receipt. `pe-context.json`'s
    `intent.source_input` links/hashes the source; `intent.scope.source_ref` is the prototype revision.
-5. `evaluation-snapshot.json` owns unverified AC results, source/visual consistency findings,
+5. `pe-evaluation-snapshot.json` owns unverified AC results, source/visual consistency findings,
    and typed `heuristics` findings/coverage. The original candidate IDs map to
    stable canonical IDs, evidence and proposed human-review actions in receipts;
-   `actions.json` owns proposed human follow-ups linked to AC/finding IDs.
+   `pe-actions.json` owns proposed human follow-ups linked to AC/finding IDs.
    Review candidates do not create fix actions. Nothing is applied automatically.
-6. `evidence.json` has empty captures/items for local-only runs. Model checks import
+6. `pe-evidence.json` has empty captures/items for local-only runs. Model checks import
    independently identified revision/screen/state captures and verified image
    hashes, plus bounded DOM facts. Raw submitted context and returned results
    remain linked receipts, so capture text is not confused with model-visible text.
    Source findings retain file/line links and the hashed check-output receipt;
    typed `source_items` record the checked revision, source path/line, file hash and observation. Missing-file findings explicitly record absence with
    a null hash; they do not invent source bytes. Do not fabricate browser captures.
-7. `state.json` records completed selected inspections/checks and skipped extraction, other
+7. `pe-state.json` records completed selected inspections/checks and skipped extraction, other
    checks, journey/persona, fix and HTML-report phases. Local elapsed times are
    measured; source input bytes are unknown (`null`). No model usage/cost is
    incurred by these scripts; host-invoked model phases preserve actual telemetry
@@ -137,12 +137,13 @@ receipt, not HTML. Use `run-report.js` for separately requested HTML; do not
 fabricate persona/CSV data. Quick runs do not
 update the prototype bar, leaderboard, Jira or MR.
 
-## UX-spec proposals and reuse limits
+## Requirements updates and reuse limits
 
-The spec remains read-only. A separate spec writer can find a run by key,
-source ID/revision, check selection and prototype revision, follow AC source IDs
-or finding/action links, and propose a patch for human approval. Findings are
-not evidence that requirements should change. The shared `schemas/v1/split.schema.json` types screens/states, roles,
+The reviewed requirements remain read-only. A separate requirements workflow can
+find a run by key, source ID/revision, check selection and prototype revision,
+follow criterion source IDs or finding/action links, and propose a change for
+human approval. Findings are not evidence that requirements should change. The
+shared `schemas/v1/split.schema.json` types screens/states, roles,
 setup-only users, permissions, fixtures/reset and expected outcomes. Preserve
 these in the reviewed packet; do not fabricate observations or execute fixtures.
 

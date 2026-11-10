@@ -162,7 +162,7 @@ judges:
     elif route == "walkthroughs":
         ok = groups(["uxd-prototype-walkthrough"], ["junior"], ["create"], ["single", "only"], ["independent", "without quick"], ["served revision", "served build"], ["browser"], ["provider"], ["approval", "authorization"], ["screenshot"], ["dom"], ["not human", "not participant"], ["not_run", "unverified"])
     elif route == "history":
-        ok = all(name in text for name in ["brief.json", "state.json", "evaluation.json", "evidence.json", "actions.json"])
+        ok = all(name in text for name in ["pe-context.json", "pe-state.json", "pe-evaluation-snapshot.json", "pe-evidence.json", "pe-actions.json"])
         ok = ok and groups(["receipt"], ["hash"], ["revision"], ["scope"], ["timestamp", "when"], ["lineage", "parent"], ["not authority", "not authoritative"], ["csv"], ["no rerun", "without rerunning", "do not rerun"], ["proposal", "propose"], ["no edits", "without editing", "do not edit"])
     elif route == "fresh":
         ok = groups(["fresh"], ["consumer"], ["outside"], ["skill"], ["preserve", "immutable"], ["no deletion", "do not delete", "never delete"], ["no overwrite", "do not overwrite", "never overwrite"], ["no cache restore", "do not copy", "never copy"], ["evidence"])

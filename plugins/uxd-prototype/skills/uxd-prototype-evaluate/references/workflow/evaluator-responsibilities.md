@@ -109,7 +109,7 @@ into completed evidence.
 
 Local import/validation does not prove live tool behavior, question UI, truthful
 receipts or provider costs. No cross-build selective restore, completed-run splicing,
-automatic spec write-back or implicit publication is supported. Test those host
+automatic requirements write-back or implicit publication is supported. Test those host
 boundaries before claiming end-to-end acceptance; keep blocked and unknown results
 visible. Authored eval definitions remain plugin source; developer logs/tests/plans
 are not installed workflow inputs.

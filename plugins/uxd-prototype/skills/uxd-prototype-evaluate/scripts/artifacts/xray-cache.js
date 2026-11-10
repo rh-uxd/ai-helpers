@@ -8,7 +8,7 @@ const path = require('path');
 
 const { validateDirectory } = require('./validate-canonical-artifacts');
 
-const CANONICAL_FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
+const CANONICAL_FILES = ['pe-context.json', 'pe-evaluation-snapshot.json', 'pe-evidence.json', 'pe-actions.json', 'pe-state.json'];
 
 function digest(buffer) {
   return `sha256:${crypto.createHash('sha256').update(buffer).digest('hex')}`;
@@ -54,7 +54,7 @@ function validateEntry(entryDir, expectedIdentity) {
   // Cache entries intentionally retain only the five canonical files.
   const validation = validateDirectory(entryDir, { skipLinkedArtifacts: true });
   if (!validation.valid) return { valid: false, reason: 'schema_invalid', errors: validation.errors };
-  const state = JSON.parse(fs.readFileSync(path.join(entryDir, 'state.json'), 'utf8'));
+  const state = JSON.parse(fs.readFileSync(path.join(entryDir, 'pe-state.json'), 'utf8'));
   if (state.quick_checks || state.workflow) return { valid: false, reason: 'unsupported_receipt_closure' };
   return { valid: true, manifest };
 }
@@ -84,7 +84,7 @@ function store(cacheRoot, canonicalDir) {
   // This compatibility cache intentionally omits legacy linked-file closures.
   const validation = validateDirectory(source, { skipLinkedArtifacts: true });
   if (!validation.valid) throw new Error(`Cannot cache invalid canonical artifacts: ${JSON.stringify(validation.errors)}`);
-  const state = JSON.parse(fs.readFileSync(path.join(source, 'state.json'), 'utf8'));
+  const state = JSON.parse(fs.readFileSync(path.join(source, 'pe-state.json'), 'utf8'));
   if (state.quick_checks || state.workflow) throw new Error('Five-file compatibility caches cannot preserve Quick/split evidence and receipt closures');
   const identity = assertIdentity(state.identity);
   const root = path.resolve(cacheRoot);

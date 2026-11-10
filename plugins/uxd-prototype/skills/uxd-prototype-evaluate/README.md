@@ -15,11 +15,10 @@ creation, standalone consistency or generalist design reviews through evaluation
   separately approved continuation. Fixes require their own decision and one
   post-fix verification pass.
 - **Existing findings:** inspect validated canonical JSON and receipts without
-  rerunning checks or changing a source spec.
+  rerunning checks or changing source requirements.
 
 See [SKILL.md](SKILL.md), [onboarding](references/workflow/evaluator-onboarding.md), and the
 [execution contract](references/workflow/split-evaluation.md) for inputs and commands.
-The old combined phase orchestrator is retired.
 
 ## Conditional setup
 
@@ -31,7 +30,7 @@ npm install
 ```
 
 Classification and existing-result review need no browser or Jira connection.
-Reviewed UX-spec snapshots are supported alongside Jira input. Source consistency
+Reviewed written requirements are supported alongside Jira input. Source consistency
 requires Python 3 and a separately installed `uxd-consistency-check` companion;
 its implementation is maintained separately. A missing selected companion blocks
 that check, not unrelated routes.
@@ -43,11 +42,12 @@ of onboarding. JSON permission records cannot grant human consent.
 
 ## Results
 
-Fresh consumer-owned runs contain `brief.json`, `evaluation.json`, `evidence.json`,
-`actions.json` and `state.json`, plus hashed input/evidence/result receipts.
+Fresh project-owned runs under `artifacts/<KEY>/evaluation/<run-name>/` contain
+`pe-context.json`, `pe-evaluation-snapshot.json`, `pe-evidence.json`,
+`pe-actions.json` and `pe-state.json`, plus hashed input/evidence/result receipts.
 Use `scripts/artifacts/validate-canonical-artifacts.js` to validate them. Reports are opt-in:
 `scripts/run-report.js` renders derived canonical HTML; it does not publish.
-Never overwrite a prior run or use legacy CSV to repair canonical results.
+Never overwrite a prior run. Each JSON starts with `created_at` and `updated_at`.
 
 ## Authored evaluations
 

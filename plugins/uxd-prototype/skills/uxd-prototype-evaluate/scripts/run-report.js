@@ -50,7 +50,7 @@ function main() {
   }
   // Any canonical file commits to canonical validation. A partial/invalid run
   // must fail closed instead of rendering stale legacy projections as a fallback.
-  if (['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'].some(name => fs.existsSync(path.join(artifactsDir, name)))) {
+  if (['pe-context.json', 'pe-evaluation-snapshot.json', 'pe-evidence.json', 'pe-actions.json', 'pe-state.json'].some(name => fs.existsSync(path.join(artifactsDir, name)))) {
     if (chatMode) {
       // All five files plus linked receipts must validate before synthesis.
       const documents = require('./artifacts/split-contract').loadRun(artifactsDir);

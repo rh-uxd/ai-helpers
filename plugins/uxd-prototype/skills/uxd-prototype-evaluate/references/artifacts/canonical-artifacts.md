@@ -7,10 +7,10 @@ runs unchanged; continuation and verification create linked child runs.
 ## Files
 
 - `pe-context.json`: reviewed source, criteria, tasks, personas and scope.
-- `evaluation-snapshot.json`: AC results, task outcomes, inspection findings and totals.
-- `evidence.json`: observed facts, captures, image paths and evidence IDs.
-- `actions.json`: proposed/applied follow-ups and human handoffs, never permission to publish.
-- `state.json`: execution status, review checkpoints, identity and usage.
+- `pe-evaluation-snapshot.json`: AC results, task outcomes, inspection findings and totals.
+- `pe-evidence.json`: observed facts, captures, image paths and evidence IDs.
+- `pe-actions.json`: proposed/applied follow-ups and human handoffs, never permission to publish.
+- `pe-state.json`: execution status, review checkpoints, identity and usage.
 
 Each JSON starts with UTC `created_at` and `updated_at`. Dates belong in fields,
 not filenames. A child may retain original creation dates; `updated_at` records
@@ -49,7 +49,7 @@ does not verify an AC. Heuristic observations need no invented fix recommendatio
 - Use schema-valid fields and stable cross-file IDs. Do not infer evidence from filenames.
 - Store visible outcomes, not private reasoning, transcripts or think-aloud traces.
 - Keep paths relative and portable. Findings reference evidence IDs; image paths
-  belong in `evidence.json`. Preserve source/build identity and hashes.
+  belong in `pe-evidence.json`. Preserve source/build identity and hashes.
 - Component/region `crop` is the unpadded element box in viewport CSS pixels.
   Apply padding, clamp to the viewport and match image dimensions exactly;
   capture at device scale factor 1. Prefer bounded crops unless page context is needed.

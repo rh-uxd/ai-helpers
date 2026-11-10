@@ -20,9 +20,9 @@ function list(items) {
 function render(directory) {
   const docs = C.loadRun(directory);
   const synthesis = S.build(docs);
-  const brief = docs['brief.json'];
-  const evaluation = docs['evaluation.json'];
-  const state = docs['state.json'];
+  const brief = docs['pe-context.json'];
+  const evaluation = docs['pe-evaluation-snapshot.json'];
+  const state = docs['pe-state.json'];
   const goal = synthesis.goal;
   const coverageLines = [];
   if (goal.planned) {
@@ -58,16 +58,16 @@ function render(directory) {
     ['Heuristics', table(['ID', 'Finding', 'Severity', 'Screen / state', 'Observation', 'Review', 'Evidence'], (evaluation.heuristics?.findings || []).map(f => [f.id, f.title, f.suggested_severity || 'unrated', `${f.screen_id} / ${f.state_id}`, f.observation, f.review_status, f.evidence_ids.join(', ')]))],
     ['Heuristic coverage', table(['Lens', 'Heuristic', 'Status', 'Scope note'], (evaluation.heuristics?.coverage || []).map(c => [c.lens, c.heuristic_id, c.status, c.note]))],
     ['Walkthroughs', table(['Journey', 'Task', 'Persona', 'Outcome', 'Execution', 'Stop reason', 'Steps'], evaluation.journeys.map(j => [j.id, j.task_id, j.persona_id, j.verdict, j.execution?.status || '—', j.execution?.stop_reason || '—', j.steps.map(s => `${s.sequence}. ${s.action}: ${s.target} — ${s.outcome} (${s.evidence_ids.join(', ')})`).join('\n')]))],
-    ['Actions', table(['ID', 'Kind', 'Status', 'Origin', 'Recommendation'], docs['actions.json'].actions.map(a => [a.id, a.kind, a.status, a.source.origin_run_id ? `${a.source.origin_run_id} / ${a.source.origin_action_id}` : a.source.ac_id || a.source.finding_id || a.source.evidence_ids.join(', '), a.recommendation]))],
-    ['Browser evidence', table(['ID', 'Capture', 'Screen / state', 'Revision', 'Kind', 'Subject'], docs['evidence.json'].items.map(e => { const capture = docs['evidence.json'].captures.find(c => c.id === e.capture_id); return [e.id, e.capture_id, `${capture.screen_id || ''} / ${capture.state_id || ''}`, capture.source_ref || brief.intent.scope.source_ref, e.kind, e.subject.name]; }))],
-    ['Source evidence', table(['ID', 'Path', 'Line', 'Availability', 'Revision', 'SHA-256'], (docs['evidence.json'].source_items || []).map(e => [e.id, e.path, e.line, e.availability, e.revision, e.sha256]))],
+    ['Actions', table(['ID', 'Kind', 'Status', 'Origin', 'Recommendation'], docs['pe-actions.json'].actions.map(a => [a.id, a.kind, a.status, a.source.origin_run_id ? `${a.source.origin_run_id} / ${a.source.origin_action_id}` : a.source.ac_id || a.source.finding_id || a.source.evidence_ids.join(', '), a.recommendation]))],
+    ['Browser evidence', table(['ID', 'Capture', 'Screen / state', 'Revision', 'Kind', 'Subject'], docs['pe-evidence.json'].items.map(e => { const capture = docs['pe-evidence.json'].captures.find(c => c.id === e.capture_id); return [e.id, e.capture_id, `${capture.screen_id || ''} / ${capture.state_id || ''}`, capture.source_ref || brief.intent.scope.source_ref, e.kind, e.subject.name]; }))],
+    ['Source evidence', table(['ID', 'Path', 'Line', 'Availability', 'Revision', 'SHA-256'], (docs['pe-evidence.json'].source_items || []).map(e => [e.id, e.path, e.line, e.availability, e.revision, e.sha256]))],
     ['Phases', table(['Phase', 'Status', 'Model', 'Cost USD'], state.phases.map(p => [p.name, p.status, p.model || 'Local', p.llm_cost_usd === null ? 'Unknown' : p.llm_cost_usd]))],
   ];
   const images = new Map();
   // Include each image path once and keep the report's total image size bounded.
   // Embed only checked image files, not scripts, remote images or active SVGs.
-  for (const capture of docs['evidence.json'].captures) if (capture.raw_image) images.set(capture.raw_image.path, capture.raw_image);
-  for (const item of docs['evidence.json'].items) if (item.image) images.set(item.image.path, item.image);
+  for (const capture of docs['pe-evidence.json'].captures) if (capture.raw_image) images.set(capture.raw_image.path, capture.raw_image);
+  for (const item of docs['pe-evidence.json'].items) if (item.image) images.set(item.image.path, item.image);
   let imageBytes = 0;
   const screenshots = [...images].map(([name, reference]) => {
     const bytes = fs.readFileSync(path.join(directory, name));

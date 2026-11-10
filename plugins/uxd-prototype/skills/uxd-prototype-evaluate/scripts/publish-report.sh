@@ -5,8 +5,8 @@ set -euo pipefail
 # Overwrites the report at the same URL if re-run for the same prototype.
 #
 # Usage:
-#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh .artifacts/PROJ-298/eval/
-#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh .artifacts/PROJ-298/eval/ --mode=branch
+#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/evaluation/full-1/
+#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/evaluation/full-1/ --mode=branch
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -28,7 +28,7 @@ done
 
 if [[ -z "$ARTIFACTS_DIR" ]]; then
   echo "Usage: publish-report.sh <artifacts-dir> [--mode=pages|branch]" >&2
-  echo "  e.g. publish-report.sh .artifacts/PROJ-298/eval/" >&2
+  echo "  e.g. publish-report.sh artifacts/PROJ-298/evaluation/full-1/" >&2
   exit 1
 fi
 
@@ -40,12 +40,17 @@ if [[ ! -f "$REPORT_FILE" ]]; then
   exit 1
 fi
 
-# Key root holds prototype-bar.json; eval outputs live under …/<KEY>/eval/
+# Find the prototype key, not the individual run name.
 KEY_DIR="$ARTIFACTS_DIR"
 PROTO_KEY="$(basename "$ARTIFACTS_DIR")"
+GLOBAL_EVAL_NAME="eval"
 if [[ "$PROTO_KEY" == "eval" ]]; then
   KEY_DIR="$(dirname "$ARTIFACTS_DIR")"
   PROTO_KEY="$(basename "$KEY_DIR")"
+elif [[ "$(basename "$(dirname "$ARTIFACTS_DIR")")" == "evaluation" ]]; then
+  KEY_DIR="$(dirname "$(dirname "$ARTIFACTS_DIR")")"
+  PROTO_KEY="$(basename "$KEY_DIR")"
+  GLOBAL_EVAL_NAME="evaluation"
 fi
 
 # Embed Prototype Bar into a published eval HTML (best-effort)
@@ -57,9 +62,8 @@ inject_prototype_bar() {
   node "$inject" --html "$html_path" --artifacts "$KEY_DIR" --view eval 2>/dev/null || true
 }
 
-# Cross-key leaderboard lives under consumer .artifacts/eval/
-# Derive from KEY_DIR (…/.artifacts/<KEY>) so we never resolve from the skill install cwd.
-EVAL_GLOBAL_DIR="$(cd "$(dirname "$KEY_DIR")" && mkdir -p eval && cd eval && pwd)"
+# Keep the cross-key index beside the project key folders, not inside a run.
+EVAL_GLOBAL_DIR="$(cd "$(dirname "$KEY_DIR")" && mkdir -p "$GLOBAL_EVAL_NAME" && cd "$GLOBAL_EVAL_NAME" && pwd)"
 
 # ── Read config ──────────────────────────────────────────────────────────────
 

@@ -176,9 +176,9 @@ the numbered lists below are text-only fallbacks, not pretend interactive contro
 
 ### Source review only
 
-**Designer:** “Can you compare the changed prototype source with this UX spec? The app is not running, and please don't run tests.”
+**Designer:** “Can you check the changed prototype against the design rules I provided? The app isn't running, and please don't run tests.”
 
-**Assistant:** “A source review is the smallest useful check for that question. I’ll reuse the spec and commit/base you supplied; I don’t need Jira, a running app, personas or browser access. I’ll keep the test exclusion in scope and stop if the checker can’t honor it. The other available checks are requirement mapping, visual review, usability-principle review and task walkthroughs. Do you want source review only? No model/browser cost is planned; local runtime is not a provider-cost estimate. May I run it?”
+**Assistant:** “A source review is the smallest useful check for that question. I’ll compare the changed app code with the design rules and versions you supplied; I don’t need Jira, a running app, personas or browser access. I’ll keep the requested test exclusion in scope and pause if the checker can’t honor it. Would you like source review only? No model or browser cost is planned; local runtime isn’t a provider-cost estimate. May I run it?”
 
 ### One task, one persona
 
@@ -196,9 +196,9 @@ Only a new decision at this pause authorizes the walkthrough stage. Keep checkpo
 
 ### Review saved results
 
-**Designer:** “What did the last evaluation find, and should I change the spec?”
+**Designer:** “What did the last evaluation find, and should I change the requirements?”
 
-**Assistant:** “I’ll check the saved evaluation for this project and validate its linked evidence. If its folder isn’t already known, please point me to it. I won’t rerun checks or edit the spec. If I can’t find a valid matching run, I’ll say what’s missing rather than infer results from an old spreadsheet.”
+**Assistant:** “I’ll check the saved evaluation for this project and validate its linked evidence. If its folder isn’t already known, please point me to it. I won’t rerun checks or edit the requirements. If I can’t find a valid matching run, I’ll say what’s missing rather than infer results from an old spreadsheet.”
 
 ## Plain-language result format
 
@@ -224,3 +224,34 @@ Next: [one useful choice]
 Use “not tested” when no explicit check ran; use “uncertain” when an attempt
 could not support a confident result. Never turn task completion into a verified
 requirement, or hide coverage gaps behind an overall score.
+
+### Example result
+
+*Illustrative only; no walkthrough was run for this example.*
+
+> **Can a new editor create a project?**
+>
+> **What we checked:** One selected simulated editor tried the task from the home
+> screen on the reviewed build.
+>
+> **What happened:** They found **New project**, entered “Project Atlas,” and saw
+> it appear in the project list. [See the after-save screenshot.]
+>
+> **Task:** Completed.
+>
+> **Requirement checks:**
+> - “A saved project appears in the list” — **Verified.** The final screen shows
+>   Project Atlas in the list.
+> - “An empty name shows a helpful message” — **Not tested.** The editor used a
+>   name, so this run did not check the empty form.
+>
+> **Coverage gap:** One task and one selected profile only; no other roles or
+> validation states were checked. This does not establish how real users or all
+> users would perform.
+>
+> **Cost:** Unknown; provider usage wasn’t returned. Unknown is not $0.
+>
+> **Next:** Would you like me to check the empty-name case or stop here?
+
+Use the real run’s evidence links and captured measurements in a report; never
+copy the illustrative outcome or screenshot claim into an actual result.

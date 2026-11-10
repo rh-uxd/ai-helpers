@@ -44,8 +44,8 @@ function usageFromPhases(phases) {
 const unknownUsage = () => ({ model_invocations: null, llm_cost_usd: null, known_cost_usd: null });
 
 function coverage(docs) {
-  const state = docs['state.json'];
-  const plan = docs['brief.json'].intent.evaluation_plan || null;
+  const state = docs['pe-state.json'];
+  const plan = docs['pe-context.json'].intent.evaluation_plan || null;
   const planning = state.planning || null;
   const workflow = state.workflow || null;
   const steps = planning
@@ -75,9 +75,9 @@ function coverage(docs) {
 function outcomes(docs) {
   // Keep AC checks, inspection findings and persona task results separate.
   // A green result in one does not make the others pass.
-  const evaluation = docs['evaluation.json'];
-  const brief = docs['brief.json'];
-  const actions = docs['actions.json'];
+  const evaluation = docs['pe-evaluation-snapshot.json'];
+  const brief = docs['pe-context.json'];
+  const actions = docs['pe-actions.json'];
   const acById = new Map(brief.intent.acceptance_criteria.map(ac => [ac.id, ac]));
   return {
     status: evaluation.status,
@@ -213,12 +213,12 @@ function uncertainty(docs, result, coverageView) {
 function usageView(docs) {
   // Use saved parent/new-call totals when available. Older child runs can
   // include their parent's calls, so adding them again would double-count.
-  const state = docs['state.json'];
+  const state = docs['pe-state.json'];
   const planning = state.planning;
   if (planning) {
     return {
       reviewed_limits: true,
-      limits: docs['brief.json'].intent.evaluation_plan.limits,
+      limits: docs['pe-context.json'].intent.evaluation_plan.limits,
       own: planning.own_usage,
       prior: planning.prior_usage,
       lineage: planning.lineage_usage,
@@ -240,7 +240,7 @@ function usageView(docs) {
 }
 
 function nextActions(docs) {
-  return docs['actions.json'].actions
+  return docs['pe-actions.json'].actions
     .filter(a => a.status === 'proposed')
     .map(a => ({
       id: a.id,
@@ -254,8 +254,8 @@ function nextActions(docs) {
 }
 
 function build(docs) {
-  const brief = docs['brief.json'];
-  const state = docs['state.json'];
+  const brief = docs['pe-context.json'];
+  const state = docs['pe-state.json'];
   const intent = brief.intent;
   const plan = intent.evaluation_plan || null;
   const workflow = state.workflow || null;

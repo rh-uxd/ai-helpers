@@ -92,7 +92,7 @@
             "decision": { "type": "string", "enum": ["hit", "miss", "bypass", "invalid"] },
             "entry_key": { "$ref": "shared.schema.json#/$defs/sha256" },
             "invalidated_by": { "type": "array", "items": { "type": "string", "enum": ["intent", "build", "evaluator", "schema", "cache_bypassed", "none"] }, "uniqueItems": true, "minItems": 1, "maxItems": 4 },
-            "restored_artifacts": { "type": "array", "items": { "type": "string", "enum": ["brief.json", "evaluation.json", "evidence.json", "actions.json", "state.json"] }, "uniqueItems": true, "maxItems": 5 },
+            "restored_artifacts": { "type": "array", "items": { "type": "string", "enum": ["pe-context.json", "pe-evaluation-snapshot.json", "pe-evidence.json", "pe-actions.json", "pe-state.json"] }, "uniqueItems": true, "maxItems": 5 },
             "validated_at": { "$ref": "shared.schema.json#/$defs/timestamp" }
           },
           "required": ["decision", "entry_key", "invalidated_by", "restored_artifacts"],

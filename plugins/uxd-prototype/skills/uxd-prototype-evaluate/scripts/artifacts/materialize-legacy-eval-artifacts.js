@@ -13,7 +13,7 @@ const { spawnSync } = require('child_process');
 const { validateDirectory } = require('./validate-canonical-artifacts');
 const { materializeTargets } = require('./legacy-artifact-adapter');
 
-const CANONICAL_FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
+const CANONICAL_FILES = ['pe-context.json', 'pe-evaluation-snapshot.json', 'pe-evidence.json', 'pe-actions.json', 'pe-state.json'];
 const TARGETS = ['csv', 'summary', 'consistency', 'extract', 'evidence', 'journey', 'actions', 'state'];
 const MANAGED_FILES = new Set([
   'evaluation-report.csv',
@@ -137,7 +137,7 @@ function run(options) {
   const stageDir = fs.mkdtempSync(path.join(parent, '.legacy-adapter-stage-'));
   try {
     for (const [filename, content] of serialized) fs.writeFileSync(path.join(stageDir, filename), content, 'utf8');
-    if (options.targets.includes('consistency') && documents['evaluation.json'].consistency.source_analysis?.evaluator_publication) {
+    if (options.targets.includes('consistency') && documents['pe-evaluation-snapshot.json'].consistency.source_analysis?.evaluator_publication) {
       require('./split-contract').copyTree(path.join(canonicalDir, '.artifacts'), path.join(stageDir, '.artifacts'));
     }
     validateDerivedFiles(stageDir, options.targets);

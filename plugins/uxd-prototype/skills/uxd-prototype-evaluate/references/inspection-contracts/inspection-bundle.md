@@ -22,7 +22,7 @@ consent, and the local merger does not execute browser/provider work.
 ## Host procedure
 
 1. Freeze the reviewed packet and source snapshot. Add `check_scope` with `task`,
-   `screen_ids`, `state_ids`, and `source_ids` (AC/spec-section IDs). Confirm the
+   `screen_ids`, `state_ids`, and `source_ids` (criterion/requirements-section IDs). Confirm the
    revision of the served prototype or supplied captures and preserve the
    verification/browser inspection receipt. No verified revision → stop.
 2. Capture the bounded approved screens/states once, or reuse matching verified
@@ -67,8 +67,8 @@ consent, and the local merger does not execute browser/provider work.
     boundary cannot be observed, retain the known sanitized payload and identify
     missing parts in that receipt; do not claim complete capture.
     Emit the bundle below, then invoke the local merger once. Do not concurrently
-   edit canonical JSON or the designer's UX spec.
-7. Read the merged `evaluation-snapshot.json` and `checks/context.json` and present findings
+    edit canonical JSON or the designer's requirements.
+7. Read the merged `pe-evaluation-snapshot.json` and `checks/context.json` and present findings
    with evidence/action/source links, model phases, and coverage gaps. A heuristic
    inspection never promotes an AC result or starts persona walkthroughs.
 
@@ -132,7 +132,7 @@ The merger normalizes offset timestamps to the canonical UTC `Z` representation
 without changing the retained raw bundle. Methodological coverage notes and
 visual descriptions are bounded to 1,000 characters so qualifiers are preserved.
 
-The evaluator validates the imported `evaluation-snapshot.json.heuristics` against its
+The evaluator validates the imported `pe-evaluation-snapshot.json.heuristics` against its
 own `schemas/v1/heuristics.schema.json`: Nielsen profile, 14 lens coverage
 entries, candidate findings with source/evidence IDs and unreviewed status. No
 design recommendations or PF metadata are required.
@@ -165,6 +165,6 @@ hashes, scope and revision must match; dangling references fail before publicati
 Reports default off. This runner's `--report` writes a JSON integrity receipt;
 request HTML separately through the evaluator. Neither runs another evaluation.
 
-No automatic spec edits, publishing or personas. Unknown model measurements are permitted;
+No automatic requirements edits, publishing or personas. Unknown model measurements are permitted;
 local/no-model phases still require zero model usage and cost. Host session
 spend remains distinct from measured invocation usage.

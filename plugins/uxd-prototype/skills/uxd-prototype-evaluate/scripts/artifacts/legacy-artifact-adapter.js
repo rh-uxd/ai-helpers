@@ -27,11 +27,11 @@ function legacyExitReason(reason) {
 function buildContext(documents) {
   // Look up each ID once and translate it to the fields older tools expect.
   // Keeping that translation here saves every caller from doing it again.
-  const brief = documents['brief.json'];
-  const evaluation = documents['evaluation.json'];
-  const evidence = documents['evidence.json'];
-  const actions = documents['actions.json'];
-  const state = documents['state.json'];
+  const brief = documents['pe-context.json'];
+  const evaluation = documents['pe-evaluation-snapshot.json'];
+  const evidence = documents['pe-evidence.json'];
+  const actions = documents['pe-actions.json'];
+  const state = documents['pe-state.json'];
   const acById = indexBy(brief.intent.acceptance_criteria);
   const resultByAc = indexBy(evaluation.ac_results, 'ac_id');
   const taskById = indexBy(brief.intent.tasks);
@@ -126,13 +126,13 @@ function toLegacyCsv(documents) {
     '',
     '# BASELINE',
     'metric,value,source',
-    csvRow(['total_criteria', counts.total, 'evaluation.json']),
-    csvRow(['pass_count', counts.pass, 'evaluation.json']),
-    csvRow(['fail_count', counts.fail, 'evaluation.json']),
-    csvRow(['flagged_count', counts.flagged, 'evaluation.json']),
+    csvRow(['total_criteria', counts.total, 'pe-evaluation-snapshot.json']),
+    csvRow(['pass_count', counts.pass, 'pe-evaluation-snapshot.json']),
+    csvRow(['fail_count', counts.fail, 'pe-evaluation-snapshot.json']),
+    csvRow(['flagged_count', counts.flagged, 'pe-evaluation-snapshot.json']),
     csvRow(['pass_rate', passRate, 'computed']),
-    csvRow(['usability_composite', evaluation.usability.score, 'evaluation.json']),
-    csvRow(['journey_pass_rate', journeyPassRate, 'evaluation.json']),
+    csvRow(['usability_composite', evaluation.usability.score, 'pe-evaluation-snapshot.json']),
+    csvRow(['journey_pass_rate', journeyPassRate, 'pe-evaluation-snapshot.json']),
     csvRow(['conclusion', conclusion, 'computed']),
   );
 

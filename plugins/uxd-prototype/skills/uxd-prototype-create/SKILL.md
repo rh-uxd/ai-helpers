@@ -291,8 +291,8 @@ If `--pipeline` / `--speedrun`, continue with [references/pipeline-mode.md](refe
 
 Apply targeted changes from user feedback or existing evaluation findings — do not rewrite the prototype. Full procedure: [references/refinement-procedure.md](references/refinement-procedure.md).
 
-When using evaluation findings, read the selected run's validated `brief.json`,
-`evaluation.json`, `evidence.json`, `actions.json` and `state.json` plus linked
+When using evaluation findings, read the selected run's validated `pe-context.json`,
+`pe-evaluation-snapshot.json`, `pe-evidence.json`, `pe-actions.json` and `pe-state.json` plus linked
 receipts. Check source/build/scope against the current prototype. Proposed actions
 do not authorize edits; classification or zero FAIL with missing, `FLAGGED` or
 `NOT_RUN` AC coverage does not establish verified AC success.
