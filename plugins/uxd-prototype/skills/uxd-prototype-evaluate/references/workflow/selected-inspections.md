@@ -14,7 +14,7 @@ call or source edit is performed by the local merger. Selected host model/browse
 phases are allowed and recorded; persona discovery and fix loops are skipped.
 Reject unsupported selected checks rather than substituting a full evaluation.
 Walkthroughs require a separate explicit selection of the independent
-`uxd-prototype-walkthrough` skill or composed Full route, not legacy compatibility.
+`uxd-prototype-walkthrough` skill or composed Full route.
 Follow the [responsibility contract](../workflow/evaluator-responsibilities.md): reuse known
 context and ask only missing, check-specific questions before new work.
 
@@ -53,31 +53,31 @@ spec parser. Preserve each source section ID without renumbering after revisions
 
 For model checks add `check_scope` with task, screen/state IDs and approved source
 section IDs; prepare the matching evidence/model bundle as documented in
-`quick-judgment-bundle.md`. The default heuristic profile has three specialist
+[the inspection bundle](../inspection-contracts/inspection-bundle.md). The heuristic profile has three specialist
 inspections. Visual consistency can share the hierarchy invocation; it does not
 automatically add another pass. Visual-only uses one inspection.
 
 For Jira use `kind: "jira"`, the ticket ID, a snapshot/version identity, and
 source IDs such as `PROJ-123#AC-1`. Source consistency alone may use an empty
-`ac_list`. Retain the full approved packet as the reusable context; the brief
+`ac_list`. Retain the full approved packet as the reusable context; `pe-context.json`
 retains the reviewed criteria and supplied task/persona cohort without executing
 unselected phases. Source-only runs do not silently classify retained criteria.
 
 ## Local invocation
 
-Pin the consumer root; create the `eval/runs/` parent if absent. Pick a fresh
-run path. Do not use retired setup helpers, `--fresh`, or reset/cleanup helpers.
+Pin the project root and create `artifacts/<KEY>/evaluation/` if absent.
+Choose a fresh run name; never reset or clear prior output.
 
 ```bash
 node "${EVALUATOR_SKILL_DIR}/scripts/run-quick-checks.js" \
   --input "${PACKET}" \
-  --output "${KEY_DIR}/eval/runs/quick-<unique-run-name>" \
+  --output "${PROJECT_ROOT}/artifacts/${KEY}/evaluation/quick-<run-name>" \
   --checks classify
 ```
 
 To select source consistency, add `--checks consistency-source` (or
 `classify,consistency-source`), `--workspace <repo-root>` and a pinned
-`--base-ref <commit>`. This first slice requires a **clean** local checkout whose
+`--base-ref <commit>`. This requires a **clean** local checkout whose
 full HEAD commit equals `prototype.revision`. It checks changed tracked source
 with the separately installed `uxd-consistency-check` analyzer. This companion's
 implementation is maintained outside the evaluator branch. If the selected
@@ -109,9 +109,9 @@ may leave an incomplete new directory that must not be consumed without validati
 4. `checks/context.json` records selected checks, producer/input/output paths,
    hashes, base/revision and changed files, raw-to-canonical AC/finding/action links,
    normalization, and explicit local-only or actual host-model context.
-   `state.quick_checks` links and hashes this receipt. `brief.intent.source_input`
-   links and hashes the frozen source; `brief.intent.scope.source_ref` is the prototype revision.
-5. `evaluation.json` owns unverified AC results, source/visual consistency findings,
+   `state.quick_checks` links and hashes this receipt. `pe-context.json`'s
+   `intent.source_input` links/hashes the source; `intent.scope.source_ref` is the prototype revision.
+5. `evaluation-snapshot.json` owns unverified AC results, source/visual consistency findings,
    and typed `heuristics` findings/coverage. The original candidate IDs map to
    stable canonical IDs, evidence and proposed human-review actions in receipts;
    `actions.json` owns proposed human follow-ups linked to AC/finding IDs.
@@ -133,9 +133,8 @@ may leave an incomplete new directory that must not be consumed without validati
 `--report` is off by default; explicit `--no-report` takes precedence. When
 requested, `integrity-report.json` records
 validation, canonical-file hashes, run ID and summary. It is a JSON integrity
-receipt, not HTML. Existing legacy renderers remain compatibility tools; do not
-fabricate their persona/CSV inputs to render Quick findings. Canonical synthesis/
-HTML reporting is a separate handoff, not part of this runner. Quick runs do not
+receipt, not HTML. Use `run-report.js` for separately requested HTML; do not
+fabricate persona/CSV data. Quick runs do not
 update the prototype bar, leaderboard, Jira or MR.
 
 ## UX-spec proposals and reuse limits
@@ -152,23 +151,20 @@ future reuse, but this route does not selectively reuse artifacts across builds.
 No screenshots or findings are imported from another revision. Quick source
 finding IDs hash guideline/file/line/property/value without an array index, so
 unrelated finding insertion does not renumber them. Changed location/value gets
-a new ID. The full compatibility assembler retains its existing index-based IDs.
+a new ID.
 
-## Human checkpoint / validation plan
+## Validation
 
 Review packet-to-source mapping, selected/skipped state, NOT_RUN results,
 finding/action links, canonical validation and integrity hashes. Any subsequent
 source-only/combined run needs its own scoped authorization and a fresh output
 path. Stop on dirty/mismatched revisions, analyzer errors or an existing output
-path. Development tests are optional local assets, not installed-skill inputs.
-No provider/browser run is implied by this checkpoint.
+path. Validation does not authorize another browser/provider call.
 
 ## Explicit source policy and replay
 
-This compatibility boundary is tested against the isolated PR80 checker at
-`8b3f36d30b57866abf79844f2e1b9bb4cc44be4a`, not a merged release/base. Install the
-companion separately; no checker implementation or corpus belongs in this patch.
-With `consistency-source` selected, the optional reviewed packet member is:
+Install a compatible companion separately. With `consistency-source` selected,
+the optional reviewed packet member is:
 
 ```json
 "consistency": {

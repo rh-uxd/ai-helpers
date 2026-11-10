@@ -69,8 +69,9 @@ previously selected check is intentionally being repeated). Invoke:
 
 ```bash
 node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
-  --route full --adapt-from runs/reviewed-parent --input packet.json \
-  --plan adapted-plan.json --plan-change change.json --output runs/adapted-1
+  --route full --adapt-from artifacts/PROJ-123/evaluation/reviewed-parent \
+  --input packet.json --plan adapted-plan.json --plan-change change.json \
+  --output artifacts/PROJ-123/evaluation/adapted-1
 ```
 
 Within the same goal, exact packet, allowed checks, limits and stops, the evaluator
@@ -106,15 +107,10 @@ Adapted Full runs pause at a **new** awaiting-review checkpoint. They cannot
 inherit permission to cross its walkthrough stage; a standalone adaptation cannot
 bypass an awaiting Full checkpoint. Preserve all original runs and evidence.
 
-## Compatibility
+## Missing planning or usage
 
-Canonical envelope version stays 1; plan/state extensions are optional and the
-plan format is explicitly versioned. Legacy runs remain readable and unchanged
-continuations need no invented retrospective plan. New planned runs use this
-contract. Adapting a legacy run needs a reviewed plan and explicit expansion
-approval because no earlier envelope was recorded. Unplanned runs may persist
-optional `state.usage_attribution` to distinguish own phases from inherited
-usage. Historical children without it retain unknown ownership and totals. A
-planned child fails closed when its parent's lineage cannot be attributed; not
-all historical children can be adapted safely. Older strict readers may reject
-the extensions; use the matching validator, not a lossy down-conversion.
+Do not invent a retrospective plan or attribute unknown parent usage to a new
+run. Adapting a run without an earlier plan needs a reviewed plan and explicit
+expansion approval. A planned child fails closed if parent spend cannot be
+attributed. For unplanned children, `state.usage_attribution` separates own and
+inherited work; absent attribution leaves ownership/totals unknown.

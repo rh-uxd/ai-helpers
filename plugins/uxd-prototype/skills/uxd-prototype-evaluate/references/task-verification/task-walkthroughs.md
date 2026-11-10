@@ -85,15 +85,8 @@ directory with exact hashes. Retain sanitized submitted context and returned
 visible results/errors, not credentials or private reasoning. Validators reject
 scope drift, path escapes, tampering, cross-pair evidence and inconsistent results.
 
-### Compatibility
-
-New producers use bundle v2. Legacy v1 remains importable only with one completed
-invocation and observed screenshot-backed steps per pair; v2 attribution/execution
-fields in v1 are rejected, never inferred as real measurements. Unknown versions
-fail closed. Canonical envelope version stays 1: optional journey `execution`, step
-`invocation_id` and phase `provider_id`/pair/invocation IDs extend its schemas.
-Older strict readers may reject those extensions; use the matching validator or
-keep legacy runs unchanged. Do not down-convert multi-call runs into one-call v1.
+Use bundle v2 for new work. Never collapse multiple calls into one receipt or
+invent measurements; unknown bundle versions are rejected.
 
 ## Commands and Full's separate decision
 
@@ -103,14 +96,15 @@ declared dependencies are required. Output parents must exist; outputs must be n
 ```bash
 node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
   --route walkthroughs --input packet.json --walkthrough-bundle bundle.json \
-  --output runs/walkthrough-1
+  --output artifacts/PROJ-123/evaluation/walkthrough-1
 ```
 
 Initial Full delegates selected Quick Checks, then stops `awaiting-review`:
 
 ```bash
 node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
-  --route full --input packet.json --checks classify --output runs/full-review-1
+  --route full --input packet.json --checks classify \
+  --output artifacts/PROJ-123/evaluation/full-review-1
 ```
 
 Show Quick findings, gaps, frozen cohort and returned `artifact_sha256`. **Before
@@ -124,12 +118,13 @@ composer writes a fresh parent-linked child without repeating Quick:
 
 ```bash
 node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
-  --route full --continue-from runs/full-review-1 --approval approval.json \
-  --walkthrough-bundle bundle.json --output runs/full-1
+  --route full --continue-from artifacts/PROJ-123/evaluation/full-review-1 \
+  --approval approval.json --walkthrough-bundle bundle.json \
+  --output artifacts/PROJ-123/evaluation/full-1
 ```
 
 Alternatively record `purpose: complete-without-walkthroughs` and omit the bundle.
 The parent remains immutable. Completion records the import, not universal success.
 Use `node scripts/artifacts/validate-canonical-artifacts.js <run-dir> --json` for readback validation.
 Keep task outcomes, AC verification, unknown usage and coverage gaps distinct in
-chat. HTML/shared synthesis is not in this package.
+chat. Request any HTML report separately through the evaluator.
