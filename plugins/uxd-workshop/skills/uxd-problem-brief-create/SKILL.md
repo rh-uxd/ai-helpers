@@ -107,6 +107,6 @@ Read it back. Revise until the statement has no solution in it, evidence and ass
 - Evidence and assumptions are labeled
 - Scope is one situation
 - At least one stakeholder is named by role, with what they care about
-- For vision briefs, the provisional Journey starter has separate As-Is and To-Be tables using the playbook's map lanes; matching stage columns and `S#` labels; and stage-level research coverage notes, gap questions, and evidence or assumption markers
+- For vision briefs, the provisional Journey starter has separate As-Is and To-Be tables using the playbook's map lanes; matching stage columns and `S#` labels; separate Evidence & assumptions and Research coverage & gaps rows with stage-level statuses and gap questions; linked `[E#]` source references; and definitions for the `[A#]` assumptions used
 
 When this brief supports a future-state vision, pass both provisional Journey map starters and the available research findings to `uxd-canvas-create` to seed the matching Miro frames. After the team edits and confirms the map, check research coverage and gaps and record them both on the board and in the written handoff. Then give the brief and paired map to `uxd-experience-narrative-create` to draft an editable storyboard; after the team edits it, use that skill again to write final prose. Keep enabling capabilities and the time horizon separate from the problem statement. For other experience stories, the narrative skill can start directly from the brief.

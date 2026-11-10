@@ -89,8 +89,8 @@ After the team confirms both journey-map frames, compare the mapped As-Is pains 
 - Judge only whether the available findings are relevant to and cover the mapped claims. Mark coverage as supported, partial, or not found; keep citations and `[E#]` links traceable.
 - Identify unsupported pains, needs, and future-state claims. Keep future claims labeled `[A#]` and list focused research questions that could address material gaps.
 - Do not launch new research or block the workflow. The team may proceed with gaps visible as assumptions.
-- Return the same concise coverage summary and gaps in the written handoff, and add them to a clearly labeled **Research Coverage & Gaps** area on the Miro board. Preserve both journey-map frames and their content. Show the proposed notes and confirm before writing them to an existing board.
-- Save the written handoff as `.artifacts/journey-map-research-check.md` beside the brief, or `.artifacts/{ID}/journey-map-research-check.md` when an ID is known. Include the Miro URL, coverage judgments, linked findings, assumptions, and suggested research questions.
+- Add a distinct **Research coverage & gaps** lane (row) to both journey-map frames, aligned to the same `S#` stages. This row is the primary map record; a separate summary area may supplement it but must not replace it. For each stage, state a coverage status, cite the relevant `[E#]` findings, and add a concise `Research gap:` question when coverage is partial or not found. In To-Be, distinguish evidence for the underlying need from evidence for the proposed future capability or behavior. Preserve existing map content and keep unsupported future claims labeled `[A#]`.
+- Save the written handoff as `.artifacts/journey-map-research-check.md` beside the brief, or `.artifacts/{ID}/journey-map-research-check.md` when an ID is known. Include the Miro URL, coverage judgments, linked findings, assumptions, and suggested research questions. On Miro, make every `[E#]` citation a clickable link to its source. Add a bottom reference strip that defines each `[A#]` used in the map.
 
 ## Craft rules
 
@@ -107,7 +107,8 @@ After the team confirms both journey-map frames, compare the mapped As-Is pains 
 - The structure answers the stated communication goal. A requested journey map, blueprint, flow, affinity map, or mind map still follows its template.
 - A vision journey map keeps matching As-Is and To-Be phases, actor, and scenario; evidence and assumptions remain distinguishable.
 - A vision map uses the brief's separate As-Is and To-Be map-shaped Journey starters as a draft, not a decision. Preserve the playbook's lanes, matching stage columns, stable step labels, and evidence trail while the team edits and confirms the Miro frames.
-- At vision map completion, existing research coverage and gaps are checked against the map and recorded both on the board and in the written handoff; unknowns remain labeled as assumptions and do not block progress.
+- At vision map completion, research coverage and gaps appear as a dedicated, stage-aligned row in both map frames and in the written handoff; unknowns remain labeled as assumptions and do not block progress.
+- In Miro, link each evidence citation directly to its source, preserve the source reference cards, and add an assumption reference strip at the bottom with a concise definition for each `[A#]` used. Do not create a generic `Evidence limits` row or emit placeholder text such as `undefined`; put useful limitations in the stage coverage notes or handoff.
 - Placeholder template copy is gone. Research-derived claims trace to the supplied sources, and assumptions are labeled.
 - Local canvases pass the validator: unique ids, positive dimensions, resolved edges, readable labels, no unintended overlap, and local assets resolve.
 - A Miro write names the board URL. Updates reuse existing widget ids. Deletions were confirmed item by item.

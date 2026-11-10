@@ -39,7 +39,7 @@
 - **Readiness:** [Committed / being explored / aspirational]
 
 ### Journey map starters — provisional, for team mapping
-Use two separate map-shaped tables with 3–5 matching stages. Follow the playbook's map structure: lanes are rows and journey stages are columns. This is an AI-assisted hypothesis for the workshop, not a decision or final narrative. Cite evidence as `[E#]`, mark assumptions as `[A#]`, and leave unsupported details open. Use findings from `uxd-research-insights` to add a preliminary stage-by-stage research coverage note; flag gaps as questions for the team to consider.
+Use two separate map-shaped tables with 3–5 matching stages. Follow the playbook's map structure: lanes are rows and journey stages are columns. This is an AI-assisted hypothesis for the workshop, not a decision or final narrative. Cite evidence as `[E#]`, mark assumptions as `[A#]`, and leave unsupported details open. Use findings from `uxd-research-insights` to add a separate, preliminary stage-by-stage Research coverage & gaps row in both tables; state supported, partial, or not found and add a `Research gap:` question when coverage is partial or absent. Link each `[E#]` to its source in Miro and define each `[A#]` in a bottom reference strip.
 
 #### As-Is journey map starter
 
@@ -51,7 +51,8 @@ Use two separate map-shaped tables with 3–5 matching stages. Follow the playbo
 | Mindsets & needs | [What the person thinks, asks, or needs] | [Current mindset or need] | [Current mindset or need] |
 | Emotions | [Observed or labeled assumed feeling] | [Observed or labeled assumed feeling] | [Observed or labeled assumed feeling] |
 | Pain & friction | [Current delay, effort, risk, or breakdown] | [Current pain or friction] | [Current pain or friction] |
-| Evidence & assumptions | [Cite `[E#]`; coverage: supported/partial/not found; add `Research gap:` when needed] | [Evidence, coverage, gap] | [Evidence, coverage, gap] |
+| Evidence & assumptions | [Cite `[E#]`; distinguish assumptions `[A#]`] | [Evidence and assumptions] | [Evidence and assumptions] |
+| Research coverage & gaps | [Status + finding links + `Research gap:` if partial/not found] | [Status + gap question] | [Status + gap question] |
 | Support & opportunities | [Where a product or team might help] | [Possible opportunity] | [Possible opportunity] |
 
 #### To-Be journey map starter
@@ -64,7 +65,8 @@ Use two separate map-shaped tables with 3–5 matching stages. Follow the playbo
 | Mindsets & needs | [What becomes clear or what support the person needs; label assumptions] | [Future mindset or need] | [Future mindset or need] |
 | Emotions | [Intended change; label `[A#]`] | [Intended change; label `[A#]`] | [Intended change; label `[A#]`] |
 | Pain & friction | [Remaining or new friction, or `Open`] | [Remaining or new friction, or `Open`] | [Remaining or new friction, or `Open`] |
-| Evidence & assumptions | [Relevant source trail; mark future claims `[A#]`; note coverage/gaps for underlying user need] | [Source, assumptions, coverage/gaps] | [Source, assumptions, coverage/gaps] |
+| Evidence & assumptions | [Relevant source trail; mark future claims `[A#]`] | [Source and assumptions] | [Source and assumptions] |
+| Research coverage & gaps | [Coverage of underlying need vs future claim; source links; gap question] | [Status + gap question] | [Status + gap question] |
 | Support & opportunities | [Concrete product or team response tied to supplied capability] | [Support response] | [Support response] |
 
 Add S4/S5 only when the user's journey needs more stages, adding matching stage columns to both tables. Keep the playbook's map lanes, `S#` labels, stage names, and order aligned. Do not imply every As-Is pain disappears in the To-Be; leave unknown future pains open.
