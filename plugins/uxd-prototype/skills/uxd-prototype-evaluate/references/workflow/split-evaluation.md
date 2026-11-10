@@ -2,7 +2,7 @@
 
 Select work from the user's question and explicitly reviewed source/build context.
 No product overlay, private-repository discovery or product-specific setup is
-required. Jira and UX specifications are supported sources; neither determines
+required. Jira and reviewed written requirements are supported sources; neither determines
 the product, design system, audience, navigation files or publishing destination.
 For new runs, follow [evaluation-planning.md](evaluation-planning.md): persist the
 reviewed questions, selected steps, evidence expectations, dependencies and limits.

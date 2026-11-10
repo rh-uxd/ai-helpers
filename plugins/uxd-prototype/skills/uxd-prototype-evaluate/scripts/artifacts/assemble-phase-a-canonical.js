@@ -12,7 +12,7 @@ const { materializeTargets } = require('./legacy-artifact-adapter');
 const { validateDirectory } = require('./validate-canonical-artifacts');
 const { lookup, restore, store } = require('./xray-cache');
 
-const CANONICAL_FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
+const CANONICAL_FILES = ['pe-context.json', 'pe-evaluation-snapshot.json', 'pe-evidence.json', 'pe-actions.json', 'pe-state.json'];
 const SCHEMA = 'https://json-schema.org/draft/2020-12/schema';
 const VERSION = '1.0.0';
 const PRODUCER_VERSION = '1';
@@ -303,7 +303,7 @@ function buildDocuments(artifactsDir, cacheDecision, inputs = null) {
   intent.scope.source_ref = buildKey;
   const runId = `eval-${extract.key}-${identity.compound_key.slice(7, 23)}`;
   const producer = { name: 'uxd-prototype-evaluate-phase-a', version: PRODUCER_VERSION };
-  const envelope = { $schema: SCHEMA, schema_version: VERSION, run_id: runId, prototype_key: extract.key, created_at: createdAt, producer };
+  const envelope = { created_at: createdAt, updated_at: createdAt, $schema: SCHEMA, schema_version: VERSION, run_id: runId, prototype_key: extract.key, producer };
   const brief = { ...envelope, artifact_type: 'brief', intent };
   const evidence = inputs && !prototypeEvidence.capture
     ? { ...envelope, artifact_type: 'evidence', captures: [], items: [] }
@@ -378,7 +378,7 @@ function buildDocuments(artifactsDir, cacheDecision, inputs = null) {
       localPhase('classify', createdAt, 1, inputBytes),
     ],
   };
-  return { documents: { 'brief.json': brief, 'evaluation.json': evaluation, 'evidence.json': evidence, 'actions.json': actionsDocument, 'state.json': state }, identity };
+  return { documents: { 'pe-context.json': brief, 'pe-evaluation-snapshot.json': evaluation, 'pe-evidence.json': evidence, 'pe-actions.json': actionsDocument, 'pe-state.json': state }, identity };
 }
 
 function writeDocuments(directory, documents) {
@@ -407,7 +407,7 @@ function compareLegacyParity(artifactsDir, documents) {
   const originalEvidence = readJson(path.join(artifactsDir, 'prototype-evidence.json'));
   const projectedEvidence = projected.get('prototype-evidence.json');
   if (originalEvidence.capture?.raw_image?.path !== projectedEvidence.captures?.[0]?.raw_image?.path) throw new Error('Canonical evidence projection changed the baseline image');
-  return { ac_rows: originalRows.length, source_findings: (originalConsistency.source_mode?.violations || []).length, crop_items: documents['evidence.json'].items.length };
+  return { ac_rows: originalRows.length, source_findings: (originalConsistency.source_mode?.violations || []).length, crop_items: documents['pe-evidence.json'].items.length };
 }
 
 function install(stage, artifactsDir) {
@@ -452,10 +452,10 @@ function main() {
   if (!artifactsArg) throw new Error('Usage: assemble-phase-a-canonical.js <artifacts-dir> [--json] [--no-cache]');
   const artifactsDir = path.resolve(artifactsArg);
   const cacheRoot = path.join(path.dirname(artifactsDir), 'cache', 'phase-a-v1');
-  const previousState = fs.existsSync(path.join(artifactsDir, 'state.json')) ? readJson(path.join(artifactsDir, 'state.json')) : null;
+  const previousState = fs.existsSync(path.join(artifactsDir, 'pe-state.json')) ? readJson(path.join(artifactsDir, 'pe-state.json')) : null;
   const preliminary = buildDocuments(artifactsDir, { decision: 'miss', invalidated_by: ['intent', 'build', 'evaluator'] });
   // Legacy five-file caches cannot preserve the modern frozen-source closure.
-  bypassCache ||= Boolean(preliminary.documents['evaluation.json'].consistency.source_analysis);
+  bypassCache ||= Boolean(preliminary.documents['pe-evaluation-snapshot.json'].consistency.source_analysis);
   const fullCacheRoot = path.join(path.dirname(artifactsDir), 'cache', 'full-v1');
   const fullLookup = bypassCache
     ? { decision: 'miss', invalidated_by: ['cache_bypassed'] }
@@ -465,11 +465,11 @@ function main() {
     try {
       restore(fullCacheRoot, preliminary.identity, fullStage);
       const documents = loadDocuments(fullStage);
-      documents['state.json'].cache = {
+      documents['pe-state.json'].cache = {
         decision: 'hit', entry_key: preliminary.identity.compound_key,
         invalidated_by: ['none'], restored_artifacts: [...CANONICAL_FILES], validated_at: timestamp(),
       };
-      documents['state.json'].phases = documents['state.json'].phases.map(phase => ({ ...phase, status: 'cached' }));
+      documents['pe-state.json'].phases = documents['pe-state.json'].phases.map(phase => ({ ...phase, status: 'cached' }));
       writeDocuments(fullStage, documents);
       // Full-cache stages intentionally contain only five canonical files.
       const validation = validateDirectory(fullStage, { skipLinkedArtifacts: true });
@@ -494,22 +494,22 @@ function main() {
     if (cacheLookup.decision === 'hit') {
       restore(cacheRoot, preliminary.identity, stage);
       documents = loadDocuments(stage);
-      documents['state.json'].cache = {
+      documents['pe-state.json'].cache = {
         decision: 'hit', entry_key: preliminary.identity.compound_key, invalidated_by: ['none'],
         restored_artifacts: [...CANONICAL_FILES], validated_at: timestamp(),
       };
-      documents['state.json'].phases = documents['state.json'].phases.map(phase => ({ ...phase, status: 'cached' }));
+      documents['pe-state.json'].phases = documents['pe-state.json'].phases.map(phase => ({ ...phase, status: 'cached' }));
       writeDocuments(stage, documents);
     } else {
       documents = buildDocuments(artifactsDir, cacheLookup).documents;
       writeDocuments(stage, documents);
     }
-    if (documents['evaluation.json'].consistency.source_analysis?.evaluator_publication) require('./split-contract').copyTree(path.join(artifactsDir, '.artifacts'), path.join(stage, '.artifacts'));
+    if (documents['pe-evaluation-snapshot.json'].consistency.source_analysis?.evaluator_publication) require('./split-contract').copyTree(path.join(artifactsDir, '.artifacts'), path.join(stage, '.artifacts'));
     // Legacy Phase-A staging may omit referenced source/image files; consumer validation stays strict.
     const validation = validateDirectory(stage, { skipLinkedArtifacts: true });
     if (!validation.valid) throw new Error(`Phase A canonical validation failed: ${JSON.stringify(validation.errors)}`);
     const parity = compareLegacyParity(artifactsDir, documents);
-    if (cacheLookup.decision !== 'hit' && !documents['evaluation.json'].consistency.source_analysis) store(cacheRoot, stage);
+    if (cacheLookup.decision !== 'hit' && !documents['pe-evaluation-snapshot.json'].consistency.source_analysis) store(cacheRoot, stage);
     install(stage, artifactsDir);
     installLegacyActionArtifacts(artifactsDir, documents);
     const result = {

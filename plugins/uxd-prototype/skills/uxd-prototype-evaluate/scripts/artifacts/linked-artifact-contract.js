@@ -6,7 +6,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 
-const CANONICAL_FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
+const CANONICAL_FILES = ['pe-context.json', 'pe-evaluation-snapshot.json', 'pe-evidence.json', 'pe-actions.json', 'pe-state.json'];
 const hash = value => `sha256:${crypto.createHash('sha256').update(value).digest('hex')}`;
 
 // Resolve the selected run once, rejecting links/non-regular canonical leaves
@@ -104,59 +104,59 @@ function verifyLinkedArtifacts(root, docs) {
     }
   }
 
-  const state = docs['state.json'];
+  const state = docs['pe-state.json'];
   // Follow the files named by each receipt, not everything in the directory.
   // Full runs can keep both workflow receipts and Quick check receipts.
   const workflow = state?.workflow;
   if (workflow) {
     const receiptRef = { path: workflow.receipt_path, sha256: workflow.receipt_sha256 };
-    const receipt = json(receiptRef, 'state.json/workflow/receipt');
+    const receipt = json(receiptRef, 'pe-state.json/workflow/receipt');
     if (receipt) {
-      verify({ path: 'inputs/packet.json', sha256: receipt.packet_sha256 }, 'state.json/workflow/packet');
+      verify({ path: 'inputs/packet.json', sha256: receipt.packet_sha256 }, 'pe-state.json/workflow/packet');
       if (receipt.walkthrough_bundle) {
-        const bundle = json(receipt.walkthrough_bundle, 'state.json/workflow/walkthrough_bundle');
-        if (bundle) verifyBundle(bundle, 'state.json/workflow/walkthrough_bundle');
+        const bundle = json(receipt.walkthrough_bundle, 'pe-state.json/workflow/walkthrough_bundle');
+        if (bundle) verifyBundle(bundle, 'pe-state.json/workflow/walkthrough_bundle');
       }
-      if (receipt.fix_receipt) verify(receipt.fix_receipt, 'state.json/workflow/receipt/fix_receipt');
+      if (receipt.fix_receipt) verify(receipt.fix_receipt, 'pe-state.json/workflow/receipt/fix_receipt');
     }
   }
 
   const quick = state?.quick_checks;
   if (quick) {
-    const context = json({ path: quick.context_path, sha256: quick.context_sha256 }, 'state.json/quick_checks/context');
+    const context = json({ path: quick.context_path, sha256: quick.context_sha256 }, 'pe-state.json/quick_checks/context');
     if (context) {
-      if (!context.packet) add('state.json/quick_checks/context/packet', 'missing_linked_reference', 'Quick context packet reference is required.');
-      verify(context.packet, 'state.json/quick_checks/context/packet');
-      if (!Array.isArray(context.checks)) add('state.json/quick_checks/context/checks', 'invalid_linked_context', 'Quick context checks must be an array.');
+      if (!context.packet) add('pe-state.json/quick_checks/context/packet', 'missing_linked_reference', 'Quick context packet reference is required.');
+      verify(context.packet, 'pe-state.json/quick_checks/context/packet');
+      if (!Array.isArray(context.checks)) add('pe-state.json/quick_checks/context/checks', 'invalid_linked_context', 'Quick context checks must be an array.');
       for (const [index, check] of (Array.isArray(context.checks) ? context.checks : []).entries()) {
-        verify({ path: check?.output, sha256: check?.output_sha256 }, `state.json/quick_checks/context/checks/${index}/output`);
+        verify({ path: check?.output, sha256: check?.output_sha256 }, `pe-state.json/quick_checks/context/checks/${index}/output`);
       }
       const judgments = context.judgments;
       if (judgments) {
         const bundleRef = { path: judgments.bundle_path, sha256: judgments.bundle_sha256 };
-        const bundle = json(bundleRef, 'state.json/quick_checks/context/judgments/bundle');
-        if (bundle) verifyBundle(bundle, 'state.json/quick_checks/context/judgments/bundle');
-        if (!Array.isArray(judgments.files)) add('state.json/quick_checks/context/judgments/files', 'invalid_linked_context', 'Quick judgment file references must be an array.');
+        const bundle = json(bundleRef, 'pe-state.json/quick_checks/context/judgments/bundle');
+        if (bundle) verifyBundle(bundle, 'pe-state.json/quick_checks/context/judgments/bundle');
+        if (!Array.isArray(judgments.files)) add('pe-state.json/quick_checks/context/judgments/files', 'invalid_linked_context', 'Quick judgment file references must be an array.');
         for (const [index, file] of (Array.isArray(judgments.files) ? judgments.files : []).entries()) {
-          verify(file, `state.json/quick_checks/context/judgments/files/${index}`);
+          verify(file, `pe-state.json/quick_checks/context/judgments/files/${index}`);
         }
         for (const [index, phase] of (Array.isArray(judgments.phases) ? judgments.phases : []).entries()) {
-          verify(phase?.submitted_context, `state.json/quick_checks/context/judgments/phases/${index}/submitted_context`);
-          verify(phase?.returned_result, `state.json/quick_checks/context/judgments/phases/${index}/returned_result`);
+          verify(phase?.submitted_context, `pe-state.json/quick_checks/context/judgments/phases/${index}/submitted_context`);
+          verify(phase?.returned_result, `pe-state.json/quick_checks/context/judgments/phases/${index}/returned_result`);
         }
       }
     }
   }
 
-  const source = docs['brief.json']?.intent?.source_input;
+  const source = docs['pe-context.json']?.intent?.source_input;
   // Check saved source text and images too. A matching hash tells us the file
   // has not changed; it does not prove the producer's observations were right.
-  if (source) verify({ path: source.snapshot_path, sha256: source.sha256 }, 'brief.json/intent/source_input/snapshot');
-  for (const [index, capture] of (docs['evidence.json']?.captures || []).entries()) {
-    if (capture.raw_image) verify(capture.raw_image, `evidence.json/captures/${index}/raw_image`);
+  if (source) verify({ path: source.snapshot_path, sha256: source.sha256 }, 'pe-context.json/intent/source_input/snapshot');
+  for (const [index, capture] of (docs['pe-evidence.json']?.captures || []).entries()) {
+    if (capture.raw_image) verify(capture.raw_image, `pe-evidence.json/captures/${index}/raw_image`);
   }
-  for (const [index, item] of (docs['evidence.json']?.items || []).entries()) {
-    if (item.image) verify(item.image, `evidence.json/items/${index}/image`);
+  for (const [index, item] of (docs['pe-evidence.json']?.items || []).entries()) {
+    if (item.image) verify(item.image, `pe-evidence.json/items/${index}/image`);
   }
   return errors;
 }

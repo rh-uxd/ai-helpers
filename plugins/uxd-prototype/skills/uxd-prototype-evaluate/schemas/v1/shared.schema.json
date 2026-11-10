@@ -52,9 +52,10 @@
         "run_id": { "$ref": "#/$defs/run_id" },
         "prototype_key": { "$ref": "#/$defs/prototype_key" },
         "created_at": { "$ref": "#/$defs/timestamp" },
+        "updated_at": { "$ref": "#/$defs/timestamp" },
         "producer": { "$ref": "#/$defs/producer" }
       },
-      "required": ["$schema", "artifact_type", "schema_version", "run_id", "prototype_key", "created_at", "producer"]
+      "required": ["$schema", "artifact_type", "schema_version", "run_id", "prototype_key", "created_at", "updated_at", "producer"]
     },
     "bounded_text": {
       "type": "string",

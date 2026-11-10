@@ -60,8 +60,8 @@ function importJudgments({ bundlePath, packet, packetBytes, snapshot, stage, sel
     if (capture.raw_image) copyReference(capture.raw_image);
   }
   for (const item of bundle.evidence.items) if (item.image) copyReference(item.image);
-  documents['evidence.json'].captures = bundle.evidence.captures;
-  documents['evidence.json'].items = bundle.evidence.items;
+  documents['pe-evidence.json'].captures = bundle.evidence.captures;
+  documents['pe-evidence.json'].items = bundle.evidence.items;
   const evidenceIds = new Set(bundle.evidence.items.map(item => item.id));
   const images = new Set(bundle.evidence.items.filter(item => item.image).map(item => item.id));
   const phases = [];
@@ -91,10 +91,10 @@ function importJudgments({ bundlePath, packet, packetBytes, snapshot, stage, sel
     if (phases.some(phase => SPECIALIST_PHASES.includes(phase.name) && !phase.checks.includes('heuristic'))) throw new Error('Specialist phase must own heuristic results');
   } else if ([...names].some(name => name.startsWith('heuristic-'))) throw new Error('Unselected heuristic phases are not allowed');
   if (wanted.some(check => !phases.some(phase => phase.checks.includes(check)))) throw new Error('Selected judgment has no producing model phase');
-  const evaluation = documents['evaluation.json'];
+  const evaluation = documents['pe-evaluation-snapshot.json'];
   // Add observations and things for a human to review, not AC pass decisions.
   // Keep each finding linked to the check and evidence that produced it.
-  const actions = documents['actions.json'].actions;
+  const actions = documents['pe-actions.json'].actions;
   const receipts = [];
   for (const check of wanted) {
     const result = bundle.results[check];

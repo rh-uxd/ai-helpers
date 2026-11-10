@@ -26,7 +26,7 @@ function validateShape(bundle) {
 function readiness(docs) {
   // Require clear tasks, roles and personas before anyone starts work. A
   // successful walkthrough means little if we guessed who did what.
-  const intent = docs['brief.json'].intent;
+  const intent = docs['pe-context.json'].intent;
   requireThat(intent.environment && intent.tasks.length && intent.personas.length && pairsFor(intent).length, 'Walkthroughs need explicit environment, tasks and selected personas');
   for (const task of intent.tasks) {
     for (const field of ['screen_ids', 'state_ids', 'role_ids', 'fixture_ids', 'source_ids', 'expected_outcome']) requireThat(task[field] !== undefined, `Walkthrough task needs ${field}`);
@@ -39,7 +39,7 @@ function readiness(docs) {
 
 function validateBundle(docs, bundle, packetHash) {
   validateShape(bundle);
-  const brief = docs['brief.json'];
+  const brief = docs['pe-context.json'];
   const intent = brief.intent;
   const v2 = bundle.schema_version === 2;
   const pairs = pairsFor(intent);
@@ -115,7 +115,7 @@ function validateBundle(docs, bundle, packetHash) {
   // Finishing a persona's task does not automatically pass the related ACs.
   // Each AC verdict needs evidence from a step that actually checked it.
   for (const result of bundle.ac_results || []) {
-    const current = docs['evaluation.json'].ac_results.find(r => r.ac_id === result.ac_id);
+    const current = docs['pe-evaluation-snapshot.json'].ac_results.find(r => r.ac_id === result.ac_id);
     const criterion = intent.acceptance_criteria.find(ac => ac.id === result.ac_id);
     requireThat(current && !seen.has(result.ac_id) && result.evaluated_by === 'journey' && result.evidence_ids.length, 'Explicit AC check is invalid or duplicated'); seen.add(result.ac_id);
     requireThat(!['PASS', 'FAIL'].includes(result.verdict) || criterion.verification_mode === 'ui', 'Browser evidence cannot verify non-UI criteria');
@@ -134,7 +134,7 @@ function merge(docs, bundleFile, stage) {
   // browser, call a provider, edit the prototype or replace old evidence.
   readiness(docs);
   const bundle = C.read(bundleFile);
-  const permissions = docs['state.json'].permissions;
+  const permissions = docs['pe-state.json'].permissions;
   // Recording an unexecuted outcome does not require granting denied activity.
   if (bundle.phases?.length || bundle.evidence?.captures?.length || bundle.inspection?.revision_verified) requireThat(permissions?.browser.status === 'approved' && permissions?.provider.status === 'approved', 'Walkthroughs require recorded browser and provider approval');
   const pairs = validateBundle(docs, bundle, C.hash(fs.readFileSync(path.join(stage, 'inputs/packet.json'))));
@@ -147,15 +147,15 @@ function merge(docs, bundleFile, stage) {
   for (const capture of bundle.evidence.captures) if (capture.raw_image) C.copyReference(root, stage, capture.raw_image);
   for (const item of bundle.evidence.items) if (item.image) C.copyReference(root, stage, item.image);
   for (const collection of ['captures', 'items']) {
-    const existing = new Set(docs['evidence.json'][collection].map(i => i.id));
+    const existing = new Set(docs['pe-evidence.json'][collection].map(i => i.id));
     requireThat(!bundle.evidence[collection].some(i => existing.has(i.id)), 'Evidence ID collision across checks');
-    docs['evidence.json'][collection].push(...bundle.evidence[collection]);
+    docs['pe-evidence.json'][collection].push(...bundle.evidence[collection]);
   }
-  docs['state.json'].phases.push(...measurements(bundle));
-  const evaluation = docs['evaluation.json'];
+  docs['pe-state.json'].phases.push(...measurements(bundle));
+  const evaluation = docs['pe-evaluation-snapshot.json'];
   evaluation.journeys = bundle.journeys;
   for (const result of bundle.ac_results || []) Object.assign(evaluation.ac_results.find(r => r.ac_id === result.ac_id), result);
-  docs['actions.json'].actions.push(...(bundle.proposed_actions || []));
+  docs['pe-actions.json'].actions.push(...(bundle.proposed_actions || []));
   evaluation.summary.ac_counts = C.counts(evaluation.ac_results);
   evaluation.summary.journey_counts = C.counts(evaluation.journeys);
   evaluation.status = 'needs-attention';
@@ -166,19 +166,19 @@ function merge(docs, bundleFile, stage) {
 function validatePublished(docs, root) {
   // Check the saved inputs, selected task/persona pairs and results again when
   // reading a run. Someone could have changed the files after import.
-  const workflow = docs['state.json'].workflow;
+  const workflow = docs['pe-state.json'].workflow;
   if (!workflow) return;
   const readReference = ref => JSON.parse(C.referenceBytes(root, ref));
   const receipt = readReference({ path: workflow.receipt_path, sha256: workflow.receipt_sha256 });
   const packet = readReference({ path: 'inputs/packet.json', sha256: receipt.packet_sha256 });
-  const intent = docs['brief.json'].intent;
+  const intent = docs['pe-context.json'].intent;
   for (const key of ['tasks', 'personas', 'environment']) requireThat(C.isDeepStrictEqual(intent[key], packet[key] || (key === 'environment' ? undefined : [])), 'Canonical walkthrough context differs from frozen packet');
   requireThat(intent.scope.source_ref === packet.prototype.revision && intent.scope.prototype_url === packet.prototype.url, 'Canonical build differs from frozen packet');
   for (const key of ['route', 'status', 'pass', 'parent_run_id', 'selected_pairs']) requireThat(C.isDeepStrictEqual(receipt[key], workflow[key]), 'Workflow receipt disagrees with canonical state');
-  if (!receipt.walkthrough_bundle) { requireThat(!workflow.selected_pairs.length && !docs['evaluation.json'].journeys.length, 'Executed pairs need a walkthrough bundle'); return; }
+  if (!receipt.walkthrough_bundle) { requireThat(!workflow.selected_pairs.length && !docs['pe-evaluation-snapshot.json'].journeys.length, 'Executed pairs need a walkthrough bundle'); return; }
   const bundle = readReference(receipt.walkthrough_bundle);
   validateBundle(docs, bundle, receipt.packet_sha256);
-  if (bundle.phases.length || bundle.evidence.captures.length || bundle.inspection.revision_verified) requireThat(docs['state.json'].permissions?.browser.status === 'approved' && docs['state.json'].permissions?.provider.status === 'approved', 'Executed walkthrough work needs browser/provider approval');
+  if (bundle.phases.length || bundle.evidence.captures.length || bundle.inspection.revision_verified) requireThat(docs['pe-state.json'].permissions?.browser.status === 'approved' && docs['pe-state.json'].permissions?.provider.status === 'approved', 'Executed walkthrough work needs browser/provider approval');
   if (workflow.route === 'full') {
     const approval = receipt.approval;
     requireThat(workflow.parent_run_id && approval?.approved === true && approval.run_id === workflow.parent_run_id && ['continue-walkthroughs', 'prototype-edits'].includes(approval.purpose), 'Full walkthroughs require a separate parent-bound review decision');
@@ -188,17 +188,17 @@ function validatePublished(docs, root) {
   for (const entry of bundle.phases) { C.referenceBytes(root, entry.submitted_context); C.referenceBytes(root, entry.returned_result); }
   for (const capture of bundle.evidence.captures) if (capture.raw_image) C.referenceBytes(root, capture.raw_image);
   for (const item of bundle.evidence.items) if (item.image) C.referenceBytes(root, item.image);
-  requireThat(samePairs(workflow.selected_pairs, bundle.selected_pairs) && C.isDeepStrictEqual(docs['evaluation.json'].journeys, bundle.journeys), 'Canonical journeys disagree with producer bundle');
-  requireThat(C.isDeepStrictEqual(docs['state.json'].phases.filter(p => ['journey', 'usability'].includes(p.name) && p.model_invoked), measurements(bundle)), 'Canonical invocations disagree with producer receipts');
+  requireThat(samePairs(workflow.selected_pairs, bundle.selected_pairs) && C.isDeepStrictEqual(docs['pe-evaluation-snapshot.json'].journeys, bundle.journeys), 'Canonical journeys disagree with producer bundle');
+  requireThat(C.isDeepStrictEqual(docs['pe-state.json'].phases.filter(p => ['journey', 'usability'].includes(p.name) && p.model_invoked), measurements(bundle)), 'Canonical invocations disagree with producer receipts');
   for (const result of bundle.ac_results || []) {
-    const current = docs['evaluation.json'].ac_results.find(r => r.ac_id === result.ac_id);
+    const current = docs['pe-evaluation-snapshot.json'].ac_results.find(r => r.ac_id === result.ac_id);
     // The existing post-fix composer adds applied-action lineage, not verdicts.
     const extras = current.action_ids.filter(id => !result.action_ids.includes(id));
-    requireThat(extras.every(id => docs['actions.json'].actions.some(a => a.id === id && a.kind === 'fix' && a.status === 'applied' && a.source.origin_run_id === workflow.parent_run_id)), 'AC check has unsupported extra actions');
+    requireThat(extras.every(id => docs['pe-actions.json'].actions.some(a => a.id === id && a.kind === 'fix' && a.status === 'applied' && a.source.origin_run_id === workflow.parent_run_id)), 'AC check has unsupported extra actions');
     requireThat(C.isDeepStrictEqual({ ...current, action_ids: result.action_ids }, result) && result.action_ids.every(id => current.action_ids.includes(id)), 'Canonical AC check disagrees with producer bundle');
   }
-  for (const result of docs['evaluation.json'].ac_results) if (result.evaluated_by === 'journey' && result.verdict !== 'NOT_RUN') requireThat(bundle.ac_results?.some(r => r.ac_id === result.ac_id), 'AC verdict has no explicit producer verification');
-  for (const collection of ['captures', 'items']) for (const item of bundle.evidence[collection]) requireThat(C.isDeepStrictEqual(docs['evidence.json'][collection].find(i => i.id === item.id), item), 'Canonical evidence disagrees with producer bundle');
+  for (const result of docs['pe-evaluation-snapshot.json'].ac_results) if (result.evaluated_by === 'journey' && result.verdict !== 'NOT_RUN') requireThat(bundle.ac_results?.some(r => r.ac_id === result.ac_id), 'AC verdict has no explicit producer verification');
+  for (const collection of ['captures', 'items']) for (const item of bundle.evidence[collection]) requireThat(C.isDeepStrictEqual(docs['pe-evidence.json'][collection].find(i => i.id === item.id), item), 'Canonical evidence disagrees with producer bundle');
 }
 
 module.exports = { readiness, validateBundle, validatePublished, merge };

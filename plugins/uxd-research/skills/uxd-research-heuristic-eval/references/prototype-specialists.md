@@ -19,7 +19,7 @@ task walkthroughs. Missing states are coverage gaps, not guessed defects.
 
 Preserve page-wide evidence for hierarchy and bounded visible text for content;
 component crops alone cannot establish page hierarchy. No page-source fallback,
-accessibility scanners, auto-fixes or edits to a source UX spec.
+accessibility scanners, auto-fixes or edits to source requirements.
 
 When a host workflow invokes this profile, follow the scope and output contract
 supplied by the caller. Do not discover or read another plugin's internal files.
@@ -87,4 +87,4 @@ With `--output reports`, honor `--review chat` by presenting findings and waitin
 for confirm/dismiss/severity before generating derived Markdown/HTML reports.
 Explicit `--review none` permits reports with the generalist procedure's
 **Unreviewed Draft** banner and **Suggested severity** labels; never imply
-researcher approval. UX-spec changes remain proposed human work.
+researcher approval. Requirements changes remain proposed human work.

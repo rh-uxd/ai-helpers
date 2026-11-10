@@ -8,7 +8,7 @@ const path = require('path');
 const { materializeTargets } = require('../artifacts/legacy-artifact-adapter');
 const { validateDirectory } = require('../artifacts/validate-canonical-artifacts');
 
-const CANONICAL_FILES = ['brief.json', 'evaluation.json', 'evidence.json', 'actions.json', 'state.json'];
+const CANONICAL_FILES = ['pe-context.json', 'pe-evaluation-snapshot.json', 'pe-evidence.json', 'pe-actions.json', 'pe-state.json'];
 const REPORT_TARGETS = ['csv', 'summary', 'consistency', 'extract', 'evidence', 'journey', 'actions', 'state'];
 
 function reportError(code, message) {
@@ -34,7 +34,7 @@ function loadReportInputs(artifactsDir) {
     filename,
     JSON.parse(fs.readFileSync(path.join(root, filename), 'utf8')),
   ]));
-  if (documents['evaluation.json'].heuristics) {
+  if (documents['pe-evaluation-snapshot.json'].heuristics) {
     // The old template cannot show specialist findings, so stop instead of
     // dropping them. run-report.js uses the newer HTML renderer for these runs.
     throw reportError('heuristic_html_not_supported', 'Legacy HTML projection does not render typed specialist findings. Use the Quick Checks summary/integrity receipt instead.');
@@ -44,7 +44,7 @@ function loadReportInputs(artifactsDir) {
     filename,
     typeof value === 'string' ? value : `${JSON.stringify(value, null, 2)}\n`,
   ]));
-  const evidence = documents['evidence.json'];
+  const evidence = documents['pe-evidence.json'];
   const imagePaths = [
     ...evidence.captures.flatMap(capture => capture.raw_image ? [capture.raw_image.path] : []),
     ...evidence.items.flatMap(item => item.image ? [item.image.path] : []),

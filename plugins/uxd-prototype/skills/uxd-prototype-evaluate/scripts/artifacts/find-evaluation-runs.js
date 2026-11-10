@@ -16,12 +16,12 @@ function discover(root, filters = {}) {
     // ponytail: search a bounded local folder tree, not a background index;
     // choose a smaller root if limits are reached rather than adding a service.
     if (depth > 8 || ++visited > 10000) throw new Error('Discovery bound exceeded; select a narrower artifact root');
-    if (fs.existsSync(path.join(directory, 'brief.json'))) {
+    if (fs.existsSync(path.join(directory, 'pe-context.json'))) {
       try {
         const docs = C.loadRun(directory);
-        const brief = docs['brief.json']; const evaluation = docs['evaluation.json'];
+        const brief = docs['pe-context.json']; const evaluation = docs['pe-evaluation-snapshot.json'];
         if (filters.key && filters.key !== brief.prototype_key || filters.source && filters.source !== brief.intent.source_input?.id || filters.revision && filters.revision !== brief.intent.scope.source_ref) return;
-        const state = docs['state.json'];
+        const state = docs['pe-state.json'];
         // loadRun validates the referenced bytes before any receipt is exposed.
         // Preserve per-check attribution (including shared model phases), rather
         // than implying that every selected check verified every frozen task.
@@ -50,11 +50,11 @@ function discover(root, filters = {}) {
             check, phases: state.phases.filter(p => p.name === check || p.checks?.includes(check)),
           })),
           walkthrough_phases: walkthrough?.phases ?? [],
-          journeys: evaluation.journeys, actions: docs['actions.json'].actions,
+          journeys: evaluation.journeys, actions: docs['pe-actions.json'].actions,
           // Exact canonical bytes identify this reviewed snapshot, not permission
           // to restore cached checks or reuse evidence on another revision.
           artifact_sha256: C.digest(directory),
-          findings: findings.map(f => ({ id: f.id, evidence_ids: f.evidence_ids, action_ids: docs['actions.json'].actions.filter(a => a.source.finding_id === f.id).map(a => a.id) })),
+          findings: findings.map(f => ({ id: f.id, evidence_ids: f.evidence_ids, action_ids: docs['pe-actions.json'].actions.filter(a => a.source.finding_id === f.id).map(a => a.id) })),
           ac_results: evaluation.ac_results,
         });
       } catch (error) { rejected.push({ directory, error: error.message }); }

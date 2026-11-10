@@ -20,18 +20,18 @@ const Ajv2020 = require('ajv/dist/2020');
 const addFormats = require('ajv-formats');
 
 const ARTIFACT_FILES = [
-  'brief.json',
-  'evaluation.json',
-  'evidence.json',
-  'actions.json',
-  'state.json',
+  'pe-context.json',
+  'pe-evaluation-snapshot.json',
+  'pe-evidence.json',
+  'pe-actions.json',
+  'pe-state.json',
 ];
 const SCHEMA_FILES = {
-  'brief.json': 'brief.schema.json',
-  'evaluation.json': 'evaluation.schema.json',
-  'evidence.json': 'evidence.schema.json',
-  'actions.json': 'actions.schema.json',
-  'state.json': 'state.schema.json',
+  'pe-context.json': 'brief.schema.json',
+  'pe-evaluation-snapshot.json': 'evaluation.schema.json',
+  'pe-evidence.json': 'evidence.schema.json',
+  'pe-actions.json': 'actions.schema.json',
+  'pe-state.json': 'state.schema.json',
 };
 const PROHIBITED_KEYS = new Set([
   'reasoning',
@@ -153,12 +153,12 @@ function validateProhibitedKeys(value, filename, pointer, errors) {
 }
 
 function validateIdentity(documents, errors) {
-  const baseline = documents['brief.json'];
+  const baseline = documents['pe-context.json'];
   if (!baseline) return;
   for (const [filename, document] of Object.entries(documents)) {
     for (const field of ['schema_version', 'run_id', 'prototype_key']) {
       if (document[field] !== baseline[field]) {
-        issue(errors, filename, `/${field}`, 'identity_mismatch', `${field} must match brief.json.`);
+        issue(errors, filename, `/${field}`, 'identity_mismatch', `${field} must match pe-context.json.`);
       }
     }
     validateProhibitedKeys(document, filename, '', errors);
@@ -168,34 +168,34 @@ function validateIdentity(documents, errors) {
 function validateReferences(documents, errors) {
   // Schemas check field shapes; these joins check that IDs refer to the same
   // criteria, tasks, evidence and actions across all five documents.
-  const brief = documents['brief.json'];
-  const evaluation = documents['evaluation.json'];
-  const evidence = documents['evidence.json'];
-  const actions = documents['actions.json'];
+  const brief = documents['pe-context.json'];
+  const evaluation = documents['pe-evaluation-snapshot.json'];
+  const evidence = documents['pe-evidence.json'];
+  const actions = documents['pe-actions.json'];
   if (!brief || !evaluation || !evidence || !actions) return;
 
-  const acIds = idsFrom(brief.intent.acceptance_criteria, 'brief.json', '/intent/acceptance_criteria', errors);
-  const taskIds = idsFrom(brief.intent.tasks, 'brief.json', '/intent/tasks', errors);
-  const personaIds = idsFrom(brief.intent.personas, 'brief.json', '/intent/personas', errors);
+  const acIds = idsFrom(brief.intent.acceptance_criteria, 'pe-context.json', '/intent/acceptance_criteria', errors);
+  const taskIds = idsFrom(brief.intent.tasks, 'pe-context.json', '/intent/tasks', errors);
+  const personaIds = idsFrom(brief.intent.personas, 'pe-context.json', '/intent/personas', errors);
   for (let index = 0; index < brief.intent.tasks.length; index += 1) {
-    assertResolvedAll(errors, 'brief.json', `/intent/tasks/${index}/ac_ids`, brief.intent.tasks[index].ac_ids, acIds, 'Task acceptance criterion');
+    assertResolvedAll(errors, 'pe-context.json', `/intent/tasks/${index}/ac_ids`, brief.intent.tasks[index].ac_ids, acIds, 'Task acceptance criterion');
   }
   for (let index = 0; index < brief.intent.personas.length; index += 1) {
-    assertResolvedAll(errors, 'brief.json', `/intent/personas/${index}/task_ids`, brief.intent.personas[index].task_ids, taskIds, 'Persona task');
+    assertResolvedAll(errors, 'pe-context.json', `/intent/personas/${index}/task_ids`, brief.intent.personas[index].task_ids, taskIds, 'Persona task');
   }
 
-  const captureIds = idsFrom(evidence.captures, 'evidence.json', '/captures', errors);
-  const evidenceIds = idsFrom([...evidence.items, ...(evidence.source_items || [])], 'evidence.json', '/items', errors);
+  const captureIds = idsFrom(evidence.captures, 'pe-evidence.json', '/captures', errors);
+  const evidenceIds = idsFrom([...evidence.items, ...(evidence.source_items || [])], 'pe-evidence.json', '/items', errors);
   const evidenceById = new Map(evidence.items.map(item => [item.id, item]));
   const captureById = new Map(evidence.captures.map(capture => [capture.id, capture]));
   for (let index = 0; index < evidence.items.length; index += 1) {
-    assertResolved(errors, 'evidence.json', `/items/${index}/capture_id`, evidence.items[index].capture_id, captureIds, 'Evidence capture');
+    assertResolved(errors, 'pe-evidence.json', `/items/${index}/capture_id`, evidence.items[index].capture_id, captureIds, 'Evidence capture');
   }
 
-  const actionIds = idsFrom(actions.actions, 'actions.json', '/actions', errors);
-  const findingIds = idsFrom(evaluation.consistency.findings, 'evaluation.json', '/consistency/findings', errors);
-  for (const id of idsFrom(evaluation.heuristics?.findings || [], 'evaluation.json', '/heuristics/findings', errors)) {
-    if (findingIds.has(id)) issue(errors, 'evaluation.json', '/heuristics/findings', 'duplicate_id', `Finding ID collides with consistency: ${id}.`);
+  const actionIds = idsFrom(actions.actions, 'pe-actions.json', '/actions', errors);
+  const findingIds = idsFrom(evaluation.consistency.findings, 'pe-evaluation-snapshot.json', '/consistency/findings', errors);
+  for (const id of idsFrom(evaluation.heuristics?.findings || [], 'pe-evaluation-snapshot.json', '/heuristics/findings', errors)) {
+    if (findingIds.has(id)) issue(errors, 'pe-evaluation-snapshot.json', '/heuristics/findings', 'duplicate_id', `Finding ID collides with consistency: ${id}.`);
     findingIds.add(id);
   }
   const candidateFindingIds = new Set(evaluation.consistency.findings.filter(finding => finding.review_candidate).map(finding => finding.id));
@@ -204,135 +204,135 @@ function validateReferences(documents, errors) {
   for (let index = 0; index < evaluation.ac_results.length; index += 1) {
     const result = evaluation.ac_results[index];
     if (resultAcIds.has(result.ac_id)) {
-      issue(errors, 'evaluation.json', `/ac_results/${index}/ac_id`, 'duplicate_ac_result', `Duplicate result for ${result.ac_id}.`);
+      issue(errors, 'pe-evaluation-snapshot.json', `/ac_results/${index}/ac_id`, 'duplicate_ac_result', `Duplicate result for ${result.ac_id}.`);
     }
     resultAcIds.add(result.ac_id);
-    assertResolved(errors, 'evaluation.json', `/ac_results/${index}/ac_id`, result.ac_id, acIds, 'Acceptance criterion');
-    assertResolvedAll(errors, 'evaluation.json', `/ac_results/${index}/evidence_ids`, result.evidence_ids, evidenceIds, 'Evidence item');
-    assertResolvedAll(errors, 'evaluation.json', `/ac_results/${index}/action_ids`, result.action_ids, actionIds, 'Action');
+    assertResolved(errors, 'pe-evaluation-snapshot.json', `/ac_results/${index}/ac_id`, result.ac_id, acIds, 'Acceptance criterion');
+    assertResolvedAll(errors, 'pe-evaluation-snapshot.json', `/ac_results/${index}/evidence_ids`, result.evidence_ids, evidenceIds, 'Evidence item');
+    assertResolvedAll(errors, 'pe-evaluation-snapshot.json', `/ac_results/${index}/action_ids`, result.action_ids, actionIds, 'Action');
   }
   for (const acId of acIds) {
     if (!resultAcIds.has(acId)) {
-      issue(errors, 'evaluation.json', '/ac_results', 'missing_ac_result', `No result exists for ${acId}.`);
+      issue(errors, 'pe-evaluation-snapshot.json', '/ac_results', 'missing_ac_result', `No result exists for ${acId}.`);
     }
   }
 
-  const journeyIds = idsFrom(evaluation.journeys, 'evaluation.json', '/journeys', errors);
+  const journeyIds = idsFrom(evaluation.journeys, 'pe-evaluation-snapshot.json', '/journeys', errors);
   void journeyIds;
   const globalStepIds = new Set();
   for (let journeyIndex = 0; journeyIndex < evaluation.journeys.length; journeyIndex += 1) {
     const journey = evaluation.journeys[journeyIndex];
-    assertResolved(errors, 'evaluation.json', `/journeys/${journeyIndex}/task_id`, journey.task_id, taskIds, 'Journey task');
-    assertResolved(errors, 'evaluation.json', `/journeys/${journeyIndex}/persona_id`, journey.persona_id, personaIds, 'Journey persona');
-    assertResolvedAll(errors, 'evaluation.json', `/journeys/${journeyIndex}/ac_ids`, journey.ac_ids, acIds, 'Journey acceptance criterion');
+    assertResolved(errors, 'pe-evaluation-snapshot.json', `/journeys/${journeyIndex}/task_id`, journey.task_id, taskIds, 'Journey task');
+    assertResolved(errors, 'pe-evaluation-snapshot.json', `/journeys/${journeyIndex}/persona_id`, journey.persona_id, personaIds, 'Journey persona');
+    assertResolvedAll(errors, 'pe-evaluation-snapshot.json', `/journeys/${journeyIndex}/ac_ids`, journey.ac_ids, acIds, 'Journey acceptance criterion');
     const sequences = new Set();
     for (let stepIndex = 0; stepIndex < journey.steps.length; stepIndex += 1) {
       const step = journey.steps[stepIndex];
       if (globalStepIds.has(step.id)) {
-        issue(errors, 'evaluation.json', `/journeys/${journeyIndex}/steps/${stepIndex}/id`, 'duplicate_id', `Duplicate step ID: ${step.id}.`);
+        issue(errors, 'pe-evaluation-snapshot.json', `/journeys/${journeyIndex}/steps/${stepIndex}/id`, 'duplicate_id', `Duplicate step ID: ${step.id}.`);
       }
       globalStepIds.add(step.id);
       if (sequences.has(step.sequence)) {
-        issue(errors, 'evaluation.json', `/journeys/${journeyIndex}/steps/${stepIndex}/sequence`, 'duplicate_sequence', `Duplicate journey step sequence: ${step.sequence}.`);
+        issue(errors, 'pe-evaluation-snapshot.json', `/journeys/${journeyIndex}/steps/${stepIndex}/sequence`, 'duplicate_sequence', `Duplicate journey step sequence: ${step.sequence}.`);
       }
       sequences.add(step.sequence);
-      assertResolvedAll(errors, 'evaluation.json', `/journeys/${journeyIndex}/steps/${stepIndex}/evidence_ids`, step.evidence_ids, evidenceIds, 'Evidence item');
+      assertResolvedAll(errors, 'pe-evaluation-snapshot.json', `/journeys/${journeyIndex}/steps/${stepIndex}/evidence_ids`, step.evidence_ids, evidenceIds, 'Evidence item');
     }
   }
 
   for (let dimensionIndex = 0; dimensionIndex < evaluation.usability.dimensions.length; dimensionIndex += 1) {
     const dimension = evaluation.usability.dimensions[dimensionIndex];
     if (dimension.score > dimension.max_score) {
-      issue(errors, 'evaluation.json', `/usability/dimensions/${dimensionIndex}/score`, 'score_exceeds_maximum', 'Dimension score exceeds max_score.');
+      issue(errors, 'pe-evaluation-snapshot.json', `/usability/dimensions/${dimensionIndex}/score`, 'score_exceeds_maximum', 'Dimension score exceeds max_score.');
     }
     for (let scoreIndex = 0; scoreIndex < dimension.persona_scores.length; scoreIndex += 1) {
       const score = dimension.persona_scores[scoreIndex];
-      assertResolved(errors, 'evaluation.json', `/usability/dimensions/${dimensionIndex}/persona_scores/${scoreIndex}/persona_id`, score.persona_id, personaIds, 'Usability persona');
+      assertResolved(errors, 'pe-evaluation-snapshot.json', `/usability/dimensions/${dimensionIndex}/persona_scores/${scoreIndex}/persona_id`, score.persona_id, personaIds, 'Usability persona');
     }
-    assertResolvedAll(errors, 'evaluation.json', `/usability/dimensions/${dimensionIndex}/evidence_ids`, dimension.evidence_ids, evidenceIds, 'Evidence item');
+    assertResolvedAll(errors, 'pe-evaluation-snapshot.json', `/usability/dimensions/${dimensionIndex}/evidence_ids`, dimension.evidence_ids, evidenceIds, 'Evidence item');
   }
 
   for (let findingIndex = 0; findingIndex < evaluation.consistency.findings.length; findingIndex += 1) {
     const finding = evaluation.consistency.findings[findingIndex];
-    assertResolvedAll(errors, 'evaluation.json', `/consistency/findings/${findingIndex}/evidence_ids`, finding.evidence_ids, evidenceIds, 'Evidence item');
+    assertResolvedAll(errors, 'pe-evaluation-snapshot.json', `/consistency/findings/${findingIndex}/evidence_ids`, finding.evidence_ids, evidenceIds, 'Evidence item');
   }
 
   for (let actionIndex = 0; actionIndex < actions.actions.length; actionIndex += 1) {
     const action = actions.actions[actionIndex];
     const source = action.source;
     if (!source.ac_id && !source.finding_id && source.evidence_ids.length === 0 && !(action.kind === 'fix' && ['applied', 'validated'].includes(action.status) && source.origin_run_id && source.origin_action_id)) {
-      issue(errors, 'actions.json', `/actions/${actionIndex}/source`, 'empty_action_source', 'An action must reference an AC, finding, or evidence item.');
+      issue(errors, 'pe-actions.json', `/actions/${actionIndex}/source`, 'empty_action_source', 'An action must reference an AC, finding, or evidence item.');
     }
-    assertResolved(errors, 'actions.json', `/actions/${actionIndex}/source/ac_id`, source.ac_id, acIds, 'Action acceptance criterion');
-    assertResolved(errors, 'actions.json', `/actions/${actionIndex}/source/finding_id`, source.finding_id, findingIds, 'Action finding');
-    assertResolvedAll(errors, 'actions.json', `/actions/${actionIndex}/source/evidence_ids`, source.evidence_ids, evidenceIds, 'Evidence item');
+    assertResolved(errors, 'pe-actions.json', `/actions/${actionIndex}/source/ac_id`, source.ac_id, acIds, 'Action acceptance criterion');
+    assertResolved(errors, 'pe-actions.json', `/actions/${actionIndex}/source/finding_id`, source.finding_id, findingIds, 'Action finding');
+    assertResolvedAll(errors, 'pe-actions.json', `/actions/${actionIndex}/source/evidence_ids`, source.evidence_ids, evidenceIds, 'Evidence item');
     if (source.finding_id && candidateFindingIds.has(source.finding_id)) {
-      issue(errors, 'actions.json', `/actions/${actionIndex}/source/finding_id`, 'review_candidate_action', 'Review-candidate findings cannot create actions.');
+      issue(errors, 'pe-actions.json', `/actions/${actionIndex}/source/finding_id`, 'review_candidate_action', 'Review-candidate findings cannot create actions.');
     }
     if (action.kind === 'fix' && action.status === 'applied') {
       if (!action.target || !action.target.file || !action.result.changed_files.length || !action.result.validated_at) {
-        issue(errors, 'actions.json', `/actions/${actionIndex}`, 'incomplete_applied_fix', 'Applied fixes require a target file, changed files, and validated_at.');
+        issue(errors, 'pe-actions.json', `/actions/${actionIndex}`, 'incomplete_applied_fix', 'Applied fixes require a target file, changed files, and validated_at.');
       }
     }
   }
 
   if (evaluation.heuristics) {
     const scope = brief.intent.check_scope;
-    if (!scope) issue(errors, 'brief.json', '/intent/check_scope', 'missing_heuristic_scope', 'Heuristics require approved screen/state/source scope.');
+    if (!scope) issue(errors, 'pe-context.json', '/intent/check_scope', 'missing_heuristic_scope', 'Heuristics require approved screen/state/source scope.');
     const expected = new Set(['content:2', 'content:4', 'content:5', 'content:9', 'content:10', 'hierarchy:2', 'hierarchy:4', 'hierarchy:6', 'hierarchy:8', 'interaction:1', 'interaction:3', 'interaction:5', 'interaction:9', 'interaction:7']);
     const assessed = new Set();
     for (const [index, row] of evaluation.heuristics.coverage.entries()) {
       const key = `${row.lens}:${row.heuristic_id}`;
-      if (!expected.delete(key)) issue(errors, 'evaluation.json', `/heuristics/coverage/${index}`, 'invalid_coverage', `Unexpected or duplicate lens coverage: ${key}.`);
+      if (!expected.delete(key)) issue(errors, 'pe-evaluation-snapshot.json', `/heuristics/coverage/${index}`, 'invalid_coverage', `Unexpected or duplicate lens coverage: ${key}.`);
       if (row.status === 'assessed') {
         assessed.add(key);
-        if (!row.evidence_ids.length) issue(errors, 'evaluation.json', `/heuristics/coverage/${index}`, 'missing_coverage_evidence', 'Assessed heuristics require evidence.');
+        if (!row.evidence_ids.length) issue(errors, 'pe-evaluation-snapshot.json', `/heuristics/coverage/${index}`, 'missing_coverage_evidence', 'Assessed heuristics require evidence.');
       }
-      assertResolvedAll(errors, 'evaluation.json', `/heuristics/coverage/${index}/evidence_ids`, row.evidence_ids, evidenceIds, 'Coverage evidence');
+      assertResolvedAll(errors, 'pe-evaluation-snapshot.json', `/heuristics/coverage/${index}/evidence_ids`, row.evidence_ids, evidenceIds, 'Coverage evidence');
     }
-    if (expected.size) issue(errors, 'evaluation.json', '/heuristics/coverage', 'missing_coverage', `Missing coverage: ${[...expected].join(', ')}.`);
+    if (expected.size) issue(errors, 'pe-evaluation-snapshot.json', '/heuristics/coverage', 'missing_coverage', `Missing coverage: ${[...expected].join(', ')}.`);
     for (const [index, finding] of evaluation.heuristics.findings.entries()) {
-      assertResolvedAll(errors, 'evaluation.json', `/heuristics/findings/${index}/evidence_ids`, finding.evidence_ids, evidenceIds, 'Heuristic evidence');
+      assertResolvedAll(errors, 'pe-evaluation-snapshot.json', `/heuristics/findings/${index}/evidence_ids`, finding.evidence_ids, evidenceIds, 'Heuristic evidence');
       if (!finding.evidence_ids.some(id => {
         const capture = captureById.get(evidenceById.get(id)?.capture_id);
         return capture && capture.screen_id === finding.screen_id && capture.state_id === finding.state_id;
-      })) issue(errors, 'evaluation.json', `/heuristics/findings/${index}`, 'wrong_state_evidence', 'Finding needs evidence from its named screen/state.');
-      if (scope && (!scope.screen_ids.includes(finding.screen_id) || !scope.state_ids.includes(finding.state_id) || finding.source_ids.some(id => !scope.source_ids.includes(id)))) issue(errors, 'evaluation.json', `/heuristics/findings/${index}`, 'out_of_scope_finding', 'Finding screen/state/source must resolve to the approved scope.');
+      })) issue(errors, 'pe-evaluation-snapshot.json', `/heuristics/findings/${index}`, 'wrong_state_evidence', 'Finding needs evidence from its named screen/state.');
+      if (scope && (!scope.screen_ids.includes(finding.screen_id) || !scope.state_ids.includes(finding.state_id) || finding.source_ids.some(id => !scope.source_ids.includes(id)))) issue(errors, 'pe-evaluation-snapshot.json', `/heuristics/findings/${index}`, 'out_of_scope_finding', 'Finding screen/state/source must resolve to the approved scope.');
       for (const heuristicId of finding.heuristic_ids) {
-        if (!finding.identified_by.some(lens => assessed.has(`${lens}:${heuristicId}`))) issue(errors, 'evaluation.json', `/heuristics/findings/${index}`, 'unassessed_finding', 'Finding heuristic must have assessed coverage from an identifying lens.');
+        if (!finding.identified_by.some(lens => assessed.has(`${lens}:${heuristicId}`))) issue(errors, 'pe-evaluation-snapshot.json', `/heuristics/findings/${index}`, 'unassessed_finding', 'Finding heuristic must have assessed coverage from an identifying lens.');
       }
     }
   }
 
-  const state = documents['state.json'];
+  const state = documents['pe-state.json'];
   if (state) {
     const iterationKeys = new Set();
     for (let iterationIndex = 0; iterationIndex < state.lifecycle.iterations.length; iterationIndex += 1) {
       const iteration = state.lifecycle.iterations[iterationIndex];
       const key = `${iteration.iteration}:${iteration.phase}`;
       if (iterationKeys.has(key)) {
-        issue(errors, 'state.json', `/lifecycle/iterations/${iterationIndex}`, 'duplicate_iteration', `Duplicate iteration phase: ${key}.`);
+        issue(errors, 'pe-state.json', `/lifecycle/iterations/${iterationIndex}`, 'duplicate_iteration', `Duplicate iteration phase: ${key}.`);
       }
       iterationKeys.add(key);
       const iterationAcIds = new Set();
       for (let resultIndex = 0; resultIndex < iteration.ac_results.length; resultIndex += 1) {
         const result = iteration.ac_results[resultIndex];
         if (iterationAcIds.has(result.ac_id)) {
-          issue(errors, 'state.json', `/lifecycle/iterations/${iterationIndex}/ac_results/${resultIndex}/ac_id`, 'duplicate_ac_result', `Duplicate iteration result for ${result.ac_id}.`);
+          issue(errors, 'pe-state.json', `/lifecycle/iterations/${iterationIndex}/ac_results/${resultIndex}/ac_id`, 'duplicate_ac_result', `Duplicate iteration result for ${result.ac_id}.`);
         }
         iterationAcIds.add(result.ac_id);
-        assertResolved(errors, 'state.json', `/lifecycle/iterations/${iterationIndex}/ac_results/${resultIndex}/ac_id`, result.ac_id, acIds, 'Iteration acceptance criterion');
+        assertResolved(errors, 'pe-state.json', `/lifecycle/iterations/${iterationIndex}/ac_results/${resultIndex}/ac_id`, result.ac_id, acIds, 'Iteration acceptance criterion');
       }
-      assertResolvedAll(errors, 'state.json', `/lifecycle/iterations/${iterationIndex}/persona_ids`, iteration.persona_ids || [], personaIds, 'Iteration persona');
+      assertResolvedAll(errors, 'pe-state.json', `/lifecycle/iterations/${iterationIndex}/persona_ids`, iteration.persona_ids || [], personaIds, 'Iteration persona');
     }
     if (state.lifecycle.iteration > 0 && !state.lifecycle.iterations.some(item => item.iteration === state.lifecycle.iteration)) {
-      issue(errors, 'state.json', '/lifecycle/iteration', 'missing_current_iteration', 'The current iteration must exist in lifecycle.iterations.');
+      issue(errors, 'pe-state.json', '/lifecycle/iteration', 'missing_current_iteration', 'The current iteration must exist in lifecycle.iterations.');
     }
   }
 }
 
 function validateSummaries(documents, errors) {
-  const evaluation = documents['evaluation.json'];
+  const evaluation = documents['pe-evaluation-snapshot.json'];
   if (!evaluation) return;
   const expectedAc = countVerdicts(evaluation.ac_results);
   const expectedJourney = countVerdicts(evaluation.journeys);
@@ -340,25 +340,25 @@ function validateSummaries(documents, errors) {
   for (const finding of evaluation.consistency.findings) expectedConsistency[finding.severity] += 1;
 
   if (!sameCounts(expectedAc, evaluation.summary.ac_counts)) {
-    issue(errors, 'evaluation.json', '/summary/ac_counts', 'derived_summary_mismatch', 'ac_counts must be derived from ac_results.');
+    issue(errors, 'pe-evaluation-snapshot.json', '/summary/ac_counts', 'derived_summary_mismatch', 'ac_counts must be derived from ac_results.');
   }
   if (!sameCounts(expectedJourney, evaluation.summary.journey_counts)) {
-    issue(errors, 'evaluation.json', '/summary/journey_counts', 'derived_summary_mismatch', 'journey_counts must be derived from journeys.');
+    issue(errors, 'pe-evaluation-snapshot.json', '/summary/journey_counts', 'derived_summary_mismatch', 'journey_counts must be derived from journeys.');
   }
   if (!sameCounts(expectedConsistency, evaluation.summary.consistency_counts)) {
-    issue(errors, 'evaluation.json', '/summary/consistency_counts', 'derived_summary_mismatch', 'consistency_counts must be derived from consistency.findings.');
+    issue(errors, 'pe-evaluation-snapshot.json', '/summary/consistency_counts', 'derived_summary_mismatch', 'consistency_counts must be derived from consistency.findings.');
   }
-  if (evaluation.consistency.coverage_by_mode && (evaluation.consistency.coverage_count_method !== 'max-per-mode' || evaluation.consistency.guidelines_checked !== Math.max(evaluation.consistency.coverage_by_mode.source, evaluation.consistency.coverage_by_mode.visual))) issue(errors, 'evaluation.json', '/consistency', 'coverage_count_mismatch', 'Coverage scalar must match its explicitly recorded max-per-mode policy.');
+  if (evaluation.consistency.coverage_by_mode && (evaluation.consistency.coverage_count_method !== 'max-per-mode' || evaluation.consistency.guidelines_checked !== Math.max(evaluation.consistency.coverage_by_mode.source, evaluation.consistency.coverage_by_mode.visual))) issue(errors, 'pe-evaluation-snapshot.json', '/consistency', 'coverage_count_mismatch', 'Coverage scalar must match its explicitly recorded max-per-mode policy.');
   const usability = evaluation.usability;
   const dimensionScore = usability.dimensions.reduce((sum, dimension) => sum + dimension.score, 0);
   const dimensionMax = usability.dimensions.reduce((sum, dimension) => sum + dimension.max_score, 0);
   if (usability.score !== dimensionScore || usability.max_score !== dimensionMax) {
-    issue(errors, 'evaluation.json', '/usability', 'derived_usability_mismatch', 'Usability score and max_score must equal the dimension totals.');
+    issue(errors, 'pe-evaluation-snapshot.json', '/usability', 'derived_usability_mismatch', 'Usability score and max_score must equal the dimension totals.');
   }
 }
 
 function validateEvidenceBounds(documents, errors) {
-  const evidence = documents['evidence.json'];
+  const evidence = documents['pe-evidence.json'];
   if (!evidence) return;
   const captures = new Map(evidence.captures.map(capture => [capture.id, capture]));
   for (let index = 0; index < evidence.items.length; index += 1) {
@@ -366,12 +366,12 @@ function validateEvidenceBounds(documents, errors) {
     if (item.kind !== 'region' && item.kind !== 'component') continue;
     const capture = captures.get(item.capture_id);
     if (!capture || !capture.raw_image || !item.crop || !item.image) {
-      issue(errors, 'evidence.json', `/items/${index}`, 'crop_without_image_source', 'Cropped evidence requires a capture raw_image, crop, and output image.');
+      issue(errors, 'pe-evidence.json', `/items/${index}`, 'crop_without_image_source', 'Cropped evidence requires a capture raw_image, crop, and output image.');
       continue;
     }
     const { crop } = item;
     if (crop.x + crop.width > capture.raw_image.width || crop.y + crop.height > capture.raw_image.height) {
-      issue(errors, 'evidence.json', `/items/${index}/crop`, 'crop_out_of_bounds', 'Crop extends outside the source image bounds.');
+      issue(errors, 'pe-evidence.json', `/items/${index}/crop`, 'crop_out_of_bounds', 'Crop extends outside the source image bounds.');
       continue;
     }
     const left = Math.max(0, crop.x - crop.padding);
@@ -379,13 +379,13 @@ function validateEvidenceBounds(documents, errors) {
     const right = Math.min(capture.raw_image.width, crop.x + crop.width + crop.padding);
     const bottom = Math.min(capture.raw_image.height, crop.y + crop.height + crop.padding);
     if (item.image.width !== right - left || item.image.height !== bottom - top) {
-      issue(errors, 'evidence.json', `/items/${index}/image`, 'crop_image_dimensions', 'Crop image dimensions must exactly match the padded, viewport-clamped source rectangle.');
+      issue(errors, 'pe-evidence.json', `/items/${index}/image`, 'crop_image_dimensions', 'Crop image dimensions must exactly match the padded, viewport-clamped source rectangle.');
     }
   }
 }
 
 function validateCache(documents, errors) {
-  const state = documents['state.json'];
+  const state = documents['pe-state.json'];
   if (!state) return;
   const identity = state.identity;
   const expected = `sha256:${crypto.createHash('sha256').update(JSON.stringify({
@@ -394,26 +394,26 @@ function validateCache(documents, errors) {
     evaluator_key: identity.evaluator_key,
   })).digest('hex')}`;
   if (identity.compound_key !== expected) {
-    issue(errors, 'state.json', '/identity/compound_key', 'compound_key_mismatch', 'compound_key must hash intent_key, build_key, and evaluator_key in canonical key order.');
+    issue(errors, 'pe-state.json', '/identity/compound_key', 'compound_key_mismatch', 'compound_key must hash intent_key, build_key, and evaluator_key in canonical key order.');
   }
   if (state.cache.entry_key !== identity.compound_key) {
-    issue(errors, 'state.json', '/cache/entry_key', 'cache_entry_key_mismatch', 'cache.entry_key must equal identity.compound_key.');
+    issue(errors, 'pe-state.json', '/cache/entry_key', 'cache_entry_key_mismatch', 'cache.entry_key must equal identity.compound_key.');
   }
   if (state.cache.decision === 'hit' && (state.cache.invalidated_by.length !== 1 || state.cache.invalidated_by[0] !== 'none')) {
-    issue(errors, 'state.json', '/cache/invalidated_by', 'invalid_cache_hit', 'A cache hit cannot list an invalidation reason.');
+    issue(errors, 'pe-state.json', '/cache/invalidated_by', 'invalid_cache_hit', 'A cache hit cannot list an invalidation reason.');
   }
   if ((state.cache.decision === 'miss' || state.cache.decision === 'invalid') && state.cache.invalidated_by.includes('none')) {
-    issue(errors, 'state.json', '/cache/invalidated_by', 'missing_invalidation_reason', 'A cache miss or invalid entry must name an invalidation reason.');
+    issue(errors, 'pe-state.json', '/cache/invalidated_by', 'missing_invalidation_reason', 'A cache miss or invalid entry must name an invalidation reason.');
   }
   for (let index = 0; index < state.phases.length; index += 1) {
     const phase = state.phases[index];
-    if (Date.parse(phase.ended_at) < Date.parse(phase.started_at)) issue(errors, 'state.json', `/phases/${index}`, 'phase_time_order', 'A phase cannot end before it starts.');
+    if (Date.parse(phase.ended_at) < Date.parse(phase.started_at)) issue(errors, 'pe-state.json', `/phases/${index}`, 'phase_time_order', 'A phase cannot end before it starts.');
     // Unknown model usage remains null. Only genuinely local phases assert
     // zero tokens/cost; unknown telemetry must never masquerade as free work.
     if (phase.provider === 'none' && (phase.model_invoked || phase.model !== '' || phase.llm_cost_usd !== 0 || phase.token_usage.input !== 0 || phase.token_usage.cached_input !== 0 || phase.token_usage.output !== 0 || phase.token_usage.reasoning_tokens !== 0)) {
-      issue(errors, 'state.json', `/phases/${index}`, 'invalid_local_phase_telemetry', 'A local phase must have no model, token use, or LLM cost.');
+      issue(errors, 'pe-state.json', `/phases/${index}`, 'invalid_local_phase_telemetry', 'A local phase must have no model, token use, or LLM cost.');
     }
-    if (phase.model_invoked && (phase.provider === 'none' || !phase.model)) issue(errors, 'state.json', `/phases/${index}`, 'missing_model_identity', 'An invoked model requires its actual provider/model.');
+    if (phase.model_invoked && (phase.provider === 'none' || !phase.model)) issue(errors, 'pe-state.json', `/phases/${index}`, 'missing_model_identity', 'An invoked model requires its actual provider/model.');
   }
 }
 
@@ -428,8 +428,8 @@ function validateDocuments(documents) {
   validateSummaries(documents, errors);
   validateEvidenceBounds(documents, errors);
   validateCache(documents, errors);
-  try { require('../consistency/consistency-contract').validateCanonical(documents['evaluation.json'].consistency); }
-  catch (error) { issue(errors, 'evaluation.json', '/consistency/source_analysis', 'source_contract', error.message); }
+  try { require('../consistency/consistency-contract').validateCanonical(documents['pe-evaluation-snapshot.json'].consistency); }
+  catch (error) { issue(errors, 'pe-evaluation-snapshot.json', '/consistency/source_analysis', 'source_contract', error.message); }
   errors.push(...require('./split-contract').validateSplit(documents));
   return errors;
 }
@@ -450,12 +450,12 @@ function validateDirectoryCore(artifactsDir) {
   if (errors.length > 0) return { root, documents: null, errors };
   const validationErrors = validateDocuments(documents);
   if (!validationErrors.length) {
-    try { require('../consistency/consistency-contract').validateCanonical(documents['evaluation.json'].consistency, root); }
-    catch (error) { issue(validationErrors, 'evaluation.json', '/consistency/source_analysis', 'source_publication', error.message); }
+    try { require('../consistency/consistency-contract').validateCanonical(documents['pe-evaluation-snapshot.json'].consistency, root); }
+    catch (error) { issue(validationErrors, 'pe-evaluation-snapshot.json', '/consistency/source_analysis', 'source_publication', error.message); }
     try { require('../task-verification/walkthrough-contract').validatePublished(documents, root); }
-    catch (error) { issue(validationErrors, 'state.json', '/workflow', 'walkthrough_publication', error.message); }
+    catch (error) { issue(validationErrors, 'pe-state.json', '/workflow', 'walkthrough_publication', error.message); }
     try { require('../workflow/evaluation-plan').validatePublished(documents, root); }
-    catch (error) { issue(validationErrors, 'state.json', '/planning', 'evaluation_plan', error.message); }
+    catch (error) { issue(validationErrors, 'pe-state.json', '/planning', 'evaluation_plan', error.message); }
   }
   return { root, documents, errors: validationErrors };
 }
