@@ -57,7 +57,7 @@ Use the As-Is frame for the current experience and the To-Be frame for the futur
 
 ## Step 2: Preserve evidence and uncertainty
 
-Carry `[E#]` evidence references and source links into the relevant beats. Keep `[A#]` assumptions labeled and state what would validate them. Do not turn an assumption into a research finding or invent a source. If the map makes a claim that conflicts with the brief, ask which source to follow.
+Carry `[E#]` evidence references and source links into the relevant beats. In Miro, make each evidence citation clickable to its source and keep `[A#]` assumptions tied to the map's bottom assumption reference strip. State what would validate assumptions. Do not turn an assumption into a research finding or invent a source. If the map makes a claim that conflicts with the brief, ask which source to follow.
 
 ## Step 3: Resolve enabling context
 
@@ -65,16 +65,9 @@ Use the time horizon and capabilities already recorded in the brief or map. Ask 
 
 ## Step 4: Draft the To-Be storyboard (first pass)
 
-Use the paired maps to draft a future-state storyboard. Build its beats from the To-Be stages and actions; use As-Is pains, needs, and evidence to make the change and contrast clear. Do not create a separate As-Is storyboard unless the designer asks for one.
+Use the paired maps to draft a future-state story map. Keep the same actor, scenario, and stage order. Use the To-Be actions to make a simple narrative sequence; draw on As-Is pains, needs, and linked evidence only where they clarify the story. Do not create a separate As-Is story map unless the designer asks for one.
 
-Keep the storyboard compact and editable. Include:
-
-- Beat and mapped `S#` stage
-- User action and touchpoint
-- Current pain or need carried forward from the As-Is map
-- Proposed screen or artifact and product response
-- Support opportunity and intended change
-- Emotion or mindset, with `[E#]` and `[A#]` references
+Keep the Miro frame simple: one short setup card, then one concise narrative beat per mapped stage, arranged left to right. Keep each beat to one or two sentences and retain its `S#` label. Carry relevant `[E#]` citations as clickable links and `[A#]` markers; avoid repeating headings for action, pain, screen, support, mindset, and emotion in every beat. Beneath the story-card row, add a matching row of empty screen/artifact drop zones, one aligned to each beat and labeled for the designer to add a screen or sketch. Keep these zones blank: they are spaces for later design work, not proposed interfaces. Include screen content only when it is present in the map or supported by a capability already supplied; if that context is open, do not invent it. Finish with one brief “Still to learn” line.
 
 Show the draft before writing to Miro. With confirmation, add a new storyboard frame to the same board and preserve the two journey-map frames. Save a Miro-ready markdown copy. If Miro writing is unavailable, return the copy for manual transfer and explain that limitation. Ask the designer and partners to edit the storyboard in Miro before finalization.
 
@@ -121,6 +114,7 @@ Write final prose from [references/template.md](references/template.md). Read it
 ## Quality checks
 
 - The story uses the same actor, scenario, and stages as the paired map
+- The storyboard reads as one setup and a simple sequence of concise narrative beats, not a repeated field checklist
 - The storyboard was reviewed and edited by the team before final prose is written
 - As-Is beats trace to evidence or remain labeled assumptions
 - To-Be beats reflect mapped opportunities and capabilities from the brief

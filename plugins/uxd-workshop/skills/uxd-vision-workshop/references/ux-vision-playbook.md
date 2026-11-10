@@ -224,7 +224,7 @@ The server is added to your global Codex configuration. Treat the authorization 
 
 **When it helps:** Use this activity when the experience needs a clearer story or when the team needs to align on the future journey before prototyping. Reuse or refine an existing storyboard or narrative when it already communicates the experience.
 
-**What you'll do:** Use available problem context and journey artifacts to create an editable To-Be storyboard in Miro. The designer can edit it alone or with partners, then use the same skill again to write final narrative prose and a prototype handoff. If the team already has an agreed story, carry it forward and fill only missing details.
+**What you'll do:** Use available problem context and journey artifacts to create an editable To-Be storyboard in Miro. Keep the storyboard simple: a setup followed by concise story cards in stage order, with one blank screen/artifact drop zone directly beneath each card for designers to add screens or sketches. The drop-zone row is part of the storyboard only; never add it to the As-Is or To-Be journey maps. The designer can edit the storyboard alone or with partners, then use the same skill again to write final narrative prose and a prototype handoff. If the team already has an agreed story, carry it forward and fill only missing details.
 
 **Useful outputs when shaping the narrative:**
 - A named user and concrete scene grounded in the available problem context and evidence
