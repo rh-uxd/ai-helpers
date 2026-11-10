@@ -3,6 +3,9 @@
 The host performs authorized browser/model work; the local merger only validates
 and publishes supplied results. Use the same packet and producer bundle for both
 entry paths. Read [evaluator-responsibilities.md](../workflow/evaluator-responsibilities.md).
+Before any browser work, also follow the [persona/task prompt](persona-task-prompt.md)
+and [browser evidence guidance](browser-evidence.md). The active walkthrough skill
+loads this contract; these linked guides are part of its execution instructions.
 
 ## Frozen preparation and readiness
 
@@ -79,6 +82,33 @@ Write an isolated `bundle.json`, validated by `walkthrough-bundle.schema.json`:
   PASS/FAIL on browser evidence. Task success alone leaves ACs NOT_RUN.
 - Optional `proposed_actions`: canonical proposed fix actions linked to explicit
   failed AC checks/evidence; `handoff.requires_user_invocation: true`. No edits run.
+
+## Explain task outcomes separately from requirements
+
+The journey outcome answers “Did this selected persona complete this selected
+task?” An acceptance-criterion result answers “Did evidence directly verify this
+specific requirement?” They are separate results and must be presented separately.
+
+- **Task completed:** the observed steps show the task goal was achieved. This is
+  not an automatic PASS for any linked requirement.
+- **Task failed:** an observed step shows the task could not be completed. A model
+  or browser-tool error by itself is not a product failure.
+- **Task uncertain:** the attempt was blocked, incomplete, ambiguous, or did not
+  produce enough reliable evidence. Preserve the stop reason as FLAGGED.
+- **Task not tried:** no walkthrough ran for that pair. Preserve it as NOT_RUN.
+- **Requirement verified:** use PASS only after an explicit `verify` step checks
+  that requirement at the verified build and cites supporting evidence.
+- **Requirement not met:** use FAIL only when that explicit check shows an observed
+  counterexample to the requirement.
+- **Requirement uncertain / not tested:** use FLAGGED for a relevant but
+  inconclusive attempt; use NOT_RUN when no explicit check was made. A source
+  classification, planned check, unrelated screenshot, or completed task cannot
+  turn an untested requirement into PASS.
+
+In chat and reports, prefer “Task completed”, “Requirement not tested”, and
+“Uncertain—[reason]” over showing a bare journey PASS beside an AC result. Keep
+the schema verdicts in the canonical records, but do not collapse task completion
+and requirement verification into one success claim.
 
 All linked files use portable `checks/` or `evidence/` paths inside the producer
 directory with exact hashes. Retain sanitized submitted context and returned

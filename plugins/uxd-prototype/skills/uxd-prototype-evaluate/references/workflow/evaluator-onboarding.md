@@ -15,11 +15,54 @@ exact pairs and limits. Full also needs its parent/digest and continuation decis
 Do not restart intake, replace the cohort or splice a standalone run into Full.
 
 Use the host's question UI: single-select for exclusive decisions, checkboxes
-for applicable checks/pairs, and short open-ended fields for missing details.
-Batch independent questions; wait before asking dependent ones. Include an
-open-ended alternative to suggestions. Defaults, canceled forms and unanswered
+for check and persona/task selections, and short open-ended fields for missing
+details. Batch independent questions; wait before asking dependent ones. Include
+an open-ended alternative to suggestions. Defaults, canceled forms and unanswered
 questions are not approval. Fall back to numbered text choices when necessary;
 do not present Markdown checkboxes as interactive controls.
+
+## Let the designer choose checks
+
+First recommend the smallest useful set and explain why. Then offer the complete
+supported list as a native multi-select, with every option initially unselected.
+Use human-readable names and explain what each check looks at, how it gathers
+evidence, and what it cannot establish. Keep internal check names and commands
+behind the scenes. Show missing prerequisites next to an option rather than
+silently omitting it or substituting another check.
+
+- **Map the requirements:** Organizes each supplied criterion by the kind of
+  evidence needed. It is planning/classification only; it does not test behavior
+  or mark a requirement as met.
+- **Compare source with design rules:** Reviews changed product source against
+  the explicitly selected guideline set and commit/base. It does not need a
+  running app. It requires a clean, revision-matched checkout and a compatible
+  source checker. Do not run project tests as a side effect. Preserve requested
+  test/fixture exclusions; if the checker cannot honor an exclusion, pause and
+  ask rather than silently broadening the scope.
+- **Review visual consistency:** Compares selected, revision-matched screens or
+  screenshots with the explicitly selected design rules. It needs supplied
+  captures or approved browser capture, plus provider approval; it is not a task
+  walkthrough.
+- **Review usability principles:** Reviews selected screens and states for
+  content clarity, information hierarchy and interaction patterns using the
+  evaluator's specialist lenses. It needs scoped visual evidence and provider
+  approval. It is an AI-assisted expert inspection, not participant research.
+- **Try selected tasks with simulated users:** Each selected persona attempts
+  only the exact task(s) chosen for them, starting from the reviewed state. It
+  needs a verified reachable build and separate browser/provider approval. One
+  persona is valid; do not silently add personas or tasks.
+
+Within a task walkthrough, the designer may also name specific requirements to
+verify. Each needs an explicit on-screen verification step and linked evidence;
+completing the task alone does not verify it. There is no standalone generic
+“pass the requirements” check. **Full** means a composed evaluation of selected
+checks with a separate review decision before any walkthrough; it is not another
+check-box item. Fixes, HTML reports and sharing are separate choices.
+
+After check selection, ask only for prerequisites of selected items. Show the
+expected browser/model activity and cost estimate, or say cost is unknown; ask for
+a clear limit and execution decision. Do not infer approval from selecting an
+option or from a prepared plan.
 
 ## Review existing work
 
@@ -125,3 +168,59 @@ scope; resolve missing decisions before the affected activity.
 - **Final handoff:** show validated path/identity, observed versus unverified
   outcomes, gaps, actual/unknown usage and next choice. Reports are opt-in;
   sharing is separate. State any hosted-media/trace limitations.
+
+## Example conversations
+
+These examples start with ordinary requests. Use the host's native checkboxes;
+the numbered lists below are text-only fallbacks, not pretend interactive controls.
+
+### Source review only
+
+**Designer:** “Can you compare the changed prototype source with this UX spec? The app is not running, and please don't run tests.”
+
+**Assistant:** “A source review is the smallest useful check for that question. I’ll reuse the spec and commit/base you supplied; I don’t need Jira, a running app, personas or browser access. I’ll keep the test exclusion in scope and stop if the checker can’t honor it. The other available checks are requirement mapping, visual review, usability-principle review and task walkthroughs. Do you want source review only? No model/browser cost is planned; local runtime is not a provider-cost estimate. May I run it?”
+
+### One task, one persona
+
+**Designer:** “Would a first-time editor be able to create a project? Use one junior editor only; the administrator is for setup.”
+
+**Assistant:** “One simulated editor attempting that one task is the smallest useful check for discoverability and task completion. I’ll exclude the setup-only administrator and won’t add a second persona. I have the task and profile; I still need the exact served build and starting state. This requires browser and model activity. The cost estimate is **[estimate or unknown]**; what limit should I respect? Shall I run only this task/profile pair? Completing the task won’t automatically verify related requirements.”
+
+### Full evaluation
+
+**Assistant, before work:** “You asked for an end-to-end review. I recommend **[selected checks]** because they answer **[question]**. The task walkthrough will use **[exact task/persona pairs]**. I’ll show you the initial findings and pause before any walkthrough. Here are the expected browser/model calls, cost estimate or uncertainty, output location and separate choices for edits, report and sharing. Do you approve this initial scope and execution?”
+
+**Assistant, at the pause:** “The initial review is ready. **What I found:** [plain-language findings with evidence]. **What has not been tested:** [coverage gaps]. No persona has started yet. Would you like me to continue with the reviewed task(s), finish without walkthroughs, or stop?”
+
+Only a new decision at this pause authorizes the walkthrough stage. Keep checkpoint IDs, hashes and continuation commands in the run record, not as a burden for the designer to assemble.
+
+### Review saved results
+
+**Designer:** “What did the last evaluation find, and should I change the spec?”
+
+**Assistant:** “I’ll check the saved evaluation for this project and validate its linked evidence. If its folder isn’t already known, please point me to it. I won’t rerun checks or edit the spec. If I can’t find a valid matching run, I’ll say what’s missing rather than infer results from an old spreadsheet.”
+
+## Plain-language result format
+
+Present a short, evidence-linked summary—not JSON, command output or internal
+phase names. Keep task outcomes separate from requirement results:
+
+```text
+Review: [the question the designer asked]
+Build: [short revision] · Run: [date from this run's execution record]
+
+What I checked: [selected checks, tasks and personas]
+What I found: [prioritized finding in plain language] — [screenshot/source evidence]
+
+Task outcome: [completed / failed / uncertain / not tried]
+Requirement checks:
+- [Requirement]: Verified / Did not meet / Uncertain / Not tested — [brief reason + evidence]
+
+Not covered: [unselected tasks, personas, screens or requirements]
+Cost: [actual attributed cost, or unknown; keep host-session cost separate]
+Next: [one useful choice]
+```
+
+Use “not tested” when no explicit check ran; use “uncertain” when an attempt
+could not support a confident result. Never turn task completion into a verified
+requirement, or hide coverage gaps behind an overall score.
