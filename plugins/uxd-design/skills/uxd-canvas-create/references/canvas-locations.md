@@ -35,6 +35,13 @@ Confirm immediately before creating a board, writing widgets, or deleting items.
 - **Delete:** send `data-deleted="true"` on that element's id, and only after the user confirms those items. Leaving an item out of the SVG does not delete it.
 - **Fidelity:** text, stickies, groups (frames), images, and connectors round-trip. Jira cards, reactions, and freehand drawings do not. Say what was dropped.
 
+### Evidence and assumption references
+
+- In Miro, make each [E#] citation itself clickable to its full HTTPS source URL, as well as keeping the source reference cards. Do not rely on a separate source list alone.
+- Add an assumption reference strip at the bottom of each map with each [A#] and its concise definition. Keep it separate from research findings.
+- Put coverage judgments and Research gap: questions in a dedicated stage-aligned row within both journey-map frames. A separate summary area is supplemental.
+- Do not create a generic Evidence limits row. Put evidence caveats with the relevant stage status or in the written handoff; never leave placeholder text such as undefined.
+
 A local `canvas.json` is optional when Miro is canonical. Offer a snapshot. Do not describe that file as the source of truth, and do not require one before updating the board.
 
 When a snapshot is saved:

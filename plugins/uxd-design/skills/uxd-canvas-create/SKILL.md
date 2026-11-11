@@ -3,9 +3,10 @@ name: uxd-canvas-create
 version: 0.1.0
 description: >-
   Create or refine a canvas as local JSON Canvas, a Miro board, or both.
-  Covers journey maps, service blueprints, architecture diagrams, user flows,
-  affinity maps, mind maps, and Mermaid diagrams. Use when turning a brief,
-  research, an existing canvas, or a Miro board into a spatial artifact.
+  Covers journey maps, paired as-is/to-be vision maps, service blueprints,
+  architecture diagrams, user flows, affinity maps, mind maps, and Mermaid
+  diagrams. Use when turning a brief, research, an existing canvas, or a Miro
+  board into a spatial artifact.
 ---
 
 # Create Canvas
@@ -44,10 +45,11 @@ canvas/
 
 ## Templates
 
-If the user names a type below, read that folder's `context.md` and start from its `canvas.json`. See [templates/README.md](templates/README.md). Keep the template's columns, rows, and reading order. Replace the placeholder text. Add or remove a whole phase column when the evidence needs a different number of stages. When revising a canvas that already exists, keep its structure unless the user asks to restart from the template.
+If the user names a type below, read that folder's `context.md` and start from its `canvas.json`. See [templates/README.md](templates/README.md). For vision work after a problem brief, use the paired vision journey map. For other journey maps, use the general journey-map template. Keep the selected template's columns, rows, and reading order. Replace the placeholder text. Add or remove a whole phase column when the evidence needs a different number of stages. When revising a canvas that already exists, keep its structure unless the user asks to restart from the template.
 
 | Request | Template |
 |---|---|
+| Vision journey map, paired as-is and to-be map | `templates/vision-journey-map` |
 | Journey map, customer journey, or experience map | `templates/journey-map` |
 | Service blueprint | `templates/service-blueprint` |
 | User flow or task flow | `templates/user-flow` |
@@ -62,19 +64,33 @@ Follow the locations reference. Journey maps, blueprints, and affinity maps stay
 
 ## Authoring workflow
 
-1. Resolve location, communication goal, audience, canvas type, source evidence, and reading order.
+1. Resolve location, communication goal, audience, canvas type, source evidence, and reading order. For a vision journey map, check whether the brief has separate **As-Is and To-Be map starters**.
 2. If the type has a template, read its `context.md` and copy `canvas.json` as the base before writing anything else.
-3. If the source is a Miro URL, read that board or one frame and preserve every widget id before editing. Confirm before creating a board, writing widgets, or deleting items. Fit the board's content into the template when the user asked for one of those types.
-4. Read [JSON Canvas fields and extensions](references/canvas-schema.md) before authoring unfamiliar node types or presentation extensions.
-5. Write the working model with stable ids such as `phase-discover-actions`. Copy widget ids onto `miroId` in any snapshot. After a new board write, store the ids the create call returns.
-6. Copy local files into `assets/` and use relative paths. Do not embed credentials, authenticated URLs, or inaccessible local absolute paths.
-7. Validate any `canvas.json` you write:
+3. For a new vision map, use the brief's separate As-Is and To-Be map-shaped Journey starters as provisional seed content. Carry the playbook's map lanes and matching `S#` stage columns into both frames. If the starter is missing, draft a concise paired outline from the supplied brief now; preserve evidence tags, label assumptions, and leave missing capability or horizon context open instead of inventing it. Share the outline before creating or writing to a Miro board.
+4. If the source is a Miro URL, read that board or one frame and preserve every widget id before editing. Confirm before creating a board, writing widgets, or deleting items. Fit the board's content into the template when the user asked for one of those types.
+5. Read [JSON Canvas fields and extensions](references/canvas-schema.md) before authoring unfamiliar node types or presentation extensions.
+6. Write the working model with stable ids such as `phase-discover-actions`. Copy widget ids onto `miroId` in any snapshot. After a new board write, store the ids the create call returns.
+7. For a completed paired vision map, run the research coverage check below before handing it to the narrative stage.
+8. Copy local files into `assets/` and use relative paths. Do not embed credentials, authenticated URLs, or inaccessible local absolute paths.
+9. Validate any `canvas.json` you write:
 
 ```bash
 node "${CLAUDE_SKILL_DIR}/scripts/validate-canvas.mjs" <path-to-canvas.json>
 ```
 
 Fix every error. Review warnings for overlaps, dense text, and edge routing rather than dismissing them automatically.
+
+### Vision map research coverage check
+
+After the team confirms both journey-map frames, compare the mapped As-Is pains and needs, and the To-Be assumptions and support opportunities, with existing findings from `uxd-research-insights`.
+
+- Start from the preliminary, stage-by-stage coverage and `Research gap:` notes in the brief's map starters. Revisit those notes against the completed map, correcting statuses and adding gaps raised by team edits; avoid repeating the same lookup or duplicating unchanged notes.
+- Use findings already gathered for the brief when available. If none were gathered and the skill is installed and authorized, search for relevant findings. Do not treat missing search results as proof that no research exists.
+- Judge only whether the available findings are relevant to and cover the mapped claims. Mark coverage as supported, partial, or not found; keep citations and `[E#]` links traceable.
+- Identify unsupported pains, needs, and future-state claims. Keep future claims labeled `[A#]` and list focused research questions that could address material gaps.
+- Do not launch new research or block the workflow. The team may proceed with gaps visible as assumptions.
+- Add a distinct **Research Coverage & Gaps** lane (row) to both journey-map frames, aligned to the same `S#` stages. This row is the primary map record; a separate summary area may supplement it but must not replace it. For each stage, state a coverage status, cite the relevant `[E#]` findings, and add a concise `Research gap:` question when coverage is partial or not found. In To-Be, distinguish evidence for the underlying need from evidence for the proposed future capability or behavior. Preserve existing map content and keep unsupported future claims labeled `[A#]`.
+- Save the written handoff as `.artifacts/journey-map-research-check.md` beside the brief, or `.artifacts/{ID}/journey-map-research-check.md` when an ID is known. Include the Miro URL, coverage judgments, linked findings, assumptions, and suggested research questions. On Miro, make every `[E#]` citation a clickable link to its source. Add a bottom reference strip that defines each `[A#]` used in the map.
 
 ## Craft rules
 
@@ -89,6 +105,10 @@ Fix every error. Review warnings for overlaps, dense text, and edge routing rath
 ## Completion check
 
 - The structure answers the stated communication goal. A requested journey map, blueprint, flow, affinity map, or mind map still follows its template.
+- A vision journey map keeps matching As-Is and To-Be phases, actor, and scenario; evidence and assumptions remain distinguishable.
+- A vision map uses the brief's separate As-Is and To-Be map-shaped Journey starters as a draft, not a decision. Preserve the playbook's lanes, matching stage columns, stable step labels, and evidence trail while the team edits and confirms the Miro frames.
+- At vision map completion, research coverage and gaps appear as a dedicated, stage-aligned row in both map frames and in the written handoff; unknowns remain labeled as assumptions and do not block progress.
+- In Miro, link each evidence citation directly to its source, preserve the source reference cards, and add an assumption reference strip at the bottom with a concise definition for each `[A#]` used. Do not create a generic `Evidence limits` row or emit placeholder text such as `undefined`; put useful limitations in the stage coverage notes or handoff.
 - Placeholder template copy is gone. Research-derived claims trace to the supplied sources, and assumptions are labeled.
 - Local canvases pass the validator: unique ids, positive dimensions, resolved edges, readable labels, no unintended overlap, and local assets resolve.
 - A Miro write names the board URL. Updates reuse existing widget ids. Deletions were confirmed item by item.
