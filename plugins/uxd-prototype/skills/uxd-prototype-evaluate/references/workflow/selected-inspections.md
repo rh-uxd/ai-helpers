@@ -1,7 +1,9 @@
 # Quick Checks — selected inspections and local checks
 
-Select only `classify`, `consistency-source`, `heuristic`, or `consistency-visual`.
-Classification describes verification needs; it does not verify requirements.
+Select only `classify`, `consistency-source`, or `consistency-visual` for new Quick
+work. New heuristic checks are unsupported; reject them rather than adding a plan
+step or substituting a research-profile invocation. Classification describes
+verification needs; it does not verify requirements.
 Model/browser work follows the [inspection handoff](../inspection-contracts/inspection-bundle.md).
 No implicit personas, fixes, requirements edits or publishing. Reuse known context
 and ask only missing check-specific questions; see
@@ -42,10 +44,10 @@ For Jira use `kind: jira`, the ticket ID/revision and stable IDs such as
 `PROJ-123#AC-1`. Confirm the key, criteria/source mapping and prototype revision.
 Source-only consistency may use no ACs; retained ACs are not silently classified.
 
-Model checks also need reviewed `check_scope` (task, screen/state/source IDs),
-permissions and a matching host-produced bundle. Heuristics uses three specialist
-inspections; visual consistency may share hierarchy's call. Visual-only uses one
-inspection. Walkthrough preparation is defined in the
+Visual consistency needs reviewed `check_scope` (inspection goal `task` and screen/state/source IDs),
+permissions and a matching host-produced bundle. It produces one
+`consistency-visual` phase; there is no specialist or shared hierarchy phase.
+Walkthrough preparation is defined in the
 [task/persona contract](../task-verification/task-walkthroughs.md).
 
 ## Local invocation

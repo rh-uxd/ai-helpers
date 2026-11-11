@@ -23,18 +23,20 @@ subagent is optional; the same review and approval rules still apply.
 
 ## Choose only the needed work
 
-Prefer a direct skill for standalone creation, consistency reviews, generalist
-heuristic inspection, PatternFly guidance, exports or publishing. The agent
-explains the destination and passes known context without requiring an evaluator
-packet or canonical run. A handoff is not permission to execute.
+Prefer a direct skill for standalone creation, consistency or research reviews,
+PatternFly guidance, exports or publishing. These requests follow the destination's
+own intake and are not evaluator checks. The agent passes known context without
+requiring an evaluator packet or canonical run. A handoff is not permission to execute.
 
 Use this skill when the designer needs source/AC-linked results, combined checks
 with canonical evidence/history, a composed review checkpoint, or review and
 verification of an existing evaluator run:
 
-- **Quick Checks:** selected classification, source consistency, specialist
-  heuristics or visual consistency. Follow [quick-checks.md](references/workflow/selected-inspections.md).
-  No implicit personas or fixes.
+- **Quick Checks:** selected classification, source consistency or visual
+  consistency only. New heuristic work is not supported in evaluator plans; reject
+  it rather than adding a check or invoking a research profile. Follow
+  [quick-checks.md](references/workflow/selected-inspections.md). No implicit
+  personas or fixes.
 - **Agentic Walkthroughs:** use the independently callable sibling
   `uxd-prototype-walkthrough` skill for the exact approved task/persona pairs.
   A selected single persona is valid.
@@ -68,14 +70,15 @@ written requirements are supplied.
 - Browser/model work belongs to the host. Verify its served revision, settled
   captures, submitted context and actual result receipts, plus the designer's
   relevant browser/provider approval. Do not bootstrap tools or invent evidence.
-- Heuristic Quick Checks requires the research skill's `prototype-specialists`
-  profile (content, hierarchy, interaction). Standalone research reviews retain
-  that skill's own generalist default and framework/researcher-review gates.
+- New Quick plans accept only `classify`, `consistency-source`, and
+  `consistency-visual`. Historical heuristic results may be reviewed read-only in
+  existing runs; they are not selectable for new work.
 
 ## Execute the approved route
 
 Run from the resolved evaluator skill directory, using consumer-owned absolute
-input/output paths. Save outputs under the project's
+input/output paths. New Quick runs may select only `classify`, `consistency-source`,
+and `consistency-visual`. Save outputs under the project's
 `artifacts/<KEY>/prototype-evaluations/<run-name>/`; each run directory must be new.
 Dates live in the JSON fields, not the filenames:
 
@@ -84,11 +87,11 @@ node scripts/run-split-evaluation.js --route quick --input <reviewed-packet.json
 node scripts/run-split-evaluation.js --route full --input <reviewed-packet.json> --output <fresh-checkpoint-directory> --checks <selected-checks>
 ```
 
-The execution contract defines host-produced judgment/walkthrough bundles,
-continuation approvals, selected fix receipts and verification commands. The
-local merger never invokes providers, launches browser sessions, edits the
-prototype or grants consent. A shared hierarchy/visual invocation owns both
-selected checks without counting its work twice; unknown usage stays `null`.
+The execution contract defines the host-produced visual-consistency and walkthrough
+bundles, continuation approvals, selected fix receipts and verification commands.
+The local merger never invokes providers, launches browser sessions, edits the
+prototype or grants consent. Visual consistency is one `consistency-visual` phase;
+it is not shared with a specialist or hierarchy phase. Unknown usage stays `null`.
 
 ## Outputs and completion
 
@@ -100,7 +103,8 @@ runs are immutable, so follow-up work writes a fresh run. See
 
 Present a decision-focused chat summary by default: goal, planned versus actual
 coverage, prioritized evidence-linked findings, uncertainty and the next useful
-decision. Keep task outcomes, AC verdicts, consistency and heuristics distinct.
+decision. Keep task outcomes, AC verdicts, consistency and any historical
+heuristic results distinct.
 Chat and HTML derive from one deterministic structured synthesis:
 `node scripts/run-report.js <run-directory> --chat` prints the chat synthesis,
 `node scripts/run-report.js <run-directory> --json` renders the local HTML report,

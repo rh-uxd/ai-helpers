@@ -2,23 +2,25 @@
 
 Selected prototype checks and canonical evidence, coordinated by the
 [uxd-evaluator agent](../../agents/uxd-evaluator.md). The agent recommends the
-smallest useful workflow or a direct handoff to another skill; it does not force
-creation, standalone consistency or generalist design reviews through evaluation.
+smallest useful workflow or a direct handoff to another skill. Standalone research
+and design reviews remain separate; they are not evaluator checks.
 
 ## Routes
 
 Default: **no-fix**. Review findings first; applying selected fixes requires a
 separate request and approval, followed by at most one verification pass.
 
-- **Quick Checks:** only selected classification, source consistency or bounded
-  heuristic/visual inspections. No implicit personas, edits or reporting.
+- **Quick Checks:** only selected classification (`classify`), source consistency
+  (`consistency-source`) or visual consistency (`consistency-visual`). No implicit
+  personas, edits or reporting.
 - **Agentic Walkthroughs:** independently callable through the sibling
   `uxd-prototype-walkthrough` skill, for exact approved task/persona pairs.
 - **Full Evaluation:** selected Quick checks, an immutable review checkpoint, then
   separately approved continuation. Fixes require their own decision and one
   post-fix verification pass.
 - **Existing findings:** inspect validated canonical JSON and receipts without
-  rerunning checks or changing source requirements.
+  rerunning checks or changing source requirements. Historical heuristic results,
+  if present, are read-only history and cannot schedule new work.
 
 See [SKILL.md](SKILL.md), [onboarding](references/workflow/evaluator-onboarding.md), and the
 [execution contract](references/workflow/split-evaluation.md) for inputs and commands.

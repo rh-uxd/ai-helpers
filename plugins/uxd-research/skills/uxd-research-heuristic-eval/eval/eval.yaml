@@ -38,6 +38,12 @@ permissions:
   deny:
     - "mcp__*"
 
+mlflow:
+  experiment: uxd-research-heuristic-eval
+  tags:
+    team: uxd
+    pipeline: prototype-evaluator
+
 # Harness generates tool_handlers.yaml from inputs.tools at workspace setup.
 inputs:
   tools:

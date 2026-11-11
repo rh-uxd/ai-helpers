@@ -290,6 +290,7 @@ function testExplicitSelection() {
   for (const args of [
     ['--input', 'missing.json', '--output', 'missing-run'],
     ['--input', 'missing.json', '--output', 'missing-run', '--checks', ''],
+    ['--input', 'missing.json', '--output', 'missing-run', '--checks', 'heuristic'],
   ]) {
     const result = invoke(quick, args);
     assert.notEqual(result.status, 0);
@@ -297,6 +298,11 @@ function testExplicitSelection() {
   }
   assert.throws(() => runSplit({ route: 'quick', output: path.join(os.tmpdir(), 'unselected-quick') }), /Select Quick checks explicitly/);
   assert.throws(() => runSplit({ route: 'full', output: path.join(os.tmpdir(), 'unselected-full') }), /Select Quick checks explicitly/);
+  for (const route of ['quick', 'full']) {
+    assert.throws(() => runSplit({ route, checks: 'heuristic', output: path.join(os.tmpdir(), `deferred-${route}`) }), /Heuristic checks are deferred/);
+  }
+  const { importJudgments } = require(path.join(scripts, 'inspection-contracts/inspection-bundle'));
+  assert.throws(() => importJudgments({ selected: ['heuristic'] }), /Heuristic checks are deferred/);
 }
 
 function testCanonicalReportAndPublisher(root, runDirectory) {
@@ -495,6 +501,14 @@ function testReviewedPlan(root) {
       expected_evidence: ['Retained producer receipts.'], depends_on: i ? ['step-classify'] : [],
     })),
   };
+  const deferredPlan = structuredClone(plan);
+  deferredPlan.allowed_checks = ['heuristic'];
+  deferredPlan.steps = [{ ...plan.steps[0], id: 'step-heuristic', check: 'heuristic' }];
+  const deferredPlanPath = path.join(root, 'deferred-plan.json');
+  writeJson(deferredPlanPath, deferredPlan);
+  const deferredOutput = path.join(root, 'deferred-plan-output');
+  assert.throws(() => runSplit({ route: 'quick', input: input.packetPath, output: deferredOutput, plan: deferredPlanPath }), /Heuristic checks are deferred/);
+  assert.equal(fs.existsSync(deferredOutput), false);
   writeJson(planPath, plan);
   const parent = path.join(root, 'parent');
   const first = runSplit({ route: 'full', input: input.packetPath, output: parent, plan: planPath });
@@ -638,12 +652,12 @@ function testQuickModelImport(root) {
     writeJson(path.join(producer, name), data);
     return { path: name, sha256: C.hash(fs.readFileSync(path.join(producer, name))) };
   };
-  const phases = ['content', 'hierarchy', 'interaction'].map(lens => ({
-    measurement: { ...sample.phases[1].measurement, name: `heuristic-${lens}`, checks: lens === 'hierarchy' ? ['heuristic', 'consistency-visual'] : ['heuristic'] },
-    submitted_context: reference(`checks/model/${lens}-input.json`, { synthetic: 'Scoped input' }),
-    returned_result: reference(`checks/model/${lens}-result.json`, { synthetic: 'Unreviewed findings' }),
+  const phases = [{
+    measurement: { ...sample.phases[1].measurement, name: 'consistency-visual', checks: ['consistency-visual'] },
+    submitted_context: reference('checks/model/visual-input.json', { synthetic: 'Scoped input' }),
+    returned_result: reference('checks/model/visual-result.json', { synthetic: 'Visual consistency findings' }),
     context_status: 'captured', evidence_ids: ['evidence-observed'],
-  }));
+  }];
   const bundle = {
     schema_version: 1, prototype_key: 'DEMO-1', prototype_revision: packet.prototype.revision,
     packet_sha256: C.hash(fs.readFileSync(input.packetPath)), source_sha256: C.hash(fs.readFileSync(input.snapshotPath)),
@@ -651,29 +665,31 @@ function testQuickModelImport(root) {
     inspection: { method: 'browser', revision_verified: true, receipt: reference('checks/model/inspection.json', { synthetic: 'Verified test build' }) },
     evidence: sample.evidence, phases,
     results: {
-      heuristic: { profile: 'prototype-specialists', framework: 'nielsen',
-        coverage: Object.entries({ content: [2, 4, 5, 9, 10], hierarchy: [2, 4, 6, 8], interaction: [1, 3, 5, 9, 7] }).flatMap(([lens, ids]) => ids.map(heuristic_id => ({ lens, heuristic_id, status: 'assessed', evidence_ids: ['evidence-observed'], note: 'Synthetic bounded coverage.' }))),
-        findings: [{ id: 'candidate-hierarchy', title: 'Synthetic hierarchy finding', screen_id: 'screen-drafts', state_id: 'state-empty',
-          observation: 'Synthetic observation for contract testing.', heuristic_ids: [8], identified_by: ['hierarchy'], source_ids: ['DEMO-1#AC-1'],
-          evidence_ids: ['evidence-observed'], review_status: 'unreviewed', suggested_severity: null, dissent: '' }],
-      },
       'consistency-visual': { guidelines_version: 'synthetic-v1', guidelines_checked: 1, screenshots_checked: 1, findings: [] },
     },
-    producers: { heuristic: { name: 'synthetic-heuristic', version: 'test' }, 'consistency-visual': { name: 'synthetic-visual', version: 'test' } },
+    producers: { 'consistency-visual': { name: 'synthetic-visual', version: 'test' } },
   };
   const bundlePath = path.join(producer, 'judgment-bundle.json');
   writeJson(bundlePath, bundle);
   const output = path.join(root, 'quick');
-  runSplit({ route: 'quick', input: input.packetPath, output, checks: 'heuristic,consistency-visual', 'judgment-bundle': bundlePath });
+  runSplit({ route: 'quick', input: input.packetPath, output, checks: 'consistency-visual', 'judgment-bundle': bundlePath });
   const docs = C.loadRun(output);
-  assert.equal(docs['pe-state.json'].usage_attribution.own_usage.model_invocations, 3);
+  assert.equal(docs['pe-state.json'].usage_attribution.own_usage.model_invocations, 1);
   assert.equal(docs['pe-state.json'].usage_attribution.own_usage.llm_cost_usd, null);
-  assert.equal(docs['pe-evaluation-snapshot.json'].heuristics.findings[0].review_status, 'unreviewed');
+  assert.equal(Object.hasOwn(docs['pe-evaluation-snapshot.json'], 'heuristics'), false);
   assert.equal(docs['pe-evaluation-snapshot.json'].ac_results[0].verdict, 'NOT_RUN');
   assert.equal(docs['pe-evaluation-snapshot.json'].consistency.visual_checked, true);
   assert.ok(docs['pe-actions.json'].actions.every(a => a.status === 'proposed'));
   runReport(output);
-  const receipt = path.join(output, 'checks/model/hierarchy-result.json');
+  const unexpected = structuredClone(bundle);
+  unexpected.results.heuristic = { findings: [] };
+  writeJson(bundlePath, unexpected);
+  assert.throws(() => runSplit({ route: 'quick', input: input.packetPath, output: path.join(root, 'unexpected-result'), checks: 'consistency-visual', 'judgment-bundle': bundlePath }), /exactly the selected judgment results/);
+  const specialist = structuredClone(bundle);
+  specialist.phases[0].measurement.name = 'heuristic-hierarchy';
+  writeJson(bundlePath, specialist);
+  assert.throws(() => runSplit({ route: 'quick', input: input.packetPath, output: path.join(root, 'unexpected-phase'), checks: 'consistency-visual', 'judgment-bundle': bundlePath }), /Unexpected or duplicate model phase/);
+  const receipt = path.join(output, 'checks/model/visual-result.json');
   fs.appendFileSync(receipt, 'tampered');
   assert.equal(validateDirectory(output).valid, false);
 }

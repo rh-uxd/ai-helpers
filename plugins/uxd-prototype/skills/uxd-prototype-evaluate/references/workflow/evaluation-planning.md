@@ -10,7 +10,10 @@ questions and rationale, never private reasoning. A plan does not grant consent.
 Supply `--plan plan.json` using `schemas/v1/evaluation-plan.schema.json`:
 
 - `schema_version: 1`, goal, exact packet hash and UTC `reviewed_at`.
-- Unique questions `{id, text}` and reviewed `allowed_checks`.
+- Unique questions `{id, text}` and reviewed `allowed_checks`. New Quick work may
+  include only `classify`, `consistency-source`, and `consistency-visual`; reject
+  heuristic or other unsupported checks instead of planning them. Historical
+  results are review-only, not selectable steps.
 - Limits: maximum invocations/cost (number or explicit null) and nonempty stop
   conditions. Unknown cost is not zero or unlimited consent; caps cover lineage.
 - Ordered steps: unique ID/check, question IDs, public rationale, expected evidence
@@ -18,12 +21,13 @@ Supply `--plan plan.json` using `schemas/v1/evaluation-plan.schema.json`:
   Independent plans contain only walkthroughs; Full still requires its separate
   continuation decision before executing them.
 
-Supported order is classification, source inspection, host model inspections,
-then walkthroughs. Heuristic/visual work may share a call unless a dependency
-requires preceding receipts. Other sequencing needs separate parent-linked runs.
-Quick selection comes from plan steps; explicit `--checks` must match their order.
-Allowed but unselected checks do not run. The host checks prerequisites and
-remaining budget before calls; prose stop conditions are not executable policy.
+Supported order is classification, source inspection, visual consistency, then
+walkthroughs. Visual consistency has one `consistency-visual` phase; no research or
+specialist phase is composed or shared. Other sequencing needs separate
+parent-linked runs. Quick selection comes from plan steps; explicit `--checks` must
+match their order. Allowed but unselected checks do not run. The host checks
+prerequisites and remaining budget before calls; prose stop conditions are not
+executable policy.
 
 The runner stores original bytes in `inputs/evaluation-plan.json`, typed intent
 in `pe-context.json.intent.evaluation_plan`, and execution in `pe-state.json.planning`:

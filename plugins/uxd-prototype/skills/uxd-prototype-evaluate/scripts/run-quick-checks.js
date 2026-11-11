@@ -16,7 +16,8 @@ const compatibility = require('./consistency/consistency-compat');
 const { loadRun } = require('./artifacts/split-contract');
 
 const FILES = ['pe-context.json', 'pe-evaluation-snapshot.json', 'pe-evidence.json', 'pe-actions.json', 'pe-state.json'];
-const CHECKS = ['classify', 'consistency-source', 'heuristic', 'consistency-visual'];
+// Historical runs can retain heuristic findings; new runs do not schedule them.
+const CHECKS = ['classify', 'consistency-source', 'consistency-visual'];
 const hash = value => `sha256:${crypto.createHash('sha256').update(value).digest('hex')}`;
 const readJson = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const writeJson = (directory, name, value) => fs.writeFileSync(path.join(directory, name), `${JSON.stringify(value, null, 2)}\n`);
@@ -51,7 +52,7 @@ function main() {
   if (typeof values.checks !== 'string' || !values.checks.trim()) throw new Error(`Select at least one check with --checks: ${CHECKS.join(', ')}`);
   const selected = values.checks.split(',').map(check => check.trim());
   if (!selected.length || selected.some(check => !check) || new Set(selected).size !== selected.length || selected.some(check => !CHECKS.includes(check))) throw new Error(`Select only: ${CHECKS.join(', ')}`);
-  if (!values.input || !values.output) throw new Error('Usage: run-quick-checks.js --input packet.json --output <new-run-dir> --checks classify,consistency-source,heuristic,consistency-visual [--judgment-bundle <file>] [--workspace <repo> --base-ref <commit>] [--report]');
+  if (!values.input || !values.output) throw new Error('Usage: run-quick-checks.js --input packet.json --output <new-run-dir> --checks classify,consistency-source,consistency-visual [--judgment-bundle <file>] [--workspace <repo> --base-ref <commit>] [--report]');
   // Run only the checks the caller selected. Classification, source analysis
   // and host-supplied judgments are not an automatic run-everything pipeline.
   const input = path.resolve(values.input);
@@ -169,7 +170,7 @@ function main() {
     const brief = documents['pe-context.json'];
     brief.intent.tasks = packet.tasks || []; brief.intent.personas = packet.personas || [];
     if (packet.environment) brief.intent.environment = packet.environment;
-    brief.intent.stage = rows.length ? 'complete' : brief.intent.tasks.length || brief.intent.personas.length || selected.some(check => ['heuristic', 'consistency-visual'].includes(check)) ? 'quick-checks' : 'consistency-source';
+    brief.intent.stage = rows.length ? 'complete' : brief.intent.tasks.length || brief.intent.personas.length || selected.includes('consistency-visual') ? 'quick-checks' : 'consistency-source';
     if (packet.check_scope) brief.intent.check_scope = packet.check_scope;
     brief.intent.source_input = context.source;
     brief.intent.scope.source_mode = workspace ? 'workspace' : 'remote-only';
@@ -237,7 +238,7 @@ function main() {
       document.run_id = runId; document.producer = { name: 'uxd-prototype-evaluate-quick-checks', version: '1' };
       document.updated_at = updatedAt;
     }
-    state.lifecycle = { status: 'completed', current_phase: selected.includes('heuristic') ? 'heuristic' : selected.includes('classify') ? 'classify' : 'consistency', iteration: 0, max_iterations: 1, exit_reason: 'no-fix', iterations: [] };
+    state.lifecycle = { status: 'completed', current_phase: selected.includes('classify') ? 'classify' : 'consistency', iteration: 0, max_iterations: 1, exit_reason: 'no-fix', iterations: [] };
     state.quick_checks = { selected, context_path: 'checks/context.json', context_sha256: hash(fs.readFileSync(path.join(stage, 'checks/context.json'))), report_requested: reportRequested };
     state.phases = [...phases, ...judgments.phases, ...['extract', ...CHECKS, 'enrichment', 'hint', 'fix', 'journey', 'usability', 'report'].filter(name => !selected.includes(name) && !phases.some(item => item.name === name)).map(name => phase(name, 'skipped', start))];
     for (const item of phases) {
@@ -257,7 +258,7 @@ function main() {
       writeJson(stage, 'pe-state.json', state);
       const finalValidation = validateDirectory(stage);
       if (!finalValidation.valid) throw new Error(`Integrity state rejected: ${JSON.stringify(finalValidation.errors)}`);
-      writeJson(stage, 'integrity-report.json', { run_id: runId, valid: true, checked_at: new Date().toISOString(), artifacts: FILES.map(filename => ({ path: filename, sha256: hash(fs.readFileSync(path.join(stage, filename))) })), summary: evaluation.summary, heuristic_findings: evaluation.heuristics?.findings.length || 0 });
+      writeJson(stage, 'integrity-report.json', { run_id: runId, valid: true, checked_at: new Date().toISOString(), artifacts: FILES.map(filename => ({ path: filename, sha256: hash(fs.readFileSync(path.join(stage, filename))) })), summary: evaluation.summary });
     }
     // Validate linked context/result receipts as well as document schemas.
     loadRun(stage);
@@ -267,7 +268,7 @@ function main() {
     const publishedValidation = validateDirectory(output);
     if (!publishedValidation.valid) throw new Error(`Published run failed readback: ${JSON.stringify(publishedValidation.errors)}`);
     loadRun(output);
-    process.stdout.write(`${JSON.stringify({ route: 'quick-checks', run_id: runId, artifacts_dir: output, selected, model_invoked: false, host_model_invoked: judgments.phases.length > 0, heuristic_findings: evaluation.heuristics?.findings.length || 0, report: reportRequested ? 'integrity-report.json' : null, summary: evaluation.summary })}\n`);
+    process.stdout.write(`${JSON.stringify({ route: 'quick-checks', run_id: runId, artifacts_dir: output, selected, model_invoked: false, host_model_invoked: judgments.phases.length > 0, report: reportRequested ? 'integrity-report.json' : null, summary: evaluation.summary })}\n`);
   } finally {
     fs.rmSync(stage, { recursive: true, force: true });
   }

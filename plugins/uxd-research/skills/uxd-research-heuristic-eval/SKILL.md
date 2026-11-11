@@ -9,12 +9,16 @@ description: "Conduct a heuristic evaluation of a prototype or interface using t
 
 # Heuristic Evaluation — Multi-Evaluator Usability Inspection
 
-Three independent generalist evaluators inspect shared heuristics, then reconcile
-findings. Surface observable usability violations only; researchers interpret
-impact, assign severity and recommend fixes.
+You are conducting a structured heuristic evaluation using three
+independent expert evaluators. Each evaluator inspects the interface
+separately against a shared set of usability heuristics, then the
+evaluators convene to reconcile their findings into a consolidated
+report.
 
-Default profile/output: `generalist`/`reports`. Before Step 0, route `--profile prototype-specialists` to [its procedure](references/prototype-specialists.md) and return (default output: `findings`). Profile and mode are independent; `--assume-defaults` never selects specialists.
-With `--output findings`, return unreviewed chat/JSON findings after Step 3; skip researcher confirmation and Step 4–5 reports. Retain review subject, legend, evidence, agreement/dissent and suggested severities; invite review. Explicit output overrides profile defaults.
+The goal is to **surface usability violations** — observable mismatches
+between the interface and established heuristic principles. You do not
+interpret impact, assign severity ratings, or recommend fixes. Those
+are researcher activities that happen after the evaluation.
 
 ## Inputs
 
@@ -40,7 +44,7 @@ With `--output findings`, return unreviewed chat/JSON findings after Step 3; ski
 
 $ARGUMENTS
 
-Parse as: `<interface-input> [--framework <name>] [--heuristics <custom>] [--specialists <areas>] [--project <slug>] [--review chat|none] [--assume-defaults] [--profile generalist|prototype-specialists] [--output reports|findings]`
+Parse as: `<interface-input> [--framework <name>] [--heuristics <custom>] [--specialists <areas>] [--project <slug>] [--review chat|none] [--assume-defaults]`
 
 - `interface-input` — Screenshots, image files, text descriptions, or
   URLs. URLs must be inspected in a live browser (not curl/WebFetch).

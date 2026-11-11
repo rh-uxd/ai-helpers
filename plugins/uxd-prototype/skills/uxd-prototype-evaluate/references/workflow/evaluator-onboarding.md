@@ -43,10 +43,6 @@ silently omitting it or substituting another check.
   screenshots with the explicitly selected design rules. It needs supplied
   captures or approved browser capture, plus provider approval; it is not a task
   walkthrough.
-- **Review usability principles:** Reviews selected screens and states for
-  content clarity, information hierarchy and interaction patterns using the
-  evaluator's specialist lenses. It needs scoped visual evidence and provider
-  approval. It is an AI-assisted expert inspection, not participant research.
 - **Try selected tasks with simulated users:** Each selected persona attempts
   only the exact task(s) chosen for them, starting from the reviewed state. It
   needs a verified reachable build and separate browser/provider approval. One
@@ -63,6 +59,12 @@ After check selection, ask only for prerequisites of selected items. Show the
 expected browser/model activity and cost estimate, or say cost is unknown; ask for
 a clear limit and execution decision. Do not infer approval from selecting an
 option or from a prepared plan.
+
+The three Quick options above are the complete new-work set. If asked to add a
+heuristic inspection, say it is not supported in evaluator plans; do not schedule
+or replace it with a research-profile call. A standalone research request follows
+its own separate workflow. Historical heuristic results can be reviewed only as
+existing run data.
 
 ## Review existing work
 
@@ -94,9 +96,9 @@ and exact revision/build identity. A URL is not proof of a reachable server.
 - **Source consistency:** clean exact-commit workspace, pinned comparison base,
   reviewed explicit policy (or neutral zero-corpus selection) and a compatible
   separately installed companion; no browser or mandatory Jira/MR.
-- **Heuristic/visual:** selected task/screen/state/source scope, revision-verified
-  settled captures, provider approval, browser approval for new captures and
-  hashed submitted-context/result receipts; no persona cohort or edits.
+- **Visual consistency:** inspection goal and selected screen/state/source scope, revision-verified settled
+  captures, provider approval, browser approval for new captures and hashed
+  submitted-context/result receipts; no persona cohort or edits.
 - **Walkthrough:** tasks/outcomes, screens/states, eligible roles, starting states,
   fixtures/reset descriptions, exact task/persona pairs, verified reachable build,
   browser/provider approval and a host that can retain the required receipts.
