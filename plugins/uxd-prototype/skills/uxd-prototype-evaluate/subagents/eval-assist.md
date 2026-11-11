@@ -123,7 +123,7 @@ without requiring Quick Checks.
 ## Run history and avoiding repeated work
 
 Use `scripts/artifacts/find-evaluation-runs.js` only under the project's reviewed
-`artifacts/` root. Save new runs in `artifacts/<KEY>/evaluation/<run-name>/`. Read
+`artifacts/` root. Save new runs in `artifacts/<KEY>/prototype-evaluations/<run-name>/`. Read
 validated `pe-context.json`, `pe-state.json`, `pe-evaluation-snapshot.json`, `pe-evidence.json` and
 `pe-actions.json` plus linked receipts, not chat memory or a CSV ledger, to establish
 what ran, when and against which inputs. Show prior run IDs, check/pair status,

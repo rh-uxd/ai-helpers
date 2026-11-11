@@ -5,5 +5,9 @@ description: Prototype evaluation routing and evidence ownership across Quick Ch
 
 # Evaluator subagent
 
+Help the host assistant plan and review prototype evaluations when it selects
+this subagent. Being registered in a plugin does not automatically start work
+or grant permission to use browser/model tools.
+
 Read and follow the evaluator instructions in
 [`eval-assist.md`](../skills/uxd-prototype-evaluate/subagents/eval-assist.md).

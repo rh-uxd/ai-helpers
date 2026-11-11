@@ -130,7 +130,7 @@ Or write it directly from `metadata.json` fields. Schema: see `uxd-prototype-exp
   ],
   "views": {
     "prototype": null,
-    "eval": "/evals/PROJ-298/"
+    "eval": "/prototype-evaluations/PROJ-298/"
   },
   "scenarios": [
     { "route": "/api-keys", "id": "default", "name": "Populated list", "default": true },
@@ -139,7 +139,7 @@ Or write it directly from `metadata.json` fields. Schema: see `uxd-prototype-exp
 }
 ```
 
-`sources` is a single list for all provenance (outcome, RFE, strat, Figma, description). Outcome / strat entries are usually added later by evaluate when `outcome-context.json` exists. `views.eval` uses the conventional static path `/evals/{ID}/` so Pages hosting works once the report is copied there. `scenarios` is a slim flatten of `states.json` (synced by `sync-prototype-bar-config.mjs`) for the bar menu. The active state is `?state=<id>`.
+`sources` is a single list for all provenance (outcome, RFE, strat, Figma, description). Outcome / strat entries are usually added later by evaluate when `outcome-context.json` exists. `views.eval` uses `/prototype-evaluations/{ID}/` so Pages hosting works once the selected report is copied there. `scenarios` is a slim flatten of `states.json` (synced by `sync-prototype-bar-config.mjs`) for the bar menu. The active state is `?state=<id>`.
 
 ## artifacts/{ID}/changeset.md
 

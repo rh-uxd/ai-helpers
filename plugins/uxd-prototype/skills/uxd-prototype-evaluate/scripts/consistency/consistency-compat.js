@@ -1,6 +1,6 @@
 'use strict';
 
-/** Evaluator publication boundary for the optional, offline PR80 companion. */
+/** Evaluator publication boundary for the optional, separately installed source checker. */
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');

@@ -1,11 +1,10 @@
 #!/usr/bin/env bash
 # Copy an evaluation report into a static Pages tree for Prototype|Eval navigation.
-# Working store: .artifacts/{ID}/eval/; Pages only needs a static copy.
+# Working store: artifacts/{ID}/prototype-evaluations/{run}/; Pages needs HTML only.
 #
 # Usage:
-#   bash copy-eval-for-pages.sh --artifacts .artifacts/PROJ-298 --pages-root public
-#   bash copy-eval-for-pages.sh --artifacts .artifacts/PROJ-298/eval --pages-root public
-#   bash copy-eval-for-pages.sh --artifacts .artifacts/PROJ-298 --pages-root dist --evals-dir evals
+#   bash copy-eval-for-pages.sh --artifacts artifacts/PROJ-298/prototype-evaluations/full-1 --pages-root public
+# Older explicit .artifacts/PROJ-298/eval paths remain readable; never guess a run.
 #
 # Result:
 #   {pages-root}/{evals-dir}/{ID}/index.html
@@ -13,7 +12,7 @@ set -euo pipefail
 
 ARTIFACTS=""
 PAGES_ROOT="public"
-EVALS_DIR="evals"
+EVALS_DIR="prototype-evaluations"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -21,7 +20,7 @@ while [[ $# -gt 0 ]]; do
     --pages-root) PAGES_ROOT="${2:-}"; shift 2 ;;
     --evals-dir) EVALS_DIR="${2:-}"; shift 2 ;;
     -h|--help)
-      echo "Usage: bash copy-eval-for-pages.sh --artifacts <key-or-eval-dir> [--pages-root public] [--evals-dir evals]"
+      echo "Usage: bash copy-eval-for-pages.sh --artifacts <selected-run-dir> [--pages-root public] [--evals-dir prototype-evaluations]"
       exit 0
       ;;
     *)
@@ -38,8 +37,12 @@ fi
 
 ARTIFACTS="$(cd "$ARTIFACTS" && pwd)"
 
-# Accept key root (.artifacts/PROJ-298) or eval dir (.artifacts/PROJ-298/eval)
-if [[ "$(basename "$ARTIFACTS")" == "eval" ]]; then
+# Accept a selected named run; retain explicit older key-root/eval inputs.
+if [[ "$(basename "$(dirname "$ARTIFACTS")")" == "prototype-evaluations" || "$(basename "$(dirname "$ARTIFACTS")")" == "evaluation" ]]; then
+  EVAL_DIR="$ARTIFACTS"
+  KEY_DIR="$(dirname "$(dirname "$ARTIFACTS")")"
+  ID="$(basename "$KEY_DIR")"
+elif [[ "$(basename "$ARTIFACTS")" == "eval" ]]; then
   EVAL_DIR="$ARTIFACTS"
   KEY_DIR="$(dirname "$ARTIFACTS")"
   ID="$(basename "$KEY_DIR")"
@@ -57,7 +60,7 @@ if [[ ! -f "$REPORT" && -f "$KEY_DIR/evaluation-report.html" ]]; then
 fi
 
 if [[ ! -f "$REPORT" ]]; then
-  echo "Error: evaluation-report.html not found in $KEY_DIR/eval/ (or key root)" >&2
+  echo "Error: evaluation-report.html not found in the selected run; pass its exact --artifacts path" >&2
   exit 1
 fi
 

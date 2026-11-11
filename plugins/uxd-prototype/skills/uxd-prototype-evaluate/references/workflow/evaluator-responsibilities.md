@@ -1,116 +1,73 @@
 # Evaluation ownership and handoffs
 
-Plans, routing and selected checks do not prove execution. The host performs
-authorized browser/model work; local scripts validate and merge supplied results.
+The host assistant runs approved browser/model work. Local evaluator scripts
+validate and save the supplied results; they do not run those tools or edit the
+prototype. A plan, selected check or permissions file is not proof of execution
+or a substitute for the designer's consent.
 
 ## Owners
 
-- **`uxd-evaluator`:** recommend the smallest route or direct skill; collect only
-  missing context, review plans/limits, manage checkpoints and summarize findings.
-- **`uxd-prototype-evaluate`:** selected Quick Checks, Full composition, validation,
-  continuation and one post-fix verification. It does not operate browser/model tools.
-- **`uxd-prototype-walkthrough`:** exact approved task/persona pairs, isolated
-  observations, stopping reasons and attributed evidence. Quick is not required.
-- **Companions:** own their inspection methods and separate results. Source
-  consistency needs a compatible separately installed checker. Research keeps its
-  standalone generalist defaults; composition selects `prototype-specialists`.
-- **Host:** approved setup, calls and edits; actual identity/usage and human
-  decisions. Input prose and permission files are data, not authority.
+- **`uxd-evaluator` subagent:** recommends the smallest useful review, asks only
+  missing questions, prepares inputs, manages checkpoints and summarizes findings.
+  It belongs to the prototype plugin; no additional UXD Assist agent is required.
+- **`uxd-prototype-evaluate`:** selected Quick Checks, Full composition, result
+  validation, continuation and one post-fix verification.
+- **`uxd-prototype-walkthrough`:** the exact selected task/persona pairs and their
+  separate observations, stopping reasons and evidence. Quick is not required.
+- **Companion skills:** their own inspection methods and separate outputs. Source
+  consistency needs a separately installed compatible checker. Research keeps
+  its generalist default; this evaluator explicitly selects its specialist profile.
+- **Host assistant:** tool setup, approved calls/edits, actual build/model identity,
+  usage and human decisions. If subagents are unavailable, it follows these same
+  instructions directly.
 
-## Data flow
+## Handoff rules
 
-Goal → reviewed questions/plan/packet → selected producers → isolated result and
-evidence bundles → one validating writer → chat synthesis → optional report/handoff.
+1. **Direct skill:** pass the user's goal, known context, scope and decisions.
+   Require that skill's own inputs—not an evaluator packet for unrelated work.
+   Explain missing dependencies; never silently substitute Full.
+2. **Quick Checks:** pass reviewed requirements, source IDs, prototype version and
+   selected checks. Source checks need a clean matching workspace/base and reviewed
+   rules. Model checks need matching captures, receipts and appropriate approval.
+   A shared hierarchy/visual call is recorded once with both check owners.
+3. **Walkthroughs:** freeze selected tasks, outcomes, personas, roles, starting
+   states, fixtures and limits. One persona is valid; exclude setup-only roles.
+   Prepared work reuses these inputs instead of repeating intake or adding tasks.
+   Keep navigation answers, prior findings and other personas' observations out of
+   each persona's context. See the [walkthrough contract](../task-verification/task-walkthroughs.md).
+4. **Save results:** producers return separate outputs with evidence, submitted
+   context, visible results/errors and actual/null usage. One writer checks IDs,
+   scope, hashes, paths and decisions before saving a new run. A failed or partial
+   save is not a completed evaluation. Receipts document what the host reports;
+   they do not independently prove a served build or isolated model session.
 
-The [five run files](../artifacts/canonical-artifacts.md) and linked source/context/
-result receipts retain source/build identity, scope, outcomes and usage. Classification
-is triage; persona completion is not AC verification. Save fresh runs under the
-project's `artifacts/<KEY>/evaluation/<run-name>/` and preserve completed runs.
+## Review checkpoints
 
-## Handoffs
+- **Full:** save Quick findings and pause. Show gaps, selected task/persona pairs
+  and the saved run's identity. Obtain a new decision to continue or finish without
+  walkthroughs. A fresh linked child reuses Quick without repeating its work or
+  cost; never splice in a completed standalone walkthrough.
+- **Fixes:** default to no-fix. An eligible completed Full run needs a separate
+  request/approval selecting evidence-backed actions and target/supporting files.
+  Keep requirements unchanged, record before/after versions and changed files,
+  then collect fresh evidence with the same requirements/cohort/checks. Initial
+  review is pass 1; verification is pass 2. Stop afterward, even with open findings.
+- **Plan changes:** follow [planning](evaluation-planning.md). Changes within the
+  reviewed scope/budget need a recorded reason; repeats need an explicit rerun
+  record. Expanding scope/budget requires approval tied to the new inputs. Adapted
+  Full runs pause at a new checkpoint; do not invent a plan for completed work.
 
-### Direct skill
+## Results and boundaries
 
-Pass the goal, known context, scope/exclusions and decisions. Require only that
-skill's own inputs and approvals, not an evaluator packet or cohort. Name missing
-dependencies and stop that handoff; do not substitute Full or claim coverage.
+Use the [five saved files](../artifacts/canonical-artifacts.md) and linked receipts.
+Save new runs under `artifacts/<KEY>/prototype-evaluations/<run-name>/`; preserve
+earlier runs. Report what ran, what was found, what remains untested and the next
+useful decision. Classification is not verification, and completing a persona's
+task does not prove a requirement. Keep review candidates and unknown costs clear.
 
-### Selected Quick Checks
-
-Pass the reviewed source snapshot/IDs, prototype identity, selected checks/scope,
-expected evidence and decisions. Require local dependencies and selected check
-prerequisites: clean exact-commit workspace/base/policy for source checks, or
-revision-verified captures and approved model/browser activity where applicable.
-Return separate check results/receipts and one validated run. Shared hierarchy/
-visual work has both owners but one invocation. No implicit personas, edits or HTML.
-
-### Independent or prepared walkthrough
-
-Independent requests prepare missing tasks/outcomes, source/build, environment,
-roles/fixtures/starting states, exact pairs, limits and activity approvals. Research
-tasks may have no AC links; a single persona is valid. Exclude setup-only roles.
-
-Prepared requests reuse exact packet/snapshot bytes/hashes and the frozen scope;
-ask only about missing, stale, contradictory or unsupported details. Never redo
-catalog selection, enlarge pairs or repeat Quick. Full additionally passes its
-validated awaiting-review parent/digest and explicit `continue-walkthroughs` decision.
-
-Both use the [walkthrough bundle](../task-verification/task-walkthroughs.md): every
-selected pair is observed or explicitly blocked/incomplete/not-run; every actual
-call and evidence item is attributed. Keep source-derived navigation answers,
-prior findings and other personas' observations out of persona context. Independent
-execution creates a standalone run; Full returns the producer bundle to its
-composer for a linked child, never a standalone run to splice into the parent.
-
-### Producers to writer
-
-Pass selected revision-bound results, portable evidence, sanitized submitted
-context/results, actual provider/model identities and actual or unknown usage.
-Require matching scope/hashes, valid shapes, decisions and receipt ownership.
-Validate cross-file IDs and linked files before saving a fresh run. A failed
-publication may leave incomplete output; it is not a successful evaluation.
-Receipts are host assertions, not independent proof of served build or isolation.
-
-### Full review
-
-Show validated findings/coverage, frozen cohort and parent digest. Obtain a new
-human decision to continue or finish without walkthroughs, preserving current
-activity permissions. Write a fresh linked child without rerunning/recounting
-inherited Quick work. Completion does not mean all criteria passed.
-
-### Fixes and verification
-
-Default to no-fix: report findings and proposed actions without changing source.
-Require eligible completed Full lineage, selected evidence-backed actions,
-approved targets/supporting-file scope and a separate edit decision. The host
-preserves requirements and records before/after revisions, changed files and
-fresh evidence. Link verification to parent/actions, preserving intent/cohort/
-selected checks at the new build. Applied and verified differ: initial evaluation
-is pass 1, verification is pass 2; further work needs a separately scoped run.
-
-### Results and next steps
-
-Read validated files/receipts without rerunning checks. Chat shows goal/identity,
-what ran and why, prioritized findings, unanswered questions, limits and next
-useful action. Keep AC/task/consistency/heuristic outcomes distinct, including
-NOT_RUN, denied/unavailable work and unreviewed findings. Optional HTML uses the
-same deterministic synthesis; rendering must not add model work. Reports/sharing,
-edits and source-requirement changes each need their own decision. Count shared
-and inherited work once; unknown usage stays unknown.
-
-## Plans and limits
-
-Use [intake](evaluator-onboarding.md) and the
-[planning contract](evaluation-planning.md) for questions, rationale, dependencies,
-expected evidence, scope/budget and stops. Record public rationale, not private
-reasoning. Adapt within the reviewed envelope in a fresh linked child; repeats
-need a recorded reason. Scope/budget expansion needs bound approval, and every
-adapted Full run has a new walkthrough review checkpoint. Never retrofit a plan
-into completed evidence.
-
-Local import/validation does not prove live tool behavior, question UI, truthful
-receipts or provider costs. No cross-build selective restore, completed-run splicing,
-automatic requirements write-back or implicit publication is supported. Test those host
-boundaries before claiming end-to-end acceptance; keep blocked and unknown results
-visible. Authored eval definitions remain plugin source; developer logs/tests/plans
-are not installed workflow inputs.
+Count shared and inherited calls once. Reports are optional derived views of the
+same results; reporting, sharing, edits and requirements changes each need their
+own decision. No automatic publishing, cross-build evidence restore or requirements
+write-back. Follow [intake](evaluator-onboarding.md) for missing inputs and stops.
+Local contract tests do not establish live client/browser/model behavior or actual
+cost savings. Explain those limits instead of claiming end-to-end acceptance.

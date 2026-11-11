@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ai-helpers.uxd/schemas/v1/actions.schema.json",
-  "$comment": "Logical schema identifier, resolved from bundled schemas; not a hosted URL.",
+  "$comment": "$schema names the JSON Schema standard. $id is this schema's unique name, not a website. The validator reads bundled files, not this address.",
   "title": "UXD Prototype Evaluation actions v1",
   "type": "object",
   "allOf": [

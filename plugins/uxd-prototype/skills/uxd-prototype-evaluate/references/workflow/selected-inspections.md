@@ -55,7 +55,7 @@ Create the project-owned output parent and choose a fresh run path:
 ```bash
 node "${EVALUATOR_SKILL_DIR}/scripts/run-quick-checks.js" \
   --input "${PACKET}" \
-  --output "${PROJECT_ROOT}/artifacts/${KEY}/evaluation/quick-<run-name>" \
+  --output "${PROJECT_ROOT}/artifacts/${KEY}/prototype-evaluations/quick-<run-name>" \
   --checks classify --no-fix
 ```
 

@@ -23,6 +23,22 @@ separate request and approval, followed by at most one verification pass.
 See [SKILL.md](SKILL.md), [onboarding](references/workflow/evaluator-onboarding.md), and the
 [execution contract](references/workflow/split-evaluation.md) for inputs and commands.
 
+## Subagent support
+
+`uxd-evaluator` is a subagent supplied by this plugin, not a second assistant in
+UXD Assist. The matching plugin manifests register its file for clients that
+support plugin agents; registration alone does not start an evaluation.
+After installation, check that your client lists it before relying on delegation.
+If it is unavailable, use this skill directly with the same intake/approval rules.
+Manifest validation is not proof that every client can discover or invoke it.
+
+## File organization
+
+Check-specific instructions live under `references/` and their helpers under
+`scripts/`, grouped by capability: classification, consistency, inspection
+handoffs and task verification. Shared workflow, artifacts and reporting stay
+separate instead of being copied into every check.
+
 ## Conditional setup
 
 Local merging/validation requires Node.js >= 18 and the declared Node dependencies.
@@ -45,7 +61,7 @@ of onboarding. JSON permission records cannot grant human consent.
 
 ## Results
 
-Fresh project-owned runs under `artifacts/<KEY>/evaluation/<run-name>/` contain
+Fresh project-owned runs under `artifacts/<KEY>/prototype-evaluations/<run-name>/` contain
 `pe-context.json`, `pe-evaluation-snapshot.json`, `pe-evidence.json`,
 `pe-actions.json` and `pe-state.json`, plus hashed input/evidence/result receipts.
 Use `scripts/artifacts/validate-canonical-artifacts.js` to validate them. Reports are opt-in:

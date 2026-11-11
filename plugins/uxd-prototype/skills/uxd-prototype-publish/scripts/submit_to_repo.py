@@ -93,9 +93,9 @@ def collect_eval_and_bar_files(workspace_path, rfe_key):
     """Files needed so Prototype Bar Eval works on GitLab/GitHub Pages.
 
     Changeset.md usually lists feature source only. Eval reports live under
-    public/evals/{ID}/ (copied by copy-eval-for-pages / install-prototype-bar.sh --artifacts) and
+    public/prototype-evaluations/{ID}/ (copied by the report attachment/copy helpers) and
     must be committed so CI CopyPlugin / static hosting can serve them under
-    the Pages path_prefix (e.g. /mr-218/evals/{ID}/).
+    the Pages path_prefix (e.g. /mr-218/prototype-evaluations/{ID}/).
     """
     extras = []
     seen = set()
@@ -108,7 +108,7 @@ def collect_eval_and_bar_files(workspace_path, rfe_key):
             seen.add(rel)
             extras.append(rel)
 
-    eval_dir = os.path.join(workspace_path, 'public', 'evals', rfe_key)
+    eval_dir = os.path.join(workspace_path, 'public', 'prototype-evaluations', rfe_key)
     if os.path.isdir(eval_dir):
         for root, _dirs, files in os.walk(eval_dir):
             for name in files:
@@ -180,7 +180,7 @@ def prepare_eval_report(rfe_key, run, workspace_path, revision, digest):
     if (run_git(['rev-parse', 'HEAD'], cwd=workspace) != revision
             or run_git(['status', '--porcelain', '--untracked-files=all'], cwd=workspace)):
         raise ValueError('Report attachment requires a clean workspace at the evaluated revision')
-    target = workspace / 'public' / 'evals' / rfe_key / 'index.html'
+    target = workspace / 'public' / 'prototype-evaluations' / rfe_key / 'index.html'
     for entry in (*reversed(target.parents), target):
         if entry == workspace or workspace in entry.parents:
             if entry.is_symlink() or (entry.exists() and
@@ -208,8 +208,8 @@ def read_review_score(rfe_key, eval_run=None, workspace_path=None, force=False,
     Explicit include_report attaches derived HTML only after evidence/source gates.
     """
     run = Path(eval_run or f'.artifacts/{rfe_key}/eval').absolute()
-    canonical = ('brief.json', 'evaluation.json', 'evidence.json',
-                 'actions.json', 'state.json')
+    canonical = ('pe-context.json', 'pe-evaluation-snapshot.json', 'pe-evidence.json',
+                 'pe-actions.json', 'pe-state.json')
     if eval_run is None and not any(os.path.lexists(run / name)
                                     for name in canonical):
         if include_report:
@@ -222,8 +222,8 @@ def read_review_score(rfe_key, eval_run=None, workspace_path=None, force=False,
     script = """
 const C = require(process.argv[1]);
 const docs = C.loadRun(process.argv[2]);
-const brief = docs['brief.json'];
-const state = docs['state.json'];
+const brief = docs['pe-context.json'];
+const state = docs['pe-state.json'];
 process.stdout.write(JSON.stringify({
   run_id: brief.run_id, prototype_key: brief.prototype_key,
   revision: brief.intent.scope.source_ref, source: brief.intent.source_input,
@@ -237,7 +237,7 @@ process.stdout.write(JSON.stringify({
     inspection: brief.intent.check_scope || null,
   },
   walkthrough_verified: Boolean(state.workflow?.selected_pairs.length),
-  ac_results: docs['evaluation.json'].ac_results,
+  ac_results: docs['pe-evaluation-snapshot.json'].ac_results,
   artifact_sha256: C.digest(process.argv[2]),
 }));
 """
@@ -289,7 +289,7 @@ process.stdout.write(JSON.stringify({
         report_hash = prepare_eval_report(
             rfe_key, run, workspace_path, data['revision'], data['artifact_sha256'],
         )
-        summary += f'; derived report public/evals/{rfe_key}/index.html {report_hash}'
+        summary += f'; derived report public/prototype-evaluations/{rfe_key}/index.html {report_hash}'
     return summary, 'eval-pass' if verified else 'needs-attention'
 
 

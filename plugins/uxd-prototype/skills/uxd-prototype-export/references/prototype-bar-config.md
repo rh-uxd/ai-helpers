@@ -50,7 +50,7 @@ Active state on the page: `?state=<id>` (default when absent: `default`). Runtim
   ],
   "views": {
     "prototype": null,
-    "eval": "/evals/PROJ-298/"
+    "eval": "/prototype-evaluations/PROJ-298/"
   },
   "scenarios": [
     { "route": "/api-keys", "id": "default", "name": "Populated list", "default": true },
@@ -73,7 +73,7 @@ Active state on the page: `?state=<id>` (default when absent: `default`). Runtim
 | `sources[].label` | string | Display label |
 | `sources[].url` | string | Optional link (Jira browse, Figma, etc.) |
 | `views.prototype` | string \| null | URL for Prototype view; `null` = session return URL / referrer / `/` |
-| `views.eval` | string \| null | Relative Pages path (`/evals/{ID}/`) or absolute hosted URL; empty until report exists |
+| `views.eval` | string \| null | Relative Pages path (`/prototype-evaluations/{ID}/`) or absolute hosted URL; empty until report exists |
 | `scenarios` | array | Slim flatten of `states.json` for the State menu |
 | `scenarios[].route` | string | Page path; menu filters by current pathname |
 | `scenarios[].id` | string | State id (`?state=<id>`) |
@@ -87,12 +87,12 @@ Active state on the page: `?state=<id>` (default when absent: `default`). Runtim
 | No `sources` or empty | Sources control hidden |
 | Helper `127.0.0.1:9417` healthy + report present | Eval navigates to `http://127.0.0.1:9417/evals/{id}/` (serves `.artifacts/{id}/eval/` or key-root fallback) |
 | Absolute `views.eval` (http/https) | Eval navigates there when helper is down / missing report |
-| Relative `views.eval` (e.g. `/evals/{id}/`) | Probes **`<base href>`-prefixed** path first (e.g. `/mr-218/evals/{id}/` on GitLab MR Pages), then site-root `/evals/{id}/`. Only enables Eval when the probe finds a real report (not an SPA `historyApiFallback` shell) |
-| No reachable report | Eval disabled; local hint mentions `export-helper` on `:9417`; on hosted Pages the hint shows the expected `{base}evals/{id}/` path |
+| Relative `views.eval` (e.g. `/prototype-evaluations/{id}/`) | Probes **`<base href>`-prefixed** path first (e.g. `/mr-218/prototype-evaluations/{id}/`), then site-root. Only enables Eval for a real report, not an SPA app shell |
+| No reachable report | Eval disabled; local hint mentions `export-helper` on `:9417`; hosted hint shows `{base}prototype-evaluations/{id}/` |
 | ≤1 scenario for current route | State menu hidden |
 | State ▾ (prototype view) | Always shown; enabled when ≥2 scenarios match the current route (updates on SPA navigation). Disabled with tooltip when none. Selection sets `?state=` |
 
-**Local SPA note:** On webpack/Vite apps, bare `/evals/{id}/` usually returns the app shell. Keep `export-helper.mjs` running so Eval can open the HTML report from `.artifacts/`. On GitLab/GitHub Pages, copy the report with `copy-eval-for-pages.sh` into `public/evals/{id}/` (and commit it) so the build emits real static HTML. The bar resolves relative eval URLs against `<base href>` / `ASSET_PATH` (MR previews live under `/mr-{iid}/`, not the site root).
+**Local SPA note:** A missing static report may return the SPA app shell, not report HTML. Pass the exact `artifacts/{ID}/prototype-evaluations/{run}/` to `copy-eval-for-pages.sh`; it copies HTML into `public/prototype-evaluations/{id}/` for the next build. The helper's existing `/evals/{id}/` endpoint remains for older `.artifacts/{id}/eval/` reports; it does not pick a new run automatically. Static links resolve against `<base href>` / `ASSET_PATH` for MR previews.
 
 **Prototype URL note:** Do not leave `views.prototype` as `http://localhost:…` in published builds. Sync clears localhost URLs; the bar also ignores them when the current host is not localhost and falls back to the session return URL / `<base href>`.
 
@@ -104,23 +104,24 @@ Active state on the page: `?state=<id>` (default when absent: `default`). Runtim
 |--------------|--------|
 | **uxd-prototype-create** (Step 9) | Write initial file from `source`, `source_rfes`, Figma URL, title; sync scenarios |
 | **uxd-prototype-evaluate** | Merge outcome / strat keys from `outcome-context.json` into `sources` |
-| **publish-report.sh** | Set `views.eval` to Pages URL or `/evals/{KEY}/`; write `report-url.txt` |
+| **publish-report.sh** | Set `views.eval` to the configured Pages URL or `/prototype-evaluations/{KEY}/`; write `report-url.txt` |
 | **install-prototype-bar.sh** | With `--artifacts`: sync config, inject into standalone HTML or copy next to workspace public assets, install `uxd-scenario-runtime.js`, copy eval report for Pages |
 
 Use `scripts/sync-prototype-bar-config.mjs` to create or merge the file from metadata + optional outcome context + `states.json`.
 
 ## Static Pages layout
 
-Keep working artifacts under `.artifacts/{ID}/`. For GitLab/GitHub Pages (no backend):
+Keep new evaluation runs under `artifacts/{ID}/prototype-evaluations/{run}/`.
+Creation metadata retains its existing owner/location. For static Pages:
 
 ```
 public/
-  evals/{ID}/index.html     ← copy of .artifacts/{ID}/eval/evaluation-report.html
+  prototype-evaluations/{ID}/index.html  ← HTML from the explicitly selected run
   uxd-prototype-bar/        ← serialize-page.browser.js + CSS + config (for Export)
   …                         ← prototype preview (e.g. mr-{iid}/)
 ```
 
-Bar links use same-origin relative paths (`/evals/{ID}/`), resolved under the document `<base href>` when present (so `/mr-218/evals/{ID}/` works). No dynamic server required when hosted.
+Bar links use `/prototype-evaluations/{ID}/`, resolved under `<base href>` when present (for example `/mr-218/prototype-evaluations/{ID}/`). Existing explicit older URLs remain readable. No dynamic server is required when hosted.
 
 **Export on Pages:** The Export menu does **not** download pre-generated journey captures. It runs the in-page serializer and triggers a browser download (same fallback as when `export-helper` is down). `inject-prototype-bar-into-html.mjs` inlines `serialize-page.browser.js` for prototype HTML; React installs load it via `<base href>`-aware URLs under `uxd-prototype-bar/`.
 

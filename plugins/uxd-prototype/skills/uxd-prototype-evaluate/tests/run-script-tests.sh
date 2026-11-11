@@ -381,14 +381,14 @@ function makeNotRunBundle(directory, docs, packetBytes, snapshotBytes) {
 
 function testFullReviewAndWalkthroughBundle(root) {
   const input = makePacket(root, true);
-  const parent = path.join(root, 'artifacts', 'DEMO-1', 'evaluation', 'full-review-1');
+  const parent = path.join(root, 'artifacts', 'DEMO-1', 'prototype-evaluations', 'full-review-1');
   fs.mkdirSync(path.dirname(parent), { recursive: true });
   const first = runSplit({ route: 'full', input: input.packetPath, output: parent, checks: 'classify' });
   assert.equal(first.status, 'awaiting-review');
   const parentDocs = C.loadRun(parent);
   assert.equal(parentDocs['pe-state.json'].workflow.status, 'awaiting-review');
   assert.equal(parentDocs['pe-evaluation-snapshot.json'].ac_results[0].verdict, 'NOT_RUN');
-  const noApproval = path.join(root, 'artifacts', 'DEMO-1', 'evaluation', 'no-approval');
+  const noApproval = path.join(root, 'artifacts', 'DEMO-1', 'prototype-evaluations', 'no-approval');
   assert.throws(() => runSplit({ route: 'full', 'continue-from': parent, output: noApproval }), /separate --approval decision/);
   assert.equal(fs.existsSync(noApproval), false);
 
@@ -408,7 +408,7 @@ function testFullReviewAndWalkthroughBundle(root) {
   });
   const bundlePath = path.join(bundleDirectory, 'bundle.json');
   writeJson(bundlePath, bundle);
-  const child = path.join(root, 'artifacts', 'DEMO-1', 'evaluation', 'full-not-run-1');
+  const child = path.join(root, 'artifacts', 'DEMO-1', 'prototype-evaluations', 'full-not-run-1');
   const result = runSplit({ route: 'full', 'continue-from': parent, approval: approvalPath, 'walkthrough-bundle': bundlePath, output: child });
   assert.equal(result.status, 'completed');
   const childDocs = C.loadRun(child);
@@ -446,7 +446,10 @@ function testNoFixAndIntegrity(root) {
       assert.equal(fs.existsSync(path.join(output, 'evaluation-report.html')), false);
       assert.equal(fs.existsSync(path.join(output, 'refinement-suggestions.json')), false);
       assert.equal(fs.existsSync(path.join(root, 'cache')), false);
-      for (const name of C.FILES) assert.ok(fs.existsSync(path.join(output, name)));
+      for (const name of C.FILES) {
+        assert.ok(fs.existsSync(path.join(output, name)));
+        for (const field of ['created_at', 'updated_at']) assert.equal(new Date(docs[name][field]).toISOString(), docs[name][field]);
+      }
       assert.deepEqual(fs.readFileSync(input.packetPath), bytes);
       assert.throws(() => runSplit({ route: 'quick', input: input.packetPath, output, checks: 'classify' }), /fresh run directory/);
     }
@@ -675,12 +678,125 @@ function testQuickModelImport(root) {
   assert.equal(validateDirectory(output).valid, false);
 }
 
+function testReviewedSourceAndReportPaths(root) {
+  const read = name => fs.readFileSync(path.join(skillRoot, name), 'utf8');
+  const guide = read('references/artifacts/canonical-artifacts.md');
+  assert.match(guide, /artifacts\/<KEY>\/prototype-evaluations\/<run-name>\//);
+  assert.match(guide, /`pe-` means \*\*prototype evaluation\*\*/);
+  assert.match(guide, /created_at.*updated_at/);
+  assert.doesNotMatch(guide, /CSV retirement decision|Temporary legacy adapter|ODH test-plan|Frozen source-consistency extension|PR80/);
+  assert.equal(fs.existsSync(path.join(skillRoot, 'references/archive')), false);
+  const planning = read('references/workflow/evaluation-planning.md');
+  assert.match(planning, /host\s+`uxd-evaluator` writes `plan.json`/);
+  assert.doesNotMatch(planning, /## Plan v1|byte-identical/);
+  assert.doesNotMatch(read('references/workflow/selected-inspections.md'), /PR80|8b3f36d30b57866abf79844f2e1b9bb4cc44be4a/);
+  const plugin = path.resolve(skillRoot, '../..');
+  const manifest = fs.readFileSync(path.join(plugin, '.claude-plugin/plugin.json'), 'utf8');
+  assert.equal(manifest, fs.readFileSync(path.join(plugin, '.cursor-plugin/plugin.json'), 'utf8'));
+  assert.deepEqual(JSON.parse(manifest).agents, ['./agents/uxd-evaluator.md']);
+  assert.match(fs.readFileSync(path.join(plugin, 'agents/uxd-evaluator.md'), 'utf8'), /# Evaluator subagent/);
+  // Registration/path checks are deliberately not a claim of live client discovery.
+  const exportRoot = path.resolve(skillRoot, '../uxd-prototype-export');
+  const exportSkill = fs.readFileSync(path.join(exportRoot, 'SKILL.md'), 'utf8');
+  const walkthroughSkill = fs.readFileSync(path.resolve(skillRoot, '../uxd-prototype-walkthrough/SKILL.md'), 'utf8');
+  for (const heading of ['Inputs', 'Requirements', 'Outputs']) assert.match(walkthroughSkill, new RegExp(`## ${heading}`));
+  for (const name of C.FILES) assert.ok(walkthroughSkill.includes(`\`${name}\``));
+  assert.match(exportSkill, /copy-eval-for-pages.sh[\s\S]*--artifacts "artifacts\/\{ID\}\/prototype-evaluations\/<selected-run>"/);
+
+  const input = makePacket(root, false);
+  const workspace = path.join(root, 'workspace');
+  fs.mkdirSync(workspace);
+  fs.writeFileSync(path.join(workspace, 'App.tsx'), 'export const title = "Synthetic fixture";\n');
+  const git = (cwd, ...args) => {
+    const result = spawnSync('git', args, { cwd, encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr || result.stdout);
+    return result.stdout.trim();
+  };
+  git(workspace, 'init', '--initial-branch=main');
+  git(workspace, 'add', 'App.tsx');
+  git(workspace, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-m', 'Synthetic fixture');
+  const revision = git(workspace, 'rev-parse', 'HEAD');
+  const packet = JSON.parse(fs.readFileSync(input.packetPath));
+  packet.prototype.revision = revision;
+  writeJson(input.packetPath, packet);
+  const selectedRun = path.join(root, 'artifacts', 'DEMO-1', 'prototype-evaluations', '2026-11-11-quick-1');
+  fs.mkdirSync(path.dirname(selectedRun), { recursive: true });
+  runSplit({ route: 'quick', input: input.packetPath, output: selectedRun, checks: 'classify' });
+  runReport(selectedRun);
+  const digest = C.digest(selectedRun);
+
+  const pages = path.join(root, 'static');
+  const copied = spawnSync('bash', [path.join(exportRoot, 'scripts/copy-eval-for-pages.sh'), '--artifacts', selectedRun, '--pages-root', pages], { encoding: 'utf8' });
+  assert.equal(copied.status, 0, copied.stderr || copied.stdout);
+  assert.equal(fs.existsSync(path.join(pages, 'prototype-evaluations/DEMO-1/index.html')), true);
+  assert.equal(fs.existsSync(path.join(pages, 'prototype-evaluations/2026-11-11-quick-1')), false);
+  assert.equal(fs.existsSync(path.join(pages, 'evals')), false);
+  const config = JSON.parse(fs.readFileSync(path.join(root, 'artifacts/DEMO-1/prototype-bar.json')));
+  assert.equal(config.views.eval, '/prototype-evaluations/DEMO-1/');
+  assert.equal(C.digest(selectedRun), digest);
+
+  const publisher = path.resolve(skillRoot, '../uxd-prototype-publish/scripts/submit_to_repo.py');
+  const publicationCheck = spawnSync('python3', ['-c', `
+import importlib.util, json, sys
+spec = importlib.util.spec_from_file_location('prototype_publisher', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+summary, verdict = module.read_review_score('DEMO-1', eval_run=sys.argv[2], workspace_path=sys.argv[3], include_report=True)
+print(json.dumps({'summary': summary, 'verdict': verdict, 'files': module.collect_eval_and_bar_files(sys.argv[3], 'DEMO-1')}))
+`, publisher, selectedRun, workspace], { encoding: 'utf8', env: { ...process.env, PYTHONDONTWRITEBYTECODE: '1' } });
+  assert.equal(publicationCheck.status, 0, publicationCheck.stderr || publicationCheck.stdout);
+  const summary = JSON.parse(publicationCheck.stdout);
+  assert.equal(summary.verdict, 'needs-attention'); // NOT_RUN is never eval-pass.
+  assert.match(summary.summary, /public\/prototype-evaluations\/DEMO-1\/index.html/);
+  assert.ok(summary.files.includes('public/prototype-evaluations/DEMO-1/index.html'));
+  assert.equal(fs.existsSync(path.join(workspace, 'public/evals')), false);
+  assert.equal(C.digest(selectedRun), digest);
+
+  // Exercise report publication using only our temporary local Git repositories.
+  // No network, provider, production branch or real publishing destination is used.
+  const remote = path.join(root, 'reports.git');
+  git(root, 'init', '--bare', '--initial-branch=main', remote);
+  const seed = path.join(root, 'reports-seed');
+  fs.mkdirSync(seed);
+  git(seed, 'init', '--initial-branch=main');
+  fs.writeFileSync(path.join(seed, 'README.md'), 'Synthetic hosted report fixture.\n');
+  git(seed, 'add', 'README.md');
+  git(seed, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-m', 'Synthetic fixture');
+  git(seed, 'remote', 'add', 'origin', remote);
+  git(seed, 'push', 'origin', 'main');
+  for (const [directory, route] of [['', 'prototype-evaluations'], ['public/review-results', 'review-results']]) {
+    const published = spawnSync('bash', [path.join(scripts, 'publish-report.sh'), selectedRun, '--mode=pages'], {
+      encoding: 'utf8', env: { ...process.env, GITLAB_PAGES_REPO: remote, PAGES_BASE_URL: 'https://reports.invalid/site/',
+        REPORTS_DIR: directory, GIT_USER_NAME: 'Fixture', GIT_USER_EMAIL: 'fixture@example.invalid' },
+    });
+    assert.equal(published.status, 0, published.stderr || published.stdout);
+    assert.equal(fs.readFileSync(path.join(selectedRun, 'report-url.txt'), 'utf8').trim(), `https://reports.invalid/site/${route}/DEMO-1/`);
+    const html = git(root, '--git-dir', remote, 'show', `main:public/${route}/DEMO-1/index.html`);
+    assert.match(html, /Requirement verdict/);
+    assert.ok(html.includes(`"eval":"/${route}/DEMO-1/"`));
+    const tree = git(root, '--git-dir', remote, 'ls-tree', '-r', '--name-only', 'main');
+    assert.doesNotMatch(tree, /pe-context.json|inputs\/|checks\//);
+    assert.equal(C.digest(selectedRun), digest);
+  }
+  const publishing = read('scripts/publish-report.sh');
+  assert.match(publishing, /REPORTS_ROUTE="\$\{REPORTS_DIR#public\/\}"/);
+  assert.match(publishing, /mkdir -p "\$REPORTS_ROUTE\/\$PROTO_KEY"/);
+  assert.match(publishing, /\$\{BRANCH\}\/\$\{REPORTS_ROUTE\}\/\$\{PROTO_KEY\}/);
+  const previous = path.join(root, 'older', 'DEMO-OLD', 'eval');
+  fs.mkdirSync(previous, { recursive: true });
+  fs.writeFileSync(path.join(previous, 'evaluation-report.html'), '<!doctype html><title>Earlier saved report</title>');
+  const oldCopy = spawnSync('bash', [path.join(exportRoot, 'scripts/copy-eval-for-pages.sh'), '--artifacts', previous, '--pages-root', pages], { encoding: 'utf8' });
+  assert.equal(oldCopy.status, 0, oldCopy.stderr || oldCopy.stdout);
+  assert.equal(fs.existsSync(path.join(previous, 'evaluation-report.html')), true);
+  assert.equal(fs.existsSync(path.join(pages, 'prototype-evaluations/DEMO-OLD/index.html')), true);
+}
+
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'uxd-split-evaluation-'));
 try {
   testClassificationDoesNotVerify();
   testExplicitSelection();
   const input = makePacket(temp, true);
-  const fullParent = path.join(temp, 'artifacts', 'DEMO-1', 'evaluation', 'full-review-1');
+  const fullParent = path.join(temp, 'artifacts', 'DEMO-1', 'prototype-evaluations', 'full-review-1');
   fs.mkdirSync(path.dirname(fullParent), { recursive: true });
   runSplit({ route: 'full', input: input.packetPath, output: fullParent, checks: 'classify' });
   testCanonicalReportAndPublisher(temp, fullParent);
@@ -689,6 +805,7 @@ try {
   testReviewedPlan(path.join(temp, 'planning'));
   testApprovedVerificationAndUsage(path.join(temp, 'verification'));
   testQuickModelImport(path.join(temp, 'quick-model'));
+  testReviewedSourceAndReportPaths(path.join(temp, 'report-paths'));
   process.stdout.write('Split evaluator regressions passed.\n');
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });

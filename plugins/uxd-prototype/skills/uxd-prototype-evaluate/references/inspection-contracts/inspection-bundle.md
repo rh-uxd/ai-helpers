@@ -1,5 +1,9 @@
 # Quick Checks: browser/model handoff
 
+This guide tells the host assistant what to save when it returns heuristic or
+visual findings. The source checker does not replace this handoff: it does not
+capture screens or make the host's model calls.
+
 The host performs approved browser/model inspections. `run-quick-checks.js`
 validates their bundle and merges results locally; it never launches a provider
 or browser, starts personas, applies fixes or edits requirements.

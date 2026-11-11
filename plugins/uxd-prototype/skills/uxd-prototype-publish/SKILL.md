@@ -80,8 +80,9 @@ If validation fails: "Prototype `{ID}` is incomplete. Missing: [list]. Fix befor
 
 Select the reviewed canonical run explicitly; do not infer it from a CSV or pick
 the newest directory. A complete canonical run directly under `.artifacts/{ID}/eval/`
-is also supported. Read validated `brief.json`, `evaluation.json`, `evidence.json`,
-`actions.json` and `state.json` plus their linked receipts. Follow the sibling
+is also supported. New runs live under `artifacts/{ID}/prototype-evaluations/{run}/`.
+Read validated `pe-context.json`, `pe-evaluation-snapshot.json`, `pe-evidence.json`,
+`pe-actions.json` and `pe-state.json` plus their linked receipts. Follow the sibling
 evaluator's [execution contract](../uxd-prototype-evaluate/references/workflow/split-evaluation.md).
 
 - Verify prototype key, frozen source/scope, completed review state and exact
@@ -116,7 +117,7 @@ Only when report rendering and sharing were explicitly selected: pass
 `--include-eval-report` to workspace repo submission. After canonical validation
 and the exact-revision clean-source gate, the publisher renders the selected
 canonical run, checks its canonical/HTML integrity hashes, rechecks the source,
-then attaches only `public/evals/{ID}/index.html`. Keep the run outside the source
+then attaches only `public/prototype-evaluations/{ID}/index.html`. Keep the run outside the source
 workspace. Do not copy an old root report or pre-copy HTML into the workspace.
 `--dry-run` validates evidence/source but does not render or copy report files.
 
@@ -134,11 +135,11 @@ commit, canonical digest and attached HTML hash. `--force` never bypasses eviden
 revision or clean-source checks. A dirty pre-copied report must be removed/reconciled
 by the user before retrying, not silently excluded. Canonical JSON stays authoritative.
 Without report approval, retain canonical results and disclose the absent hosted view.
-Do not materialize CSV for publish gating; the shadow adapter is for legacy consumers.
+Do not materialize CSV for publish gating; the evaluator no longer ships that adapter.
 
 ```
 public/
-  evals/{ID}/index.html      ← derived HTML from the explicitly selected run
+  prototype-evaluations/{ID}/index.html  ← derived HTML from the explicitly selected run
   uxd-prototype-bar/         ← bar runtime
 ```
 

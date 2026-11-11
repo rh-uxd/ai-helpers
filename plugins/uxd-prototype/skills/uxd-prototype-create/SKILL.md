@@ -230,7 +230,7 @@ bash "${EXPORT_SKILL}/scripts/install-prototype-bar.sh" \
 
 `--source` is `artifacts/{ID}/prototype/` (standalone) or the workspace root from `workspace-analysis.json`. If auto-mount fails for React, import `<PrototypeBar />` in the app shell.
 
-Re-run after evaluate so the Eval tab gets the report (`public/evals/{ID}/`). Pass `--no-eval-copy` if the report is not needed.
+Copy the selected report to `public/prototype-evaluations/{ID}/` only when requested. Do not reinstall source assets after freezing the evaluated revision. Pass `--no-eval-copy` if no report copy is needed.
 
 ## Step 11: Code-Level Checks
 

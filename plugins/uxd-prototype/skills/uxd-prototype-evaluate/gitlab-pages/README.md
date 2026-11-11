@@ -9,7 +9,7 @@ Reports are deployed via GitLab Pages on push to `main` (see `.gitlab-ci.yml` in
 
 ```
 public/
-└── evals/
+└── prototype-evaluations/
     ├── index.html              # Browsable report index
     ├── PROJ-298/
     │   └── index.html          # Eval report for PROJ-298
@@ -21,7 +21,7 @@ public/
 Configure `config/publish.yaml` (`gitlab_pages_repo`, `pages_base_url`), then run:
 
 ```bash
-bash "${EVALUATOR_SKILL_DIR}/scripts/publish-report.sh" artifacts/PROJ-298/evaluation/full-1/
+bash "${EVALUATOR_SKILL_DIR}/scripts/publish-report.sh" artifacts/PROJ-298/prototype-evaluations/full-1/
 ```
 
 Publication requires all five `pe-*` files, linked receipts and matching report
@@ -29,3 +29,8 @@ integrity. CSV/HTML-only directories are rejected. The hosted index links report
 without inferring verdicts from old projections. A selected new run updates the
 same report URL. Render and obtain sharing approval first; evaluation alone does
 not publish.
+
+Local JSON runs stay under `artifacts/<KEY>/prototype-evaluations/<run-name>/`.
+Hosted HTML uses `public/prototype-evaluations/<KEY>/index.html`, served at
+`<pages-base-url>/prototype-evaluations/<KEY>/`. Changing the publishing default
+does not move or delete previously saved local runs or hosted reports.
