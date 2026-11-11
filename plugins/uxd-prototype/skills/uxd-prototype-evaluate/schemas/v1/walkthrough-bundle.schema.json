@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-helpers.uxd/schemas/v1/walkthrough-bundle.schema.json",
+  "title": "Walkthrough producer bundle (versions 1 and 2)",
+  "type": "object",
+  "properties": {
+    "schema_version": { "enum": [1, 2] },
+    "prototype_key": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "prototype_revision": { "type": "string", "minLength": 1, "maxLength": 160 },
+    "packet_sha256": { "$ref": "shared.schema.json#/$defs/sha256" },
+    "source_sha256": { "$ref": "shared.schema.json#/$defs/sha256" },
+    "selected_pairs": { "$ref": "state.schema.json#/allOf/1/properties/workflow/properties/selected_pairs" },
+    "inspection": {
+      "type": "object",
+      "properties": {
+        "method": { "const": "browser" },
+        "revision_verified": { "type": "boolean" },
+        "receipt": { "$ref": "#/$defs/reference" }
+      },
+      "required": ["method", "revision_verified", "receipt"],
+      "additionalProperties": false
+    },
+    "evidence": {
+      "type": "object",
+      "properties": {
+        "captures": { "$ref": "evidence.schema.json#/allOf/1/properties/captures" },
+        "items": { "$ref": "evidence.schema.json#/allOf/1/properties/items" }
+      },
+      "required": ["captures", "items"],
+      "additionalProperties": false
+    },
+    "journeys": { "$ref": "evaluation.schema.json#/allOf/1/properties/journeys" },
+    "phases": {
+      "type": "array", "maxItems": 100,
+      "items": {
+        "type": "object",
+        "properties": {
+          "task_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+          "persona_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+          "invocation_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+          "sequence": { "type": "integer", "minimum": 1, "maximum": 100 },
+          "session_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+          "measurement": { "$ref": "state.schema.json#/allOf/1/properties/phases/items" },
+          "context_status": { "const": "captured" },
+          "evidence_ids": { "$ref": "shared.schema.json#/$defs/evidence_ids" },
+          "submitted_context": { "$ref": "#/$defs/reference" },
+          "returned_result": { "$ref": "#/$defs/reference" }
+        },
+        "required": ["task_id", "persona_id", "measurement", "context_status", "evidence_ids", "submitted_context", "returned_result"],
+        "additionalProperties": false
+      }
+    },
+    "ac_results": { "$ref": "evaluation.schema.json#/allOf/1/properties/ac_results" },
+    "proposed_actions": { "$ref": "actions.schema.json#/allOf/1/properties/actions" }
+  },
+  "required": ["schema_version", "prototype_key", "prototype_revision", "packet_sha256", "source_sha256", "selected_pairs", "inspection", "evidence", "journeys", "phases"],
+  "additionalProperties": false,
+  "$defs": {
+    "reference": {
+      "type": "object",
+      "properties": {
+        "path": { "$ref": "shared.schema.json#/$defs/relative_path" },
+        "sha256": { "$ref": "shared.schema.json#/$defs/sha256" }
+      },
+      "required": ["path", "sha256"],
+      "additionalProperties": false
+    }
+  }
+}

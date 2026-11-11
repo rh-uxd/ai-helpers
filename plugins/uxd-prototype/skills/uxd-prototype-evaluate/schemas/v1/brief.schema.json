@@ -1,0 +1,246 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-helpers.uxd/schemas/v1/brief.schema.json",
+  "title": "UXD Prototype Evaluation brief v1",
+  "type": "object",
+  "allOf": [
+    { "$ref": "shared.schema.json#/$defs/envelope" },
+    {
+      "type": "object",
+      "properties": {
+        "artifact_type": { "const": "brief" },
+        "intent": {
+          "type": "object",
+          "properties": {
+            "stage": { "type": "string", "enum": ["complete", "consistency-source", "quick-checks", "walkthroughs"] },
+            "title": { "type": "string", "minLength": 1, "maxLength": 500 },
+            "acceptance_criteria": {
+              "type": "array",
+              "maxItems": 200,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                  "source_id": { "type": "string", "minLength": 1, "maxLength": 120 },
+                  "source": { "type": "string", "enum": ["jira", "user", "derived", "unknown"] },
+                  "text": { "type": "string", "minLength": 1, "maxLength": 4000 },
+                  "verification_mode": { "type": "string", "enum": ["ui", "source", "external", "design-process"] },
+                  "tier": { "type": "string", "enum": ["T1", "T2", "T3", "T4"] },
+                  "requires_human_followup": { "type": "boolean" }
+                },
+                "required": ["id", "source_id", "source", "text", "verification_mode", "tier", "requires_human_followup"],
+                "allOf": [
+                  {
+                    "if": { "type": "object", "properties": { "tier": { "const": "T4" } }, "required": ["tier"] },
+                    "then": { "type": "object", "properties": { "requires_human_followup": { "const": true } } }
+                  }
+                ],
+                "additionalProperties": false
+              }
+            },
+            "tasks": {
+              "type": "array",
+              "maxItems": 100,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                  "title": { "type": "string", "minLength": 1, "maxLength": 500 },
+                  "ac_ids": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/identifier" }, "uniqueItems": true, "maxItems": 100 },
+                  "target_route": { "type": "string", "maxLength": 500 },
+                  "screen_ids": { "type": "array", "items": {"$ref": "shared.schema.json#/$defs/identifier"}, "maxItems": 100, "uniqueItems": true },
+                  "state_ids": { "type": "array", "items": {"$ref": "shared.schema.json#/$defs/identifier"}, "maxItems": 100, "uniqueItems": true },
+                  "role_ids": { "type": "array", "items": {"$ref": "shared.schema.json#/$defs/identifier"}, "maxItems": 100, "uniqueItems": true },
+                  "fixture_ids": { "type": "array", "items": {"$ref": "shared.schema.json#/$defs/identifier"}, "maxItems": 100, "uniqueItems": true },
+                  "source_ids": { "type": "array", "items": {"type": "string", "minLength": 1, "maxLength": 1000}, "maxItems": 100 },
+                  "expected_outcome": { "type": "string", "minLength": 1, "maxLength": 1000 }
+                },
+                "required": ["id", "title", "ac_ids", "target_route"],
+                "additionalProperties": false
+              }
+            },
+            "personas": {
+              "type": "array",
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                  "label": { "type": "string", "minLength": 1, "maxLength": 160 },
+                  "experience": { "type": "string", "enum": ["junior", "senior", "experienced", "mixed"] },
+                  "task_ids": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/identifier" }, "uniqueItems": true, "maxItems": 100 },
+                  "role_id": { "$ref": "shared.schema.json#/$defs/identifier" }
+                },
+                "required": ["id", "label", "experience", "task_ids"],
+                "additionalProperties": false
+              }
+            },
+            "feature_context": {
+              "type": "object",
+              "properties": {
+                "background": { "type": ["string", "null"], "maxLength": 4000 },
+                "problem_statement": { "type": ["string", "null"], "maxLength": 4000 },
+                "user_stories": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/bounded_text" }, "maxItems": 40 },
+                "ui_enhancements": { "type": ["string", "null"], "maxLength": 8000 },
+                "source_ticket": { "type": ["string", "null"], "maxLength": 120 }
+              },
+              "required": ["background", "problem_statement", "user_stories", "ui_enhancements", "source_ticket"],
+              "additionalProperties": false
+            },
+            "breadcrumb": {
+              "type": "object",
+              "properties": {
+                "outcome": { "$ref": "#/$defs/ticket_reference" },
+                "rfe": { "$ref": "#/$defs/ticket_reference" },
+                "strat": { "$ref": "#/$defs/ticket_reference" },
+                "prototype": {
+                  "type": ["object", "null"],
+                  "properties": {
+                    "path": { "$ref": "shared.schema.json#/$defs/relative_path" },
+                    "commit": { "type": "string", "minLength": 1, "maxLength": 160 }
+                  },
+                  "required": ["path", "commit"],
+                  "additionalProperties": false
+                },
+                "mr": { "$ref": "#/$defs/ticket_reference" }
+              },
+              "required": ["outcome", "rfe", "strat", "prototype", "mr"],
+              "additionalProperties": false
+            },
+            "scope": {
+              "type": "object",
+              "properties": {
+                "prototype_url": { "$ref": "shared.schema.json#/$defs/url" },
+                "source_mode": { "type": "string", "enum": ["workspace", "mr-clone", "remote-only"] },
+                "source_ref": { "type": "string", "minLength": 1, "maxLength": 160 },
+                "changed_files": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/relative_path" }, "uniqueItems": true, "maxItems": 1000 }
+              },
+              "required": ["prototype_url", "source_mode", "source_ref", "changed_files"],
+              "additionalProperties": false
+            },
+            "check_scope": {
+              "type": "object",
+              "properties": {
+                "task": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 1000
+                },
+                "screen_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1,
+                  "maxItems": 100
+                },
+                "state_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1,
+                  "maxItems": 100
+                },
+                "source_ids": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "uniqueItems": true,
+                  "minItems": 1,
+                  "maxItems": 200
+                }
+              },
+              "required": [
+                "task",
+                "screen_ids",
+                "state_ids",
+                "source_ids"
+              ],
+              "additionalProperties": false
+            },
+            "source_input": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "jira",
+                    "ux-spec"
+                  ]
+                },
+                "id": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 120
+                },
+                "revision": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 160
+                },
+                "snapshot_path": {
+                  "$ref": "shared.schema.json#/$defs/relative_path"
+                },
+                "sha256": {
+                  "$ref": "shared.schema.json#/$defs/sha256"
+                }
+              },
+              "required": [
+                "kind",
+                "id",
+                "revision",
+                "snapshot_path",
+                "sha256"
+              ],
+              "additionalProperties": false
+            },
+            "environment": { "$ref": "split.schema.json#/$defs/environment" },
+            "evaluation_plan": { "$ref": "evaluation-plan.schema.json" }
+          },
+          "required": ["stage", "title", "acceptance_criteria", "tasks", "personas", "scope"],
+          "allOf": [
+            {
+              "if": { "type": "object", "properties": { "stage": { "const": "complete" } }, "required": ["stage"] },
+              "then": { "type": "object", "properties": { "acceptance_criteria": { "type": "array", "minItems": 1 } } }
+            },
+            {
+              "if": { "type": "object", "properties": { "stage": { "const": "consistency-source" } }, "required": ["stage"] },
+              "then": {
+                "type": "object",
+                "properties": {
+                  "acceptance_criteria": { "type": "array", "maxItems": 0 },
+                  "tasks": { "type": "array", "maxItems": 0 },
+                  "personas": { "type": "array", "maxItems": 0 }
+                }
+              }
+            }
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": ["intent"]
+    }
+  ],
+  "unevaluatedProperties": false,
+  "$defs": {
+    "ticket_reference": {
+      "type": ["object", "null"],
+      "properties": {
+        "key": { "type": "string", "minLength": 1, "maxLength": 120 },
+        "url": { "$ref": "shared.schema.json#/$defs/url" },
+        "validated": { "type": "boolean" }
+      },
+      "required": ["key", "url", "validated"],
+      "additionalProperties": false
+    }
+  }
+}
