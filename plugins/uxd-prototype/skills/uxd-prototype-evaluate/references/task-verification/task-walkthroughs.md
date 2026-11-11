@@ -1,5 +1,9 @@
 # Task/persona walkthrough contract
 
+This guide defines the inputs, observations and results for task walkthroughs.
+Both independent walkthroughs and Full Evaluation use it, so they follow the
+same evidence and approval rules.
+
 The host performs approved browser/model work; the local merger validates supplied
 results. Follow the [persona/task prompt](persona-task-prompt.md),
 [browser evidence guidance](browser-evidence.md), and
@@ -87,11 +91,11 @@ the output parent; each run path must be new.
 ```bash
 node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
   --route walkthroughs --input packet.json --walkthrough-bundle bundle.json \
-  --output artifacts/PROJ-123/evaluation/walkthrough-1
+  --output artifacts/PROJ-123/prototype-evaluations/walkthrough-1
 
 node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
   --route full --input packet.json --checks classify \
-  --output artifacts/PROJ-123/evaluation/full-review-1
+  --output artifacts/PROJ-123/prototype-evaluations/full-review-1
 ```
 
 Full stops `awaiting-review` after Quick. Show findings/gaps, frozen cohort and
@@ -103,9 +107,9 @@ standalone runs cannot be spliced into this checkpoint.
 
 ```bash
 node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
-  --route full --continue-from artifacts/PROJ-123/evaluation/full-review-1 \
+  --route full --continue-from artifacts/PROJ-123/prototype-evaluations/full-review-1 \
   --approval approval.json --walkthrough-bundle bundle.json \
-  --output artifacts/PROJ-123/evaluation/full-1
+  --output artifacts/PROJ-123/prototype-evaluations/full-1
 ```
 
 Alternatively approve `purpose: complete-without-walkthroughs` and omit the bundle.

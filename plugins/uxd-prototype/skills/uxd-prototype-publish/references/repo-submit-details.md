@@ -34,7 +34,7 @@ When `--target` was a git URL during create/pipeline, pass that URL as `--upstre
 3. If `--upstream` or analysis `upstream_url` is set: ensure `upstream` remote points there
 4. **Detects workflow** — fork (`origin` ≠ `upstream`) vs same-repo
 5. Creates branch `prototype/{ID}`
-6. Stages changeset files **plus** Prototype Bar / eval Pages assets when present (`public/evals/{ID}/**`, `public/uxd-prototype-bar/**`, HTML entry with bar inject)
+6. Stages changeset files **plus** approved report/Prototype Bar assets when present (`public/prototype-evaluations/{ID}/**`, `public/uxd-prototype-bar/**`, HTML entry with bar inject)
 7. Commits: `Prototype: {ID} - {title}`
 8. Unshallows if needed (GitLab rejects shallow pushes)
 9. **Pushes to origin** (fork in fork workflows)

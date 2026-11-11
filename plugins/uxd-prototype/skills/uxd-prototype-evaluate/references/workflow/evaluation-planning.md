@@ -56,9 +56,9 @@ Write the updated plan and `change.json` with public reason, UTC time and explic
 
 ```bash
 node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
-  --route full --adapt-from artifacts/PROJ-123/evaluation/reviewed-parent \
+  --route full --adapt-from artifacts/PROJ-123/prototype-evaluations/reviewed-parent \
   --input packet.json --plan adapted-plan.json --plan-change change.json \
-  --output artifacts/PROJ-123/evaluation/adapted-1
+  --output artifacts/PROJ-123/prototype-evaluations/adapted-1
 ```
 
 Within the same goal, exact packet, allowed checks, limits and stops, adaptation

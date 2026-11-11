@@ -1,20 +1,30 @@
 # Evaluation files
 
+These files are the saved record of one prototype review, not CI test results.
 Save each new run in the prototype project's
-`artifacts/<KEY>/evaluation/<run-name>/`, outside the installed skill. Keep completed
-runs unchanged; continuation and verification create linked child runs.
+`artifacts/<KEY>/prototype-evaluations/<run-name>/`, outside the installed skill.
+`<KEY>` is the ticket or prototype key, not a folder literally named `JIRA`.
+Do not move or overwrite earlier runs. Continuing a review or checking approved
+fixes saves a new run linked to the earlier one.
 
 ## Files
 
-- `pe-context.json`: reviewed source, criteria, tasks, personas and scope.
-- `pe-evaluation-snapshot.json`: AC results, task outcomes, inspection findings and totals.
-- `pe-evidence.json`: observed facts, captures, image paths and evidence IDs.
-- `pe-actions.json`: proposed/applied follow-ups and human handoffs, never permission to publish.
-- `pe-state.json`: execution status, review checkpoints, identity and usage.
+- `pe-context.json`: what we agreed to test—requirements, tasks, selected personas
+  and the prototype version.
+- `pe-evaluation-snapshot.json`: what we found—requirement checks, task outcomes
+  and inspection findings. It contains more than pass/fail verdicts.
+- `pe-evidence.json`: what supports the findings—observations, screenshots and
+  references linking them to results.
+- `pe-actions.json`: suggested next steps and fixes already applied with approval.
+  Recording an action does not authorize edits or publishing.
+- `pe-state.json`: what ran, what needs approval, and recorded model usage/cost.
 
-Each JSON starts with UTC `created_at` and `updated_at`. Dates belong in fields,
-not filenames. A child may retain original creation dates; `updated_at` records
-when its documents were prepared, not when inherited checks ran.
+`pe-` means **prototype evaluation** and keeps the five files grouped together.
+Keep these filenames stable so readers can find them. Put the date in the run
+folder, for example `2026-11-11-quick-1`; each JSON also starts with UTC
+`created_at` and `updated_at`. A linked run can retain an earlier creation date.
+Use the phase timestamps to see when checks actually ran; updating a file is not
+the same as rerunning a check.
 
 Validate before reading or reporting results:
 
@@ -22,12 +32,13 @@ Validate before reading or reporting results:
 node scripts/artifacts/validate-canonical-artifacts.js <run-directory> --json
 ```
 
-Schemas live in `schemas/v1/`. Keep the complete run, including linked `inputs/`,
-`checks/` and evidence files; a partial directory is not a completed evaluation.
+Schemas in `schemas/v1/` define the required JSON fields and allowed values.
+Keep the complete run, including linked `inputs/`, `checks/` and evidence files;
+validation also checks that referenced files exist and match their saved hashes.
 
 ## Data flow
 
-Reviewed packet → selected producers → one validating writer → results in chat.
+Reviewed inputs → selected checks → validated saved results → summary in chat.
 Full pauses for a separate decision before walkthroughs. Fixes need approval and
 fresh evidence at the changed revision; allow one verification pass.
 See [routes](../workflow/split-evaluation.md) and
@@ -55,8 +66,9 @@ does not verify an AC. Heuristic observations need no invented fix recommendatio
   capture at device scale factor 1. Prefer bounded crops unless page context is needed.
 - Do not turn incomplete coverage or internal comparison candidates into a pass.
   Keep guideline IDs exact and unavailable documentation URLs null.
-- Source inspections retain the report and frozen guideline manifest together;
-  validation checks their contents, provenance, membership and totals. See
+- Source inspections keep the checker report and a saved copy of the rules used.
+  This lets reviewers see which rules produced the findings, even if those rules
+  change later. Validation checks both files. See
   [source policy and replay](../workflow/selected-inspections.md#explicit-source-policy-and-replay).
 - New runs do not restore cross-build caches or copy old observations as new evidence.
 

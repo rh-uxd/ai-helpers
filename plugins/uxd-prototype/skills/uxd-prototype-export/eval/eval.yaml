@@ -167,7 +167,7 @@ judges:
           re.IGNORECASE | re.DOTALL,
       )
       pages_copy = re.search(
-          r"copy-eval-for-pages|public/evals|copy.{0,30}eval|Pages.{0,40}eval",
+          r"copy-eval-for-pages|public/prototype-evaluations|copy.{0,30}eval|Pages.{0,40}eval",
           text,
           re.IGNORECASE | re.DOTALL,
       )

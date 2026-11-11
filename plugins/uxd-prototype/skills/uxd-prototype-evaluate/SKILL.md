@@ -17,6 +17,9 @@ Conversational routing, planning, readiness, review checkpoints, synthesis and
 cross-skill handoffs follow the
 [responsibility contract](references/workflow/evaluator-responsibilities.md), including
 its ownership and execution limits. This skill executes only the selected work.
+If the host cannot select the evaluator subagent, use the
+[intake guide](references/workflow/evaluator-onboarding.md) directly. A separate
+subagent is optional; the same review and approval rules still apply.
 
 ## Choose only the needed work
 
@@ -73,7 +76,7 @@ written requirements are supplied.
 
 Run from the resolved evaluator skill directory, using consumer-owned absolute
 input/output paths. Save outputs under the project's
-`artifacts/<KEY>/evaluation/<run-name>/`; each run directory must be new.
+`artifacts/<KEY>/prototype-evaluations/<run-name>/`; each run directory must be new.
 Dates live in the JSON fields, not the filenames:
 
 ```bash

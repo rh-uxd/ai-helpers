@@ -5,8 +5,8 @@ set -euo pipefail
 # Overwrites the report at the same URL if re-run for the same prototype.
 #
 # Usage:
-#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/evaluation/full-1/
-#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/evaluation/full-1/ --mode=branch
+#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/prototype-evaluations/full-1/
+#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/prototype-evaluations/full-1/ --mode=branch
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -27,7 +27,7 @@ done
 
 if [[ -z "$ARTIFACTS_DIR" ]]; then
   echo "Usage: publish-report.sh <run-dir> [--mode=pages|branch]" >&2
-  echo "  canonical: publish-report.sh artifacts/PROJ-298/evaluation/full-1/" >&2
+  echo "  canonical: publish-report.sh artifacts/PROJ-298/prototype-evaluations/full-1/" >&2
   exit 1
 fi
 
@@ -48,14 +48,13 @@ node "$SCRIPT_DIR/reporting/validate-publish-input.js" "$ARTIFACTS_DIR"
 # Find the prototype key, not the individual run name.
 KEY_DIR="$ARTIFACTS_DIR"
 PROTO_KEY="$(basename "$ARTIFACTS_DIR")"
-GLOBAL_EVAL_NAME="eval"
+GLOBAL_EVAL_NAME="prototype-evaluations"
 if [[ "$PROTO_KEY" == "eval" ]]; then
   KEY_DIR="$(dirname "$ARTIFACTS_DIR")"
   PROTO_KEY="$(basename "$KEY_DIR")"
-elif [[ "$(basename "$(dirname "$ARTIFACTS_DIR")")" == "evaluation" ]]; then
+elif [[ "$(basename "$(dirname "$ARTIFACTS_DIR")")" == "prototype-evaluations" || "$(basename "$(dirname "$ARTIFACTS_DIR")")" == "evaluation" ]]; then
   KEY_DIR="$(dirname "$(dirname "$ARTIFACTS_DIR")")"
   PROTO_KEY="$(basename "$KEY_DIR")"
-  GLOBAL_EVAL_NAME="evaluation"
 fi
 
 # Embed Prototype Bar into a published eval HTML (best-effort)
@@ -64,7 +63,20 @@ inject_prototype_bar() {
   local inject="$SCRIPT_DIR/../../uxd-prototype-export/scripts/inject-prototype-bar-into-html.mjs"
   [[ -f "$html_path" && -f "$inject" ]] || return 0
   command -v node >/dev/null 2>&1 || return 0
-  node "$inject" --html "$html_path" --artifacts "$KEY_DIR" --view eval 2>/dev/null || true
+  # Keep this copy's navigation on the configured report route without changing
+  # the designer's existing config before publication has succeeded.
+  local report_config="$WORK_DIR/report-bar.json"
+  node - "$KEY_DIR/prototype-bar.json" "$report_config" "$PROTO_KEY" "/$REPORTS_ROUTE/$PROTO_KEY/" <<'NODE'
+const fs = require('fs');
+const [source, output, id, url] = process.argv.slice(2);
+let config = {};
+try {
+  const saved = JSON.parse(fs.readFileSync(source, 'utf8'));
+  if (saved && typeof saved === 'object' && !Array.isArray(saved)) config = saved;
+} catch {}
+fs.writeFileSync(output, JSON.stringify({ ...config, id, views: { ...config.views, eval: url } }));
+NODE
+  node "$inject" --html "$html_path" --artifacts "$KEY_DIR" --config "$report_config" --view eval 2>/dev/null || true
 }
 
 # Keep the cross-key index beside the project key folders, not inside a run.
@@ -81,6 +93,14 @@ GITLAB_PAGES_REPO="${GITLAB_PAGES_REPO:-$(read_yaml_value gitlab_pages_repo)}"
 PAGES_BASE_URL="${PAGES_BASE_URL:-$(read_yaml_value pages_base_url)}"
 PAGES_BRANCH="${PAGES_BRANCH:-$(read_yaml_value pages_branch)}"
 REPORTS_DIR="${REPORTS_DIR:-$(read_yaml_value reports_dir)}"
+REPORTS_DIR="${REPORTS_DIR:-public/prototype-evaluations}"
+# Pages serves public/ as its root. Derive URLs and branch-mode paths from the
+# same setting, so changing reports_dir cannot leave links pointing at /evals/.
+REPORTS_ROUTE="${REPORTS_DIR#public/}"
+if [[ ! "$REPORTS_DIR" =~ ^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$ || "/$REPORTS_DIR/" == *"/../"* || "/$REPORTS_DIR/" == *"/./"* || "$REPORTS_ROUTE" == "public" ]]; then
+  echo "Error: reports_dir must be a relative report directory such as public/prototype-evaluations" >&2
+  exit 1
+fi
 JIRA_BASE_URL="${JIRA_BASE_URL:-$(read_yaml_value jira_base_url)}"
 DEFAULT_MODE="$(read_yaml_value default_mode)"
 BRANCH_REMOTE="$(read_yaml_value branch_remote)"
@@ -106,7 +126,7 @@ publish_pages() {
   fi
 
   local BRANCH="${PAGES_BRANCH:-main}"
-  local RDIR="${REPORTS_DIR:-public/evals}"
+  local RDIR="$REPORTS_DIR"
 
   # Shallow clone the target branch
   git clone --depth 1 --branch "$BRANCH" "$GITLAB_PAGES_REPO" "$WORK_DIR/pages-repo" 2>/dev/null
@@ -140,7 +160,7 @@ publish_pages() {
     echo "Published successfully."
   fi
 
-  local REPORT_URL="${PAGES_BASE_URL}/evals/${PROTO_KEY}/"
+  local REPORT_URL="${PAGES_BASE_URL%/}/${REPORTS_ROUTE}/${PROTO_KEY}/"
   echo "$REPORT_URL" > "$ARTIFACTS_DIR/report-url.txt"
   echo "$REPORT_URL"
 }
@@ -178,12 +198,12 @@ publish_branch() {
   fi
 
   cd "$BRANCH_DIR"
-  mkdir -p "evals/$PROTO_KEY"
-  cp "$REPORT_FILE" "evals/$PROTO_KEY/index.html"
-  inject_prototype_bar "evals/$PROTO_KEY/index.html"
+  mkdir -p "$REPORTS_ROUTE/$PROTO_KEY"
+  cp "$REPORT_FILE" "$REPORTS_ROUTE/$PROTO_KEY/index.html"
+  inject_prototype_bar "$REPORTS_ROUTE/$PROTO_KEY/index.html"
 
   # Regenerate index
-  node "$(dirname "$0")/reporting/generate-dashboard.js" "$BRANCH_DIR/evals"
+  node "$SCRIPT_DIR/reporting/generate-dashboard.js" "$BRANCH_DIR/$REPORTS_ROUTE"
 
   git add -A
   if git diff --cached --quiet; then
@@ -202,7 +222,7 @@ publish_branch() {
   git worktree remove "$BRANCH_DIR" 2>/dev/null || true
 
   # Construct raw file URL (GitLab format)
-  local RAW_URL="${GITLAB_PAGES_REPO%.git}/-/raw/${BRANCH}/evals/${PROTO_KEY}/index.html"
+  local RAW_URL="${GITLAB_PAGES_REPO%.git}/-/raw/${BRANCH}/${REPORTS_ROUTE}/${PROTO_KEY}/index.html"
   # Convert SSH URL to HTTPS for raw access
   RAW_URL="$(echo "$RAW_URL" | sed 's|git@\([^:]*\):|https://\1/|')"
   echo "$RAW_URL" > "$ARTIFACTS_DIR/report-url.txt"
@@ -227,10 +247,10 @@ sync_prototype_bar_config() {
     eval_url="$(tr -d '[:space:]' < "$ARTIFACTS_DIR/report-url.txt")"
   fi
   if [[ -z "$eval_url" && -n "$PAGES_BASE_URL" ]]; then
-    eval_url="${PAGES_BASE_URL%/}/evals/${PROTO_KEY}/"
+    eval_url="${PAGES_BASE_URL%/}/${REPORTS_ROUTE}/${PROTO_KEY}/"
   fi
   if [[ -z "$eval_url" ]]; then
-    eval_url="/evals/${PROTO_KEY}/"
+    eval_url="/${REPORTS_ROUTE}/${PROTO_KEY}/"
   fi
 
   local jira_base="${JIRA_BASE_URL:-$(read_yaml_value jira_base_url)}"
