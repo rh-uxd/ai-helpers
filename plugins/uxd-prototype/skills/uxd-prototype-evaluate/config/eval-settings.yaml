@@ -29,4 +29,5 @@ usability_testing:
 defaults:
   depth: deep
   mode: informed
-  max_iterations: 3
+  no_fix: true
+  max_iterations: 2  # Initial evaluation plus one separately approved verification.

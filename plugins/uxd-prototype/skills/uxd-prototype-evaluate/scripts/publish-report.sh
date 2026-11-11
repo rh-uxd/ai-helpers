@@ -7,32 +7,27 @@ set -euo pipefail
 # Usage:
 #   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/evaluation/full-1/
 #   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/evaluation/full-1/ --mode=branch
-#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh .artifacts/PROJ-298/eval/ --legacy
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 CONFIG_FILE="$PROJECT_ROOT/config/publish.yaml"
-INDEX_TEMPLATE="$PROJECT_ROOT/templates/report-index.html"
 
 # ── Parse arguments ──────────────────────────────────────────────────────────
 
 ARTIFACTS_DIR=""
 MODE=""
-LEGACY=0
 
 for arg in "$@"; do
   case "$arg" in
     --mode=*) MODE="${arg#--mode=}" ;;
-    --legacy) LEGACY=1 ;;
     -*) echo "Unknown flag: $arg" >&2; exit 1 ;;
     *) ARTIFACTS_DIR="$arg" ;;
   esac
 done
 
 if [[ -z "$ARTIFACTS_DIR" ]]; then
-  echo "Usage: publish-report.sh <run-dir> [--mode=pages|branch] [--legacy]" >&2
+  echo "Usage: publish-report.sh <run-dir> [--mode=pages|branch]" >&2
   echo "  canonical: publish-report.sh artifacts/PROJ-298/evaluation/full-1/" >&2
-  echo "  legacy:    publish-report.sh .artifacts/PROJ-298/eval/ --legacy" >&2
   exit 1
 fi
 
@@ -48,9 +43,7 @@ if ! command -v node >/dev/null 2>&1; then
   echo "Error: Node.js is required to validate report publication input." >&2
   exit 1
 fi
-VALIDATE_ARGS=("$ARTIFACTS_DIR")
-if [[ "$LEGACY" -eq 1 ]]; then VALIDATE_ARGS+=(--legacy); fi
-node "$SCRIPT_DIR/reporting/validate-publish-input.js" "${VALIDATE_ARGS[@]}"
+node "$SCRIPT_DIR/reporting/validate-publish-input.js" "$ARTIFACTS_DIR"
 
 # Find the prototype key, not the individual run name.
 KEY_DIR="$ARTIFACTS_DIR"
@@ -125,46 +118,8 @@ publish_pages() {
   cp "$REPORT_FILE" "$REPORTS_PATH/$PROTO_KEY/index.html"
   inject_prototype_bar "$REPORTS_PATH/$PROTO_KEY/index.html"
 
-  # Copy data files for dashboard index generation
-  [[ -f "$ARTIFACTS_DIR/evaluation-report.csv" ]] && cp "$ARTIFACTS_DIR/evaluation-report.csv" "$REPORTS_PATH/$PROTO_KEY/"
-  [[ -f "$ARTIFACTS_DIR/journey-log.json" ]] && cp "$ARTIFACTS_DIR/journey-log.json" "$REPORTS_PATH/$PROTO_KEY/"
-
-  # Copy screenshots directory (fallback for any relative paths not inlined as base64)
-  if [[ -d "$ARTIFACTS_DIR/screenshots" ]]; then
-    cp -r "$ARTIFACTS_DIR/screenshots" "$REPORTS_PATH/$PROTO_KEY/screenshots"
-  fi
-
-  # Write metadata.json with MR/repo info if available from extract state
-  local EXTRACT_STATE="$ARTIFACTS_DIR/extract-state.json"
-  if [[ -f "$EXTRACT_STATE" ]]; then
-    cp "$EXTRACT_STATE" "$REPORTS_PATH/$PROTO_KEY/extract-state.json"
-  fi
-  # Generate metadata from environment or extract-state
-  if command -v node >/dev/null 2>&1; then
-    node -e "
-      const fs = require('fs');
-      const path = require('path');
-      const dir = '$REPORTS_PATH/$PROTO_KEY';
-      const meta = {};
-      const es = path.join(dir, 'extract-state.json');
-      if (fs.existsSync(es)) {
-        const d = JSON.parse(fs.readFileSync(es, 'utf8'));
-        if (d.ticket_summary || d.story_title || d.title) meta.title = d.ticket_summary || d.story_title || d.title;
-        if (d.mr_url || d.merge_request_url) meta.mrUrl = d.mr_url || d.merge_request_url;
-        if (d.repo_url || d.repository_url) meta.repoUrl = d.repo_url || d.repository_url;
-        if (d.branch) meta.branch = d.branch;
-      }
-      if (Object.keys(meta).length > 0) {
-        fs.writeFileSync(path.join(dir, 'metadata.json'), JSON.stringify(meta, null, 2));
-      }
-    " 2>/dev/null || true
-  fi
-
-  # ponytail: only final report published — no iter snapshots or originals
-
-  # Regenerate the data.json for the React dashboard
-  # Always use local generate-dashboard.js — remote generate-data.cjs has a
-  # variable shadowing bug (html module vs html string variable on line 89).
+  # Canonical HTML is self-contained. Publish only that derived report and
+  # rebuild the link index, never old CSV/journey projections or private inputs.
   node "$(dirname "$0")/reporting/generate-dashboard.js" "$REPORTS_PATH"
 
   # Copy leaderboard if it exists (sibling to index.html for navigation)
@@ -252,108 +207,6 @@ publish_branch() {
   RAW_URL="$(echo "$RAW_URL" | sed 's|git@\([^:]*\):|https://\1/|')"
   echo "$RAW_URL" > "$ARTIFACTS_DIR/report-url.txt"
   echo "$RAW_URL"
-}
-
-# ── Index page generation ────────────────────────────────────────────────────
-
-generate_index() {
-  local EVALS_DIR="$1"
-  local INDEX_FILE="$EVALS_DIR/index.html"
-  local ROWS_FILE STATS_FILE
-  ROWS_FILE="$(mktemp)"
-  STATS_FILE="$(mktemp)"
-
-  local total_evals=0
-  local total_pass=0
-  local usability_sum=0
-  local usability_count=0
-
-  for report_dir in "$EVALS_DIR"/*/; do
-    [[ -f "$report_dir/index.html" ]] || continue
-    local key
-    key="$(basename "$report_dir")"
-    [[ "$key" == "." || "$key" == ".." ]] && continue
-
-    total_evals=$((total_evals + 1))
-
-    local eval_date
-    eval_date="$(date -r "$report_dir/index.html" +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)"
-
-    local title=""
-    title="$(grep -o '<title>[^<]*</title>' "$report_dir/index.html" 2>/dev/null | head -1 | sed 's/<[^>]*>//g' || echo "")"
-    [[ -z "$title" ]] && title="$key"
-
-    local ac_result="—" ac_display="" usability="—" usability_class=""
-    local csv_file="$report_dir/evaluation-report.csv"
-    if [[ -f "$csv_file" ]]; then
-      local p f fl
-      p=$(grep -c ',PASS,' "$csv_file" 2>/dev/null || echo 0)
-      f=$(grep -c ',FAIL,' "$csv_file" 2>/dev/null || echo 0)
-      fl=$(grep -c ',FLAGGED,' "$csv_file" 2>/dev/null || echo 0)
-      local total_ac=$((p + f + fl))
-      ac_result="${p}/${total_ac}"
-      if [[ "$f" -eq 0 ]]; then
-        ac_display="<span class=\"badge badge-pass\">Pass</span> ${ac_result}"
-        total_pass=$((total_pass + 1))
-      elif [[ "$fl" -gt 0 ]]; then
-        ac_display="<span class=\"badge badge-mixed\">Mixed</span> ${ac_result}"
-      else
-        ac_display="<span class=\"badge badge-fail\">Fail</span> ${ac_result}"
-      fi
-    fi
-
-    local jl_file="$report_dir/journey-log.json"
-    if [[ -f "$jl_file" ]]; then
-      local score
-      score=$(grep -o '"overall_score"[[:space:]]*:[[:space:]]*"[^"]*"' "$jl_file" 2>/dev/null | head -1 | sed 's/.*: *"//;s/".*//')
-      if [[ -z "$score" ]]; then
-        score=$(grep -o '"overall_score"[[:space:]]*:[[:space:]]*[0-9.]*' "$jl_file" 2>/dev/null | head -1 | sed 's/.*: *//')
-      fi
-      if [[ -n "$score" ]]; then
-        usability="$score"
-        local num_score
-        num_score=$(echo "$score" | sed 's|/21||')
-        if command -v bc >/dev/null 2>&1; then
-          if [[ $(echo "$num_score >= 15" | bc 2>/dev/null) == "1" ]]; then usability_class="score-good"
-          elif [[ $(echo "$num_score >= 10" | bc 2>/dev/null) == "1" ]]; then usability_class="score-ok"
-          else usability_class="score-low"; fi
-          usability_sum=$(echo "$usability_sum + $num_score" | bc)
-          usability_count=$((usability_count + 1))
-        fi
-      fi
-    fi
-
-    echo "<tr><td><a href=\"${key}/\">${key}</a></td><td>${title}</td><td>${ac_display}</td><td><span class=\"score ${usability_class}\">${usability}</span></td><td class=\"date-cell\">${eval_date}</td><td><a href=\"${JIRA_BASE_URL}/${key}\" target=\"_blank\">Jira</a></td></tr>" >> "$ROWS_FILE"
-  done
-
-  local avg_usability="—"
-  if [[ "$usability_count" -gt 0 ]] && command -v bc >/dev/null 2>&1; then
-    avg_usability="$(echo "scale=1; $usability_sum / $usability_count" | bc)/21"
-  fi
-  local pass_rate="—"
-  if [[ "$total_evals" -gt 0 ]]; then
-    pass_rate="$((total_pass * 100 / total_evals))%"
-  fi
-
-  cat > "$STATS_FILE" <<STATSEOF
-<div class="stat-card"><div class="stat-value">${total_evals}</div><div class="stat-label">Total Evals</div></div>
-<div class="stat-card"><div class="stat-value">${pass_rate}</div><div class="stat-label">Pass Rate</div></div>
-<div class="stat-card"><div class="stat-value">${avg_usability}</div><div class="stat-label">Avg Usability</div></div>
-<div class="stat-card"><div class="stat-value">${total_pass}/${total_evals}</div><div class="stat-label">All AC Pass</div></div>
-STATSEOF
-
-  if [[ -f "$INDEX_TEMPLATE" ]]; then
-    sed "s|{{STATS_CARDS}}|$(cat "$STATS_FILE")|" "$INDEX_TEMPLATE" | sed "/{{REPORT_ROWS}}/r $ROWS_FILE" | sed '/{{REPORT_ROWS}}/d' > "$INDEX_FILE"
-  else
-    cat > "$INDEX_FILE" <<'INDEXEOF'
-<!DOCTYPE html><html><head><title>Evaluation Reports</title></head><body>
-<h1>Evaluation Reports</h1><table><thead><tr><th>Key</th><th>Title</th><th>Result</th><th>Usability</th><th>Date</th><th>Jira</th></tr></thead><tbody>
-INDEXEOF
-    cat "$ROWS_FILE" >> "$INDEX_FILE"
-    echo "</tbody></table></body></html>" >> "$INDEX_FILE"
-  fi
-
-  rm -f "$ROWS_FILE" "$STATS_FILE"
 }
 
 # ── Sync Prototype Bar config (Sources + views.eval) ─────────────────────────

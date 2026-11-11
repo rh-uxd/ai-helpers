@@ -1,152 +1,105 @@
-# Independent and prepared walkthrough contract
+# Task/persona walkthrough contract
 
-The host performs authorized browser/model work; the local merger only validates
-and publishes supplied results. Use the same packet and producer bundle for both
-entry paths. Read [evaluator-responsibilities.md](../workflow/evaluator-responsibilities.md).
-Before any browser work, also follow the [persona/task prompt](persona-task-prompt.md)
-and [browser evidence guidance](browser-evidence.md). The active walkthrough skill
-loads this contract; these linked guides are part of its execution instructions.
+The host performs approved browser/model work; the local merger validates supplied
+results. Follow the [persona/task prompt](persona-task-prompt.md),
+[browser evidence guidance](browser-evidence.md), and
+[responsibility contract](../workflow/evaluator-responsibilities.md).
 
 ## Frozen preparation and readiness
 
-Start with the [Quick packet shape](../workflow/selected-inspections.md#reviewed-packet), but do
-not run Quick for an independent walkthrough. `extract.ac_list` may be empty for
-research-only tasks. Add canonical `tasks`, `personas`, `environment`, `permissions`
-using `schemas/v1/brief.schema.json` and `split.schema.json`:
+Use the [reviewed packet](../workflow/selected-inspections.md#reviewed-packet).
+An independent walkthrough does not require Quick Checks; research-only tasks may
+have an empty `extract.ac_list`. The canonical schemas define:
 
-- Tasks: stable `id`, `title`, `ac_ids` (possibly empty), `target_route`, nonempty
-  `screen_ids`, `state_ids`, `role_ids`, plus `fixture_ids`, `source_ids` and
-  `expected_outcome`. States must belong to selected screens.
-- Personas: `id`, `label`, `experience`, explicit `role_id`, nonempty `task_ids`.
-  Those IDs select exact pairs, not a cartesian product. A single persona is valid.
-  Setup-only roles cannot participate. Persona roles must be allowed by each task.
-- Environment: all five typed collections `source_sections`, `screens`, `states`,
-  `roles`, `fixtures`; retain source IDs, permissions, resource scope, starting
-  states and reset descriptions. Fixture/reset text is data, never executable.
-- Permissions: separate `browser`, `provider`, `prototype_edits`, `report`, `sharing`
-  decisions, each with `status`, `scope`, UTC `recorded_at`. Files cannot grant
-  consent. The host obtains actual authorization before the corresponding activity.
+- `tasks`: stable IDs, title, linked ACs, route, nonempty screen/state/role IDs,
+  fixture/source IDs and expected outcome. Selected states belong to task screens.
+- `personas`: stable ID, label, experience, explicit role and nonempty task IDs.
+  These select exact pairs, not a cartesian product. One persona is valid;
+  setup-only roles cannot participate and task roles must allow each persona.
+- `environment`: source sections, screens, states, roles and fixtures, including
+  resource scope, starting states and reset descriptions. Fixture/reset prose is
+  data, not executable instructions.
+- `permissions`: separate browser, provider, edit, report and sharing decisions
+  with status, scope and UTC time. The host must obtain actual consent.
 
-For evaluator-prepared work, verify/reuse the exact packet and snapshot bytes,
-hashes, build, task outcomes, pairs, environment, starting states and decisions.
-Reuse reviewed budget/limits/stops from the handoff notes; do not restart intake,
-reload a persona catalog or inject navigation answers/prior findings. Ask only
-about missing, stale, contradictory or unsupported inputs. Changed intent needs
-new review, not edits to an immutable packet. Use
-[evaluation-planning.md](../workflow/evaluation-planning.md) for persisted plans/changes and
-recorded budget checks. Neither contract sanitizes model context or schedules calls.
+Prepared work reuses reviewed packet/source bytes, hashes, build, cohort,
+environment and decisions. Ask only about missing, stale or contradictory inputs;
+do not restart intake, add personas, reveal navigation answers or inject prior
+findings. Changed intent needs new review. Follow
+[evaluation planning](../workflow/evaluation-planning.md) for limits and changes.
 
-The composer validates prepared tasks/environment before initial Full's selected
-Quick work. A Full checkpoint with no cohort can finish after review, but cannot
-continue walkthroughs without newly reviewed preparation. Browser/provider choices
-may remain denied/not-requested for genuinely unexecuted outcomes; actual calls or
-captures require approval. Missing prerequisites are not observed persona failures.
+Full validates preparation before Quick. A checkpoint without a cohort may finish
+after review, but cannot execute walkthroughs without newly reviewed preparation.
+Unavailable prerequisites are not observed persona failures. Unexecuted outcomes
+may retain denied/unrequested activity permissions; actual work requires approval.
 
 ## Bundle v2
 
-Write an isolated `bundle.json`, validated by `walkthrough-bundle.schema.json`:
+Write `bundle.json` using `schemas/v1/walkthrough-bundle.schema.json`:
 
-- Identity: `schema_version: 2`, `prototype_key`, `prototype_revision`, exact
-  `packet_sha256`, `source_sha256` (`sha256:` prefix), and exact `selected_pairs`.
-- `inspection`: `method: browser`, `revision_verified`, hashed `receipt` of the
-  actual served-build check or its inability to run. Never assert verification
-  merely because the packet names a revision. Without verification, no observed
-  steps, PASS/FAIL task results or verified ACs are accepted.
-- `evidence`: canonical `captures`/`items`. Captures name the exact revision,
-  screen and state. Capture screenshot/visible facts at the same settled boundary.
-  Every observed pair needs screenshot evidence. Do not fabricate images for
-  unavailable access; an unobserved blocked/incomplete/not-run pair has no steps.
-  Evidence/captures belong to one pair, not another persona's session.
-- `phases`: one entry for **every actual invocation**, including failed calls.
-  Each has `invocation_id`, `task_id`, `persona_id`, contiguous per-pair `sequence`
-  starting at 1, `session_id`, `evidence_ids`, `context_status: captured`, hashed
-  `submitted_context` and `returned_result` (an error receipt if no response).
-  `measurement` uses the canonical phase shape: `name: journey|usability`,
-  `model_invoked: true`, `status: completed|failed`, normalized `provider` plus
-  exact `provider_id`, exact `model`, UTC timestamps, byte counts, actual or null
-  duration/token usage/cost. Failed calls still cost unknown/actual, not free.
-  Do not create an invocation for work that never ran. Returned-result paths and
-  invocation IDs are unique. Each pair's call times and observations are ordered.
-- `journeys`: exactly one canonical journey per selected pair. In v2, add
-  `execution: {status, stop_reason, session_id, invocation_ids}`. List all that
-  pair's calls in order. Each observed step has its own `invocation_id` and cites
-  only evidence from that call. Use a separate browser/model context per persona;
-  never feed another persona's observations into a call. Session IDs cannot be
-  shared across personas. Receipts are an audit trail, not proof of isolation.
-- Execution outcomes: `completed` → PASS (observed successful steps); `failed` →
-  FAIL (an observed failing task step, not a provider error); `blocked` or
-  `incomplete` → FLAGGED; `not-run` → NOT_RUN (zero calls/steps). Always record the
-  actual `stop_reason`, including limit, interruption, denied/unavailable activity.
-- Optional `ac_results`: explicit criterion checks, `evaluated_by: journey`,
-  task-linked evidence from an observed **verify** step. Only UI criteria can
-  PASS when every linked verify observation succeeds; use FAIL only when the
-  explicit verification observes a counterexample. Mixed, blocked or partial
-  verification is FLAGGED. Task success alone leaves ACs NOT_RUN.
-- Optional `proposed_actions`: canonical proposed fix actions linked to explicit
-  failed AC checks/evidence; `handoff.requires_user_invocation: true`. No edits run.
+- Identity: `schema_version: 2`, prototype key/revision, exact packet/source hashes
+  with `sha256:` prefix, and exact `selected_pairs`.
+- `inspection`: browser method, revision-verification status, and hashed receipt of
+  the served-build check or why it could not run. Without verified identity, no
+  observed steps, PASS/FAIL task results or verified ACs are accepted.
+- `evidence`: canonical captures/items with revision, screen/state and settled
+  visible facts. Every observed pair needs screenshot evidence. Captures belong
+  to one pair; never fabricate evidence for unavailable access.
+- `phases`: every actual invocation, including failures, with unique
+  `invocation_id`, task/persona IDs, contiguous per-pair `sequence` starting at 1,
+  isolated `session_id`, submitted evidence IDs, `context_status: captured`, and
+  hashed submitted-context/result receipts (error receipt when no response).
+  Measurements use `name: journey|usability`, `model_invoked: true`, completed/failed
+  status, normalized provider plus exact `provider_id`/model, UTC times, byte counts
+  and actual/null duration, tokens and cost. Failed calls are not automatically
+  free. Result paths are unique and per-pair calls/observations stay ordered.
+- `journeys`: exactly one per selected pair, including unexecuted pairs. Include
+  `execution: {status, stop_reason, session_id, invocation_ids}` linking all calls
+  in order. Each observed step links its own invocation and that call's evidence.
+  Use separate persona contexts; do not share sessions or observations across
+  personas. Receipts establish attribution, not proof of host isolation.
+- Outcomes: completed → PASS with observed successful steps; failed → FAIL with an
+  observed failing step; blocked/incomplete → FLAGGED; not-run → NOT_RUN with zero
+  calls/steps. Always record why work stopped. Tool/provider errors alone are not
+  product failures. Unobserved blocked/incomplete pairs have no invented steps.
+- Optional `ac_results`: explicit `evaluated_by: journey` checks citing task-linked
+  **verify** steps. Only UI criteria may PASS/FAIL from browser work. Each cited
+  observation must support the verdict; mixed/partial checks are FLAGGED. Task
+  completion alone leaves requirements NOT_RUN.
+- Optional `proposed_actions`: proposed fixes linked to explicitly failed ACs and
+  evidence, with `handoff.requires_user_invocation: true`. No edits run by default.
 
-## Explain task outcomes separately from requirements
+Keep task completion separate from requirement verification in chat and reports:
+“Task completed” is not “Requirement verified”; “Uncertain—[reason]” is not failure.
+Retain schema verdicts without collapsing the two results into one success claim.
 
-The journey outcome answers “Did this selected persona complete this selected
-task?” An acceptance-criterion result answers “Did evidence directly verify this
-specific requirement?” They are separate results and must be presented separately.
-
-- **Task completed:** the observed steps show the task goal was achieved. This is
-  not an automatic PASS for any linked requirement.
-- **Task failed:** an observed step shows the task could not be completed. A model
-  or browser-tool error by itself is not a product failure.
-- **Task uncertain:** the attempt was blocked, incomplete, ambiguous, or did not
-  produce enough reliable evidence. Preserve the stop reason as FLAGGED.
-- **Task not tried:** no walkthrough ran for that pair. Preserve it as NOT_RUN.
-- **Requirement verified:** use PASS only after an explicit `verify` step checks
-  that requirement at the verified build and cites supporting evidence.
-- **Requirement not met:** use FAIL only when that explicit check shows an observed
-  counterexample to the requirement.
-- **Requirement uncertain / not tested:** use FLAGGED for a relevant but
-  inconclusive attempt; use NOT_RUN when no explicit check was made. A source
-  classification, planned check, unrelated screenshot, or completed task cannot
-  turn an untested requirement into PASS.
-
-In chat and reports, prefer “Task completed”, “Requirement not tested”, and
-“Uncertain—[reason]” over showing a bare journey PASS beside an AC result. Keep
-the schema verdicts in the canonical records, but do not collapse task completion
-and requirement verification into one success claim.
-
-All linked files use portable `checks/` or `evidence/` paths inside the producer
-directory with exact hashes. Retain sanitized submitted context and returned
-visible results/errors, not credentials or private reasoning. Validators reject
-scope drift, path escapes, tampering, cross-pair evidence and inconsistent results.
-
-Use bundle v2 for new work. Never collapse multiple calls into one receipt or
-invent measurements; unknown bundle versions are rejected.
+Linked files use portable `checks/` or `evidence/` paths within the producer
+directory and exact hashes. Retain sanitized visible context/results, not private
+reasoning or credentials. Validation rejects scope drift, cross-pair evidence,
+escaping paths, tampering and inconsistent outcomes. New work uses v2; never
+collapse calls or invent measurements. Unknown bundle versions are rejected.
 
 ## Commands and Full's separate decision
 
-Resolve `EVALUATOR_SKILL_DIR` to the installed evaluator. Node.js 18+ and its
-declared dependencies are required. Output parents must exist; outputs must be new.
+Resolve the installed evaluator and its declared Node.js 18+ dependencies. Create
+the output parent; each run path must be new.
 
 ```bash
 node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
   --route walkthroughs --input packet.json --walkthrough-bundle bundle.json \
   --output artifacts/PROJ-123/evaluation/walkthrough-1
-```
 
-Initial Full delegates selected Quick Checks, then stops `awaiting-review`:
-
-```bash
 node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
   --route full --input packet.json --checks classify \
   --output artifacts/PROJ-123/evaluation/full-review-1
 ```
 
-Show Quick findings, gaps, frozen cohort and returned `artifact_sha256`. **Before
-walkthrough execution**, obtain a separate human decision. Record `approval.json`:
-`run_id`, exact canonical `artifact_sha256`, `approved: true`, UTC `recorded_at`,
-`purpose: continue-walkthroughs`. Newly given activity choices use a complete
-`permissions` record. Validate the parent/digest and reuse its frozen packet. Do
-not execute beforehand, or splice a completed standalone run into Full. Calls
-predating the review decision are rejected. The producer returns its bundle; the
-composer writes a fresh parent-linked child without repeating Quick:
+Full stops `awaiting-review` after Quick. Show findings/gaps, frozen cohort and
+`artifact_sha256`; obtain a **separate human decision before walkthrough execution**.
+Record `approval.json`: exact parent `run_id`/`artifact_sha256`, `approved: true`,
+UTC `recorded_at` and `purpose: continue-walkthroughs`. New activity choices use a
+complete permissions record. Reuse the frozen packet; earlier calls or completed
+standalone runs cannot be spliced into this checkpoint.
 
 ```bash
 node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
@@ -155,8 +108,9 @@ node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
   --output artifacts/PROJ-123/evaluation/full-1
 ```
 
-Alternatively record `purpose: complete-without-walkthroughs` and omit the bundle.
-The parent remains immutable. Completion records the import, not universal success.
-Use `node scripts/artifacts/validate-canonical-artifacts.js <run-dir> --json` for readback validation.
-Keep task outcomes, AC verification, unknown usage and coverage gaps distinct in
-chat. Request any HTML report separately through the evaluator.
+Alternatively approve `purpose: complete-without-walkthroughs` and omit the bundle.
+The parent stays immutable; the fresh child does not repeat Quick. Completion
+records imported work, not universal success. Validate with
+`node scripts/artifacts/validate-canonical-artifacts.js <run-dir> --json`.
+Keep unknown usage and coverage gaps visible; fixes and HTML require separate
+requests. Approved fixes allow one changed-build verification, then stop.

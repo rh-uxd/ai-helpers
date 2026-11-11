@@ -1,75 +1,58 @@
 # Reviewed evaluation plans and changes
 
-The evaluator owns the plan; producers perform only selected work. Prepare a
-concise public plan before new execution, using the user's existing decisions
-and frozen context rather than restarting intake. Record questions and rationale,
-not private model reasoning. Plans do not grant consent or prove execution.
-After presenting the proposed plan and receiving the relevant human decision,
-`uxd-evaluator` writes the approved plan data to `plan.json` using the schema below.
-There is no separate plan-generator command: the split runner validates and stores
-the supplied JSON; it does not infer or author the designer's plan.
+After presenting the plan and obtaining the relevant human decision, the host
+`uxd-evaluator` writes `plan.json`. There is no plan-generator command: the split
+runner validates/stores supplied JSON, not the designer's intent. Record public
+questions and rationale, never private reasoning. A plan does not grant consent.
 
-## Plan v1
+## Plan
 
-Supply `--plan plan.json` to the split runner. The file uses
-`schemas/v1/evaluation-plan.schema.json`:
+Supply `--plan plan.json` using `schemas/v1/evaluation-plan.schema.json`:
 
-- `schema_version: 1`, `goal`, exact `packet_sha256`, actual UTC `reviewed_at`.
-- `questions`: unique `{id, text}` entries describing the decision to inform.
-- `allowed_checks`: the reviewed adaptation envelope, not checks claimed executed.
-- `limits`: `max_model_invocations`, `max_cost_usd` (numbers or explicit null), and
-  nonempty `stop_conditions`. Explain uncertainty during review; null is not zero
-  cost or proof of unlimited consent. Limits apply to recorded lineage spend.
-- Ordered `steps`: unique `id`/`check`, `question_ids`, public `rationale`, expected
-  evidence descriptions and `depends_on` earlier step IDs. Select only work that
-  answers a question. An independent walkthrough plan contains only walkthroughs.
-  Full may plan walkthroughs, but cannot execute them before the separate review.
+- `schema_version: 1`, goal, exact packet hash and UTC `reviewed_at`.
+- Unique questions `{id, text}` and reviewed `allowed_checks`.
+- Limits: maximum invocations/cost (number or explicit null) and nonempty stop
+  conditions. Unknown cost is not zero or unlimited consent; caps cover lineage.
+- Ordered steps: unique ID/check, question IDs, public rationale, expected evidence
+  and dependencies on earlier steps. Select only work that answers a question.
+  Independent plans contain only walkthroughs; Full still requires its separate
+  continuation decision before executing them.
 
-The bundled adapters support classification, source inspection, host model
-inspections, then walkthroughs. Heuristic/visual work may share an invocation
-without declaring a dependency on each other. Explicit dependent steps need
-separate, preceding execution receipts. To sequence differently, use distinct
-parent-linked runs; do not claim the local merger schedules browser/model work.
+Supported order is classification, source inspection, host model inspections,
+then walkthroughs. Heuristic/visual work may share a call unless a dependency
+requires preceding receipts. Other sequencing needs separate parent-linked runs.
+Quick selection comes from plan steps; explicit `--checks` must match their order.
+Allowed but unselected checks do not run. The host checks prerequisites and
+remaining budget before calls; prose stop conditions are not executable policy.
 
-Quick selection comes from plan steps unless `--checks` is explicitly supplied;
-then its selection/order must agree. Unselected allowed checks do not run. The
-host checks prerequisites/dependencies and remaining limits before actual calls,
-and stops or asks when a condition is reached. Arbitrary stop-condition prose is
-reviewed host guidance, not executable policy. Local validation cannot undo spend.
+The runner stores original bytes in `inputs/evaluation-plan.json`, typed intent
+in `pe-context.json.intent.evaluation_plan`, and execution in `pe-state.json.planning`:
 
-The runner preserves exact plan bytes in `inputs/evaluation-plan.json`, the typed
-plan in `brief.intent.evaluation_plan`, and separate `state.planning` execution:
+- Per-step status, phase indexes and evidence; completion is not an AC verdict.
+- Own, prior and lineage usage without recounting inherited/shared calls. Failed
+  calls count; unknown total cost stays null. Known cost is only a subtotal.
+- `budget_status: within-known|unknown|exceeded`. A known subtotal can establish
+  excess. Preserve actual over-limit receipts, stop and review; import completion
+  does not authorize further activity. Counters exclude host sessions and invoices.
 
-- Actual phase indexes and evidence links per step; completed/failed/blocked/
-  incomplete/not-run states. Check execution completion is not an AC verdict.
-- `own_usage` for this run's new calls and `prior_usage`/`lineage_usage` for parent
-  spend without counting inherited Quick phases twice. A shared call counts once,
-  even when two steps cite it. Failed calls still count. Unknown total cost stays
-  null; `known_cost_usd` is only the known subtotal/lower bound, never a full bill.
-- `budget_status`: `within-known`, `unknown`, or `exceeded`. Known subtotal alone
-  can establish an excess even if total cost is unknown. Preserve actual over-limit
-  receipts rather than deleting calls or inventing cheaper measurements. Stop and
-  review an excess; a completed import does not authorize further activity.
-
-For findings-free inspections, evidence links can be empty; execution still links
-the canonical phase and its producer receipts. No artifact answers a question
-merely because a step was planned. Synthesis of answers remains separate work.
+Findings-free inspections may have no evidence links, but must retain execution
+receipts. Planned questions do not become answered merely because a check ran.
 
 ## Unchanged Full continuation
 
-Use the existing parent/digest-bound review decision and `--continue-from`. The
-runner reuses the exact frozen plan automatically, just like the packet. It does
-not repeat Quick or intake. A byte-identical `--plan` is optional; changed bytes
-fail closed. Changed check selections and ignored Quick/source arguments are
-rejected, not silently treated as executed. Finishing without walkthroughs leaves
-that planned step not-run. A planned verification preserves questions/limits/steps
-and supplies a fresh plan bound to the approved changed-build packet.
+Use the parent/digest-bound decision with `--continue-from`. The runner reuses the
+stored approved plan and packet without repeating Quick/intake. A supplied plan
+must match the stored hash; changing it requires the adaptation route and review
+where scope expands. Changed selections or ignored Quick/source arguments fail.
+Completing without walkthroughs leaves that step not-run.
 
-## Adaptation: a fresh, explicit child
+Post-fix verification keeps the questions, limits and steps but needs a freshly
+reviewed plan bound to the changed-build packet. Only one verification is allowed.
 
-When findings justify a change, record a new plan and `change.json` containing
-public `reason`, UTC `recorded_at`, and explicit `allow_rerun` (true only when a
-previously selected check is intentionally being repeated). Invoke:
+## Adaptation: a fresh child
+
+Write the updated plan and `change.json` with public reason, UTC time and explicit
+`allow_rerun` (true only for an intentional repeat):
 
 ```bash
 node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
@@ -78,43 +61,30 @@ node "$EVALUATOR_SKILL_DIR/scripts/run-split-evaluation.js" \
   --output artifacts/PROJ-123/evaluation/adapted-1
 ```
 
-Within the same goal, exact packet, allowed checks, limits and stops, the evaluator
-may adapt without another scope-expansion prompt. The fresh child records the
-reason, parent/digest and actual new execution. It does **not** splice or copy
-prior findings/evidence as new results. Keep parent results linked for review.
-Choose only needed new checks; a repeat requires the explicit rerun record.
+Within the same goal, exact packet, allowed checks, limits and stops, adaptation
+may proceed without a scope-expansion prompt. It records reason, parent/digest and
+new execution; prior observations are not copied as new findings. Repeats require
+the rerun record. Preserve original runs/evidence for review.
 
-Changing goal, source/build/task/persona scope (packet bytes), enlarging allowed
-checks, raising/removing a numeric cap or removing a stop condition requires a new
-human decision. Supply `--approval approval.json` with parent `run_id`, canonical
-`artifact_sha256`, `approved: true`, UTC `recorded_at`,
-`purpose: expand-evaluation`, exact new `plan_sha256` and `packet_sha256`.
-Approving the parent alone cannot approve a substituted plan or packet.
+Changing goal/packet, enlarging allowed checks, raising/removing a numeric cap or
+removing a stop condition needs new human approval: parent `run_id` and canonical
+`artifact_sha256`, `approved: true`, UTC time, `purpose: expand-evaluation`, and
+exact new plan/packet hashes. Parent approval alone cannot authorize substitutes.
+An exceeded budget requires approved expansion sufficient for known lineage spend.
 
-An exceeded budget requires approved budget expansion before further work. When
-prior cost is unknown and a numeric cost limit applies, review that uncertainty
-before additional model work; a separate parent/plan/packet-bound
-`purpose: continue-unknown-usage` decision may record consent without turning cost
-into a known value. New call timestamps cannot predate the applicable plan/change/
-review decision. Receipts remain host assertions, not independent billing proof.
-For unchanged Full continuation with unknown prior cost and a numeric cost cap,
-the `continue-walkthroughs` approval additionally records
-`accept_unknown_usage: true` and the exact plan/packet hashes. An exceeded parent
-cannot continue unchanged; finish without walkthroughs or review an adapted plan
-with sufficient limits.
-Planned post-fix verification uses the same uncertainty acknowledgment with its
-fresh plan/packet hashes; it cannot expand the original plan or its limits.
-Usage covers attributed producer calls only, not uninstrumented host-session work,
-browser-tool billing or invoices. Do not claim measured savings from these counters.
+Unknown prior cost with a numeric cap needs explicit review before more model work.
+Adaptation can use a hash-bound `continue-unknown-usage` or expansion decision.
+Unchanged Full continuation uses `continue-walkthroughs` plus
+`accept_unknown_usage: true` and exact plan/packet hashes. Planned verification
+needs the same acknowledgment for its fresh hashes, without expanding limits.
+New invocation times cannot predate the applicable plan/change/approval.
 
-Adapted Full runs pause at a **new** awaiting-review checkpoint. They cannot
-inherit permission to cross its walkthrough stage; a standalone adaptation cannot
-bypass an awaiting Full checkpoint. Preserve all original runs and evidence.
+Adapted Full creates a new awaiting-review checkpoint; old approval cannot cross
+it, and standalone adaptation cannot bypass an awaiting Full checkpoint.
 
 ## Missing planning or usage
 
-Do not invent a retrospective plan or attribute unknown parent usage to a new
-run. Adapting a run without an earlier plan needs a reviewed plan and explicit
-expansion approval. A planned child fails closed if parent spend cannot be
-attributed. For unplanned children, `state.usage_attribution` separates own and
-inherited work; absent attribution leaves ownership/totals unknown.
+Do not invent retrospective plans or attribute unknown parent work to the child.
+Adapting an unplanned parent needs reviewed planning and expansion approval. A
+planned child requires attributable parent spend; unplanned children retain
+`state.usage_attribution` with own/prior/lineage usage and honest unknowns.

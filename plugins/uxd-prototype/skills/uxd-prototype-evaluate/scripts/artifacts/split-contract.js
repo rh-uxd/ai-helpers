@@ -129,7 +129,6 @@ function identify(docs, route, inputs) {
   state.identity.evaluator_key = hash(JSON.stringify(dependencies));
   const { intent_key, build_key, evaluator_key } = state.identity;
   state.identity.compound_key = hash(JSON.stringify({ intent_key, build_key, evaluator_key }));
-  state.cache = { decision: 'bypass', entry_key: state.identity.compound_key, invalidated_by: ['cache_bypassed'], restored_artifacts: [] };
 }
 
 function counts(rows) {

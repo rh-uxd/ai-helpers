@@ -7,7 +7,7 @@ const path = require('path');
 const { parseArgs } = require('util');
 const { spawnSync } = require('child_process');
 const C = require('./artifacts/split-contract');
-const { buildDocuments } = require('./artifacts/assemble-phase-a-canonical');
+const { buildDocuments } = require('./artifacts/build-canonical-artifacts');
 const { classifyCriterion } = require('./classification/run-classification');
 const { buildOverrides } = require('./classification/classify-ac-tier');
 
@@ -29,8 +29,8 @@ function seed(input, stage) {
     sourceIds.add(ac.source_id);
   }
   const overrides = new Map(buildOverrides(packet.extract).map(item => [item.criterion_id, item]));
-  const rows = packet.extract.ac_list.map(ac => ({ criterion_id: ac.criterion_id, criterion_text: ac.text, source: packet.source.kind === 'jira' ? 'jira' : 'user', tier: classifyCriterion(ac, overrides.get(ac.criterion_id)).tier, verdict: '', rationale: 'Not verified.' }));
-  const { documents } = buildDocuments(stage, { decision: 'bypass', invalidated_by: ['cache_bypassed'] }, { extract: packet.extract, delta: { changed_files: [] }, rows, consistency: { source_mode: { ran: false, violations: [] }, degraded: false, guidelines_version: 'not-run' }, evidence: { prototype_url: packet.prototype.url, captured_at: new Date().toISOString() } });
+  const rows = packet.extract.ac_list.map(ac => ({ criterion_id: ac.criterion_id, criterion_text: ac.text, source: packet.source.kind === 'jira' ? 'jira' : 'user', tier: classifyCriterion(ac, overrides.get(ac.criterion_id)).tier, rationale: 'Not verified.' }));
+  const { documents } = buildDocuments({ extract: packet.extract, delta: { changed_files: [] }, rows, consistency: { source_mode: { ran: false, violations: [] }, degraded: false, guidelines_version: 'not-run' }, evidence: { prototype_url: packet.prototype.url, captured_at: new Date().toISOString() } });
   const intent = documents['pe-context.json'].intent;
   intent.stage = 'walkthroughs'; intent.tasks = packet.tasks || []; intent.personas = packet.personas || [];
   intent.environment = packet.environment;
@@ -189,7 +189,7 @@ function run(options) {
 }
 
 function main() {
-  const { values } = parseArgs({ options: Object.fromEntries(['route', 'input', 'output', 'checks', 'workspace', 'base-ref', 'judgment-bundle', 'walkthrough-bundle', 'continue-from', 'verify-from', 'adapt-from', 'plan', 'plan-change', 'approval', 'fix-receipt', 'design-system', 'design-system-version', 'guideline-manifest'].map(k => [k, { type: 'string' }]).concat([['guidelines', { type: 'string', multiple: true }], ['report', { type: 'boolean', default: false }]])) });
+  const { values } = parseArgs({ options: Object.fromEntries(['route', 'input', 'output', 'checks', 'workspace', 'base-ref', 'judgment-bundle', 'walkthrough-bundle', 'continue-from', 'verify-from', 'adapt-from', 'plan', 'plan-change', 'approval', 'fix-receipt', 'design-system', 'design-system-version', 'guideline-manifest'].map(k => [k, { type: 'string' }]).concat([['guidelines', { type: 'string', multiple: true }], ['report', { type: 'boolean', default: false }], ['no-fix', { type: 'boolean', default: true }]])) });
   process.stdout.write(`${JSON.stringify(run(values))}\n`);
 }
 if (require.main === module) { try { main(); } catch (error) { process.stderr.write(`${error.message}\n`); process.exitCode = 1; } }
