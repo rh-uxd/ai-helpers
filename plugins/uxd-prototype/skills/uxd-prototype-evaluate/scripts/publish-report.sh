@@ -5,8 +5,9 @@ set -euo pipefail
 # Overwrites the report at the same URL if re-run for the same prototype.
 #
 # Usage:
-#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh .artifacts/PROJ-298/eval/
-#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh .artifacts/PROJ-298/eval/ --mode=branch
+#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/evaluation/full-1/
+#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/evaluation/full-1/ --mode=branch
+#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh .artifacts/PROJ-298/eval/ --legacy
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -17,18 +18,21 @@ INDEX_TEMPLATE="$PROJECT_ROOT/templates/report-index.html"
 
 ARTIFACTS_DIR=""
 MODE=""
+LEGACY=0
 
 for arg in "$@"; do
   case "$arg" in
     --mode=*) MODE="${arg#--mode=}" ;;
+    --legacy) LEGACY=1 ;;
     -*) echo "Unknown flag: $arg" >&2; exit 1 ;;
     *) ARTIFACTS_DIR="$arg" ;;
   esac
 done
 
 if [[ -z "$ARTIFACTS_DIR" ]]; then
-  echo "Usage: publish-report.sh <artifacts-dir> [--mode=pages|branch]" >&2
-  echo "  e.g. publish-report.sh .artifacts/PROJ-298/eval/" >&2
+  echo "Usage: publish-report.sh <run-dir> [--mode=pages|branch] [--legacy]" >&2
+  echo "  canonical: publish-report.sh artifacts/PROJ-298/evaluation/full-1/" >&2
+  echo "  legacy:    publish-report.sh .artifacts/PROJ-298/eval/ --legacy" >&2
   exit 1
 fi
 
@@ -40,12 +44,25 @@ if [[ ! -f "$REPORT_FILE" ]]; then
   exit 1
 fi
 
-# Key root holds prototype-bar.json; eval outputs live under …/<KEY>/eval/
+if ! command -v node >/dev/null 2>&1; then
+  echo "Error: Node.js is required to validate report publication input." >&2
+  exit 1
+fi
+VALIDATE_ARGS=("$ARTIFACTS_DIR")
+if [[ "$LEGACY" -eq 1 ]]; then VALIDATE_ARGS+=(--legacy); fi
+node "$SCRIPT_DIR/reporting/validate-publish-input.js" "${VALIDATE_ARGS[@]}"
+
+# Find the prototype key, not the individual run name.
 KEY_DIR="$ARTIFACTS_DIR"
 PROTO_KEY="$(basename "$ARTIFACTS_DIR")"
+GLOBAL_EVAL_NAME="eval"
 if [[ "$PROTO_KEY" == "eval" ]]; then
   KEY_DIR="$(dirname "$ARTIFACTS_DIR")"
   PROTO_KEY="$(basename "$KEY_DIR")"
+elif [[ "$(basename "$(dirname "$ARTIFACTS_DIR")")" == "evaluation" ]]; then
+  KEY_DIR="$(dirname "$(dirname "$ARTIFACTS_DIR")")"
+  PROTO_KEY="$(basename "$KEY_DIR")"
+  GLOBAL_EVAL_NAME="evaluation"
 fi
 
 # Embed Prototype Bar into a published eval HTML (best-effort)
@@ -57,9 +74,8 @@ inject_prototype_bar() {
   node "$inject" --html "$html_path" --artifacts "$KEY_DIR" --view eval 2>/dev/null || true
 }
 
-# Cross-key leaderboard lives under consumer .artifacts/eval/
-# Derive from KEY_DIR (…/.artifacts/<KEY>) so we never resolve from the skill install cwd.
-EVAL_GLOBAL_DIR="$(cd "$(dirname "$KEY_DIR")" && mkdir -p eval && cd eval && pwd)"
+# Keep the cross-key index beside the project key folders, not inside a run.
+EVAL_GLOBAL_DIR="$(cd "$(dirname "$KEY_DIR")" && mkdir -p "$GLOBAL_EVAL_NAME" && cd "$GLOBAL_EVAL_NAME" && pwd)"
 
 # ── Read config ──────────────────────────────────────────────────────────────
 
@@ -149,7 +165,7 @@ publish_pages() {
   # Regenerate the data.json for the React dashboard
   # Always use local generate-dashboard.js — remote generate-data.cjs has a
   # variable shadowing bug (html module vs html string variable on line 89).
-  node "$(dirname "$0")/generate-dashboard.js" "$REPORTS_PATH"
+  node "$(dirname "$0")/reporting/generate-dashboard.js" "$REPORTS_PATH"
 
   # Copy leaderboard if it exists (sibling to index.html for navigation)
   local LEADERBOARD="${EVAL_GLOBAL_DIR:+$EVAL_GLOBAL_DIR/pain-leaderboard.html}"
@@ -212,7 +228,7 @@ publish_branch() {
   inject_prototype_bar "evals/$PROTO_KEY/index.html"
 
   # Regenerate index
-  node "$(dirname "$0")/generate-dashboard.js" "$BRANCH_DIR/evals"
+  node "$(dirname "$0")/reporting/generate-dashboard.js" "$BRANCH_DIR/evals"
 
   git add -A
   if git diff --cached --quiet; then
@@ -364,9 +380,7 @@ sync_prototype_bar_config() {
     eval_url="/evals/${PROTO_KEY}/"
   fi
 
-  local overlay_jira
-  overlay_jira="$(node "$SCRIPT_DIR/overlay-get.js" publish.jira_base_url 2>/dev/null || true)"
-  local jira_base="${JIRA_BASE_URL:-${overlay_jira:-https://issues.example.com/browse/}}"
+  local jira_base="${JIRA_BASE_URL:-$(read_yaml_value jira_base_url)}"
   # prototype-bar.json lives at the key root, not under eval/
   node "$export_sync" \
     --artifacts "$KEY_DIR" \
