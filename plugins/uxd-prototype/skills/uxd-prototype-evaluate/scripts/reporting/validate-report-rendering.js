@@ -2,14 +2,15 @@
 /**
  * validate-report-rendering.js
  *
- * Unit test: given pipeline artifacts, runs render-report.js and asserts
- * the output HTML contains all expected sections and data.
+ * Legacy rendering regression: runs render-report.js and compares the resulting
+ * HTML with historical sidecar fields. This writes report outputs and may
+ * normalize legacy journey data; it is not a read-only canonical validator.
  *
  * Catches: data that exists in JSON artifacts but fails to render in the HTML
  * due to field name mismatches, missing template placeholders, or broken lookups.
  *
  * Usage:
- *   node validate-report-rendering.js <artifacts-dir>
+ *   node scripts/reporting/validate-report-rendering.js <artifacts-dir>
  *
  * Exit codes:
  *   0 = all checks pass
@@ -18,11 +19,11 @@
 
 const { readFileSync, existsSync } = require('fs');
 const { join } = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 
 const artifactsDir = process.argv[2];
 if (!artifactsDir) {
-  console.error('Usage: node validate-report-rendering.js <artifacts-dir>');
+  console.error('Usage: node scripts/reporting/validate-report-rendering.js <artifacts-dir>');
   process.exit(1);
 }
 
@@ -37,11 +38,13 @@ function check(name, condition, detail) {
 }
 
 // ─── Step 1: Render the report ───────────────────────────────────────────────
-const renderScript = join(__dirname, '..', 'scripts', 'render-report.js');
+// This implementation always renders; it does not parse a --skip-render flag.
+// Keep it outside modern canonical validation and import-only callers.
+const renderScript = join(__dirname, 'render-report.js');
 try {
-  execSync(`node "${renderScript}" "${absArtifacts}" --note="test-render"`, {
+  execFileSync(process.execPath, [renderScript, absArtifacts, '--note=test-render'], {
     stdio: ['pipe', 'pipe', 'pipe'],
-    cwd: join(__dirname, '..', '..', '..', '..')
+    cwd: join(__dirname, '..', '..', '..', '..', '..')
   });
 } catch (e) {
   check('Report Renders Without Error', false, `render-report.js crashed: ${e.stderr ? e.stderr.toString().slice(0, 200) : e.message}`);

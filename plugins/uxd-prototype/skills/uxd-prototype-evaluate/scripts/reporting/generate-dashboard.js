@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 'use strict';
 
+// Build the old hosted-report index for publish-report.sh. Its CSV and journey
+// numbers help people browse reports; they are not current acceptance checks.
 const fs = require('fs');
 const path = require('path');
 
 const SCRIPT_DIR = __dirname;
-const SKILL_ROOT = path.resolve(SCRIPT_DIR, '..');
+const SKILL_ROOT = path.resolve(SCRIPT_DIR, '../..');
 const TEMPLATE_PATH = path.join(SKILL_ROOT, 'templates', 'report-index.html');
 
 const evalsDir = process.argv[2];
 if (!evalsDir) {
-  console.error('Usage: node generate-dashboard.js <evals-directory>');
-  console.error('  e.g. node generate-dashboard.js /path/to/pages-repo/public/evals');
+  console.error('Usage: node scripts/reporting/generate-dashboard.js <evals-directory>');
+  console.error('  e.g. node scripts/reporting/generate-dashboard.js /path/to/pages-repo/public/evals');
   process.exit(1);
 }
 
@@ -25,7 +27,7 @@ function escapeHtml(str) {
   return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-const { parseCSVLine } = require('./csv-utils');
+const { parseCSVLine } = require('../shared/csv-utils');
 
 function main() {
   if (!fs.existsSync(absEvalsDir)) {
@@ -45,6 +47,8 @@ function main() {
   const rows = [];
 
   for (const key of reportDirs) {
+    // Make one row per hosted prototype folder and add up the display stats.
+    // This does not find or validate the evaluator's saved JSON runs.
     const dir = path.join(absEvalsDir, key);
     totalEvals++;
 

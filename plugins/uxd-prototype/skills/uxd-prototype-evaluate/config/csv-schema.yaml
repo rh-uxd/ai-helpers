@@ -4,7 +4,7 @@
 #
 # This file is the SOURCE OF TRUTH for CSV column ordering in
 # evaluation-report.csv. Both the evaluate-journey skill and
-# scripts/render-report.js MUST conform to it.
+# scripts/reporting/render-report.js MUST conform to it.
 #
 # Do not add, remove, or reorder columns without updating both consumers.
 # =============================================================================

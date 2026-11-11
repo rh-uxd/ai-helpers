@@ -2,9 +2,9 @@
 /**
  * validate-phase-b-output.js
  * 
- * INLINE VALIDATOR — runs after eval-discover (Phase B) completes and BEFORE
- * render-report.js. Catches schema mismatches that would cause the report to
- * render blank usability sections.
+ * Legacy repair CLI, referenced by the old report's recovery guidance.
+ * It rewrites sidecar data; it is not a read-only validator and is not part
+ * of the modern canonical reporting path.
  * 
  * Three failure modes this prevents:
  *   1. Flat-dict usability_dimensions (must be nested with dimensions[])
@@ -14,8 +14,8 @@
  * If any check fails, it FIXES the data in-place (reads persona-results.json
  * to reconstruct the correct format) and prints a warning.
  * 
- * Usage: node validate-phase-b-output.js <artifacts-dir>
- * Exit: 0 always (self-healing — fixes issues and continues)
+ * Usage: node scripts/task-verification/validate-phase-b-output.js <artifacts-dir>
+ * Repair/skip paths exit 0; usage and uncaught read/parse failures can fail.
  */
 
 const { readFileSync, writeFileSync, existsSync } = require('fs');
@@ -23,7 +23,7 @@ const { join } = require('path');
 
 const artifactsDir = process.argv[2];
 if (!artifactsDir) {
-  console.error('Usage: node validate-phase-b-output.js <artifacts-dir>');
+  console.error('Usage: node scripts/task-verification/validate-phase-b-output.js <artifacts-dir>');
   process.exit(1);
 }
 
@@ -92,6 +92,8 @@ if (!ps || !ps.method || !ps.target_audience_source || !Array.isArray(ps.conside
 }
 
 // ═══════════════════ SELF-HEALING ═══════════════════
+// Reconstructed defaults are compatibility display data, not fresh measured
+// usability evidence. Never import them as canonical verification results.
 
 const DIMENSION_NAMES = {
   'workflow_continuity': 'Workflow Continuity & Integrity',

@@ -8,7 +8,7 @@
 #   [Future] HTML prototype from uxd-prototype-create — standalone HTML file
 #
 # Usage:
-#   bash resolve-prototype-url.sh <URL> <WORKSPACE> <ARTIFACTS_DIR> [PORT]
+#   bash scripts/evidence/resolve-prototype-url.sh <URL> <WORKSPACE> <ARTIFACTS_DIR> [PORT]
 #
 # Outputs (stdout, one per line):
 #   RESOLVED_URL=<url>
@@ -21,7 +21,7 @@
 
 set -euo pipefail
 
-URL="${1:?Usage: resolve-prototype-url.sh <URL> <WORKSPACE> <ARTIFACTS_DIR> [PORT]}"
+URL="${1:?Usage: scripts/evidence/resolve-prototype-url.sh <URL> <WORKSPACE> <ARTIFACTS_DIR> [PORT]}"
 WORKSPACE="${2:-}"
 ARTIFACTS_DIR="${3:-}"
 PORT="${4:-9000}"
@@ -100,6 +100,8 @@ find_open_port() {
 # ── Start local server ────────────────────────────────────────────────────────
 
 start_server() {
+  # This fallback starts a persistent server, and npx may fetch sirv if absent.
+  # The caller owns setup/network approval and cleanup of the returned PID.
   local serve_dir="$1"
   local spa_flag="$2"
   local port="$3"

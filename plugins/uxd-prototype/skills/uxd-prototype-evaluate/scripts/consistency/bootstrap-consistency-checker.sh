@@ -3,29 +3,28 @@
 # Sparse-clones guidelines/, scripts/, and requirements files from the
 # consistency-checker git remote.
 #
-# Repo URL resolution (first non-empty wins):
-#   CONSISTENCY_CHECKER_REPO env
-#   overlay context_repos.consistency_checker
+# Repo URL is supplied explicitly through CONSISTENCY_CHECKER_REPO.
 #
 # Writes into the consumer project (UXD_PROJECT_ROOT), never into the skill install.
+# Optional legacy network setup, not the modern Quick companion lookup.
+# Clone/checkout changes local context; invoke only with separate setup approval.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${UXD_PROJECT_ROOT:-}"
 if [ -z "$PROJECT_ROOT" ]; then
-  PROJECT_ROOT="$(node -e "console.log(require('${SCRIPT_DIR}/resolve-root').resolveProjectRoot())" 2>/dev/null || pwd)"
+  PROJECT_ROOT="$(node -e "console.log(require('${SCRIPT_DIR}/../shared/resolve-root').resolveProjectRoot())" 2>/dev/null || pwd)"
 fi
 
-OVERLAY_REPO="$(node "${SCRIPT_DIR}/overlay-get.js" context_repos.consistency_checker 2>/dev/null || true)"
-CHECKER_REPO="${CONSISTENCY_CHECKER_REPO:-${OVERLAY_REPO:-}}"
+CHECKER_REPO="${CONSISTENCY_CHECKER_REPO:-}"
 
 CONTEXT_DIR="${PROJECT_ROOT}/.context/consistency-checker"
 
 echo "Bootstrapping consistency-checker into ${CONTEXT_DIR}..."
 
 if [ -z "$CHECKER_REPO" ]; then
-    echo "Skipping: set CONSISTENCY_CHECKER_REPO or overlay context_repos.consistency_checker"
+    echo "Skipping: set CONSISTENCY_CHECKER_REPO"
     echo "  to a git URL with guidelines/ and scripts/. Design consistency checks will be unavailable."
     exit 0
 fi
