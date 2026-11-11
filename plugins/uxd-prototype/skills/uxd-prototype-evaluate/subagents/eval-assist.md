@@ -196,8 +196,9 @@ Never mutate a completed run.
    observations without presenting them as independent votes; retain evidence IDs.
 3. Separate AC verification, task completion, consistency and heuristic findings.
    Preserve NOT_RUN, blocked/FLAGGED results and unreviewed-draft labels.
-4. Prioritize actionable findings and describe eligible handoffs; a finding is not
-   evidence that the requirements should change. Do not apply edits automatically.
+4. Default to no-fix. Prioritize findings and describe eligible handoffs; a finding
+   is not evidence that requirements should change. Only a separate explicit
+   request/approval authorizes selected edits, followed by one verification pass.
 5. Report actual model calls/usage/cost or unknown (`null`), never unknown as zero.
    Keep host-session costs separate and do not sum inherited parent/child snapshots.
 6. End with the next useful designer choice: inspect, select fixes, continue,

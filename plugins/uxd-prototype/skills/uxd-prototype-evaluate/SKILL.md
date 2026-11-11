@@ -9,6 +9,10 @@ description: >-
 
 # Evaluate Prototype
 
+Default: **no-fix** (findings only). `--no-fix` makes this explicit; it does not
+disable selected checks or walkthroughs. Proposed actions never authorize edits.
+Apply fixes only after a separate request/approval, then verify once and stop.
+
 Conversational routing, planning, readiness, review checkpoints, synthesis and
 cross-skill handoffs follow the
 [responsibility contract](references/workflow/evaluator-responsibilities.md), including

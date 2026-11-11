@@ -9,7 +9,7 @@ const { parseArgs } = require('util');
 const { spawnSync } = require('child_process');
 const { classifyCriterion } = require('./classification/run-classification');
 const { buildOverrides } = require('./classification/classify-ac-tier');
-const { buildDocuments } = require('./artifacts/assemble-phase-a-canonical');
+const { buildDocuments } = require('./artifacts/build-canonical-artifacts');
 const { validateDirectory } = require('./artifacts/validate-canonical-artifacts');
 const { importJudgments } = require('./inspection-contracts/inspection-bundle');
 const compatibility = require('./consistency/consistency-compat');
@@ -42,6 +42,7 @@ function main() {
     input: { type: 'string' }, output: { type: 'string' }, checks: { type: 'string' },
     workspace: { type: 'string' }, 'base-ref': { type: 'string' }, report: { type: 'boolean', default: false },
     'no-report': { type: 'boolean', default: false },
+    'no-fix': { type: 'boolean', default: true },
     'judgment-bundle': { type: 'string' },
     'design-system': { type: 'string' }, 'design-system-version': { type: 'string' },
     guidelines: { type: 'string', multiple: true }, 'guideline-manifest': { type: 'string' },
@@ -134,18 +135,17 @@ function main() {
       const overrides = new Map(buildOverrides(extract).map(item => [item.criterion_id, item]));
       const classifications = extract.ac_list.map(ac => ({ criterion_id: ac.criterion_id, ...classifyCriterion(ac, overrides.get(ac.criterion_id)) }));
       writeJson(stage, 'checks/classify.json', classifications);
-      // Preserve raw triage separately, including its legacy backend-only PASS;
-      // an empty row verdict deliberately assembles as NOT_RUN, not verification.
+      // Preserve triage separately; classification is never verification.
       rows = classifications.map((result, index) => ({
         criterion_id: result.criterion_id, source: source.kind === 'jira' ? 'jira' : 'user',
         tier: result.tier, criterion_text: extract.ac_list[index].text,
-        verdict: '', rationale: `Not verified; classification: ${result.reasonCode}.`,
+        rationale: `Not verified; classification: ${result.reasonCode}.`,
         human_action: result.humanAction,
       }));
       phases.push(phase('classify', 'completed', checkStart, Date.now() - started));
       context.checks.push({ check: 'classify', producer: 'classification/run-classification.js/classifyCriterion', output: 'checks/classify.json', input: 'inputs/packet.json', normalization: 'All AC verdicts remain NOT_RUN, including backend-only exclusions.' });
     } else {
-      rows = extract.ac_list.map(ac => ({ criterion_id: ac.criterion_id, source: source.kind === 'jira' ? 'jira' : 'user', tier: ac.tier || 'T1', criterion_text: ac.text, verdict: '', rationale: 'Not verified; classification was not selected.' }));
+      rows = extract.ac_list.map(ac => ({ criterion_id: ac.criterion_id, source: source.kind === 'jira' ? 'jira' : 'user', tier: ac.tier || 'T1', criterion_text: ac.text, rationale: 'Not verified; classification was not selected.' }));
     }
     let consistency = { source_mode: { ran: false, violations: [] }, degraded: false, guidelines_version: 'not-run', summary: {} };
     if (workspace) {
@@ -161,8 +161,7 @@ function main() {
       context.checks.push({ check: 'consistency-source', producer: 'uxd-consistency-check/scripts/analyze.py', output: 'checks/consistency-report.json', input: 'clean workspace at prototype.revision', base_ref: baseRef, changed_files: changedFiles });
     }
     for (const receipt of context.checks) receipt.output_sha256 = hash(fs.readFileSync(path.join(stage, receipt.output)));
-    const { documents } = buildDocuments(stage, { decision: 'bypass', invalidated_by: ['cache_bypassed'] }, {
-      // Reuse the builder without running its old file-conversion/cache CLI.
+    const { documents } = buildDocuments({
       extract: { key: extract.key, title: extract.title, ac_list: extract.ac_list, extracted_at: start },
       delta: { changed_files: changedFiles }, consistency,
       evidence: { prototype_url: prototype.url, captured_at: start }, rows,
@@ -232,7 +231,6 @@ function main() {
     state.identity.build_key = hash(JSON.stringify({ revision: prototype.revision, base_ref: baseRef, changed_files: changedFiles, ...(judgments.evidenceHash ? { evidence: judgments.evidenceHash } : {}) }));
     state.identity.evaluator_key = hash(JSON.stringify({ assembler: state.identity.evaluator_key, runner: hash(fs.readFileSync(__filename)), judgments: hash(fs.readFileSync(path.join(__dirname, 'inspection-contracts/inspection-bundle.js'))), judgment_producers: judgments.receipts.map(receipt => receipt.producer), classifier: hash(fs.readFileSync(path.join(__dirname, 'classification/run-classification.js'))), overrides: hash(fs.readFileSync(path.join(__dirname, 'classification/classify-ac-tier.js'))), ...(workspace ? { analyzer: hash(fs.readFileSync(path.resolve(__dirname, '../../uxd-consistency-check/scripts/analyze.py'))) } : {}) }));
     state.identity.compound_key = hash(JSON.stringify({ intent_key: state.identity.intent_key, build_key: state.identity.build_key, evaluator_key: state.identity.evaluator_key }));
-    state.cache.entry_key = state.identity.compound_key;
     const runId = `eval-quick-${crypto.randomUUID()}`;
     const updatedAt = new Date().toISOString();
     for (const document of Object.values(documents)) {

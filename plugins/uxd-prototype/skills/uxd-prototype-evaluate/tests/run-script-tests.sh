@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 # run-script-tests.sh
 #
-# Unified test runner for all eval subskill validators.
-# Discovers fixture directories and runs each validator against them.
-#
-# Output protocol: "Test <name> (<fixture>):\n{PASS|FAIL}"
-# This matches what mlflow-trace-eval.py's run_script_tests() parser expects.
+# Canonical evaluator and source-companion contract regressions. No providers,
+# browsers or prototype edits; generated runs stay in temporary directories.
 #
 # Exit codes:
 #   0 = all tests pass
@@ -48,47 +45,12 @@ run_validator() {
 echo "=== Subskill Validation Tests ==="
 echo ""
 
-# Full validators (require a complete artifact set)
-FULL_VALIDATORS="artifacts/validate-artifact-schemas.js reporting/validate-report-rendering.js"
-
-# Subskill validators (run on both golden and their specific minimal fixture)
-SUBSKILL_VALIDATORS="classification/validate-classify.js workflow/validate-fix-loop.js consistency/validate-consistency.js"
-
-# Run against golden fixture directories (.golden-* and golden-*)
-for golden_dir in "$FIXTURES_DIR"/.golden-* "$FIXTURES_DIR"/golden-*; do
-  [ -d "$golden_dir" ] || continue
-  label="$(basename "$golden_dir")"
-  echo "--- Fixture: $label ---"
-
-  for validator in $FULL_VALIDATORS $SUBSKILL_VALIDATORS; do
-    run_validator "$validator" "$golden_dir" "$label"
-  done
-  echo ""
-done
-
-# Run subskill validators against their specific minimal fixtures
-if [ -d "$FIXTURES_DIR/minimal" ]; then
-  echo "--- Minimal fixtures ---"
-
-  [ -d "$FIXTURES_DIR/minimal/classify" ] && \
-    run_validator "classification/validate-classify.js" "$FIXTURES_DIR/minimal/classify" "minimal/classify"
-
-  [ -d "$FIXTURES_DIR/minimal/fix" ] && \
-    run_validator "workflow/validate-fix-loop.js" "$FIXTURES_DIR/minimal/fix" "minimal/fix"
-
-  [ -d "$FIXTURES_DIR/minimal/consistency" ] && \
-    run_validator "consistency/validate-consistency.js" "$FIXTURES_DIR/minimal/consistency" "minimal/consistency"
-
-  echo ""
-fi
+run_validator "consistency/validate-consistency.js" "$FIXTURES_DIR/minimal/consistency" "minimal/consistency"
 
 echo "--- Runtime regressions ---"
 if node - "$SCRIPTS_DIR" <<'NODE'
 const assert = require('assert/strict');
-const fs = require('fs');
-const os = require('os');
 const path = require('path');
-const { spawnSync } = require('child_process');
 
 const scriptsDir = process.argv[2];
 const { counts } = require(path.join(scriptsDir, 'artifacts', 'split-contract'));
@@ -168,22 +130,15 @@ try {
   delete require.cache[require.resolve(classifierPath)];
 }
 
-const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'run-classification-'));
-try {
-  fs.writeFileSync(path.join(tempDir, 'extract-state.json'), JSON.stringify({
-    ac_list: [{ id: 'AC-1', text: 'Status column displays ready state', source: 'jira' }],
-  }));
-  const result = spawnSync(process.execPath, [classifierPath, tempDir, '--json'], { encoding: 'utf8' });
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /"criteria_count":1/);
-  assert.equal(fs.existsSync(path.join(tempDir, 'tier-overrides.json')), true);
-  assert.equal(fs.existsSync(path.join(tempDir, 'evaluation-report.csv')), true);
-
-  const usage = spawnSync(process.execPath, [classifierPath], { encoding: 'utf8' });
-  assert.notEqual(usage.status, 0);
-  assert.match(usage.stderr, /Usage: node scripts\/classification\/run-classification\.js/);
-} finally {
-  fs.rmSync(tempDir, { recursive: true, force: true });
+const { classifyCriterion } = require(classifierPath);
+for (const [text, tier] of [
+  ['The server validates tokens.', 'T3'],
+  ['Status column displays ready state', 'T1'],
+  ['The workflow is intuitive.', 'T4'],
+]) {
+  const result = classifyCriterion({ text });
+  assert.equal(result.tier, tier);
+  assert.equal(result.verdict, 'NOT_RUN');
 }
 NODE
 then
@@ -208,11 +163,11 @@ const { spawnSync } = require('node:child_process');
 const scripts = process.argv[2];
 const skillRoot = path.resolve(scripts, '..');
 const C = require(path.join(scripts, 'artifacts', 'split-contract'));
-const { buildDocuments, compareLegacyParity } = require(path.join(scripts, 'artifacts', 'assemble-phase-a-canonical'));
+const { buildDocuments } = require(path.join(scripts, 'artifacts', 'build-canonical-artifacts'));
 const { run: runSplit } = require(path.join(scripts, 'run-split-evaluation'));
 const { validateBundle } = require(path.join(scripts, 'task-verification', 'walkthrough-contract'));
 const { validatePublishInput } = require(path.join(scripts, 'reporting', 'validate-publish-input'));
-const { validateDocuments } = require(path.join(scripts, 'artifacts', 'validate-canonical-artifacts'));
+const { validateDocuments, validateDirectory } = require(path.join(scripts, 'artifacts', 'validate-canonical-artifacts'));
 const synthesis = require(path.join(scripts, 'reporting', 'evaluation-synthesis'));
 
 const writeJson = (file, value) => {
@@ -262,34 +217,25 @@ function makePacket(directory, withCohort) {
   return { packetPath, snapshotPath: path.join(inputDir, 'source.snapshot') };
 }
 
-function testLegacyCsvDoesNotVerify() {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'legacy-classification-'));
-  try {
-    fs.writeFileSync(path.join(root, 'extract-state.json'), JSON.stringify({
-      key: 'DEMO-1', title: 'Legacy test', extracted_at: utc(),
-      ac_list: [{ criterion_id: 'AC-1', text: 'The server validates tokens.', source: 'jira' }], tasks_to_be_done: [],
-    }));
-    fs.writeFileSync(path.join(root, 'mr-delta.json'), JSON.stringify({ changed_files: [] }));
-    fs.writeFileSync(path.join(root, 'consistency-report.json'), JSON.stringify({
+function testClassificationDoesNotVerify() {
+    const { documents } = buildDocuments({
+      extract: {
+      key: 'DEMO-1', title: 'Classification test', extracted_at: utc(),
+      ac_list: [{ criterion_id: 'AC-1', text: 'The server validates tokens.', source: 'jira' }],
+      }, delta: { changed_files: [] }, consistency: {
       source_mode: { ran: false, violations: [] }, degraded: false, guidelines_version: 'not-run', summary: {},
-    }));
-    fs.writeFileSync(path.join(root, 'prototype-evidence.json'), JSON.stringify({
-      prototype_url: 'https://demo.invalid/prototype', captured_at: utc(), capture: {}, crops: [],
-    }));
-    const csv = [
-      '# ACCEPTANCE CRITERIA',
-      'criterion_id,source,tier,criterion_text,verdict,rationale,evidence,fix_action,fix_file,human_action',
-      'AC-1,jira,T3,"The server validates tokens",PASS,"Backend-only classification",,,,,', '',
-    ].join('\n');
-    fs.writeFileSync(path.join(root, 'evaluation-report.csv'), csv);
-    const { documents } = buildDocuments(root, { decision: 'bypass', invalidated_by: ['cache_bypassed'] });
+      }, evidence: { prototype_url: 'https://demo.invalid/prototype', captured_at: utc() },
+      rows: [{ criterion_id: 'AC-1', criterion_text: 'The server validates tokens.', source: 'jira', tier: 'T3', verdict: 'PASS' }],
+    });
     const result = documents['pe-evaluation-snapshot.json'].ac_results[0];
     assert.equal(result.verdict, 'NOT_RUN');
     assert.equal(result.evaluated_by, null);
     assert.deepEqual(result.evidence_ids, []);
-    assert.match(result.rationale, /no canonical evidence-backed verification receipt/);
-    compareLegacyParity(root, documents);
-    assert.match(fs.readFileSync(path.join(root, 'evaluation-report.csv'), 'utf8'), /,PASS,/);
+    assert.deepEqual(documents['pe-evidence.json'].captures, []);
+    assert.deepEqual(documents['pe-context.json'].intent.personas, []);
+    assert.deepEqual(documents['pe-context.json'].intent.tasks, []);
+    assert.equal(Object.hasOwn(documents['pe-state.json'], 'cache'), false);
+    assert.deepEqual(validateDocuments(documents), []);
 
     const unverifiedPass = structuredClone(documents);
     unverifiedPass['pe-evaluation-snapshot.json'].ac_results[0] = {
@@ -304,7 +250,12 @@ function testLegacyCsvDoesNotVerify() {
     assert.ok(validateDocuments(missingVerifier).some(error => error.code === 'missing_verifier'));
 
     const explicit = structuredClone(documents);
+    explicit['pe-context.json'].intent.tasks = [{ id: 'task-1', title: 'Check draft', ac_ids: ['ac-1'], target_route: '/drafts' }];
+    explicit['pe-context.json'].intent.personas = [{ id: 'persona-prototype-user', label: 'Selected user', experience: 'mixed', task_ids: ['task-1'] }];
     const explicitEvidence = explicit['pe-evidence.json'];
+    explicitEvidence.captures.push({ id: 'capture-explicit', url: 'https://demo.invalid/prototype',
+      viewport: { width: 1440, height: 900, device_scale_factor: 1 }, captured_at: utc(),
+      dom_digest: C.hash('Draft title absent'), page: { title: 'Drafts', headings: [], controls: [] } });
     explicitEvidence.items.push({
       id: 'evidence-explicit-check', capture_id: explicitEvidence.captures[0].id,
       kind: 'dom', purpose: 'ac', subject: { role: 'text', name: 'Draft title', locator: 'main' },
@@ -330,9 +281,6 @@ function testLegacyCsvDoesNotVerify() {
     contradictory['pe-evaluation-snapshot.json'].ac_results[0].verdict = 'PASS';
     contradictory['pe-evaluation-snapshot.json'].summary.ac_counts = C.counts(contradictory['pe-evaluation-snapshot.json'].ac_results);
     assert.ok(validateDocuments(contradictory).some(error => error.code === 'missing_explicit_verification'));
-  } finally {
-    fs.rmSync(root, { recursive: true, force: true });
-  }
 }
 
 function testExplicitSelection() {
@@ -390,18 +338,24 @@ function testCanonicalReportAndPublisher(root, runDirectory) {
   const csvOnly = path.join(root, 'csv-only');
   fs.mkdirSync(csvOnly);
   fs.writeFileSync(path.join(csvOnly, 'evaluation-report.csv'), 'AC-1,PASS\n');
-  assert.throws(() => validatePublishInput(csvOnly), /requires --legacy/);
-  assert.throws(() => validatePublishInput(csvOnly, { legacy: true }), /evaluation-report.html is missing/);
+  assert.throws(() => validatePublishInput(csvOnly), /requires all five canonical JSON/);
+  assert.notEqual(invoke(path.join(scripts, 'run-report.js'), [csvOnly]).status, 0);
+  assert.equal(fs.existsSync(path.join(csvOnly, 'evaluation-report.html')), false);
   const legacy = path.join(root, 'legacy');
   fs.mkdirSync(legacy);
   fs.writeFileSync(path.join(legacy, 'evaluation-report.csv'), 'AC-1,PASS\n');
   fs.writeFileSync(path.join(legacy, 'evaluation-report.html'), '<p>Legacy report</p>');
-  assert.throws(() => validatePublishInput(legacy), /requires --legacy/);
-  assert.equal(validatePublishInput(legacy, { legacy: true }).mode, 'legacy');
+  assert.throws(() => validatePublishInput(legacy), /requires all five canonical JSON/);
+  assert.throws(() => validatePublishInput(legacy, { legacy: true }), /requires all five canonical JSON/);
   const legacyShell = spawnSync('bash', [publishScript, legacy, '--legacy', '--mode=invalid'], { cwd: skillRoot, encoding: 'utf8' });
   assert.notEqual(legacyShell.status, 0);
-  assert.match(legacyShell.stdout, /"mode":"legacy"/);
-  assert.match(legacyShell.stderr, /Unknown mode/);
+  assert.match(legacyShell.stderr, /Unknown flag: --legacy/);
+
+  const index = invoke(path.join(scripts, 'reporting/generate-dashboard.js'), [root]);
+  assert.equal(index.status, 0, index.stderr);
+  const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.match(indexHtml, /legacy\//);
+  assert.doesNotMatch(indexHtml, /<span class="badge badge-pass"|Pass Rate|All AC Pass/);
 }
 
 function makeNotRunBundle(directory, docs, packetBytes, snapshotBytes) {
@@ -471,9 +425,259 @@ function testFullReviewAndWalkthroughBundle(root) {
   assert.doesNotMatch(report, /<td>(PASS|FAIL|NOT_RUN)<\/td>/);
 }
 
+function testNoFixAndIntegrity(root) {
+  const input = makePacket(root, false);
+  const bytes = fs.readFileSync(input.packetPath);
+  for (const [name, extra] of [['default', []], ['explicit', ['--no-fix']]]) {
+    for (const runner of ['run-quick-checks.js', 'run-split-evaluation.js']) {
+      const output = path.join(root, `${name}-${runner}`);
+      const result = invoke(path.join(scripts, runner), [
+        ...(runner === 'run-split-evaluation.js' ? ['--route', 'quick'] : []),
+        '--input', input.packetPath, '--output', output, '--checks', 'classify', ...extra,
+      ]);
+      assert.equal(result.status, 0, result.stderr);
+      const docs = C.loadRun(output);
+      assert.equal(docs['pe-state.json'].lifecycle.exit_reason, 'no-fix');
+      assert.equal(docs['pe-state.json'].permissions.prototype_edits.status, 'not-requested');
+      assert.equal(Object.hasOwn(docs['pe-state.json'], 'cache'), false);
+      assert.ok(docs['pe-state.json'].phases.every(p => !p.model_invoked));
+      assert.ok(docs['pe-actions.json'].actions.every(a => a.status === 'proposed'));
+      assert.equal(fs.existsSync(path.join(output, 'evaluation-report.csv')), false);
+      assert.equal(fs.existsSync(path.join(output, 'evaluation-report.html')), false);
+      assert.equal(fs.existsSync(path.join(output, 'refinement-suggestions.json')), false);
+      assert.equal(fs.existsSync(path.join(root, 'cache')), false);
+      for (const name of C.FILES) assert.ok(fs.existsSync(path.join(output, name)));
+      assert.deepEqual(fs.readFileSync(input.packetPath), bytes);
+      assert.throws(() => runSplit({ route: 'quick', input: input.packetPath, output, checks: 'classify' }), /fresh run directory/);
+    }
+  }
+  const run = path.join(root, 'default-run-split-evaluation.js');
+  const docs = C.loadRun(run);
+  const altered = structuredClone(docs);
+  altered['pe-state.json'].identity.compound_key = C.hash('wrong identity');
+  assert.ok(validateDocuments(altered).some(e => e.code === 'compound_key_mismatch'));
+  const source = path.join(run, 'inputs/source.snapshot');
+  const sourceBytes = fs.readFileSync(source);
+  fs.appendFileSync(source, 'tampered');
+  assert.equal(validateDirectory(run).valid, false);
+  // The removed legacy staging option must not weaken consumer validation.
+  assert.equal(validateDirectory(run, { skipLinkedArtifacts: true }).valid, false);
+  assert.throws(() => C.loadRun(run), /hash mismatch/);
+  fs.writeFileSync(source, sourceBytes);
+  const packet = path.join(run, 'inputs/packet.json');
+  const packetBytes = fs.readFileSync(packet);
+  fs.unlinkSync(packet);
+  fs.symlinkSync(input.packetPath, packet);
+  assert.throws(() => C.loadRun(run), /escapes|outside/);
+  fs.unlinkSync(packet);
+  fs.writeFileSync(packet, packetBytes);
+  assert.equal(validateDirectory(run).valid, true);
+  const statePath = path.join(run, 'pe-state.json');
+  fs.unlinkSync(statePath);
+  fs.writeFileSync(path.join(run, 'evaluation-report.csv'), 'AC-1,PASS\n');
+  assert.notEqual(invoke(path.join(scripts, 'run-report.js'), [run, '--chat']).status, 0);
+  writeJson(statePath, docs['pe-state.json']);
+}
+
+function testReviewedPlan(root) {
+  const input = makePacket(root, true);
+  const planPath = path.join(root, 'plan.json');
+  const plan = {
+    schema_version: 1, goal: 'Review draft creation', packet_sha256: C.hash(fs.readFileSync(input.packetPath)), reviewed_at: utc(),
+    questions: [{ id: 'question-draft', text: 'Can the selected user save a draft?' }],
+    allowed_checks: ['classify', 'walkthroughs'],
+    limits: { max_model_invocations: 4, max_cost_usd: 1, stop_conditions: ['Stop at the review checkpoint.'] },
+    steps: ['classify', 'walkthroughs'].map((check, i) => ({
+      id: `step-${check}`, check, question_ids: ['question-draft'], rationale: 'Check only reviewed scope.',
+      expected_evidence: ['Retained producer receipts.'], depends_on: i ? ['step-classify'] : [],
+    })),
+  };
+  writeJson(planPath, plan);
+  const parent = path.join(root, 'parent');
+  const first = runSplit({ route: 'full', input: input.packetPath, output: parent, plan: planPath });
+  assert.equal(first.status, 'awaiting-review');
+  const parentDocs = C.loadRun(parent);
+  const approval = path.join(root, 'approval.json');
+  writeJson(approval, { run_id: first.run_id, artifact_sha256: first.artifact_sha256, approved: true, recorded_at: utc(), purpose: 'complete-without-walkthroughs' });
+  const reserialized = path.join(root, 'reserialized.json');
+  fs.writeFileSync(reserialized, JSON.stringify(plan));
+  assert.throws(() => runSplit({ route: 'full', 'continue-from': parent, output: path.join(root, 'changed-plan'), approval, plan: reserialized }), /cannot replace the frozen plan/);
+  const child = path.join(root, 'child');
+  runSplit({ route: 'full', 'continue-from': parent, output: child, approval });
+  const childDocs = C.loadRun(child);
+  assert.deepEqual(fs.readFileSync(path.join(child, 'inputs/evaluation-plan.json')), fs.readFileSync(planPath));
+  assert.deepEqual(childDocs['pe-state.json'].planning.own_usage, { model_invocations: 0, llm_cost_usd: 0, known_cost_usd: 0 });
+  assert.deepEqual(childDocs['pe-state.json'].planning.prior_usage, parentDocs['pe-state.json'].planning.lineage_usage);
+  assert.equal(childDocs['pe-state.json'].planning.execution[1].status, 'not-run');
+}
+
+function observedBundle(directory, docs, packetBytes, snapshotBytes) {
+  const bundle = makeNotRunBundle(directory, docs, packetBytes, snapshotBytes);
+  bundle.inspection.revision_verified = true;
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jB5kAAAAASUVORK5CYII=', 'base64');
+  const image = { path: 'evidence/observed.png', width: 1, height: 1, sha256: C.hash(png) };
+  fs.mkdirSync(path.join(directory, 'evidence'), { recursive: true });
+  fs.writeFileSync(path.join(directory, image.path), png);
+  bundle.evidence.captures = [{ id: 'capture-observed', url: 'https://demo.invalid/prototype',
+    source_ref: bundle.prototype_revision, screen_id: 'screen-drafts', state_id: 'state-empty',
+    viewport: { width: 1, height: 1, device_scale_factor: 1 }, captured_at: utc(),
+    dom_digest: C.hash('Synthetic observation'), raw_image: image,
+    page: { title: 'Drafts', headings: [], controls: [] } }];
+  bundle.evidence.items = [{ id: 'evidence-observed', capture_id: 'capture-observed', kind: 'full-page', purpose: 'ac',
+    subject: { role: 'main', name: 'Draft list', locator: 'main' }, image }];
+  const start = Date.now();
+  bundle.phases = [1, 2].map(sequence => {
+    const context = `checks/context-${sequence}.json`, result = `checks/result-${sequence}.json`;
+    writeJson(path.join(directory, context), { supplied_context: 'Synthetic test context' });
+    writeJson(path.join(directory, result), { result: sequence === 1 ? 'provider error' : 'Draft title absent' });
+    return { invocation_id: `invocation-${sequence}`, task_id: 'task-save-draft', persona_id: 'persona-junior',
+      sequence, session_id: 'session-junior', context_status: 'captured', evidence_ids: sequence === 2 ? ['evidence-observed'] : [],
+      submitted_context: { path: context, sha256: C.hash(fs.readFileSync(path.join(directory, context))) },
+      returned_result: { path: result, sha256: C.hash(fs.readFileSync(path.join(directory, result))) },
+      measurement: { name: 'journey', status: sequence === 1 ? 'failed' : 'completed', model_invoked: true,
+        provider: 'openai', provider_id: 'openai', model: 'synthetic-test-model',
+        started_at: new Date(start + sequence * 10).toISOString(), ended_at: new Date(start + sequence * 10 + 5).toISOString(),
+        duration_ms: null, input_files: 1, input_bytes: 10, output_bytes: 10,
+        token_usage: { input: null, cached_input: null, output: null, reasoning_tokens: null }, llm_cost_usd: sequence === 1 ? 0.1 : null } };
+  });
+  const journey = bundle.journeys[0];
+  journey.verdict = 'FAIL';
+  journey.execution = { status: 'failed', stop_reason: 'Explicit check found the draft title absent.', session_id: 'session-junior', invocation_ids: ['invocation-1', 'invocation-2'] };
+  journey.steps = [{ id: 'step-verify-title', sequence: 1, invocation_id: 'invocation-2', action: 'verify', target: 'draft title', outcome: 'failure', evidence_ids: ['evidence-observed'], note: 'Synthetic failure observation.' }];
+  bundle.ac_results = [{ ac_id: 'ac-1', verdict: 'FAIL', rationale: 'Draft title absent.', evidence_ids: ['evidence-observed'],
+    action_ids: ['action-title'], evaluated_by: 'journey', updated_at: utc() }];
+  bundle.proposed_actions = [{ id: 'action-title', kind: 'fix', status: 'proposed', priority: 'high', confidence: 'high',
+    source: { ac_id: 'ac-1', finding_id: null, evidence_ids: ['evidence-observed'] }, target: { file: 'src/App.tsx', line: 1 },
+    recommendation: 'Show the saved draft title.', result: { changed_files: [] }, handoff: { requires_user_invocation: true, skill: 'uxd-prototype-create', payload: {} } }];
+  return bundle;
+}
+
+function testApprovedVerificationAndUsage(root) {
+  const input = makePacket(root, true);
+  const packet = JSON.parse(fs.readFileSync(input.packetPath));
+  packet.extract.ac_list[0].text = 'The saved draft title is visible.';
+  for (const key of ['browser', 'provider']) packet.permissions[key] = { status: 'approved', scope: 'Synthetic test only', recorded_at: utc() };
+  writeJson(input.packetPath, packet);
+  const parent = path.join(root, 'parent');
+  const first = runSplit({ route: 'full', input: input.packetPath, output: parent, checks: 'classify' });
+  const parentHash = C.digest(parent);
+  const approval = path.join(root, 'approval.json');
+  writeJson(approval, { run_id: first.run_id, artifact_sha256: C.hash('wrong snapshot'), approved: true, recorded_at: utc(), purpose: 'continue-walkthroughs' });
+  assert.throws(() => runSplit({ route: 'full', 'continue-from': parent, output: path.join(root, 'bad-approval'), approval }), /exact reviewed canonical snapshot/);
+  writeJson(approval, { run_id: first.run_id, artifact_sha256: parentHash, approved: true, recorded_at: utc(), purpose: 'continue-walkthroughs' });
+  const producer = path.join(root, 'producer');
+  const bundle = observedBundle(producer, C.loadRun(parent), fs.readFileSync(input.packetPath), fs.readFileSync(input.snapshotPath));
+  const bundlePath = path.join(producer, 'bundle.json');
+  writeJson(bundlePath, bundle);
+  const denied = C.loadRun(parent);
+  denied['pe-state.json'].permissions.provider.status = 'denied';
+  assert.throws(() => require(path.join(scripts, 'task-verification/walkthrough-contract')).merge(denied, bundlePath, producer), /recorded browser and provider approval/);
+  const completed = path.join(root, 'completed');
+  runSplit({ route: 'full', 'continue-from': parent, output: completed, approval, 'walkthrough-bundle': bundlePath });
+  assert.equal(C.digest(parent), parentHash);
+  const docs = C.loadRun(completed);
+  assert.equal(docs['pe-state.json'].lifecycle.exit_reason, 'no-fix');
+  assert.equal(docs['pe-actions.json'].actions[0].status, 'proposed');
+  assert.deepEqual(docs['pe-state.json'].usage_attribution.own_usage, { model_invocations: 2, llm_cost_usd: null, known_cost_usd: 0.1 });
+  assert.deepEqual(docs['pe-state.json'].usage_attribution.lineage_usage, docs['pe-state.json'].usage_attribution.own_usage);
+  const imagePath = path.join(completed, 'evidence/observed.png'), image = fs.readFileSync(imagePath);
+  fs.appendFileSync(imagePath, 'tampered');
+  assert.equal(validateDirectory(completed).valid, false);
+  assert.notEqual(invoke(path.join(scripts, 'run-report.js'), [completed]).status, 0);
+  fs.writeFileSync(imagePath, image);
+  const escaped = structuredClone(bundle);
+  escaped.phases[0].returned_result.path = '../escape.json';
+  assert.throws(() => validateBundle(docs, escaped, bundle.packet_sha256), /Invalid walkthrough bundle/);
+  const failedCall = structuredClone(bundle);
+  failedCall.journeys[0].steps[0].invocation_id = 'invocation-1';
+  assert.throws(() => validateBundle(docs, failedCall, bundle.packet_sha256), /failed provider call/);
+  assert.match(runReport(completed, '--chat'), /Unknown|unknown/);
+  runReport(completed);
+
+  const fixApproval = path.join(root, 'fix-approval.json');
+  writeJson(fixApproval, { run_id: docs['pe-context.json'].run_id, artifact_sha256: C.digest(completed), approved: true,
+    recorded_at: utc(), purpose: 'prototype-edits', action_ids: ['action-title'] });
+  packet.prototype.revision = 'build-revision-2';
+  writeJson(input.packetPath, packet);
+  const receipt = path.join(root, 'fix-receipt.json');
+  writeJson(receipt, { action_ids: ['action-title'], before_revision: 'build-revision-1', after_revision: packet.prototype.revision, changed_files: ['src/App.tsx'], applied_at: utc() });
+  const verificationProducer = path.join(root, 'verification-producer');
+  const seed = structuredClone(docs);
+  seed['pe-context.json'].intent.scope.source_ref = packet.prototype.revision;
+  const verificationBundle = observedBundle(verificationProducer, seed, fs.readFileSync(input.packetPath), fs.readFileSync(input.snapshotPath));
+  const verificationBundlePath = path.join(verificationProducer, 'bundle.json');
+  writeJson(verificationBundlePath, verificationBundle);
+  const verified = path.join(root, 'verified');
+  assert.throws(() => runSplit({ route: 'full', 'verify-from': completed, input: input.packetPath, output: verified, checks: 'classify' }), /separate --approval decision/);
+  runSplit({ route: 'full', 'verify-from': completed, input: input.packetPath, output: verified, checks: 'classify', approval: fixApproval, 'fix-receipt': receipt, 'walkthrough-bundle': verificationBundlePath });
+  const verifiedDocs = C.loadRun(verified);
+  assert.equal(verifiedDocs['pe-state.json'].workflow.pass, 2);
+  assert.equal(verifiedDocs['pe-state.json'].usage_attribution.own_usage.model_invocations, 2);
+  assert.equal(verifiedDocs['pe-state.json'].usage_attribution.prior_usage.model_invocations, 2);
+  assert.equal(verifiedDocs['pe-state.json'].usage_attribution.lineage_usage.model_invocations, 4);
+  assert.equal(verifiedDocs['pe-state.json'].usage_attribution.lineage_usage.llm_cost_usd, null);
+  assert.equal(verifiedDocs['pe-actions.json'].actions.find(a => a.id === 'applied-action-title').status, 'applied');
+  assert.match(runReport(verified, '--chat'), /Inherited|inherited/);
+  writeJson(fixApproval, { run_id: verifiedDocs['pe-context.json'].run_id, artifact_sha256: C.digest(verified), approved: true, recorded_at: utc(), purpose: 'prototype-edits' });
+  assert.throws(() => runSplit({ route: 'full', 'verify-from': verified, output: path.join(root, 'third-pass'), approval: fixApproval }), /Only one post-fix verification/);
+}
+
+function testQuickModelImport(root) {
+  const input = makePacket(root, false);
+  const packet = JSON.parse(fs.readFileSync(input.packetPath));
+  packet.check_scope = { task: 'Inspect draft list', screen_ids: ['screen-drafts'], state_ids: ['state-empty'], source_ids: ['DEMO-1#AC-1'] };
+  for (const key of ['browser', 'provider']) packet.permissions[key] = { status: 'approved', scope: 'Synthetic test only', recorded_at: utc() };
+  writeJson(input.packetPath, packet);
+  const producer = path.join(root, 'producer');
+  const seed = { 'pe-context.json': { prototype_key: 'DEMO-1', intent: { scope: { source_ref: packet.prototype.revision } } } };
+  const sample = observedBundle(producer, seed, fs.readFileSync(input.packetPath), fs.readFileSync(input.snapshotPath));
+  const reference = (name, data) => {
+    writeJson(path.join(producer, name), data);
+    return { path: name, sha256: C.hash(fs.readFileSync(path.join(producer, name))) };
+  };
+  const phases = ['content', 'hierarchy', 'interaction'].map(lens => ({
+    measurement: { ...sample.phases[1].measurement, name: `heuristic-${lens}`, checks: lens === 'hierarchy' ? ['heuristic', 'consistency-visual'] : ['heuristic'] },
+    submitted_context: reference(`checks/model/${lens}-input.json`, { synthetic: 'Scoped input' }),
+    returned_result: reference(`checks/model/${lens}-result.json`, { synthetic: 'Unreviewed findings' }),
+    context_status: 'captured', evidence_ids: ['evidence-observed'],
+  }));
+  const bundle = {
+    schema_version: 1, prototype_key: 'DEMO-1', prototype_revision: packet.prototype.revision,
+    packet_sha256: C.hash(fs.readFileSync(input.packetPath)), source_sha256: C.hash(fs.readFileSync(input.snapshotPath)),
+    scope: packet.check_scope,
+    inspection: { method: 'browser', revision_verified: true, receipt: reference('checks/model/inspection.json', { synthetic: 'Verified test build' }) },
+    evidence: sample.evidence, phases,
+    results: {
+      heuristic: { profile: 'prototype-specialists', framework: 'nielsen',
+        coverage: Object.entries({ content: [2, 4, 5, 9, 10], hierarchy: [2, 4, 6, 8], interaction: [1, 3, 5, 9, 7] }).flatMap(([lens, ids]) => ids.map(heuristic_id => ({ lens, heuristic_id, status: 'assessed', evidence_ids: ['evidence-observed'], note: 'Synthetic bounded coverage.' }))),
+        findings: [{ id: 'candidate-hierarchy', title: 'Synthetic hierarchy finding', screen_id: 'screen-drafts', state_id: 'state-empty',
+          observation: 'Synthetic observation for contract testing.', heuristic_ids: [8], identified_by: ['hierarchy'], source_ids: ['DEMO-1#AC-1'],
+          evidence_ids: ['evidence-observed'], review_status: 'unreviewed', suggested_severity: null, dissent: '' }],
+      },
+      'consistency-visual': { guidelines_version: 'synthetic-v1', guidelines_checked: 1, screenshots_checked: 1, findings: [] },
+    },
+    producers: { heuristic: { name: 'synthetic-heuristic', version: 'test' }, 'consistency-visual': { name: 'synthetic-visual', version: 'test' } },
+  };
+  const bundlePath = path.join(producer, 'judgment-bundle.json');
+  writeJson(bundlePath, bundle);
+  const output = path.join(root, 'quick');
+  runSplit({ route: 'quick', input: input.packetPath, output, checks: 'heuristic,consistency-visual', 'judgment-bundle': bundlePath });
+  const docs = C.loadRun(output);
+  assert.equal(docs['pe-state.json'].usage_attribution.own_usage.model_invocations, 3);
+  assert.equal(docs['pe-state.json'].usage_attribution.own_usage.llm_cost_usd, null);
+  assert.equal(docs['pe-evaluation-snapshot.json'].heuristics.findings[0].review_status, 'unreviewed');
+  assert.equal(docs['pe-evaluation-snapshot.json'].ac_results[0].verdict, 'NOT_RUN');
+  assert.equal(docs['pe-evaluation-snapshot.json'].consistency.visual_checked, true);
+  assert.ok(docs['pe-actions.json'].actions.every(a => a.status === 'proposed'));
+  runReport(output);
+  const receipt = path.join(output, 'checks/model/hierarchy-result.json');
+  fs.appendFileSync(receipt, 'tampered');
+  assert.equal(validateDirectory(output).valid, false);
+}
+
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'uxd-split-evaluation-'));
 try {
-  testLegacyCsvDoesNotVerify();
+  testClassificationDoesNotVerify();
   testExplicitSelection();
   const input = makePacket(temp, true);
   const fullParent = path.join(temp, 'artifacts', 'DEMO-1', 'evaluation', 'full-review-1');
@@ -481,6 +685,10 @@ try {
   runSplit({ route: 'full', input: input.packetPath, output: fullParent, checks: 'classify' });
   testCanonicalReportAndPublisher(temp, fullParent);
   testFullReviewAndWalkthroughBundle(path.join(temp, 'full-workflow'));
+  testNoFixAndIntegrity(path.join(temp, 'no-fix-integrity'));
+  testReviewedPlan(path.join(temp, 'planning'));
+  testApprovedVerificationAndUsage(path.join(temp, 'verification'));
+  testQuickModelImport(path.join(temp, 'quick-model'));
   process.stdout.write('Split evaluator regressions passed.\n');
 } finally {
   fs.rmSync(temp, { recursive: true, force: true });

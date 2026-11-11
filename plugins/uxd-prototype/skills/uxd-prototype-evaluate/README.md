@@ -7,6 +7,9 @@ creation, standalone consistency or generalist design reviews through evaluation
 
 ## Routes
 
+Default: **no-fix**. Review findings first; applying selected fixes requires a
+separate request and approval, followed by at most one verification pass.
+
 - **Quick Checks:** only selected classification, source consistency or bounded
   heuristic/visual inspections. No implicit personas, edits or reporting.
 - **Agentic Walkthroughs:** independently callable through the sibling

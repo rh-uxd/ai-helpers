@@ -30,7 +30,7 @@ function isUtcTimestamp(value) {
   catch { return false; }
 }
 
-function validatePublishInput(directory, { legacy = false } = {}) {
+function validatePublishInput(directory) {
   directory = path.resolve(directory);
   if (!fs.existsSync(directory) || !fs.statSync(directory).isDirectory()) throw new Error(`Evaluation directory does not exist: ${directory}`);
   const present = CANONICAL_FILES.map(name => fs.existsSync(path.join(directory, name)));
@@ -40,7 +40,6 @@ function validatePublishInput(directory, { legacy = false } = {}) {
 
   if (hasCanonicalFiles) {
     if (!present.every(Boolean)) throw new Error('Canonical evaluation is partial; all five canonical files are required.');
-    if (legacy) throw new Error('--legacy cannot bypass canonical validation for a canonical run.');
     const documents = C.loadRun(directory);
     if (!isRegularFile(report)) throw new Error('Canonical evaluation report is missing or is not a regular file.');
     if (!isRegularFile(integrityPath)) throw new Error('Canonical report-integrity.json is missing or is not a regular file.');
@@ -59,17 +58,14 @@ function validatePublishInput(directory, { legacy = false } = {}) {
     return { mode: 'canonical', run_id: integrity.run_id, artifact_sha256: snapshotHash, html_sha256: htmlHash };
   }
 
-  if (!legacy) throw new Error('Legacy report publishing requires --legacy; CSV/HTML alone are not canonical evaluation results.');
-  if (!isRegularFile(report)) throw new Error('Legacy evaluation-report.html is missing or is not a regular file.');
-  return { mode: 'legacy' };
+  throw new Error('Report publication requires all five canonical JSON files; CSV/HTML alone are not evaluation results.');
 }
 
 function main() {
   const args = process.argv.slice(2);
-  const legacy = args.includes('--legacy');
   const directory = args.find(arg => !arg.startsWith('--'));
-  if (!directory || args.some(arg => arg !== '--legacy' && arg !== directory)) throw new Error('Usage: validate-publish-input.js <run-directory> [--legacy]');
-  const result = validatePublishInput(directory, { legacy });
+  if (!directory || args.length !== 1) throw new Error('Usage: validate-publish-input.js <run-directory>');
+  const result = validatePublishInput(directory);
   process.stdout.write(`${JSON.stringify(result)}\n`);
 }
 

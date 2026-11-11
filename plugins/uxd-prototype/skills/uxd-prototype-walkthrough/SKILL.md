@@ -83,8 +83,8 @@ validated; the host must independently ensure context isolation and truthful rec
 
 ## Outputs
 
-Independent execution produces an immutable run directory containing `brief.json`,
-`evaluation.json`, `evidence.json`, `actions.json`, `state.json`, plus linked
+Independent execution produces an immutable run directory containing `pe-context.json`,
+`pe-evaluation-snapshot.json`, `pe-evidence.json`, `pe-actions.json`, `pe-state.json`, plus linked
 input/evidence receipts.
 Retain the exact run path for review. Full composition consumes the producer
 bundle through its checkpoint, not a completed standalone run.

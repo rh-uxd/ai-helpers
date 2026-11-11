@@ -87,26 +87,6 @@
               "required": ["background", "problem_statement", "user_stories", "ui_enhancements", "source_ticket"],
               "additionalProperties": false
             },
-            "breadcrumb": {
-              "type": "object",
-              "properties": {
-                "outcome": { "$ref": "#/$defs/ticket_reference" },
-                "rfe": { "$ref": "#/$defs/ticket_reference" },
-                "strat": { "$ref": "#/$defs/ticket_reference" },
-                "prototype": {
-                  "type": ["object", "null"],
-                  "properties": {
-                    "path": { "$ref": "shared.schema.json#/$defs/relative_path" },
-                    "commit": { "type": "string", "minLength": 1, "maxLength": 160 }
-                  },
-                  "required": ["path", "commit"],
-                  "additionalProperties": false
-                },
-                "mr": { "$ref": "#/$defs/ticket_reference" }
-              },
-              "required": ["outcome", "rfe", "strat", "prototype", "mr"],
-              "additionalProperties": false
-            },
             "scope": {
               "type": "object",
               "properties": {
@@ -230,17 +210,5 @@
       "required": ["intent"]
     }
   ],
-  "unevaluatedProperties": false,
-  "$defs": {
-    "ticket_reference": {
-      "type": ["object", "null"],
-      "properties": {
-        "key": { "type": "string", "minLength": 1, "maxLength": 120 },
-        "url": { "$ref": "shared.schema.json#/$defs/url" },
-        "validated": { "type": "boolean" }
-      },
-      "required": ["key", "url", "validated"],
-      "additionalProperties": false
-    }
-  }
+  "unevaluatedProperties": false
 }

@@ -9,7 +9,7 @@
  *
  * This validator is intentionally model-free. JSON Schema validates each
  * document while the cross-artifact checks validate references, summaries,
- * crop bounds, cache identity, and safety invariants that JSON Schema cannot
+ * crop bounds, execution identity, and safety invariants that JSON Schema cannot
  * compare across sibling files.
  */
 
@@ -410,7 +410,7 @@ function validateEvidenceBounds(documents, errors) {
   }
 }
 
-function validateCache(documents, errors) {
+function validateExecutionIdentity(documents, errors) {
   const state = documents['pe-state.json'];
   if (!state) return;
   const identity = state.identity;
@@ -421,15 +421,6 @@ function validateCache(documents, errors) {
   })).digest('hex')}`;
   if (identity.compound_key !== expected) {
     issue(errors, 'pe-state.json', '/identity/compound_key', 'compound_key_mismatch', 'compound_key must hash intent_key, build_key, and evaluator_key in canonical key order.');
-  }
-  if (state.cache.entry_key !== identity.compound_key) {
-    issue(errors, 'pe-state.json', '/cache/entry_key', 'cache_entry_key_mismatch', 'cache.entry_key must equal identity.compound_key.');
-  }
-  if (state.cache.decision === 'hit' && (state.cache.invalidated_by.length !== 1 || state.cache.invalidated_by[0] !== 'none')) {
-    issue(errors, 'pe-state.json', '/cache/invalidated_by', 'invalid_cache_hit', 'A cache hit cannot list an invalidation reason.');
-  }
-  if ((state.cache.decision === 'miss' || state.cache.decision === 'invalid') && state.cache.invalidated_by.includes('none')) {
-    issue(errors, 'pe-state.json', '/cache/invalidated_by', 'missing_invalidation_reason', 'A cache miss or invalid entry must name an invalidation reason.');
   }
   for (let index = 0; index < state.phases.length; index += 1) {
     const phase = state.phases[index];
@@ -453,15 +444,13 @@ function validateDocuments(documents) {
   validateReferences(documents, errors);
   validateSummaries(documents, errors);
   validateEvidenceBounds(documents, errors);
-  validateCache(documents, errors);
+  validateExecutionIdentity(documents, errors);
   try { require('../consistency/consistency-contract').validateCanonical(documents['pe-evaluation-snapshot.json'].consistency); }
   catch (error) { issue(errors, 'pe-evaluation-snapshot.json', '/consistency/source_analysis', 'source_contract', error.message); }
   errors.push(...require('./split-contract').validateSplit(documents));
   return errors;
 }
 
-// skipLinkedArtifacts is for internal five-file staging/cache paths only;
-// CLI and consumer validation retain strict linked-closure checks by default.
 function validateDirectoryCore(artifactsDir) {
   // Validate persisted workflow/plan/source receipts without recursing through
   // loadRun. The public directory wrapper adds generic linked-file integrity.
@@ -486,10 +475,10 @@ function validateDirectoryCore(artifactsDir) {
   return { root, documents, errors: validationErrors };
 }
 
-function validateDirectory(artifactsDir, options = {}) {
+function validateDirectory(artifactsDir) {
   const result = validateDirectoryCore(artifactsDir);
   const schemaInvalid = result.errors.some(error => error.code.startsWith('schema_'));
-  if (!options.skipLinkedArtifacts && result.documents && !schemaInvalid) {
+  if (result.documents && !schemaInvalid) {
     result.errors.push(...require('./linked-artifact-contract').verifyLinkedArtifacts(result.root, result.documents));
   }
   return { valid: result.errors.length === 0, errors: result.errors };

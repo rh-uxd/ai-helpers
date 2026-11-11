@@ -80,6 +80,7 @@ inherited Quick work. Completion does not mean all criteria passed.
 
 ### Fixes and verification
 
+Default to no-fix: report findings and proposed actions without changing source.
 Require eligible completed Full lineage, selected evidence-backed actions,
 approved targets/supporting-file scope and a separate edit decision. The host
 preserves requirements and records before/after revisions, changed files and

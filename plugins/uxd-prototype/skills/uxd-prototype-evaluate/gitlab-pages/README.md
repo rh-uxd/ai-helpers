@@ -24,8 +24,8 @@ Configure `config/publish.yaml` (`gitlab_pages_repo`, `pages_base_url`), then ru
 bash "${EVALUATOR_SKILL_DIR}/scripts/publish-report.sh" artifacts/PROJ-298/evaluation/full-1/
 ```
 
-Canonical publication validates all five `pe-*` files and the report's integrity
-receipt before publishing. Older report-only directories require the explicit
-`--legacy` flag; CSV or HTML alone is never treated as a canonical run. Publishing
-a selected new run updates the report at the same URL. Evaluation alone does not
-publish; render the report and obtain sharing approval first.
+Publication requires all five `pe-*` files, linked receipts and matching report
+integrity. CSV/HTML-only directories are rejected. The hosted index links reports
+without inferring verdicts from old projections. A selected new run updates the
+same report URL. Render and obtain sharing approval first; evaluation alone does
+not publish.
