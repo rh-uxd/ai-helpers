@@ -14,9 +14,10 @@ or a substitute for the designer's consent.
   validation, continuation and one post-fix verification.
 - **`uxd-prototype-walkthrough`:** the exact selected task/persona pairs and their
   separate observations, stopping reasons and evidence. Quick is not required.
-- **Companion skills:** their own inspection methods and separate outputs. Source
-  consistency needs a separately installed compatible checker. Research keeps
-  its generalist default; this evaluator explicitly selects its specialist profile.
+- **Source-check dependency:** `consistency-source` needs a separately installed
+  compatible checker. Visual consistency is a host-produced single
+  `consistency-visual` phase. Standalone research reviews use their own workflow;
+  they are not evaluator companions or Quick/Full checks.
 - **Host assistant:** tool setup, approved calls/edits, actual build/model identity,
   usage and human decisions. If subagents are unavailable, it follows these same
   instructions directly.
@@ -27,9 +28,10 @@ or a substitute for the designer's consent.
    Require that skill's own inputs—not an evaluator packet for unrelated work.
    Explain missing dependencies; never silently substitute Full.
 2. **Quick Checks:** pass reviewed requirements, source IDs, prototype version and
-   selected checks. Source checks need a clean matching workspace/base and reviewed
-   rules. Model checks need matching captures, receipts and appropriate approval.
-   A shared hierarchy/visual call is recorded once with both check owners.
+   selected checks (`classify`, `consistency-source`, `consistency-visual` only).
+   Source checks need a clean matching workspace/base and reviewed rules. Visual
+   consistency needs matching captures, receipts and appropriate approval; record
+   one `consistency-visual` phase without a shared specialist/hierarchy phase.
 3. **Walkthroughs:** freeze selected tasks, outcomes, personas, roles, starting
    states, fixtures and limits. One persona is valid; exclude setup-only roles.
    Prepared work reuses these inputs instead of repeating intake or adding tasks.
@@ -63,11 +65,13 @@ Use the [five saved files](../artifacts/canonical-artifacts.md) and linked recei
 Save new runs under `artifacts/<KEY>/prototype-evaluations/<run-name>/`; preserve
 earlier runs. Report what ran, what was found, what remains untested and the next
 useful decision. Classification is not verification, and completing a persona's
-task does not prove a requirement. Keep review candidates and unknown costs clear.
+task does not prove a requirement. Historical heuristic results may remain in old
+runs but do not authorize new work. Keep review candidates and unknown costs clear.
 
-Count shared and inherited calls once. Reports are optional derived views of the
-same results; reporting, sharing, edits and requirements changes each need their
-own decision. No automatic publishing, cross-build evidence restore or requirements
-write-back. Follow [intake](evaluator-onboarding.md) for missing inputs and stops.
+Count shared historical work and inherited calls once. Reports are optional derived
+views of the same results; reporting, sharing, edits and requirements changes each
+need their own decision. No automatic publishing, cross-build evidence restore or
+requirements write-back.
+Follow [intake](evaluator-onboarding.md) for missing inputs and stops.
 Local contract tests do not establish live client/browser/model behavior or actual
 cost savings. Explain those limits instead of claiming end-to-end acceptance.

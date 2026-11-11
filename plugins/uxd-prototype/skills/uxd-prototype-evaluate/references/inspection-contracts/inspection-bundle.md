@@ -1,40 +1,37 @@
-# Quick Checks: browser/model handoff
+# Quick Checks: visual-consistency handoff
 
-This guide tells the host assistant what to save when it returns heuristic or
-visual findings. The source checker does not replace this handoff: it does not
-capture screens or make the host's model calls.
+This guide defines the host-produced bundle for visual consistency only. Source
+analysis is a separate check and does not capture screens or make the host's model
+calls. This contract has one `consistency-visual` phase; it does not invoke a
+research/specialist profile or share a hierarchy phase.
 
-The host performs approved browser/model inspections. `run-quick-checks.js`
-validates their bundle and merges results locally; it never launches a provider
-or browser, starts personas, applies fixes or edits requirements.
+The host performs approved browser/model visual inspection. `run-quick-checks.js`
+validates the bundle and merges results locally; it never launches a provider or
+browser, starts personas, applies fixes or edits requirements.
 
 ## Host procedure
 
-1. Freeze the reviewed packet/source and `check_scope`: task, screen/state IDs and
-   source-section IDs. Verify the served build or supplied captures match the
-   prototype revision; retain a receipt. Without verified identity, stop.
+1. Freeze the reviewed packet/source and `check_scope`: inspection goal (`task`),
+   selected screen/state IDs and source-section IDs. Verify the served build or supplied captures
+   match the prototype revision; retain a receipt. Without verified identity, stop.
 2. Obtain actual provider approval for model work and browser approval for new
    browser activity. Record them in `permissions`; a JSON record cannot grant
    consent. Supplied verified captures do not require inventing browser approval.
 3. Capture each approved state once, or reuse matching verified captures. Give each
    capture its own ID, URL/time, revision, screen/state, visible facts and image
    hashes. DOM alone is not visual evidence. Prefer crops for components and
-   full-page context for hierarchy. For a single settled baseline state:
+   full-page context for overall layout. For a single settled baseline state:
    `node scripts/evidence/capture-prototype-evidence.js <artifacts-dir> <prototype-url>`.
    This approved browser activity writes `prototype-evidence.json`, not AC verdicts.
-4. For `heuristic`, invoke the installed research skill with
-   `--profile prototype-specialists --output findings --framework nielsen --review chat`.
-   Supply scoped evidence and this result contract as caller instructions; do not
-   ask that skill to read evaluator files. If unavailable, name the prerequisite
-   and stop instead of substituting generalist passes. Persist unreviewed findings
-   before chat review; final reports remain opt-in.
-5. If both heuristic and visual checks are selected, the hierarchy specialist can
-   inspect the explicitly reviewed visual rules in the same call. Keep separate
-   results and guideline/rule identities. This means three inspections, not an
-   extra visual pass. Visual-only uses one `consistency-visual` call; for selected
-   PatternFly rules follow [visual inspection](../consistency/visual-check.md#step-2-visual-inspection).
-   Do not imply source-policy coverage unless the source check was selected.
-6. Retain sanitized submitted context and visible results/errors for every actual
+4. Compare the approved captures against the explicitly reviewed visual rules.
+   For selected PatternFly rules, follow
+   [visual inspection](../consistency/visual-check.md#step-2-visual-inspection).
+   Record one `consistency-visual` invocation and its result; do not add a research
+   or specialist call.
+5. A visual-consistency selection produces exactly one `consistency-visual` phase.
+   If source consistency also ran, keep its output and guideline identity separate;
+   visual inspection does not imply source-policy coverage.
+6. Retain sanitized submitted context and visible results/errors for the actual
    invocation. Unknown measurements stay null. Mark context `captured` or
    `unverified`, identifying any unobservable boundary. Never store credentials or
    private reasoning. Import once; model phases do not edit canonical documents.
@@ -49,26 +46,19 @@ Write an isolated producer bundle with these fields:
 - `inspection`: `method: browser|supplied-captures`, `revision_verified: true`, and
   `receipt: {path, sha256}` supporting the host's build-identity assertion.
 - `evidence: {captures, items}` using canonical evidence shapes without an envelope.
-- `phases`: one record per actual invocation, including separate synthesis if used.
-- `results`: exactly the selected model-check names, with separate owned outputs.
-- `producers`: each selected check's actual `{name, version}`.
+- `phases`: exactly one record for the actual visual invocation; no specialist,
+  shared hierarchy or separate synthesis phase.
+- `results`: exactly one selected model-check result, `consistency-visual`, with a
+  separately owned output.
+- `producers`: the visual check's actual `{name, version}`.
 
-Each phase has canonical `measurement`, `submitted_context: {path, sha256}`,
+The phase has canonical `measurement`, `submitted_context: {path, sha256}`,
 `returned_result: {path, sha256}`, `context_status` and submitted `evidence_ids`.
-Use distinct returned-result paths. A shared hierarchy/visual call appears once,
-with `checks: ["heuristic", "consistency-visual"]`; never count it twice.
+Use a distinct returned-result path. Its `checks` contains only
+`["consistency-visual"]`.
 
-Heuristic phase names are `heuristic-content`, `heuristic-hierarchy`, and
-`heuristic-interaction`; optional separate synthesis is `heuristic-synthesis`.
-Visual-only uses `consistency-visual`. No generalist phases are accepted.
 Measurements use actual provider/model, times, byte counts and actual/null usage;
 local phases require zero model usage/cost. Host-session spend stays separate.
-
-The heuristic result follows `schemas/v1/heuristics.schema.json`: Nielsen profile,
-14 lens/heuristic coverage entries, and unreviewed candidates with source/evidence
-IDs. Recommendations, aggregate scores and PatternFly metadata are not required.
-The importer assigns order-independent IDs and preserves candidate/finding/action
-mapping in its context receipt. Coverage notes are bounded to 1,000 characters.
 
 `results["consistency-visual"]` contains `guidelines_version`, `guidelines_checked`,
 `screenshots_checked`, and canonical consistency `findings` with `origin: visual`,
@@ -87,12 +77,12 @@ normalize to UTC without changing the retained original bundle.
 ```bash
 node "${EVALUATOR_SKILL_DIR}/scripts/run-quick-checks.js" \
   --input "${PACKET}" --output "${NEW_RUN_DIR}" \
-  --checks heuristic,consistency-visual \
+  --checks consistency-visual \
   --judgment-bundle "${PRODUCER_DIR}/judgment-bundle.json"
 ```
 
-The fresh run retains input snapshots, evidence/model receipts, separate check
-outputs, the original judgment bundle and five validated `pe-*.json` files.
+The fresh run retains input snapshots, evidence/model receipts, the separate visual
+check output, the original judgment bundle and five validated `pe-*.json` files.
 Read `pe-evaluation-snapshot.json` and `checks/context.json` to present linked
 findings, attribution and coverage gaps. Inspection findings never promote ACs.
 `--report` here writes an integrity receipt; request HTML separately through

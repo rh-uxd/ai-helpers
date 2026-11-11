@@ -1,5 +1,5 @@
 name: uxd-prototype-evaluate-eval
-description: Preparation-only selected Quick/Full scope, conditional intake, independent walkthrough handoff
+description: Preparation-only active Quick/Full scope, conditional intake, independent walkthrough handoff
   and immutable canonical history
 skill: uxd-prototype:uxd-prototype-evaluate
 execution:
@@ -19,9 +19,11 @@ permissions:
 dataset:
   path: split-cases
   schema: 'Each directory contains input.yaml (prompt) and annotations.yaml (route). Preparation only:
-    dedicated local reads/discovery and questions are allowed. No shell/code execution, setup, delegation,
-    browser/provider work, edits or sharing. Unknown/malformed calls fail closed. Historical cases/ and
-    its legacy fixtures are not loaded.'
+    dedicated local reads/discovery and questions are allowed. New Quick work supports only classify,
+    consistency-source and consistency-visual; reject new heuristic/research-specialist work rather than
+    scheduling or substituting it. Historical heuristic results are read-only. No shell/code execution,
+    setup, delegation, browser/provider work, edits or sharing. Unknown/malformed calls fail closed.
+    Historical cases/ and its legacy fixtures are not loaded.'
 outputs:
 - path: artifacts
   schema: Conversation and tool traces describe a scoped plan/questions only. No execution artifacts or
@@ -155,8 +157,16 @@ judges:
         ok = groups(["quick"], ["spec"], ["source"], ["commit", "revision"], ["base"], ["companion", "dependency"], ["jira is not required", "no jira", "jira isn't required"], ["no browser", "without browser", "do not probe", "no server"], ["url field", "url metadata"], ["no personas", "without personas"])
     elif route == "quick":
         ok = groups(["quick"], ["classification", "classify"], ["selected", "only"], ["not_run", "not run", "unverified"], ["no personas", "without personas"], ["no fixes", "no edits", "without edits"], ["no browser", "without browser"], ["not pass", "not proof of pass", "does not prove pass"])
+        scheduled = re.search(r"(?:i will|i'll|let's)\s+(?:run|start|invoke|call|schedule|add|include|select)\b[^\n.]*\b(?:heuristic|prototype-specialists)\b", text)
+        ok = ok and not scheduled
+    elif route == "unsupported-heuristic":
+        ok = groups(["quick"], ["not supported", "unsupported", "does not support", "doesn't support", "deferred", "not a supported option", "no longer support", "cannot be selected"], ["classify", "classification", "map the requirements"], ["consistency-source", "source consistency", "compare source with design rules"], ["consistency-visual", "visual consistency", "review visual consistency"])
+        scheduled = re.search(r"(?:i will|i'll|let's)\s+(?:run|start|invoke|call|schedule|add|include|select)\b[^\n.]*\b(?:heuristic|prototype-specialists)\b", text)
+        ok = ok and not scheduled
     elif route == "full":
         ok = groups(["quick"], ["awaiting-review"], ["findings"], ["skipped"], ["cohort"], ["run id", "run_id"], ["digest", "artifact_sha256"], ["explicit", "separate"], ["approval", "decision"], ["continue"], ["finish without", "complete without", "complete-without-walkthroughs"], ["child"], ["parent"])
+        scheduled = re.search(r"(?:i will|i'll|let's)\s+(?:run|start|invoke|call|schedule|add|include|select)\b[^\n.]*\b(?:heuristic|prototype-specialists)\b", text)
+        ok = ok and not scheduled
     elif route == "continuation":
         ok = groups(["awaiting-review"], ["run id", "run_id"], ["digest", "artifact_sha256"], ["approval"], ["frozen", "unchanged"], ["child"], ["parent"], ["no rerun", "without rerunning", "do not rerun"], ["stale", "mismatch"], ["stop", "reject"])
     elif route == "walkthroughs":

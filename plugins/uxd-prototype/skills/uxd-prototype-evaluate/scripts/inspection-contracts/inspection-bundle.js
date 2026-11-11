@@ -6,14 +6,14 @@ const fs = require('fs');
 const path = require('path');
 const { isDeepStrictEqual } = require('util');
 const hash = bytes => `sha256:${crypto.createHash('sha256').update(bytes).digest('hex')}`;
-const JUDGMENTS = ['heuristic', 'consistency-visual'];
-const SPECIALIST_PHASES = ['heuristic-content', 'heuristic-hierarchy', 'heuristic-interaction'];
+const JUDGMENTS = ['consistency-visual'];
 const PORTABLE = /^(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9._+@=-]+(?:\/[A-Za-z0-9._+@=-]+)*$/;
 
 function importJudgments({ bundlePath, packet, packetBytes, snapshot, stage, selected, documents }) {
+  if (selected.includes('heuristic')) throw new Error('Heuristic checks are deferred; select consistency-visual for visual consistency work');
   const wanted = selected.filter(name => JUDGMENTS.includes(name));
   if (!wanted.length) {
-    if (bundlePath) throw new Error('Judgment bundle supplied without a selected heuristic/visual check');
+    if (bundlePath) throw new Error('Judgment bundle supplied without a selected visual consistency check');
     return { phases: [], receipts: [], evidenceHash: null };
   }
   if (!bundlePath || !packet.check_scope) throw new Error('Selected model checks require --judgment-bundle and packet.check_scope');
@@ -65,15 +65,14 @@ function importJudgments({ bundlePath, packet, packetBytes, snapshot, stage, sel
   const evidenceIds = new Set(bundle.evidence.items.map(item => item.id));
   const images = new Set(bundle.evidence.items.filter(item => item.image).map(item => item.id));
   const phases = [];
-  // A shared hierarchy/visual call owns both checks but remains one invocation
-  // for telemetry. Findings may cite only evidence declared for their producer.
+  // Findings may cite only evidence submitted to the visual consistency call.
   const submittedByCheck = new Map(wanted.map(check => [check, new Set()]));
   const names = new Set();
   const invocationResults = new Set();
-  if (!Array.isArray(bundle.phases) || !bundle.phases.length || bundle.phases.length > 5) throw new Error('Judgment bundle needs bounded actual phase measurements');
+  if (!Array.isArray(bundle.phases) || bundle.phases.length !== 1) throw new Error('Visual consistency requires one actual phase measurement');
   for (const entry of bundle.phases) {
     const measurement = entry.measurement;
-    if (!measurement || ![...SPECIALIST_PHASES, 'heuristic-synthesis', 'consistency-visual'].includes(measurement.name) || names.has(measurement.name)) throw new Error('Unexpected or duplicate model phase');
+    if (!measurement || measurement.name !== 'consistency-visual' || names.has(measurement.name)) throw new Error('Unexpected or duplicate model phase');
     if (measurement.status !== 'completed' || !measurement.model_invoked || !measurement.model || measurement.provider === 'none') throw new Error('Judgment phases need an actual completed model invocation');
     if (!Array.isArray(measurement.checks) || !measurement.checks.length || measurement.checks.some(name => !wanted.includes(name))) throw new Error('Phase ownership must name only selected checks');
     if (!Array.isArray(entry.evidence_ids) || !entry.evidence_ids.length || entry.evidence_ids.some(id => !evidenceIds.has(id))) throw new Error('Model phase has missing or unknown submitted evidence');
@@ -86,15 +85,10 @@ function importJudgments({ bundlePath, packet, packetBytes, snapshot, stage, sel
     for (const check of measurement.checks) entry.evidence_ids.forEach(id => submittedByCheck.get(check).add(id));
     phases.push({ ...measurement, started_at: new Date(measurement.started_at).toISOString(), ended_at: new Date(measurement.ended_at).toISOString() }); names.add(measurement.name);
   }
-  if (wanted.includes('heuristic')) {
-    if (SPECIALIST_PHASES.some(name => !names.has(name))) throw new Error('Heuristic Quick Checks requires exactly the three specialist inspection phases');
-    if (phases.some(phase => SPECIALIST_PHASES.includes(phase.name) && !phase.checks.includes('heuristic'))) throw new Error('Specialist phase must own heuristic results');
-  } else if ([...names].some(name => name.startsWith('heuristic-'))) throw new Error('Unselected heuristic phases are not allowed');
   if (wanted.some(check => !phases.some(phase => phase.checks.includes(check)))) throw new Error('Selected judgment has no producing model phase');
   const evaluation = documents['pe-evaluation-snapshot.json'];
   // Add observations and things for a human to review, not AC pass decisions.
   // Keep each finding linked to the check and evidence that produced it.
-  const actions = documents['pe-actions.json'].actions;
   const receipts = [];
   for (const check of wanted) {
     const result = bundle.results[check];
@@ -103,43 +97,26 @@ function importJudgments({ bundlePath, packet, packetBytes, snapshot, stage, sel
     const output = `checks/${check}.json`;
     fs.writeFileSync(path.join(stage, output), `${JSON.stringify(result, null, 2)}\n`);
     const links = [];
-    if (check === 'heuristic') {
-      if (result.profile !== 'prototype-specialists' || result.framework !== 'nielsen' || !Array.isArray(result.findings)) throw new Error('Expected prototype-specialists Nielsen findings');
-      evaluation.heuristics = structuredClone(result);
-      const lensEvidence = lens => bundle.phases.find(entry => entry.measurement.name === `heuristic-${lens}`)?.evidence_ids || [];
-      if (!Array.isArray(result.coverage) || result.coverage.some(row => !Array.isArray(row.evidence_ids) || row.evidence_ids.some(id => !lensEvidence(row.lens).includes(id)))) throw new Error('Coverage cites evidence not submitted to its lens');
-      for (const finding of evaluation.heuristics.findings) {
-        if (finding.review_status !== 'unreviewed') throw new Error('Imported model findings must remain unreviewed');
-        if (!Array.isArray(finding.identified_by) || finding.identified_by.some(lens => !finding.evidence_ids.some(id => lensEvidence(lens).includes(id))) || finding.evidence_ids.some(id => !finding.identified_by.some(lens => lensEvidence(lens).includes(id)))) throw new Error('Finding evidence does not resolve to the identifying lens submissions');
-        const originalId = finding.id;
-        // Stable across display order; a changed observation/state gets a new ID.
-        finding.id = `heuristic-${hash(JSON.stringify([finding.screen_id, finding.state_id, finding.observation, [...finding.heuristic_ids].sort((a, b) => a - b), [...finding.source_ids].sort()])).slice(7, 31)}`;
-        const actionId = `action-${finding.id}`;
-        actions.push({ id: actionId, kind: 'human-followup', status: 'proposed', priority: 'normal', confidence: 'low', source: { ac_id: null, finding_id: finding.id, evidence_ids: finding.evidence_ids }, recommendation: `Review heuristic finding: ${finding.title}`.slice(0, 500), result: { changed_files: [] }, handoff: { requires_user_invocation: true, skill: 'uxd-prototype-evaluate', payload: {} } });
-        links.push({ result_id: originalId, finding_id: finding.id, evidence_ids: finding.evidence_ids, action_ids: [actionId] });
-      }
-    } else {
-      if (!Number.isInteger(result.guidelines_checked) || result.guidelines_checked < 0 || !Number.isInteger(result.screenshots_checked) || result.screenshots_checked < 1 || result.screenshots_checked > bundle.evidence.captures.length) throw new Error('Visual coverage counts must match bounded supplied captures');
-      if (!Array.isArray(result.findings) || result.findings.some(finding => finding.origin !== 'visual' || !finding.evidence_ids?.some(id => images.has(id)))) throw new Error('Visual findings require explicit image evidence');
-      const consistency = evaluation.consistency;
-      if (consistency.source_checked && consistency.guidelines_version !== result.guidelines_version) throw new Error('Source and visual guideline versions differ');
-      consistency.guidelines_version = result.guidelines_version;
-      consistency.visual_checked = true;
-      consistency.screenshots_checked = result.screenshots_checked;
-      // The two checks can overlap; use the larger coverage count, not a false sum.
-      consistency.coverage_count_method = 'max-per-mode';
-      consistency.coverage_by_mode = { source: consistency.guidelines_checked, visual: result.guidelines_checked };
-      consistency.guidelines_checked = Math.max(consistency.guidelines_checked, result.guidelines_checked);
-      for (const finding of structuredClone(result.findings)) {
-        const originalId = finding.id;
-        finding.id = `visual-${hash(JSON.stringify([finding.guideline_id, finding.description, [...finding.evidence_ids].sort()])).slice(7, 31)}`;
-        consistency.findings.push(finding);
-        links.push({ result_id: originalId, finding_id: finding.id, evidence_ids: finding.evidence_ids, action_ids: [] });
-      }
-      consistency.status = consistency.findings.some(finding => finding.severity === 'error') ? 'failed' : consistency.findings.length ? 'flagged' : result.guidelines_checked > 0 ? 'passed' : 'degraded';
-      evaluation.summary.consistency_counts = { error: 0, warning: 0, info: 0, total: consistency.findings.length };
-      for (const finding of consistency.findings) evaluation.summary.consistency_counts[finding.severity] += 1;
+    if (!Number.isInteger(result.guidelines_checked) || result.guidelines_checked < 0 || !Number.isInteger(result.screenshots_checked) || result.screenshots_checked < 1 || result.screenshots_checked > bundle.evidence.captures.length) throw new Error('Visual coverage counts must match bounded supplied captures');
+    if (!Array.isArray(result.findings) || result.findings.some(finding => finding.origin !== 'visual' || !finding.evidence_ids?.some(id => images.has(id)))) throw new Error('Visual findings require explicit image evidence');
+    const consistency = evaluation.consistency;
+    if (consistency.source_checked && consistency.guidelines_version !== result.guidelines_version) throw new Error('Source and visual guideline versions differ');
+    consistency.guidelines_version = result.guidelines_version;
+    consistency.visual_checked = true;
+    consistency.screenshots_checked = result.screenshots_checked;
+    // The two checks can overlap; use the larger coverage count, not a false sum.
+    consistency.coverage_count_method = 'max-per-mode';
+    consistency.coverage_by_mode = { source: consistency.guidelines_checked, visual: result.guidelines_checked };
+    consistency.guidelines_checked = Math.max(consistency.guidelines_checked, result.guidelines_checked);
+    for (const finding of structuredClone(result.findings)) {
+      const originalId = finding.id;
+      finding.id = `visual-${hash(JSON.stringify([finding.guideline_id, finding.description, [...finding.evidence_ids].sort()])).slice(7, 31)}`;
+      consistency.findings.push(finding);
+      links.push({ result_id: originalId, finding_id: finding.id, evidence_ids: finding.evidence_ids, action_ids: [] });
     }
+    consistency.status = consistency.findings.some(finding => finding.severity === 'error') ? 'failed' : consistency.findings.length ? 'flagged' : result.guidelines_checked > 0 ? 'passed' : 'degraded';
+    evaluation.summary.consistency_counts = { error: 0, warning: 0, info: 0, total: consistency.findings.length };
+    for (const finding of consistency.findings) evaluation.summary.consistency_counts[finding.severity] += 1;
     receipts.push({ check, producer: bundle.producers[check], output, output_sha256: hash(fs.readFileSync(path.join(stage, output))), phase_names: phases.filter(phase => phase.checks.includes(check)).map(phase => phase.name), canonical_links: links });
   }
   fs.writeFileSync(path.join(stage, 'checks/judgment-bundle.json'), bytes);

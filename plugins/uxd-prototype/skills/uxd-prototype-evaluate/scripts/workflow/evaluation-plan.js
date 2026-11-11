@@ -54,6 +54,7 @@ function validatePlan(plan, packetHash) {
 }
 
 function preflight(options, parent, approval) {
+  if (!options['continue-from']) assert(!(typeof options.checks === 'string' && options.checks.split(',').some(check => check.trim() === 'heuristic')), 'Heuristic checks are deferred; select only supported evaluator checks');
   // Continuing keeps the same inputs; verification checks a changed build;
   // adapting changes the plan. None should quietly approve extra work.
   if (options['continue-from']) {
@@ -71,6 +72,8 @@ function preflight(options, parent, approval) {
   }
   const packetBytes = options['continue-from'] ? fs.readFileSync(path.join(options['continue-from'], 'inputs/packet.json')) : fs.readFileSync(options.input);
   const plan = JSON.parse(bytes); validatePlan(plan, C.hash(packetBytes));
+  // Existing plans remain readable; new/adapted work cannot schedule this check.
+  if (!options['continue-from']) assert(!plan.steps.some(step => step.check === 'heuristic'), 'Heuristic checks are deferred; remove them from the reviewed plan');
   let change = { kind: options['continue-from'] ? 'continue' : 'initial', reason: options['continue-from'] ? 'Continue the reviewed frozen plan without repeating Quick work.' : 'Initial reviewed evaluation plan.', recorded_at: plan.reviewed_at, allow_rerun: false };
   if (options['continue-from']) assert(old && C.hash(bytes) === parent['pe-state.json'].planning?.plan_sha256, 'Continuation cannot replace the frozen plan');
   else {

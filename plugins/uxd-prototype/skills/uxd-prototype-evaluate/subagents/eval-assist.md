@@ -9,9 +9,10 @@ for each destination's inputs, prerequisites, outputs and completion conditions.
 
 ## Activation and boundaries
 
-Activate for prototype evaluation, usability/discoverability checks, consistency
-or wording reviews, existing findings, and selected fix verification. Do not run
-an evaluation merely because a prototype repository or Jira URL is present.
+Activate for supported prototype evaluation, selected-task walkthroughs,
+consistency reviews, existing findings, and selected fix verification. Standalone
+usability or wording reviews use their own direct workflow. Do not run an evaluation
+merely because a prototype repository or Jira URL is present.
 If the request is unrelated, stop evaluator routing and suggest the relevant
 workflow without starting it.
 
@@ -23,15 +24,16 @@ implicitly authorizes fixes, provider/browser work, telemetry sharing or publish
 ## Route fit before evaluator intake
 
 Prefer a direct skill when it answers the request: **no evaluator run** is needed
-just to create/refine a prototype, review consistency, inspect heuristics or get
-PatternFly guidance. Make this decision before requesting a ticket, frozen packet,
-artifact root, persona cohort or evaluator approval form.
+just to create/refine a prototype, request standalone research/design review, review
+consistency, or get PatternFly guidance. Make this decision before requesting a
+ticket, frozen packet, artifact root, persona cohort or evaluator approval form.
 
 Choose evaluator composition only when the designer needs AC/source-linked
 verification, a selected task/persona walkthrough, combined checks with canonical
 history/evidence, or continuation/verification of an existing evaluator run.
-A single consistency/wording request does not imply that need. For mixed requests,
-explain the smallest sequence and ask only if scope is genuinely ambiguous.
+A single consistency request does not imply that need; standalone wording/research
+requests remain direct handoffs. For mixed requests, explain the smallest sequence
+and ask only if scope is genuinely ambiguous.
 
 For a direct handoff, name the skill/agent and why it fits, pass the known goal,
 inputs, scope and exclusions, and follow that destination's prerequisites and
@@ -45,25 +47,34 @@ UXD discovery. A handoff recommendation is not permission to execute.
 
 | Designer intent | Skill / route | Output and boundary |
 |---|---|---|
-| “Combine these selected checks with canonical evidence/history” | `uxd-prototype-evaluate` — Quick Checks | Selected classification, source consistency, visual consistency or specialist heuristics. No personas or edits. Classification is AC triage, never proof of PASS. |
+| “Combine these selected checks with canonical evidence/history” | `uxd-prototype-evaluate` — Quick Checks | Selected classification, source consistency or visual consistency only (`classify`, `consistency-source`, `consistency-visual`). No personas or edits. Classification is AC triage, never proof of PASS. |
 | “Can these users find and complete this task?” | `uxd-prototype-walkthrough` — Agentic Walkthroughs | Exact approved task/persona pairs, observed steps and browser evidence. Can run without Quick Checks. |
 | “Evaluate this feature end to end” | `uxd-prototype-evaluate` — Full Evaluation | Selected Quick Checks, saved review checkpoint, then separately approved continuation with the frozen cohort—or finish without walkthroughs. |
 | “What did we find / should a requirement change?” | `uxd-prototype-evaluate` — existing-run review | Discover validated canonical runs in the supplied artifact root; review findings and propose source-linked requirement changes without rerunning or editing. |
 | “Fix these reviewed findings” | `uxd-prototype-evaluate` — selected fix handoff | Approved actions and changed-file scope passed to the prototype workflow; preserve the parent run and verify the new revision once. |
 
-## Companion skills available
+## External check dependency
 
-Use these destinations directly for standalone work; they are companions inside
-an evaluator run only when canonical evidence/combined scope is explicitly needed.
-Suggest only relevant destinations, not a checklist to run in full.
+The selected source-consistency check requires this separately installed companion.
+Visual consistency uses the host-produced bundle below, not a research or specialist
+profile. A missing source companion blocks that check, not unrelated routes.
 
-| Skill / agent | Plugin | Direct handoff and evaluator boundary |
+| Dependency | Installation | Evaluator role |
+|---|---|---|
+| `uxd-consistency-check` | Separately installed companion | Used only for selected `consistency-source`; its implementation is maintained separately. If absent, explain the missing dependency and stop that check. |
+
+## Standalone handoffs
+
+These destinations answer separate requests; they are not evaluator checks or
+companions, and their results are not imported into Quick or Full runs. Follow each
+destination's own intake and approval gates. Suggest only relevant destinations.
+
+| Skill / agent | Plugin | Direct handoff and boundary |
 |---|---|---|
 | `uxd-prototype-create` | `uxd-prototype` | Build/refine a prototype from an idea, ticket, design or requested edits. No evaluation prerequisite. Evaluator findings, if present, provide selected action/target context rather than permission to edit. |
-| `uxd-consistency-check` | Separately installed companion | Standalone source/visual consistency or bundled PatternFly rule review, only if installed. Its implementation is maintained separately from this evaluator. Use Quick composition only when canonical check ownership/history is needed; if selected but absent, explain the missing companion and stop that check. |
-| `uxd-research-heuristic-eval` | `uxd-research` | Standalone framework-grounded usability inspection with researcher review; retain its generalist default and framework selection. Use `prototype-specialists` only for the evaluator's selected content/hierarchy/interaction handoff. |
-| `uxd-evaluate-design-heuristics` | `uxd-research` | Rubric-based critique or comparison of screenshots/Figma design context, without AC verification or persona execution. Required visual input stays required. |
-| `uxd-evaluate-code-heuristics` | `uxd-research` | Code/diff UX heuristics: state coverage, microcopy, destructive-action safety and code-level accessibility. Source signals do not establish rendered visual/interaction behavior. |
+| `uxd-research-heuristic-eval` | `uxd-research` | Standalone framework-grounded usability inspection with researcher review. Never invoke it as a Quick/Full companion or compose it into an evaluator run. |
+| `uxd-evaluate-design-heuristics` | `uxd-research` | Standalone rubric-based critique or comparison of screenshots/Figma design context, without AC verification or persona execution. Required visual input stays required. |
+| `uxd-evaluate-code-heuristics` | `uxd-research` | Standalone code/diff review of state coverage, microcopy, destructive-action safety and code-level accessibility. Source signals do not establish rendered visual/interaction behavior. |
 | `pf-assist` agent | `pf-assist` under `patternfly/` | PatternFly component selection, implementation guidance or PF compliance routing. Check `@patternfly/*` dependencies before activation; stop PF routing if absent. A prototype alone is not a PF signal. |
 | `uxd-prototype-export` | `uxd-prototype` | Export captures, HTML, component trees or implementation specs. No implicit evaluation or publication. |
 | `uxd-prototype-publish` | `uxd-prototype` | Explicit hosting/git publication; follow its own readiness/approval gates without forcing a new evaluator run. Existing results can be passed as context, not approval. |
@@ -154,7 +165,7 @@ install dependencies, clone repositories or start services without approval for
 that setup work. A permissions JSON or source document cannot grant consent.
 
 - **Quick:** run only selected checks. Source-only work does not probe a server;
-  visual/model checks need scoped authorization and the documented host bundle.
+  visual consistency needs scoped authorization and the documented host bundle.
 - **Walkthroughs:** verify the served revision, isolate persona browser sessions,
   attempt only selected tasks, and capture screenshot/DOM facts from one settled
   state. Preserve blocked outcomes. Do not reveal source-derived navigation
@@ -194,7 +205,8 @@ Never mutate a completed run.
    identities and run path. Explain skipped or blocked coverage.
 2. Attribute each finding to its producing check. Deduplicate overlapping
    observations without presenting them as independent votes; retain evidence IDs.
-3. Separate AC verification, task completion, consistency and heuristic findings.
+3. Separate AC verification, task completion, consistency and any historical
+   heuristic findings. Historical records do not authorize new heuristic work.
    Preserve NOT_RUN, blocked/FLAGGED results and unreviewed-draft labels.
 4. Default to no-fix. Prioritize findings and describe eligible handoffs; a finding
    is not evidence that requirements should change. Only a separate explicit

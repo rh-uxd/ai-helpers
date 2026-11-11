@@ -1,5 +1,5 @@
 name: uxd-evaluator-routing-eval
-description: Check conversational evaluation route selection and Full review boundary
+description: Check active Quick route selection, direct handoffs and Full review boundary
 skill: ""
 execution:
   mode: case
@@ -18,7 +18,9 @@ permissions:
 dataset:
   path: cases
   schema: |
-    Preparation-only routing, adaptive intake and JSON-history requests. No live
+    Preparation-only routing, adaptive intake and JSON-history requests. New Quick
+    plans support only classification, source consistency and visual consistency;
+    reject new heuristic checks instead of scheduling or substituting them. No live
     prototype access, browser/provider work, edits or sharing. Instruction-file
     reads/discovery and structured clarification via dedicated tools are allowed.
     No shell/code execution, setup or delegation is authorized; unknown tools
@@ -149,11 +151,17 @@ judges:
           ok = bool(target) and target in text and "direct" in text and not promotes_run
           return ok, "Prefer the matching direct destination without requiring an evaluator run"
       if route == "quick":
-          ok = groups(["quick"], ["heuristic", "consistency"], ["no personas", "skip personas", "without personas"])
-          return ok, "Focused inspection must select Quick without personas"
+          ok = groups(["quick"], ["classify", "classification", "map requirements"], ["consistency-visual", "visual consistency"], ["no personas", "skip personas", "without personas"])
+          unsafe = re.search(r"(?:i will|i'll|let's)\s+(?:run|start|invoke|call|schedule|add|include|select)\b[^\n.]*\b(?:heuristic|prototype-specialists)\b", text)
+          return ok and not unsafe, "Quick uses only active checks and no personas"
+      if route == "unsupported-heuristic":
+          ok = groups(["quick"], ["not supported", "unsupported", "does not support", "doesn't support", "deferred", "not a supported option", "no longer support", "cannot be selected"], ["classify", "classification", "map the requirements"], ["consistency-source", "source consistency", "compare source with design rules"], ["consistency-visual", "visual consistency", "review visual consistency"])
+          unsafe = re.search(r"(?:i will|i'll|let's)\s+(?:run|start|invoke|call|schedule|add|include|select)\b[^\n.]*\b(?:heuristic|prototype-specialists)\b", text)
+          return ok and not unsafe, "Reject new heuristic work and offer only the active Quick set"
       if route == "full":
           ok = groups(["quick"], ["review"], ["pause", "checkpoint"], ["approval", "approve", "decision"])
-          return ok, "Full preparation must preserve a separate review decision"
+          unsafe = re.search(r"(?:i will|i'll|let's)\s+(?:run|start|invoke|call|schedule|add|include|select)\b[^\n.]*\b(?:heuristic|prototype-specialists)\b", text)
+          return ok and not unsafe, "Full preparation must preserve a separate review decision"
       if route == "walkthroughs":
           ok = groups(["walkthrough"], ["junior"], ["create"], ["only", "single"], ["revision", "build"], ["approval", "approve"])
           return ok, "Preserve the single selected pair and identify readiness/consent"
