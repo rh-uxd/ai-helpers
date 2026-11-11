@@ -21,7 +21,11 @@ public/
 Configure `config/publish.yaml` (`gitlab_pages_repo`, `pages_base_url`), then run:
 
 ```bash
-bash "${CLAUDE_SKILL_DIR}/scripts/publish-report.sh" .artifacts/PROJ-298/eval/
+bash "${EVALUATOR_SKILL_DIR}/scripts/publish-report.sh" artifacts/PROJ-298/evaluation/full-1/
 ```
 
-Re-running an eval replaces the report at the same URL.
+Canonical publication validates all five `pe-*` files and the report's integrity
+receipt before publishing. Older report-only directories require the explicit
+`--legacy` flag; CSV or HTML alone is never treated as a canonical run. Publishing
+a selected new run updates the report at the same URL. Evaluation alone does not
+publish; render the report and obtain sharing approval first.

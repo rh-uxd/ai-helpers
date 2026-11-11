@@ -1,375 +1,178 @@
 name: uxd-prototype-evaluate-eval
-description: Evaluate uxd-prototype-evaluate's input gating, review mode, flag behavior, exit conditions, artifact paths, and two-phase orchestration contract
-
+description: Preparation-only selected Quick/Full scope, conditional intake, independent walkthrough handoff
+  and immutable canonical history
 skill: uxd-prototype:uxd-prototype-evaluate
-
 execution:
   mode: case
-  arguments: "{prompt}"
-
+  arguments: '{prompt}'
 runner:
   type: claude-code
   plugin_dirs:
-    - plugins/uxd-prototype
-
+  - plugins/uxd-prototype
 models:
   skill: claude-opus-4-6
   judge: claude-sonnet-5
-
 permissions:
   allow: []
   deny:
-    - "mcp__*"
-
-mlflow:
-  experiment: uxd-prototype-evaluate
-  tags:
-    team: uxd
-    pipeline: prototype-evaluator
-
+  - mcp__*
 dataset:
-  path: cases
-  # Missing paths are skipped (asks-required-inputs / two-phase-orchestration
-  # have no .artifacts tree).
-  workspace:
-    files:
-      - .artifacts
-  schema: |
-    Each case directory contains:
-    - input.yaml: prompt field with a realistic user request
-    - annotations.yaml: case_type for conditional judges
-    - Optional .artifacts/ fixture tree for review-mode cases
-      (copied into the agent workspace via dataset.workspace.files)
-
+  path: split-cases
+  schema: 'Each directory contains input.yaml (prompt) and annotations.yaml (route). Preparation only:
+    dedicated local reads/discovery and questions are allowed. No shell/code execution, setup, delegation,
+    browser/provider work, edits or sharing. Unknown/malformed calls fail closed. Historical cases/ and
+    its legacy fixtures are not loaded.'
 outputs:
-  - path: artifacts
-    schema: |
-      Judges check conversation text for required-input prompts,
-      review-mode summaries without Playwright re-runs, and
-      two-phase (Phase A / Phase B) orchestration awareness.
-      Cases must not perform live publishes or long Playwright loops.
-
+- path: artifacts
+  schema: Conversation and tool traces describe a scoped plan/questions only. No execution artifacts or
+    fabricated findings expected. Vocabulary gates are coarse regressions, not semantic proof or live
+    acceptance.
 traces:
   stdout: true
   stderr: true
   events: true
   metrics: true
-
 judges:
-  - name: asks_required_inputs
-    description: Asks for BOTH missing Jira key AND prototype URL before evaluating
-    if: "annotations.get('case_type') == 'asks-required-inputs'"
-    check: |
-      import re
-      text = outputs.get("conversation", "")
-      asks_key = re.search(
-          r"Jira|story key|issue key|ticket|PROJ-",
-          text,
-          re.IGNORECASE,
-      )
-      asks_url = re.search(
-          r"URL|localhost|http|prototype (URL|address|endpoint)",
-          text,
-          re.IGNORECASE,
-      )
-      if not asks_key:
-          return False, "Did not ask for missing Jira key"
-      if not asks_url:
-          return False, "Did not ask for missing prototype URL"
-      if "?" not in text:
-          return False, "Response is not interrogative (no question mark)"
-      launched = re.search(
-          r"npx playwright|playwright test|playwright install|eval-journey|eval-extract|npm install|Phase A.{0,30}(start|begin|run|launch)",
-          text,
-          re.IGNORECASE,
-      )
-      if launched:
-          return False, "Must not reference starting pipeline steps when inputs are missing"
-      return True, "Asked for both required inputs without launching pipeline"
+- name: prepares_selected_canonical_workflow
+  description: Fail-closed preparation tool policy plus coarse route/scope vocabulary checks; manual response/trace
+    review remains required
+  check: |
+    text = outputs.get("conversation", "").lower()
+    # Preparation-only policy (shared with agent/walkthrough preparation evals).
+    # Dedicated local reads/discovery and questions only. Never classify a shell
+    # command by substrings: even `cat` via an executor is outside this policy.
+    # Names are exact aliases, not suffix matches; MCP/browser/provider reads are
+    # intentionally NOT local instruction reads. Unknown/malformed calls fail shut.
+    import json
+    allowed = {
+        "read", "read_file", "readfile", "glob", "grep", "search_files",
+        "list_directory", "list_dir", "ls", "askuserquestion", "askquestion",
+        "ask_user_question", "request_user_input",
+    }
+    wrappers = {"multi_tool_use.parallel": "tool_uses", "tool_call": "calls"}
+    call_types = {"function", "function_call", "custom_tool_call", "tool_call", "tool_use"}
+    result_types = {"tool_result", "function_call_output", "custom_tool_call_output"}
+    call_lists = {"tool_calls", "tool_uses", "calls"}
 
-  - name: review_summarizes_without_rerun
-    description: Review mode summarizes artifacts with specific details and does not re-run Playwright
-    if: "annotations.get('case_type') == 'review-mode-no-rerun'"
-    check: |
-      import re
-      text = outputs.get("conversation", "")
-      mentions_results = re.search(
-          r"FAIL|PASS|FLAGGED|acceptance|Eval results|needs attention",
-          text,
-          re.IGNORECASE,
-      )
-      if not mentions_results:
-          return False, "Did not summarize AC verdicts / eval results"
-      mentions_ac2 = re.search(r"AC-2|save profile|Save button", text, re.IGNORECASE)
-      if not mentions_ac2:
-          return False, "Did not surface the FAIL criterion (AC-2 / Save button) from the fixture"
-      reran = re.search(
-          r"(npx playwright|playwright install|launching browser|starting Phase A|eval-extract|eval-classify|eval-journey)",
-          text,
-          re.IGNORECASE,
-      )
-      if reran:
-          return False, "Appears to re-run Playwright / full eval in review mode"
-      offers_help = re.search(
-          r"(would you like|shall I|I can|want me to|next action|next step|fix AC|re-run|re-evaluate).{0,40}(fix|re-run|re-evaluate|help|look|Phase|AC-|required|before)",
-          text,
-          re.IGNORECASE | re.DOTALL,
-      )
-      if not offers_help:
-          return False, "Did not offer actionable review-mode next steps"
-      mentions_score = re.search(r"12[/ ]21|12 out of 21|usability.{0,30}(score|rating)", text, re.IGNORECASE)
-      if not mentions_score:
-          return False, "Did not reference the usability score (12/21) from the fixture"
-      return True, "Summarized prior eval results with specific fixture data"
+    def alias(name):
+        if not isinstance(name, str):
+            return ""
+        name = name.lower()
+        return name[len("functions."):] if name.startswith("functions.") else name
 
-  - name: describes_two_phase_flow
-    description: Describes Phase A then Phase B orchestration with always-fires contract and exit conditions
-    if: "annotations.get('case_type') == 'two-phase-orchestration'"
-    check: |
-      import re
-      text = outputs.get("conversation", "")
-      phase_a = re.search(
-          r"Phase A|x-?ray|acceptance criteria|AC validation",
-          text,
-          re.IGNORECASE,
-      )
-      phase_b = re.search(
-          r"Phase B|usability|persona|discovery|walkthrough",
-          text,
-          re.IGNORECASE,
-      )
-      if not phase_a:
-          return False, "Did not describe Phase A / AC validation"
-      if not phase_b:
-          return False, "Did not describe Phase B / usability walkthroughs"
-      always_b = re.search(
-          r"(Phase B|usability).{0,80}(always|still|regardless)|always.{0,60}(Phase B|usability)",
-          text,
-          re.IGNORECASE | re.DOTALL,
-      )
-      if not always_b:
-          return False, "Must explicitly state Phase B always fires regardless of Phase A outcome"
-      sub_phases = 0
-      for name in ["eval-classify", "eval-journey", "eval-usability", "eval-extract"]:
-          if re.search(re.escape(name), text, re.IGNORECASE):
-              sub_phases += 1
-      if sub_phases < 2:
-          return False, f"Only mentioned {sub_phases}/4 key sub-phases (need at least 2 of: eval-classify, eval-journey, eval-usability, eval-extract)"
-      exit_cond = re.search(
-          r"exit.{0,30}(condition|reason)|all.pass|max.iteration|regression|flagged.unfixable|no.fix",
-          text,
-          re.IGNORECASE,
-      )
-      if not exit_cond:
-          return False, "Did not mention any exit conditions (all_pass, max_iterations, regression, etc.)"
-      return True, "Described two-phase orchestration with always-fires contract and exit conditions"
+    def safe_list(value, depth):
+        return isinstance(value, list) and all(isinstance(v, dict) and safe_node(v, True, depth + 1) for v in value)
 
-  - name: no_fix_flag_respected
-    description: Explains --no-fix skips the fix loop but Phase B still runs
-    if: "annotations.get('case_type') == 'no-fix-flag-respected'"
-    check: |
-      import re
-      text = outputs.get("conversation", "")
-      no_fix_explained = re.search(
-          r"no.fix|--no-fix|skip.{0,20}fix|without.{0,20}fix|disable.{0,20}fix|won.t.{0,20}fix|not.{0,20}(auto|attempt).{0,20}fix",
-          text,
-          re.IGNORECASE,
-      )
-      if not no_fix_explained:
-          return False, "Did not explain the --no-fix flag behavior"
-      fail_noted = re.search(
-          r"FAIL.{0,40}(remain|stay|persist|not.{0,15}(fixed|repaired|resolved))|won.t.{0,20}(fix|repair|resolve).{0,20}FAIL",
-          text,
-          re.IGNORECASE,
-      )
-      if not fail_noted:
-          return False, "Did not explain that FAILs remain unfixed when --no-fix is set"
-      phase_b_runs = re.search(
-          r"Phase B.{0,40}(still|always|regardless)|usability.{0,40}(still|always)|still.{0,40}Phase B",
-          text,
-          re.IGNORECASE | re.DOTALL,
-      )
-      if not phase_b_runs:
-          return False, "Did not state Phase B still runs after --no-fix Phase A"
-      launched = re.search(
-          r"npx playwright|playwright install|npm install|launching browser",
-          text,
-          re.IGNORECASE,
-      )
-      if launched:
-          return False, "Should not launch pipeline when asked for planning only"
-      return True, "Correctly described --no-fix behavior with Phase B contract"
+    def safe_node(node, required=False, depth=0):
+        if depth > 40:
+            return False
+        if isinstance(node, list):
+            return all(safe_node(v, required, depth + 1) for v in node)
+        if not isinstance(node, dict):
+            return not required
+        kind = node.get("type", "")
+        if not isinstance(kind, str):
+            return False
+        # Include Codex command_execution and unknown future execution/call types.
+        tool_kind = any(token in kind for token in ("tool", "function", "execution", "_call"))
+        named = any(k in node for k in ("tool", "tool_name", "recipient_name", "function"))
+        named = named or ("name" in node and any(k in node for k in ("input", "arguments", "parameters")))
+        is_call = required or kind in call_types or named
+        if tool_kind and kind not in call_types | result_types:
+            return False
+        if is_call:
+            if kind and kind not in call_types:
+                return False
+            names = [node[k] for k in ("name", "tool_name", "recipient_name") if k in node]
+            for key in ("tool", "function"):
+                if key in node:
+                    value = node[key]
+                    if isinstance(value, dict):
+                        names.append(value.get("name"))
+                    elif key == "tool":
+                        names.append(value)
+                    else:
+                        return False
+            if not names:
+                # Some hosts wrap the actual call in data/payload/call.
+                nested = [node[k] for k in ("data", "payload", "call") if k in node]
+                if not nested or not all(safe_node(v, True, depth + 1) for v in nested):
+                    return False
+            else:
+                names = {alias(name) for name in names}
+                if len(names) != 1:
+                    return False
+                name = next(iter(names))
+                if name in wrappers:
+                    envelopes = [node] + [node[k] for k in ("function", "tool") if isinstance(node.get(k), dict)]
+                    payloads = [e[k] for e in envelopes for k in ("input", "arguments", "parameters") if k in e]
+                    if not payloads:
+                        return False
+                    for payload in payloads:
+                        if isinstance(payload, str):
+                            try:
+                                payload = json.loads(payload)
+                            except (ValueError, TypeError):
+                                return False
+                        key = wrappers[name]
+                        if not isinstance(payload, dict) or not payload.get(key):
+                            return False
+                        if not safe_list(payload[key], depth + 1):
+                            return False
+                elif name not in allowed:
+                    return False
+        for key, value in node.items():
+            if key in call_lists:
+                if not safe_list(value, depth + 1):
+                    return False
+            # Inspect structured envelopes too, but never parse arbitrary prose
+            # as event JSON. Only dispatcher arguments are decoded above.
+            elif isinstance(value, (dict, list)) and not safe_node(value, False, depth + 1):
+                return False
+        return True
 
-  - name: fresh_flag_behavior
-    description: Correctly describes --fresh deletion scope (eval/ only, not key root or cross-key)
-    if: "annotations.get('case_type') == 'fresh-flag-behavior'"
-    check: |
-      import re
-      text = outputs.get("conversation", "")
-      deletes_eval = re.search(
-          r"\.artifacts/.{0,20}/eval|ARTIFACTS_DIR|eval.{0,15}(delet|remov|clear|wip)",
-          text,
-          re.IGNORECASE,
-      )
-      if not deletes_eval:
-          return False, "Did not explain that .artifacts/<KEY>/eval/ gets deleted"
-      preserves_key_root = re.search(
-          r"(key root|\.artifacts/<KEY>/|KEY_DIR).{0,40}(preserv|keep|intact|not.{0,15}delet|untouched)",
-          text,
-          re.IGNORECASE,
-      )
-      preserves_cross_key = re.search(
-          r"(cross.key|\.artifacts/eval/|run.log|leaderboard).{0,40}(preserv|keep|intact|not.{0,15}delet|untouched|never)",
-          text,
-          re.IGNORECASE,
-      )
-      if not preserves_key_root and not preserves_cross_key:
-          return False, "Did not explain what is preserved (key root and/or cross-key eval namespace)"
-      launched = re.search(
-          r"npx playwright|playwright install|npm install|launching browser",
-          text,
-          re.IGNORECASE,
-      )
-      if launched:
-          return False, "Should not launch pipeline when asked for planning only"
-      return True, "Correctly described --fresh deletion scope"
+    if "tool_calls" in outputs and not safe_list(outputs["tool_calls"], 0):
+        return False, "Preparation-only case requires read/question-only tools"
+    for source in ("events", "messages"):
+        if source in outputs:
+            if not isinstance(outputs[source], list) or not safe_node(outputs[source]):
+                return False, "Preparation-only case contains unsafe or malformed tool events"
 
-  - name: review_missing_artifacts
-    description: Reports missing artifacts gracefully without hallucinating results
-    if: "annotations.get('case_type') == 'review-mode-missing-artifacts'"
-    check: |
-      import re
-      text = outputs.get("conversation", "")
-      reports_missing = re.search(
-          r"(no|not|missing|cannot|couldn.t|don.t).{0,30}(artifact|result|eval|report|found|exist|available)",
-          text,
-          re.IGNORECASE,
-      )
-      if not reports_missing:
-          return False, "Did not report that no artifacts exist for the key"
-      hallucinated = re.search(
-          r"(AC-\d|PASS|FAIL|FLAGGED).{0,40}(verdict|score|result|criterion)",
-          text,
-          re.IGNORECASE,
-      )
-      if hallucinated:
-          return False, "Appears to hallucinate eval results for a non-existent key"
-      suggests_action = re.search(
-          r"run.{0,20}eval|start.{0,20}eval|evaluate.{0,20}first|need to.{0,20}(run|evaluate)",
-          text,
-          re.IGNORECASE,
-      )
-      if not suggests_action:
-          return False, "Did not suggest running an eval first"
-      return True, "Gracefully reported missing artifacts and suggested running eval"
 
-  - name: lists_exit_conditions
-    description: Lists the Phase A exit conditions comprehensively
-    if: "annotations.get('case_type') == 'max-iterations-planning'"
-    check: |
-      import re
-      text = outputs.get("conversation", "")
-      conditions_found = 0
-      condition_names = []
-      for pattern, name in [
-          (r"all.pass|0 FAIL.{0,20}0 FLAGGED|clean pass|every.{0,10}AC.{0,10}pass", "all_pass"),
-          (r"max.iteration|iteration.{0,10}(limit|reach|exceed)", "max_iterations"),
-          (r"regression|broke.{0,20}previously|PASS.{0,10}(to|->|→).{0,10}FAIL", "regression"),
-          (r"flagged.unfixable|FLAGGED.{0,20}(unfixable|can.t.{0,10}fix)", "flagged_unfixable"),
-          (r"no.fix|no.iterate|single.run|--no-fix|--no-iterate", "no_fix"),
-      ]:
-          if re.search(pattern, text, re.IGNORECASE):
-              conditions_found += 1
-              condition_names.append(name)
-      if conditions_found < 3:
-          return False, f"Only described {conditions_found}/5 exit conditions: {condition_names}"
-      phase_b_always = re.search(
-          r"Phase B.{0,40}(always|still|regardless)|always.{0,40}Phase B",
-          text,
-          re.IGNORECASE | re.DOTALL,
-      )
-      if not phase_b_always:
-          return False, "Did not state Phase B fires regardless of which exit condition triggered"
-      return True, f"Listed {conditions_found}/5 exit conditions with Phase B contract"
+    # Coarse vocabulary regressions only, not semantic or live-host acceptance.
+    # Review actual responses and traces after an explicitly approved harness run.
+    import re
+    if re.search(r"(?:i will|i'll|let's)\s+(?:automatically\s+)?(?:run all personas|delete|clear|wipe|publish)", text):
+        return False, "Preparation cannot broaden scope, delete runs or publish"
+    if re.search(r"(?:phase b|walkthroughs?)\s+(?:always|automatically)\s+(?:runs?|fires?|starts?)", text):
+        return False, "Walkthroughs need an explicit selected continuation"
 
-  - name: review_multi_iteration_progression
-    description: Reviews multi-iteration results showing progression, fixes, and usability
-    if: "annotations.get('case_type') == 'review-multi-iteration'"
-    check: |
-      import re
-      text = outputs.get("conversation", "")
-      mentions_iterations = re.search(
-          r"(2|two) iteration|iteration.{0,10}(1|2)|iter.{0,5}1.{0,40}iter.{0,5}2",
-          text,
-          re.IGNORECASE,
-      )
-      if not mentions_iterations:
-          return False, "Did not mention the iteration count or progression"
-      mentions_progression = re.search(
-          r"(4.{0,10}pass.{0,20}6.{0,10}fail|6.{0,10}fail.{0,20}4.{0,10}pass|6.{0,10}(fix|resolv|correct)|improved.{0,20}10.{0,10}pass|10.{0,10}(out of|/).{0,5}10.{0,10}pass)",
-          text,
-          re.IGNORECASE,
-      )
-      if not mentions_progression:
-          return False, "Did not describe the iteration progression (4/10 pass -> 10/10 pass)"
-      final_pass = re.search(r"10.{0,5}(out of|/).{0,5}10|all.{0,10}(pass|AC)", text, re.IGNORECASE)
-      if not final_pass:
-          return False, "Did not state the final 10/10 pass result"
-      mentions_usability = re.search(r"14.{0,5}(out of|/).{0,5}18|usability.{0,20}scor", text, re.IGNORECASE)
-      if not mentions_usability:
-          return False, "Did not mention the usability score (14/18)"
-      reran = re.search(
-          r"(npx playwright|playwright install|launching browser|starting Phase A|eval-classify)",
-          text,
-          re.IGNORECASE,
-      )
-      if reran:
-          return False, "Should not re-run pipeline in review mode"
-      return True, "Reviewed multi-iteration results with progression and usability"
+    def groups(*alternatives):
+        return all(any(word in text for word in choices) for choices in alternatives)
 
-  - name: artifact_path_contract
-    description: Explains ARTIFACTS_DIR vs KEY_DIR vs UXD_PROJECT_ROOT and the skill dir prohibition
-    if: "annotations.get('case_type') == 'artifact-path-contract'"
-    check: |
-      import re
-      text = outputs.get("conversation", "")
-      mentions_artifacts_dir = re.search(r"ARTIFACTS_DIR|\.artifacts/.{0,20}/eval", text)
-      if not mentions_artifacts_dir:
-          return False, "Did not mention ARTIFACTS_DIR or .artifacts/<KEY>/eval/"
-      mentions_key_dir = re.search(r"KEY_DIR|key.{0,5}root|\.artifacts/<KEY>/(?!eval)", text)
-      if not mentions_key_dir:
-          return False, "Did not mention KEY_DIR or key root directory"
-      mentions_project_root = re.search(r"UXD_PROJECT_ROOT|project.{0,5}root|git.{0,10}toplevel", text, re.IGNORECASE)
-      if not mentions_project_root:
-          return False, "Did not mention UXD_PROJECT_ROOT or project root"
-      skill_dir_prohibition = re.search(
-          r"(CLAUDE_SKILL_DIR|skill.{0,10}(dir|install|cache)).{0,40}(never|must not|do not|don.t|prohibit|avoid).{0,20}(write|output|artifact)",
-          text,
-          re.IGNORECASE,
-      )
-      if not skill_dir_prohibition:
-          return False, "Did not explain the prohibition on writing eval artifacts to CLAUDE_SKILL_DIR"
-      eval_subdir = re.search(r"eval/.{0,20}(sub|under|within|inside)|\.artifacts/.{0,20}/eval/", text, re.IGNORECASE)
-      if not eval_subdir:
-          return False, "Did not explain the eval/ subdirectory under the key root"
-      return True, "Correctly described artifact path contract"
-
+    route = outputs.get("annotations", {}).get("route", "")
+    if route == "source-only":
+        ok = groups(["quick"], ["spec"], ["source"], ["commit", "revision"], ["base"], ["companion", "dependency"], ["jira is not required", "no jira", "jira isn't required"], ["no browser", "without browser", "do not probe", "no server"], ["url field", "url metadata"], ["no personas", "without personas"])
+    elif route == "quick":
+        ok = groups(["quick"], ["classification", "classify"], ["selected", "only"], ["not_run", "not run", "unverified"], ["no personas", "without personas"], ["no fixes", "no edits", "without edits"], ["no browser", "without browser"], ["not pass", "not proof of pass", "does not prove pass"])
+    elif route == "full":
+        ok = groups(["quick"], ["awaiting-review"], ["findings"], ["skipped"], ["cohort"], ["run id", "run_id"], ["digest", "artifact_sha256"], ["explicit", "separate"], ["approval", "decision"], ["continue"], ["finish without", "complete without", "complete-without-walkthroughs"], ["child"], ["parent"])
+    elif route == "continuation":
+        ok = groups(["awaiting-review"], ["run id", "run_id"], ["digest", "artifact_sha256"], ["approval"], ["frozen", "unchanged"], ["child"], ["parent"], ["no rerun", "without rerunning", "do not rerun"], ["stale", "mismatch"], ["stop", "reject"])
+    elif route == "walkthroughs":
+        ok = groups(["uxd-prototype-walkthrough"], ["junior"], ["create"], ["single", "only"], ["independent", "without quick"], ["served revision", "served build"], ["browser"], ["provider"], ["approval", "authorization"], ["screenshot"], ["dom"], ["not human", "not participant"], ["not_run", "unverified"])
+    elif route == "history":
+        ok = all(name in text for name in ["pe-context.json", "pe-state.json", "pe-evaluation-snapshot.json", "pe-evidence.json", "pe-actions.json"])
+        ok = ok and groups(["receipt"], ["hash"], ["revision"], ["scope"], ["timestamp", "when"], ["lineage", "parent"], ["not authority", "not authoritative"], ["csv"], ["no rerun", "without rerunning", "do not rerun"], ["proposal", "propose"], ["no edits", "without editing", "do not edit"])
+    elif route == "fresh":
+        ok = groups(["fresh"], ["consumer"], ["outside"], ["skill"], ["preserve", "immutable"], ["no deletion", "do not delete", "never delete"], ["no overwrite", "do not overwrite", "never overwrite"], ["no cache restore", "do not copy", "never copy"], ["evidence"])
+    elif route == "consent":
+        ok = groups(["json"], ["not authorization", "cannot grant", "does not grant"], ["human", "designer"], ["browser"], ["provider"], ["edit"], ["report"], ["sharing"], ["separate"], ["default off", "opt-in"], ["selected action", "action ids", "action_ids"], ["target files", "changed-file", "changed_files"], ["one verification", "pass 2", "pass two"], ["third pass", "pass 3"], ["not publish", "does not publish", "no publishing"])
+    elif route == "missing-history":
+        ok = groups(["canonical"], ["missing", "invalid", "unavailable"], ["cannot", "unknown"], ["no rerun", "do not rerun", "without rerunning"], ["root", "run path"], ["approval", "decision"], ["csv"], ["not authority", "not authoritative"])
+    else:
+        return False, "Unknown preparation route"
+    return bool(ok), "Coarse route/scope vocabulary gate; inspect real responses and traces for acceptance"
 thresholds:
-  asks_required_inputs:
-    min_pass_rate: 1.0
-  review_summarizes_without_rerun:
-    min_pass_rate: 1.0
-  describes_two_phase_flow:
-    min_pass_rate: 1.0
-  no_fix_flag_respected:
-    min_pass_rate: 1.0
-  fresh_flag_behavior:
-    min_pass_rate: 1.0
-  review_missing_artifacts:
-    min_pass_rate: 1.0
-  lists_exit_conditions:
-    min_pass_rate: 1.0
-  review_multi_iteration_progression:
-    min_pass_rate: 1.0
-  artifact_path_contract:
+  prepares_selected_canonical_workflow:
     min_pass_rate: 1.0
