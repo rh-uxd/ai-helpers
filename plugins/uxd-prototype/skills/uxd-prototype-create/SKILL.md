@@ -291,13 +291,24 @@ If `--pipeline` / `--speedrun`, continue with [references/pipeline-mode.md](refe
 
 Apply targeted changes from user feedback or existing evaluation findings — do not rewrite the prototype. Full procedure: [references/refinement-procedure.md](references/refinement-procedure.md).
 
-Reads `artifacts/{ID}/eval/evaluation-report.csv` + `refinement-suggestions.json`. For explicitly requested evaluation loops, pass = zero FAIL and default max = 3 cycles. Ordinary refinement applies feedback, runs code-level checks, and hands back the prototype without re-evaluating.
+When using evaluation findings, read the selected run's validated `pe-context.json`,
+`pe-evaluation-snapshot.json`, `pe-evidence.json`, `pe-actions.json` and `pe-state.json` plus linked
+receipts. Check source/build/scope against the current prototype. Proposed actions
+do not authorize edits; classification or zero FAIL with missing, `FLAGGED` or
+`NOT_RUN` AC coverage does not establish verified AC success.
+
+Ordinary refinement applies feedback, runs code-level checks, and hands back the
+prototype without re-evaluating. Evaluator-selected fixes need separate approval
+for the actions, target files and verification scope. Preserve the parent run and
+verify the changed revision once, then stop for review, including unresolved results.
 
 ```
-/uxd-prototype-create refine {ID} [--decisions skip|auto|human] [--headless] [--max-cycles 3]
+/uxd-prototype-create refine {ID} [--decisions skip|auto|human] [--headless]
 ```
 
-`--headless` loops refine → evaluate until zero FAIL, max cycles, or plateau.
+`--headless`, pipeline mode and legacy `--max-cycles` settings do not bypass split
+evaluation checkpoints, grant browser/provider/edit permission or authorize a third
+pass. Initial evaluation is pass 1; the one approved post-fix verification is pass 2.
 
 ## Guardrails
 
