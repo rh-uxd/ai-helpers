@@ -9,10 +9,10 @@ reviewed questions, selected steps, evidence expectations, dependencies and limi
 Prepared continuations reuse their frozen plan; adaptations create explicit children.
 
 - **Quick Checks:** select only the relevant inspections. Follow
-  [quick-checks.md](selected-inspections.md) and, for host-produced judgments,
+  [selected inspections](selected-inspections.md) and, for host-produced judgments,
   [inspection-bundle.md](../inspection-contracts/inspection-bundle.md). Classification is triage,
   not acceptance-criterion verification. No personas run implicitly.
-- **Independent walkthroughs:** follow [walkthroughs.md](../task-verification/task-walkthroughs.md). Prepare
+- **Independent walkthroughs:** follow [task walkthroughs](../task-verification/task-walkthroughs.md). Prepare
   only missing task/persona/environment details. An intentionally selected single
   persona is valid, and no preceding Quick run is required.
 - **Evaluator-prepared walkthroughs:** use the same execution/result contract;
@@ -23,7 +23,7 @@ Prepared continuations reuse their frozen plan; adaptations create explicit chil
   parent/digest-bound continuation decision authorizes walkthrough execution.
   Return the producer bundle to the composer, which writes a fresh parent-linked
   child without rerunning inherited Quick work. Finishing without walkthroughs
-  is also an explicit decision. See the commands in [walkthroughs.md](../task-verification/task-walkthroughs.md).
+  is also an explicit decision. See the commands in [task walkthroughs](../task-verification/task-walkthroughs.md).
 
 All producers retain actual invocation receipts, attributed observations and
 evidence, blocked/incomplete/not-run outcomes, and actual or unknown usage. Persona

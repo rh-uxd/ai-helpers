@@ -75,7 +75,7 @@ Never overwrite a prior run. Each JSON starts with `created_at` and `updated_at`
 Agent and walkthrough `eval/eval.yaml` definitions and case prompts are reviewable
 plugin source. This skill's evaluator preparation suite also lives under `eval/`.
 These fixtures are not proof of actual model/host acceptance until separately run
-and reviewed. Automated developer tests remain local and are not runtime inputs.
+and reviewed.
 
 Prototype edits, exports and publishing use their respective skills with their own
 scope and approval gates; an evaluation recommendation authorizes none of them.

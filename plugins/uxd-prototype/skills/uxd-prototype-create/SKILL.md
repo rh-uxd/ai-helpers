@@ -28,7 +28,7 @@ Family: **create → evaluate → publish** (optional export along the way). Pip
 | What to prototype (Jira URL/key, Figma link, description, or idea) | **Yes** | User; skill asks if omitted |
 | Workspace (`--workspace`) | No | Local path, git URL, or `standalone` (default) |
 | Push destination (`--target`) | No | `none` unless publishing |
-| Prior eval feedback | No | `artifacts/{ID}/eval/` when refining |
+| Prior eval feedback | No | Selected run under `artifacts/{ID}/prototype-evaluations/{run}/` when refining |
 
 If the user has not said what to prototype, **stop and ask** before writing files.
 
