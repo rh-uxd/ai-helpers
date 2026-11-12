@@ -1,0 +1,14 @@
+case_type: keep
+installed_prefix: pf-v6-u-
+expected_classes: []
+forbidden_classes: []
+expected_keep_terms:
+  - pf-v6-c-table__td
+  - column-gap
+  - max-height
+  - font-weight
+  - max-width
+  - display
+  - width
+expected_invalid_classes: []
+expected_props: []

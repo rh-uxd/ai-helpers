@@ -1,0 +1,7 @@
+prompt: >-
+  Check UtilityClasses.tsx against this project's installed PatternFly
+  utilities. The project uses @patternfly/patternfly 6.7.0 and the scanner
+  reports prefix pf-v6-u-. The scanner says pf-v6-u-mt-md exists, but the other
+  three utility-looking classes are wrong-major, legacy-missing, or nonexistent.
+  Use those scanner facts without installing packages or calling MCP tools.
+fixture: UtilityClasses.tsx

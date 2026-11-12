@@ -25,6 +25,7 @@ PatternFly team tools and skill incubation — issue triage, release management,
 - **PF Summarize Jira Issues** (`/pf-workshop:pf-summarize-jira-issues`) — Summarize your current sprint workload from Jira — assigned issues, contributor roles, and priorities.
 - **PF Summarize PR Reviews** (`/pf-workshop:pf-summarize-pr-reviews`) — Summarize GitHub pull requests awaiting your review with status, age, and priority.
 - **PF Token Build** (`/pf-workshop:pf-token-build`) — Build CSS design tokens for PatternFly core and copy them to the PatternFly repo.
+- **PF Utility Styles** (`/pf-workshop:pf-utility-styles`) — Audit SCSS, CSS, and inline styles in the current project and report which declarations can be replaced by that project's PatternFly utility classes (pf-v5-u-* or pf-v6-u-*, matching the installed @patternfly/patternfly).
 - **PF Write Example Description** (`/pf-workshop:pf-write-example-description`) — Write and refine example descriptions for PatternFly.org component and demo pages.
 
 ### Agents

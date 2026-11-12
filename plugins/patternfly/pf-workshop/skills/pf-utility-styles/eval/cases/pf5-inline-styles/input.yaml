@@ -1,0 +1,7 @@
+prompt: >-
+  Review LegacyPanel.tsx and replace eligible inline styles with PatternFly
+  utilities. This application uses @patternfly/patternfly 5.4.2, the scanner
+  reports prefix pf-v5-u-, and patternfly-addons is already loaded. Use those
+  scanner facts; do not install packages or call MCP tools. Explain any inline
+  style that should stay.
+fixture: LegacyPanel.tsx

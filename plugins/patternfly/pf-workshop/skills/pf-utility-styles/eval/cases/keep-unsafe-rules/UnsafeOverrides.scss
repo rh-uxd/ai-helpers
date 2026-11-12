@@ -1,0 +1,21 @@
+.pf-v6-c-table__td {
+  padding-top: var(--pf-t--global--spacer--sm);
+}
+
+.results-panel {
+  column-gap: 8px;
+  max-height: 400px;
+  overflow: auto;
+  font-weight: 300;
+}
+
+@media (max-width: 768px) {
+  .results-panel {
+    margin-block-start: 0;
+  }
+}
+
+.resizable-panel {
+  display: none;
+  width: 0%;
+}

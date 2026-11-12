@@ -1,0 +1,238 @@
+name: pf-utility-styles-eval
+description: Evaluate pf-utility-styles utility-class recommendations, installed-version awareness, and safe keep decisions
+
+skill: pf-workshop:pf-utility-styles
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-workshop
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory is the workspace and contains:
+    - input.yaml: prompt with scanner context and a realistic audit request
+    - annotations.yaml: case_type plus expected classes, keep terms, invalid classes, or component props
+    - A CSS, SCSS, or TSX fixture referenced by the prompt
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces a PatternFly utility audit that separates declarations
+      that can move to utility classes from declarations that should remain CSS.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+# With-skill / without-skill A/B delta
+#
+# Discriminating signal: exact utility names from the installed PF major,
+# exceptions for PF selectors and max-width queries, invalid utility detection,
+# and preferring PF component props over utility classes. A base model may suggest
+# generic tokens, invent classes for unsupported properties, or use only PF6 names.
+#
+# Expected delta:
+# | Case                    | Without skill                         | With skill                                      |
+# |-------------------------|---------------------------------------|-------------------------------------------------|
+# | pf6-plain-declarations  | Generic CSS/token suggestions         | Exact pf-v6-u-* classes                         |
+# | pf5-inline-styles       | Assumes current PF6 prefix             | Exact pf-v5-u-* classes                         |
+# | keep-unsafe-rules       | Converts matching values mechanically | Keeps PF overrides, max queries, unsupported CSS|
+# | invalid-utility-classes | Misses wrong-major/nonexistent names  | Flags each class against installed PF6 catalog  |
+# | prefer-flex-props       | Adds utility classes to Flex          | Prefers alignItems and spaceItems props         |
+
+judges:
+  - name: annotations_complete
+    description: Every case declares the routing and expectation fields used by conditional judges
+    check: |
+      ann = outputs.get("annotations", {})
+      required = [
+          "case_type", "installed_prefix", "expected_classes", "forbidden_classes",
+          "expected_keep_terms", "expected_invalid_classes", "expected_props",
+      ]
+      missing = [key for key in required if key not in ann]
+      if missing:
+          return False, f"Missing required annotation keys: {', '.join(missing)}"
+      if not isinstance(ann.get("case_type"), str) or not isinstance(ann.get("installed_prefix"), str):
+          return False, "case_type and installed_prefix must be strings"
+      list_fields = required[2:]
+      bad = [key for key in list_fields if not isinstance(ann.get(key), list)]
+      if bad:
+          return False, f"Expected list annotations for: {', '.join(bad)}"
+      return True, "All required annotations are present with correct types"
+
+  - name: recommends_exact_installed_utilities
+    description: Recommends every expected utility class with the installed PatternFly prefix
+    if: "annotations.get('case_type') in ['pf6-convert', 'pf5-convert']"
+    check: |
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      expected = ann.get("expected_classes", [])
+      missing = [name for name in expected if name not in text]
+      if missing:
+          return False, f"Missing expected utility recommendations: {missing}"
+      prefix = ann.get("installed_prefix", "")
+      if prefix and not any(name.startswith(prefix) for name in expected):
+          return False, f"Case expectations do not use installed prefix {prefix}"
+      return True, f"Recommended all {len(expected)} expected installed-version utilities"
+
+  - name: avoids_wrong_major_prefix
+    description: Does not recommend utility classes from a different PatternFly major version
+    if: "annotations.get('case_type') in ['pf6-convert', 'pf5-convert']"
+    check: |
+      import re
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      forbidden = ann.get("forbidden_classes", [])
+      bad = []
+      for name in forbidden:
+          pattern = re.compile(
+              r'(recommend|replace|becomes|use|class|can move).{0,100}' + re.escape(name)
+              + r'|' + re.escape(name) + r'.{0,100}(recommend|replace|becomes|use|class|can move)',
+              re.IGNORECASE | re.DOTALL,
+          )
+          if pattern.search(text):
+              bad.append(name)
+      if bad:
+          return False, f"Recommended utility classes from the wrong PF major: {bad}"
+      return True, "No wrong-major utility recommendations"
+
+  - name: keeps_unsafe_or_unsupported_css
+    description: Keeps PF overrides, max-width query rules, dynamic styles, and properties with no utility
+    if: "annotations.get('case_type') == 'keep'"
+    check: |
+      import re
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      missing = []
+      for term in ann.get("expected_keep_terms", []):
+          keep_pattern = re.compile(
+              r'(keep|leave|remain|no utility|do not|should not|unsupported).{0,140}'
+              + re.escape(term)
+              + r'|' + re.escape(term)
+              + r'.{0,140}(keep|leave|remain|no utility|do not|should not|unsupported)',
+              re.IGNORECASE | re.DOTALL,
+          )
+          if not keep_pattern.search(text):
+              missing.append(term)
+      if missing:
+          return False, f"Did not explain why these declarations stay in CSS: {missing}"
+      invented = re.findall(r'pf-v[56]-u-(?:gap|column-gap|max-height-400|font-weight-300|vertical-align)[a-z0-9-]*', text)
+      if invented:
+          return False, f"Invented unsupported utility classes: {invented}"
+      return True, "Kept unsafe and unsupported declarations with reasons"
+
+  - name: flags_invalid_utility_classes
+    description: Flags wrong-major, legacy-missing, and nonexistent utility classes
+    if: "annotations.get('case_type') == 'invalid-classes'"
+    check: |
+      import re
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      expected = ann.get("expected_invalid_classes", [])
+      missing = []
+      for name in expected:
+          pattern = re.compile(
+              r'(wrong|invalid|unknown|nonexistent|not (?:a|an)|no .*equivalent|different major|legacy|missing).{0,100}'
+              + re.escape(name)
+              + r'|' + re.escape(name)
+              + r'.{0,100}(wrong|invalid|unknown|nonexistent|not (?:a|an)|no .*equivalent|different major|legacy|missing)',
+              re.IGNORECASE | re.DOTALL,
+          )
+          if not pattern.search(text):
+              missing.append(name)
+      if missing:
+          return False, f"Did not flag invalid utility classes: {missing}"
+      return True, f"Flagged all {len(expected)} invalid utility classes"
+
+  - name: recognizes_dynamic_style_mutation
+    description: Keeps display and width declarations when script changes those properties at runtime
+    if: "annotations.get('case_type') == 'keep'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      dynamic = re.search(
+          r'(script|javascript|typescript|runtime|dynamically|style\.display|style\.width|showPanel)'
+          r'.{0,180}(display|width|!important|override|mutation|change|set)'
+          r'|(display|width).{0,180}(script|javascript|typescript|runtime|dynamically|style\.display|style\.width|showPanel)',
+          text,
+          re.IGNORECASE | re.DOTALL,
+      )
+      if not dynamic:
+          return False, "Did not connect runtime style mutation to keeping display and width in CSS"
+      return True, "Recognized runtime display/width mutation and avoided !important utilities"
+
+  - name: prefers_patternfly_component_props
+    description: Recommends PatternFly component props instead of adding utilities to an existing Flex
+    if: "annotations.get('case_type') == 'component-props'"
+    check: |
+      import re
+      ann = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      expected = ann.get("expected_props", [])
+      missing = [prop for prop in expected if prop not in text]
+      if missing:
+          return False, f"Missing preferred PatternFly component props: {missing}"
+      if "alignItemsCenter" not in text or "spaceItemsMd" not in text:
+          return False, "Did not provide the expected Flex prop values alignItemsCenter and spaceItemsMd"
+      utility_pattern = re.compile(
+          r'(recommend|add|use).{0,80}pf-v[56]-u-(align-items-center|m[trblxy]?-md|p[trblxy]?-md)',
+          re.IGNORECASE | re.DOTALL,
+      )
+      for match in utility_pattern.finditer(text):
+          context = text[max(0, match.start() - 20):match.end()].lower()
+          if not re.search(r"(do not|don't|should not|instead of|rather than|avoid)", context):
+              return False, "Recommended a utility class where Flex props should be preferred"
+      return True, "Preferred Flex component props over utility classes"
+
+  - name: separates_can_move_and_keep
+    description: Presents actionable move recommendations separately from declarations that should remain CSS
+    if: "annotations.get('case_type') in ['pf6-convert', 'pf5-convert']"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      has_move = re.search(r'(can move|utility audit|recommend|replace|becomes)', text, re.IGNORECASE)
+      has_keep = re.search(r'\b(keep|leave|remain|no utility|unsupported)\b', text, re.IGNORECASE)
+      if not has_move:
+          return False, "Output lacks an actionable utility recommendation section"
+      if not has_keep:
+          return False, "Output does not distinguish declarations that should stay in CSS"
+      return True, "Separates utility candidates from keep decisions"
+
+thresholds:
+  annotations_complete:
+    min_pass_rate: 1.0
+  recommends_exact_installed_utilities:
+    min_pass_rate: 1.0
+  avoids_wrong_major_prefix:
+    min_pass_rate: 1.0
+  keeps_unsafe_or_unsupported_css:
+    min_pass_rate: 1.0
+  flags_invalid_utility_classes:
+    min_pass_rate: 1.0
+  recognizes_dynamic_style_mutation:
+    min_pass_rate: 1.0
+  prefers_patternfly_component_props:
+    min_pass_rate: 1.0
+  separates_can_move_and_keep:
+    min_pass_rate: 0.67
