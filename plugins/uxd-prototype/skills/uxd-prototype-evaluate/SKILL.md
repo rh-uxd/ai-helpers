@@ -35,7 +35,7 @@ verification of an existing evaluator run:
 - **Quick Checks:** selected classification, source consistency or visual
   consistency only. New heuristic work is not supported in evaluator plans; reject
   it rather than adding a check or invoking a research profile. Follow
-  [quick-checks.md](references/workflow/selected-inspections.md). No implicit
+  [selected inspections](references/workflow/selected-inspections.md). No implicit
   personas or fixes.
 - **Agentic Walkthroughs:** use the independently callable sibling
   `uxd-prototype-walkthrough` skill for the exact approved task/persona pairs.
@@ -79,7 +79,8 @@ written requirements are supplied.
 Run from the resolved evaluator skill directory, using consumer-owned absolute
 input/output paths. New Quick runs may select only `classify`, `consistency-source`,
 and `consistency-visual`. Save outputs under the project's
-`artifacts/<KEY>/prototype-evaluations/<run-name>/`; each run directory must be new.
+`artifacts/<KEY>/prototype-evaluations/<run-name>/`; create the output parent first
+and choose a new run directory.
 Dates live in the JSON fields, not the filenames:
 
 ```bash
@@ -119,5 +120,5 @@ NOT_RUN and unreviewed findings. Report source/build identity, evidence gaps and
 actual/unknown measurements. Stop on missing dependencies, dirty/mismatched source,
 stale approvals or invalid hashes instead of silently degrading coverage.
 
-Explain any remaining host/model acceptance work. Local contract tests are not
-live user research, proof of hosted delivery or measured cost savings.
+Explain any remaining host/model acceptance work. Local validation is not live user
+research, proof of hosted delivery or measured cost savings.
