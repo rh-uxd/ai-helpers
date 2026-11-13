@@ -6,9 +6,11 @@ description: >-
   declarations can be replaced by that project's PatternFly utility classes
   (pf-v5-u-* or pf-v6-u-*, matching the installed @patternfly/patternfly).
   Use when the user asks whether custom styles, CSS, SCSS, or inline styles
-  can use PatternFly utilities, PF utility classes, or pf-v*-u classes, or
-  asks to replace stylesheet rules with utilities. Works in any project that
-  depends on PatternFly.
+  can use PatternFly utilities, PF utility classes, or pf-v*-u classes, asks
+  to replace stylesheet rules with utilities, or asks to walk through or
+  implement the suggested updates. After a run, ask whether to summarize
+  the changes that actually landed on the branch. Works in any project
+  that depends on PatternFly.
 ---
 
 # PatternFly utility styles
@@ -40,7 +42,8 @@ python3 "$CLAUDE_SKILL_DIR/scripts/scan_pf_utilities.py" PATH
 ```
 
 - One file or directory: run it with no extra flags. Add `--review` when the user wants the hidden PatternFly-selector, pseudo, and media-query hits explained.
-- A whole project, or no path (the current directory): run `--summary`. Do not paste every hit into the answer.
+- A whole project, or no path (the current directory): run `--summary --queue`. Do not paste the queue into the answer.
+- `--queue` groups each suggested rule into one item. Component stylesheets come first, then inline styles, then other project CSS. `base.scss`, override stylesheets, and email or mailer CSS are last. Inline styles are included. Hidden PatternFly selectors, pseudos, media queries, and bare elements are not. Dependency directories (`node_modules`, `vendor`, `.vendor`) are not scanned.
 - `--off-scale` lists utility properties whose values are not on the installed scale. `--tests` includes test and fixture files.
 
 Token tables, the breakpoint rule, and properties that have no utility are in [reference.md](reference.md). Those examples use the PatternFly 5 prefix. Use the prefix the scanner prints for this project. If the scanner and the reference disagree, the installed SCSS wins. Do not invent a utility class the scanner did not emit. PatternFly 4 is out of scope.
@@ -101,11 +104,77 @@ PatternFly <version> utilities (`<prefix>` from the scanner).
 - <rule>: <reason in one line>
 ```
 
-For a whole project, lead with the scanner counts, the class prefix, whether a utility stylesheet import was seen, and how many hidden hits are PatternFly overrides or media queries. Name any legacy `pf-u-*` hit. Do not list every candidate. Offer the top files as the places worth cleaning up, and audit one of them in the format above only if the user pointed at it or asked for the detail.
+For a whole project, lead with the scanner counts, the class prefix, whether a utility stylesheet import was seen, and how many hidden hits are PatternFly overrides or media queries. Name any legacy `pf-u-*` hit. Do not list every candidate. Name the files with the most listed matches.
+
+After a file report or a project summary, stop. Ask the user which they want:
+
+- **Walk through** the suggested updates, one at a time.
+- **Implement all** suggested updates that pass the Keep checks.
+
+Do not edit files, and do not start the walkthrough, until they choose.
+
+## Walk through updates
+
+Use this only after the user chooses to walk through. Apply a change only after the user accepts that suggestion.
+
+1. Run `--summary --queue` on the project that contains `@patternfly/patternfly`. If the user named a file or directory, pass that path and start there.
+2. Read the queue in order. For each group, open the rule and apply the Keep checks. Skip it when any check fails, including these:
+   - The stylesheet exists to override PatternFly, Bootstrap, or another library.
+   - The selector uses a sibling combinator, `:not()`, or another condition a class on the element would ignore.
+   - The selector is a shared helper (`.fr`, `.ellipsis`) used from many templates.
+   - The file is email or mailer CSS.
+   - Script later sets the same property (`.show()`, `.hide()`, `.width()`, or a caller-passed `style`).
+   - A PatternFly component prop already covers it (`Flex` `spaceItems`, `MenuToggle` `isFullWidth`).
+   - The verdict is `approximate`. Mention those once in the summary, not as a suggestion.
+3. Batch the skips. In one turn, skip every group that fails a Keep check until the next group that can move. Tell the user the count and the reasons in one or two lines. Do not ask them to reject those.
+4. Show one suggestion, then stop. Do not edit in that turn.
+
+```markdown
+### Suggestion <n>
+`<file>:<line>`
+Current: `<property>: <value>` on `<selector or JSX element>`
+Change: add `<classes>` on `<the element the declaration targets>`. Remove that declaration. Leave the rest of the rule.
+Why: <one line>
+
+Reply **apply**, **skip**, or **stop**.
+```
+
+5. On the next turn:
+   - **apply**: make that one change, then continue from step 3 and show the next suggestion.
+   - **skip**: leave the file unchanged, then continue from step 3.
+   - **apply the rest of this file**: apply the remaining suggestions in the current file that already passed the Keep checks. Do not apply groups you have not read.
+   - **stop**: end the queue, then ask about a change summary as described below.
+
+When the queue is finished, or the user stops, do not list the skipped suggestions again. Ask about a change summary as described below.
+
+A legacy `pf-u-*` class with no installed equivalent is one suggestion: remove the class, and say there is no utility to put in its place. Do not invent a substitute.
+
+## Implement all
+
+Use this only after the user chooses to implement all.
+
+1. Read every queued group and apply the Keep checks. Drop hidden hits, off-scale values, `approximate` matches, and anything in the skip list above.
+2. Apply each group that passes. Use the same edit steps as a single accepted suggestion.
+3. Say how many groups were applied and how many were left in place. Do not list every leave. Then ask about a change summary as described below.
+
+## Change summary
+
+Ask only when the walkthrough ends or **implement all** finishes. The walkthrough ends when the user says **stop** or the queue has no suggestions left.
+
+Ask: do you want a summary of the changes?
+
+Write the summary only if they say yes. Build it from the branch, not from the suggestion list.
+
+1. Remember which files this run edited.
+2. Read `git status` and `git diff` for those files, including staged changes. If this run committed them, read `git diff <base>...HEAD` for those same files. Use the merge base of the upstream or default branch.
+3. Include a change only when the diff shows it. Leave out skipped suggestions, suggestions that were not applied, and edits this run did not make, even when they are in the same file or already on the branch.
+4. For each included change, name the file, the utility class added, and the declaration removed.
+
+If this run changed nothing, say that and do not invent entries.
 
 ## Applying a change
 
-Only when the user asks:
+Only for a suggestion the user accepted:
 
 1. Add the class on the element the declaration targets (`class` / `className` in the template or JSX).
 2. Remove that declaration. Leave the rest of the rule.

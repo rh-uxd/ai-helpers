@@ -56,6 +56,7 @@ traces:
 # | keep-unsafe-rules       | Converts matching values mechanically | Keeps PF overrides, max queries, unsupported CSS|
 # | invalid-utility-classes | Misses wrong-major/nonexistent names  | Flags each class against installed PF6 catalog  |
 # | prefer-flex-props       | Adds utility classes to Flex          | Prefers alignItems and spaceItems props         |
+# | walkthrough-choice      | Starts editing or dumps all findings  | Stops and offers walkthrough vs implement all   |
 
 judges:
   - name: annotations_complete
@@ -219,6 +220,27 @@ judges:
           return False, "Output does not distinguish declarations that should stay in CSS"
       return True, "Separates utility candidates from keep decisions"
 
+  - name: offers_controlled_followup
+    description: Initial audits stop before editing and offer walkthrough or implement-all follow-up modes
+    if: "annotations.get('case_type') == 'walkthrough-choice'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      if not re.search(r'walk through|walkthrough', text, re.IGNORECASE):
+          return False, "Did not offer to walk through suggestions one at a time"
+      if not re.search(r'implement all', text, re.IGNORECASE):
+          return False, "Did not offer the implement-all option"
+      if not re.search(r'(which|choose|would you like|do you want|reply)', text, re.IGNORECASE):
+          return False, "Did not stop and ask the user to choose a follow-up mode"
+      edit_claim = re.search(
+          r'(updated|edited|changed|applied|modified)\s+(Card\.scss|the file|your file)',
+          text,
+          re.IGNORECASE,
+      )
+      if edit_claim:
+          return False, "Claimed to edit files before the user selected a follow-up mode"
+      return True, "Stopped after the audit and offered controlled follow-up modes"
+
 thresholds:
   annotations_complete:
     min_pass_rate: 1.0
@@ -236,3 +258,5 @@ thresholds:
     min_pass_rate: 1.0
   separates_can_move_and_keep:
     min_pass_rate: 0.67
+  offers_controlled_followup:
+    min_pass_rate: 1.0

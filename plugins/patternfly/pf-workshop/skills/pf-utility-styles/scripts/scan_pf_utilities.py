@@ -27,6 +27,7 @@ PF_SELECTOR = re.compile(r"pf-(?:v\d+-)?[cl]-|pf-m-")
 SKIP_DIRS = {
     "node_modules",
     "vendor",
+    ".vendor",
     "dist",
     "coverage",
     "tmp",
@@ -947,6 +948,70 @@ def walk(paths, catalog, include_tests):
     return hits, summary
 
 
+def queue_hit(hit):
+    if hit["verdict"] not in ("candidate", "partial"):
+        return False
+    blocking = ("conditional:", "PatternFly selector", "pseudo selector", "element selector")
+    for note in hit["notes"]:
+        if note in blocking or note.startswith("conditional:"):
+            return False
+    if hit["list"]:
+        return True
+    return hit.get("origin") == "style"
+
+
+def queue_rank(group):
+    path = group["file"].replace("\\", "/").lower()
+    name = Path(path).name
+    if name in {"base.scss", "email.css"} or any(token in path for token in ("override", "/email", "mailer")):
+        band = 3
+    elif "/components/" in path and group["origin"] != "style":
+        band = 0
+    elif group["origin"] == "style":
+        band = 1
+    else:
+        band = 2
+    return (band, len(group["hits"]), path, group["selector"])
+
+
+def queue_groups(hits):
+    groups = []
+    index = {}
+    for hit in hits:
+        if not queue_hit(hit):
+            continue
+        if hit.get("origin") == "style":
+            key = (hit["file"], "style", hit["line"])
+        else:
+            key = (hit["file"], hit["selector"])
+        group = index.get(key)
+        if group is None:
+            group = {
+                "file": hit["file"],
+                "selector": hit["selector"],
+                "origin": hit.get("origin", "css"),
+                "hits": [],
+            }
+            index[key] = group
+            groups.append(group)
+        group["hits"].append(hit)
+    groups.sort(key=queue_rank)
+    return groups
+
+
+def print_queue(groups):
+    print(f"\n## queue ({len(groups)} suggestions)")
+    print("Walk these one at a time. Skip a group when a Keep rule applies. Do not paste this list into the answer.")
+    for number, group in enumerate(groups, 1):
+        where = group["selector"] or "(inline style)"
+        print(f"\n### {number}. {group['file']}")
+        print(f"selector: {where}")
+        for hit in group["hits"]:
+            classes = " ".join(hit["classes"]) if hit["classes"] else "(none)"
+            extra = f" — {'; '.join(hit['notes'])}" if hit["notes"] else ""
+            print(f"  {hit['file']}:{hit['line']}  {hit['verdict']}  {hit['property']}: {hit['value']}  ->  {classes}{extra}")
+
+
 def format_hit(hit):
     loc = f"{hit['file']}:{hit['line']}"
     classes = " ".join(hit["classes"]) if hit["classes"] else "(none)"
@@ -1065,6 +1130,14 @@ def self_test(catalog):
     comma = [hit for hit in hits if hit["selector"] == "#import-btn, #undo-btn"][0]
     assert comma["list"] is True, comma
     assert "descendant selector" not in comma["notes"]
+    groups = queue_groups(hits)
+    selectors = {group["selector"] for group in groups}
+    assert ".card" in selectors, selectors
+    assert "#import-btn, #undo-btn" in selectors, selectors
+    assert not any(selector.startswith("#header") for selector in selectors), selectors
+    assert all(hit["property"] != "margin-bottom" for group in groups for hit in group["hits"])
+    card = next(group for group in groups if group["selector"] == ".card")
+    assert [hit["property"] for hit in card["hits"]] == ["margin-top", "padding", "display", "align-items"], card
     print("self-test ok")
     print(f"catalog classes: {len(catalog['classes'])}  patternfly {catalog['version']}  prefix {catalog['prefix']}")
 
@@ -1076,6 +1149,7 @@ def main(argv):
     parser.add_argument("--off-scale", action="store_true", help="print utility properties whose values are not on the PF scale")
     parser.add_argument("--tests", action="store_true", help="include test and fixture files")
     parser.add_argument("--summary", action="store_true", help="print counts and per-file totals, plus legacy or unknown classes")
+    parser.add_argument("--queue", action="store_true", help="print suggested updates grouped by rule, component files first")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--self-test", action="store_true")
     args = parser.parse_args(argv)
@@ -1107,11 +1181,13 @@ def main(argv):
             if hit["verdict"] == "off-scale":
                 hit["list"] = True
     if args.json:
-        visible = [hit for hit in hits if args.review or hit["list"]]
+        visible = [hit for hit in hits if args.review or hit["list"] or queue_hit(hit)]
         json.dump({"version": catalog["version"], "summary": {k: v for k, v in summary.items() if k != "show_off_scale"}, "hits": visible}, sys.stdout, indent=2)
         print()
         return 0
-    print_text(catalog, hits, summary, args.review, args.summary)
+    print_text(catalog, hits, summary, args.review, args.summary or args.queue)
+    if args.queue:
+        print_queue(queue_groups(hits))
     return 0
 
 

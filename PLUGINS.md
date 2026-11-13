@@ -363,5 +363,5 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 | `pf-summarize-jira-issues` | Contributors and maintainers | Task context | Structured result | M |
 | `pf-summarize-pr-reviews` | Contributors and maintainers | Task context | Structured result | M |
 | `pf-token-build` | Contributors and maintainers | Task context | Structured result | S |
-| `pf-utility-styles` | Contributors and maintainers | Task context | Structured result | M |
+| `pf-utility-styles` | Contributors and maintainers | Task context | Structured result | L |
 | `pf-write-example-description` | Contributors and maintainers | Task context | Structured result | M |
