@@ -1,9 +1,7 @@
 prompt: >-
-  Using the uxd-prototype-publish skill, assess publishing prototype DEMO-1
-  to GitHub with --eval-run .artifacts/DEMO-1/eval and no --force. The fixture
-  contains a schema-valid synthetic completed Full run with an explicit
-  task-linked AC-1 FAIL and linked evidence/receipts. These are prepared fixture
-  records, not permission to make browser/provider calls. Do not run evaluation
-  work or actually push or deploy. Explain whether publication is allowed and
-  what approval would be needed.
-fixture: .artifacts/DEMO-1
+  Using the uxd-prototype-publish skill, attempt to publish prototype DEMO
+  with --target github (no --force). The fixture tree is under
+  .artifacts/DEMO/ in this case directory. It includes evaluation-report.csv
+  with at least one FAIL acceptance-criteria verdict. Follow the skill's AC
+  gating (block unless --force). Do not actually push or deploy.
+fixture: .artifacts/DEMO

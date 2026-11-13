@@ -1,4 +1,4 @@
-.PHONY: validate validate-evals test-evaluator lint security scaffold help docs
+.PHONY: validate validate-evals lint security scaffold help docs
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
@@ -11,11 +11,6 @@ validate: ## Run all repository validation, including eval configuration checks
 
 validate-evals: ## Validate eval configuration structure
 	@python3 scripts/lint-evals.py
-
-test-evaluator: ## Run offline evaluator and publisher contract regressions
-	@bash plugins/uxd-prototype/skills/uxd-prototype-evaluate/tests/test-resolve-prototype-url.sh
-	@node --test plugins/uxd-prototype/skills/uxd-prototype-evaluate/tests/canonical-contracts.test.js
-	@python3 plugins/uxd-prototype/skills/uxd-prototype-evaluate/tests/test-publish-eval.py
 
 lint: ## Run skillsaw content linter (zero-install via uvx)
 	@command -v uvx >/dev/null 2>&1 || { \

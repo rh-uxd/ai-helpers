@@ -43,7 +43,7 @@ while IFS= read -r skill_file; do
   if [[ -n "$fm_name" ]] && [[ ! "$fm_name" =~ ^($VALID_PREFIXES)- ]]; then
     fail "$skill_file" "Skill name '${fm_name}' must start with a valid prefix (${VALID_PREFIXES})"
   fi
-done < <(find plugins -type d -name node_modules -prune -o -name 'SKILL.md' -print 2>/dev/null)
+done < <(find plugins -name 'SKILL.md' 2>/dev/null)
 
 # Agents
 while IFS= read -r agent_file; do
@@ -64,10 +64,10 @@ while IFS= read -r agent_file; do
   if [[ -n "$fm_name" ]] && [[ ! "$fm_name" =~ ^($VALID_PREFIXES)- ]]; then
     fail "$agent_file" "Agent name '${fm_name}' must start with a valid prefix (${VALID_PREFIXES})"
   fi
-done < <(find plugins -type d -name node_modules -prune -o -path '*/agents/*.md' -not -path '*/agents/*/*.md' -print 2>/dev/null)
+done < <(find plugins -path '*/agents/*.md' -not -path '*/agents/*/*.md' 2>/dev/null)
 
-SKILL_COUNT=$(find plugins -type d -name node_modules -prune -o -name 'SKILL.md' -print 2>/dev/null | wc -l | tr -d ' ')
-AGENT_COUNT=$(find plugins -type d -name node_modules -prune -o -path '*/agents/*.md' -not -path '*/agents/*/*.md' -print 2>/dev/null | wc -l | tr -d ' ')
+SKILL_COUNT=$(find plugins -name 'SKILL.md' 2>/dev/null | wc -l | tr -d ' ')
+AGENT_COUNT=$(find plugins -path '*/agents/*.md' -not -path '*/agents/*/*.md' 2>/dev/null | wc -l | tr -d ' ')
 
 if [[ "$ERRORS" -gt 0 ]]; then
   echo "${ERRORS} error(s) found."
