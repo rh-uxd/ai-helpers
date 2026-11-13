@@ -83,15 +83,49 @@ find_dist_dir() {
 
 # ── Find available port ───────────────────────────────────────────────────────
 
+normalize_port() {
+  local raw="$1"
+  local digits
+  local normalized_port
+
+  case "$raw" in
+    ''|*[!0123456789]*)
+      echo "ERROR: Port must be a decimal integer from 1 to 65535" >&2
+      return 1
+      ;;
+  esac
+
+  # Strip leading zeroes before arithmetic so long or octal-looking input is safe.
+  digits="${raw#"${raw%%[!0]*}"}"
+  [ -n "$digits" ] || digits="0"
+  if [ "${#digits}" -gt 5 ]; then
+    echo "ERROR: Port must be a decimal integer from 1 to 65535" >&2
+    return 1
+  fi
+
+  normalized_port=$((10#$digits))
+  if (( normalized_port < 1 || normalized_port > 65535 )); then
+    echo "ERROR: Port must be a decimal integer from 1 to 65535" >&2
+    return 1
+  fi
+
+  printf '%s\n' "$normalized_port"
+}
+
 find_open_port() {
-  local port="$1"
+  local start_port="$1"
   local attempts=0
-  while [ $attempts -lt $MAX_PORT_ATTEMPTS ]; do
-    if ! lsof -ti:"$port" > /dev/null 2>&1; then
-      echo "$port"
+  local candidate
+
+  while (( attempts < MAX_PORT_ATTEMPTS )); do
+    candidate=$((start_port + attempts))
+    if (( candidate > 65535 )); then
+      return 1
+    fi
+    if ! lsof -ti:"$candidate" > /dev/null 2>&1; then
+      echo "$candidate"
       return 0
     fi
-    port=$((port + 1))
     attempts=$((attempts + 1))
   done
   return 1
@@ -106,13 +140,13 @@ start_server() {
   local spa_flag="$2"
   local port="$3"
   local pid_file="${ARTIFACTS_DIR}/server.pid"
+  local -a server_args=(npx sirv "$serve_dir" --port "$port" --host 0.0.0.0)
 
-  local cmd="npx sirv ${serve_dir} --port ${port} --host 0.0.0.0"
   if [ "$spa_flag" = "true" ]; then
-    cmd="${cmd} --single"
+    server_args+=(--single)
   fi
 
-  nohup bash -c "$cmd" > /dev/null 2>&1 &
+  nohup "${server_args[@]}" > /dev/null 2>&1 &
   local server_pid=$!
   disown $server_pid 2>/dev/null || true
 
@@ -200,8 +234,14 @@ DIST_DIR=$(find_dist_dir "$WORKSPACE") || {
   exit 1
 }
 
+PORT=$(normalize_port "$PORT") || exit 1
+
 ACTUAL_PORT=$(find_open_port "$PORT") || {
-  echo "ERROR: Ports ${PORT}-$((PORT + MAX_PORT_ATTEMPTS - 1)) all in use" >&2
+  LAST_PORT=$((PORT + MAX_PORT_ATTEMPTS - 1))
+  if [ "$LAST_PORT" -gt 65535 ]; then
+    LAST_PORT=65535
+  fi
+  echo "ERROR: Ports ${PORT}-${LAST_PORT} all in use" >&2
   exit 1
 }
 

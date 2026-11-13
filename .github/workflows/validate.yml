@@ -27,5 +27,18 @@ jobs:
       - name: Install validation dependencies
         run: pip install pyyaml
 
-      - name: Validate repository
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '24'
+
+      - name: Install evaluator dependencies (no browser downloads or lifecycle scripts)
+        working-directory: plugins/uxd-prototype/skills/uxd-prototype-evaluate
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+        run: npm ci --ignore-scripts
+
+      - name: Validate repository with dependencies installed
         run: make validate
+
+      - name: Test evaluator contracts (offline)
+        run: make test-evaluator

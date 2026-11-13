@@ -1,0 +1,59 @@
+{
+  "created_at": "2026-11-13T15:38:49.095Z",
+  "updated_at": "2026-11-13T15:38:49.685Z",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema_version": "1.0.0",
+  "run_id": "eval-full-4e5b22eb-824d-409d-a3ab-3ab8206b34a1",
+  "prototype_key": "DEMO-1",
+  "producer": {
+    "name": "uxd-prototype-evaluate-split",
+    "version": "0.1.0"
+  },
+  "artifact_type": "evidence",
+  "captures": [
+    {
+      "id": "capture-observed",
+      "url": "https://demo.invalid/prototype",
+      "source_ref": "build-revision-1",
+      "screen_id": "screen-drafts",
+      "state_id": "state-empty",
+      "viewport": {
+        "width": 1,
+        "height": 1,
+        "device_scale_factor": 1
+      },
+      "captured_at": "2026-11-13T15:38:49.520Z",
+      "dom_digest": "sha256:7f8bce421681cf2099d4592cb5ae0a3a04f2112c97f5be55fce54ebd944a9d94",
+      "raw_image": {
+        "path": "evidence/observed.png",
+        "width": 1,
+        "height": 1,
+        "sha256": "sha256:b3c4b19781aef529995411399c5dc85cc432d9447d147db5a2c8cddf06917f56"
+      },
+      "page": {
+        "title": "Drafts",
+        "headings": [],
+        "controls": []
+      }
+    }
+  ],
+  "items": [
+    {
+      "id": "evidence-observed",
+      "capture_id": "capture-observed",
+      "kind": "full-page",
+      "purpose": "ac",
+      "subject": {
+        "role": "main",
+        "name": "Draft list",
+        "locator": "main"
+      },
+      "image": {
+        "path": "evidence/observed.png",
+        "width": 1,
+        "height": 1,
+        "sha256": "sha256:b3c4b19781aef529995411399c5dc85cc432d9447d147db5a2c8cddf06917f56"
+      }
+    }
+  ]
+}
