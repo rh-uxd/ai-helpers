@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-helpers.uxd/schemas/v1/actions.schema.json",
+  "$comment": "$schema names the JSON Schema standard. $id is this schema's unique name, not a website. The validator reads bundled files, not this address.",
+  "title": "UXD Prototype Evaluation actions v1",
+  "type": "object",
+  "allOf": [
+    { "$ref": "shared.schema.json#/$defs/envelope" },
+    {
+      "type": "object",
+      "properties": {
+        "artifact_type": { "const": "actions" },
+        "actions": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "$ref": "shared.schema.json#/$defs/identifier" },
+              "kind": { "type": "string", "enum": ["fix", "human-followup", "publish"] },
+              "status": { "type": "string", "enum": ["proposed", "applied", "skipped", "deferred", "validated"] },
+              "priority": { "type": "string", "enum": ["blocking", "high", "normal", "low"] },
+              "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+              "source": {
+                "type": "object",
+                "properties": {
+                  "ac_id": { "anyOf": [{ "$ref": "shared.schema.json#/$defs/identifier" }, { "type": "null" }] },
+                  "finding_id": { "anyOf": [{ "$ref": "shared.schema.json#/$defs/identifier" }, { "type": "null" }] },
+                  "origin_run_id": { "$ref": "shared.schema.json#/$defs/run_id" },
+                  "origin_action_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+                  "evidence_ids": { "$ref": "shared.schema.json#/$defs/evidence_ids" }
+                },
+                "required": ["ac_id", "finding_id", "evidence_ids"],
+                "additionalProperties": false
+              },
+              "target": {
+                "type": "object",
+                "properties": {
+                  "file": { "$ref": "shared.schema.json#/$defs/relative_path" },
+                  "line": { "type": "integer", "minimum": 1 }
+                },
+                "additionalProperties": false
+              },
+              "recommendation": { "$ref": "shared.schema.json#/$defs/recommendation" },
+              "result": {
+                "type": "object",
+                "properties": {
+                  "changed_files": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/relative_path" }, "uniqueItems": true, "maxItems": 100 },
+                  "validated_at": { "$ref": "shared.schema.json#/$defs/timestamp" },
+                  "applied_in_iteration": { "type": "integer", "minimum": 1, "maximum": 20 }
+                },
+                "required": ["changed_files"],
+                "additionalProperties": false
+              },
+              "handoff": {
+                "type": "object",
+                "properties": {
+                  "requires_user_invocation": { "type": "boolean" },
+                  "skill": { "type": "string", "maxLength": 120 },
+                  "payload": {
+                    "type": "object",
+                    "properties": {
+                      "target": { "type": "string", "enum": ["repo", "github", "gitlab", "vercel"] },
+                      "repo": { "type": "string", "maxLength": 2048 },
+                      "workspace": { "$ref": "shared.schema.json#/$defs/relative_path" },
+                      "target_branch": { "type": "string", "maxLength": 160 },
+                      "remote": { "$ref": "shared.schema.json#/$defs/url" },
+                      "pages_base_url": { "$ref": "shared.schema.json#/$defs/url" },
+                      "dry_run": { "type": "boolean" },
+                      "force": { "type": "boolean" },
+                      "skip_jira": { "type": "boolean" }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["requires_user_invocation", "skill", "payload"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["id", "kind", "status", "priority", "confidence", "source", "recommendation", "result", "handoff"],
+            "allOf": [
+              {
+                "if": { "type": "object", "properties": { "kind": { "const": "publish" } }, "required": ["kind"] },
+                "then": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "const": "proposed" },
+                    "handoff": {
+                      "type": "object",
+                      "properties": {
+                        "requires_user_invocation": { "const": true },
+                        "skill": { "const": "uxd-prototype-publish" }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "if": { "type": "object", "properties": { "kind": { "const": "human-followup" } }, "required": ["kind"] },
+                "then": { "type": "object", "properties": { "handoff": { "type": "object", "properties": { "requires_user_invocation": { "const": true } } } } }
+              },
+              {
+                "if": { "type": "object", "properties": { "kind": { "const": "fix" }, "status": { "enum": ["applied", "validated"] } }, "required": ["kind", "status"] },
+                "then": { "type": "object", "properties": { "result": { "type": "object", "properties": { "validated_at": {}, "applied_in_iteration": {} }, "required": ["validated_at", "applied_in_iteration"] } } }
+              }
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["actions"]
+    }
+  ],
+  "unevaluatedProperties": false
+}

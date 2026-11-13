@@ -1,0 +1,1 @@
+prompt: "Use the uxd-evaluator routing agent. This project depends on @patternfly/react-core. I need PatternFly component selection and implementation guidance, not prototype evaluation. Recommend the matching routing agent without running it."

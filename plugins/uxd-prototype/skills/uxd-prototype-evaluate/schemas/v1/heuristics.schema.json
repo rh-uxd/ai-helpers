@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-helpers.uxd/schemas/v1/heuristics.schema.json",
+  "title": "Prototype specialist findings (no AC verdict or design recommendations)",
+  "type": "object",
+  "properties": {
+    "profile": { "const": "prototype-specialists" },
+    "framework": { "const": "nielsen" },
+    "coverage": {
+      "type": "array", "minItems": 14, "maxItems": 14,
+      "items": {
+        "type": "object",
+        "properties": {
+          "lens": { "$ref": "#/$defs/lens" },
+          "heuristic_id": { "type": "integer", "minimum": 1, "maximum": 10 },
+          "status": { "enum": ["assessed", "not-assessed", "out-of-scope"] },
+          "evidence_ids": { "$ref": "shared.schema.json#/$defs/evidence_ids" },
+          "note": { "type": "string", "minLength": 1, "maxLength": 1000 }
+        },
+        "required": ["lens", "heuristic_id", "status", "evidence_ids", "note"],
+        "additionalProperties": false
+      }
+    },
+    "findings": {
+      "type": "array", "maxItems": 200,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "$ref": "shared.schema.json#/$defs/identifier" },
+          "title": { "$ref": "shared.schema.json#/$defs/bounded_text" },
+          "screen_id": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "state_id": { "type": "string", "minLength": 1, "maxLength": 120 },
+          "observation": { "type": "string", "minLength": 1, "maxLength": 2000 },
+          "heuristic_ids": { "type": "array", "items": { "type": "integer", "minimum": 1, "maximum": 10 }, "uniqueItems": true, "minItems": 1, "maxItems": 10 },
+          "identified_by": { "type": "array", "items": { "$ref": "#/$defs/lens" }, "uniqueItems": true, "minItems": 1, "maxItems": 3 },
+          "source_ids": { "type": "array", "items": { "type": "string", "minLength": 1, "maxLength": 120 }, "uniqueItems": true, "minItems": 1, "maxItems": 40 },
+          "evidence_ids": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/identifier" }, "uniqueItems": true, "minItems": 1, "maxItems": 24 },
+          "review_status": { "enum": ["unreviewed", "confirmed", "dismissed"] },
+          "suggested_severity": { "enum": [null, "critical", "major", "minor", "cosmetic"] },
+          "dissent": { "type": "string", "maxLength": 1000 }
+        },
+        "required": ["id", "title", "screen_id", "state_id", "observation", "heuristic_ids", "identified_by", "source_ids", "evidence_ids", "review_status", "suggested_severity", "dissent"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["profile", "framework", "coverage", "findings"],
+  "additionalProperties": false,
+  "$defs": { "lens": { "enum": ["content", "hierarchy", "interaction"] } }
+}

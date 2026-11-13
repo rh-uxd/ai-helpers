@@ -1,0 +1,5 @@
+prompt: >-
+  I want to add a heuristic inspection to a new Quick evaluator plan. Preparation
+  only: tell me whether this check is supported and list the current Quick options.
+  Do not select, schedule, invoke, execute, or substitute any check yet; no
+  browser/provider work, edits or sharing.

@@ -66,7 +66,7 @@ function resolveConfig({ artifacts, config, prototypeUrl, idHint }) {
     cfg = {
       id,
       sources: [],
-      views: { prototype: null, eval: `/evals/${id}/` },
+      views: { prototype: null, eval: `/prototype-evaluations/${id}/` },
       scenarios: [],
     };
   }
@@ -76,7 +76,7 @@ function resolveConfig({ artifacts, config, prototypeUrl, idHint }) {
     cfg.views.prototype = prototypeUrl;
   }
   if (cfg.views.eval == null || cfg.views.eval === '') {
-    cfg.views.eval = `/evals/${cfg.id || id}/`;
+    cfg.views.eval = `/prototype-evaluations/${cfg.id || id}/`;
   }
   return cfg;
 }

@@ -21,7 +21,7 @@ Family: `uxd-prototype-create` → `uxd-prototype-evaluate` → **publish**.
 | `metadata.json` | `.artifacts/{ID}/metadata.json` | **Yes** |
 | Changeset | `.artifacts/{ID}/changeset.md` | Yes (workspace mode) |
 | Workspace analysis | `.artifacts/{ID}/workspace-analysis.json` | Yes (repo target, workspace mode) |
-| Eval report | `.artifacts/{ID}/eval/evaluation-report.csv` | Recommended |
+| Canonical evaluation run | Explicit `--eval-run <run-directory>`; five validated JSON files and linked receipts | Recommended; required for verified AC claims |
 | Pages base URL | `--pages-base-url` or product config | Optional (repo target) |
 
 If `{ID}` is missing or artifacts are incomplete, **stop** and list what is missing.
@@ -50,7 +50,9 @@ Parse as: `<ID> [--target repo|github|gitlab|vercel|<git-url>] …`
 | `--pages-timeout` | seconds | `600` | Pages poll timeout |
 | `--dry-run` | flag | Off | Preview without external writes |
 | `--skip-jira` | flag | Off | Skip Jira comment and labels |
-| `--force` | flag | Off | Submit even if eval has FAIL verdicts |
+| `--eval-run` | canonical run directory | — | Select the exact reviewed run; never guess the newest run |
+| `--include-eval-report` | flag | Off | Workspace repo target only: render/attach selected canonical HTML after source validation; separate report/sharing approval required |
+| `--force` | flag | Off | Explicitly submit with AC FAILs or without evaluation; never claim verified success or bypass invalid/stale canonical data |
 | `--no-ssl-verify` | flag | Off | Skip SSL for git push (self-signed certs) |
 
 ## Conversational Guidance
@@ -76,40 +78,75 @@ If validation fails: "Prototype `{ID}` is incomplete. Missing: [list]. Fix befor
 
 ## Step 2: Check Eval Results
 
-Read `.artifacts/{ID}/eval/evaluation-report.csv` if it exists.
+Select the reviewed canonical run explicitly; do not infer it from a CSV or pick
+the newest directory. A complete canonical run directly under `.artifacts/{ID}/eval/`
+is also supported. New runs live under `artifacts/{ID}/prototype-evaluations/{run}/`.
+Read validated `pe-context.json`, `pe-evaluation-snapshot.json`, `pe-evidence.json`,
+`pe-actions.json` and `pe-state.json` plus their linked receipts. Follow the sibling
+evaluator's [execution contract](../uxd-prototype-evaluate/references/workflow/split-evaluation.md).
 
-- **Pass** — zero `FAIL` in Section 1 → label `rubric-pass` (or `eval-pass`)
-- **Needs attention** — one or more `FAIL` → label `needs-attention`
-- **FLAGGED only** — warn; do not block unless the user wants a clean report
-- **No eval** — warn; recommend `uxd-prototype-evaluate {ID} <URL>`. Proceed in `--dry-run` or `--force`.
+- Verify prototype key, frozen source/scope, completed review state and exact
+  prototype revision. Stop on invalid/partial artifacts, stale results or changed
+  workspace source; `--force` does not repair evidence or bypass Full's checkpoint.
+- **Verified AC success:** a nonempty selected AC set is all `PASS`, with explicit
+  task-linked verification evidence validated by the evaluator. Only then use
+  `eval-pass`. This covers the recorded scope, not every feature or backend behavior.
+- **FAIL:** label `needs-attention`; block submission unless the user explicitly
+  selects `--force` after reviewing failures.
+- **FLAGGED / NOT_RUN / no ACs:** show the gaps and warn; never label `eval-pass`.
+  Classification is triage, including its legacy raw backend-only PASS label.
+- **No canonical eval:** warn; use `uxd-evaluator` to scope a selected Quick check,
+  independent walkthrough or checkpointed Full run. Evaluation is a separate
+  decision, not an automatic publishing step. Preview with `--dry-run`, or obtain
+  explicit `--force` approval to publish without evaluation.
 
-Unless `--force`, **block submission when any AC verdict is FAIL**.
-
-Legacy fallback: `.artifacts/{ID}/reviews/summary.md` if no CSV; prefer a fresh Playwright eval.
+`submit_to_repo.py` uses the sibling evaluator's local canonical loader (Node.js
+and its declared dependencies required), checks a clean workspace at the recorded
+revision, and preserves run/source/digest, route, AC IDs, exact task/persona pairs
+and optional inspection scope in the MR summary. It never reads
+legacy CSV or rubric summaries as current AC authority. A missing dependency blocks
+selected-result validation; do not install it automatically or fall back to CSV.
+Install source-affecting bar/runtime/HTML-entry changes before freezing and
+evaluating the source revision. Any later source changes require a newly reviewed
+evaluation; do not commit prepared report output before the source gate or ignore
+dirty paths to make old evidence pass.
 
 ## Step 2a: Static Eval path for Prototype Bar
 
-**Required** for `repo`, `github`, `gitlab`, and `vercel` when an eval report exists. Copy the report into `public/` so **Eval** works on the hosted preview (no export-helper):
+Only when report rendering and sharing were explicitly selected: pass
+`--include-eval-report` to workspace repo submission. After canonical validation
+and the exact-revision clean-source gate, the publisher renders the selected
+canonical run, checks its canonical/HTML integrity hashes, rechecks the source,
+then attaches only `public/prototype-evaluations/{ID}/index.html`. Keep the run outside the source
+workspace. Do not copy an old root report or pre-copy HTML into the workspace.
+`--dry-run` validates evidence/source but does not render or copy report files.
 
 ```bash
-EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
-WORKSPACE=".artifacts/{ID}/code"   # or workspace path from workspace-analysis.json
-
-bash "${EXPORT_SKILL}/scripts/install-prototype-bar.sh" \
-  --artifacts ".artifacts/{ID}" \
-  --source "$WORKSPACE" \
-  --mode workspace
+# Only after the source-affecting bar installation was committed and evaluated,
+# and report/sharing plus repo submission were approved:
+python3 "${CLAUDE_SKILL_DIR}/scripts/submit_to_repo.py" \
+  --rfe-key {ID} --title "{title}" \
+  --eval-run "<selected-canonical-run>" --include-eval-report
 ```
 
-Copy-only alternative: `copy-eval-for-pages.sh --artifacts .artifacts/{ID} --pages-root "$WORKSPACE/public"`.
+The final publication commit may add/change that derived HTML; it does not become
+a newly evaluated source revision. The MR summary retains the evaluated source
+commit, canonical digest and attached HTML hash. `--force` never bypasses evidence,
+revision or clean-source checks. A dirty pre-copied report must be removed/reconciled
+by the user before retrying, not silently excluded. Canonical JSON stays authoritative.
+Without report approval, retain canonical results and disclose the absent hosted view.
+Do not materialize CSV for publish gating; the evaluator no longer ships that adapter.
 
 ```
 public/
-  evals/{ID}/index.html      ← copy of .artifacts/{ID}/eval/evaluation-report.html
+  prototype-evaluations/{ID}/index.html  ← derived HTML from the explicitly selected run
   uxd-prototype-bar/         ← bar runtime
 ```
 
-`submit_to_repo.py` auto-stages `public/evals/{ID}/` and `public/uxd-prototype-bar/` even if they are missing from `changeset.md`. Still run this step so the files exist on disk.
+`submit_to_repo.py` includes the approved derived attachment and already evaluated
+bar assets even if absent from `changeset.md`. Other publishing targets do not use
+this automatic attachment path: prepare their derived output only after validating
+the selected run/source and retain the same provenance; never weaken the source gate.
 
 **Do not delete `public/` during sanitize** — only strip internal metadata. See [references/sensitive-files.md](references/sensitive-files.md).
 
@@ -133,6 +170,7 @@ Push and create a GitLab merge request. A git-URL `--target` normalizes to `repo
 ```bash
 python3 "${CLAUDE_SKILL_DIR}/scripts/submit_to_repo.py" \
   --rfe-key {ID} --title "{title}" \
+  [--eval-run "{RUN_DIRECTORY}"] [--include-eval-report] [--force] \
   [--upstream "{TARGET_REPO_URL}"] \
   [--target-branch "{TARGET_BRANCH}"] \
   [--pages-base-url {url}] [--pages-timeout 600] \
@@ -141,6 +179,12 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/submit_to_repo.py" \
 ```
 
 Requires authenticated `glab`. Details: [references/repo-submit-details.md](references/repo-submit-details.md). Git push needs `required_permissions: ["all"]` in Cursor.
+
+Repo submission uses ordinary non-force pushes, including fork recovery. A
+divergent remote branch requires human reconciliation, not automatic overwrite.
+If the destination branch already exists but is not checked out, select it and
+verify its source revision before submission; the publisher will not switch to
+an existing branch after validating another revision.
 
 **Standalone mode:** `git init` in `.artifacts/{ID}/prototype`, commit, add remote, push.
 
@@ -196,9 +240,9 @@ bash "${CLAUDE_SKILL_DIR}/scripts/publish-vercel.sh" \
 
 If Jira is available and `--skip-jira` is not set:
 
-1. Comment with published location, AC summary (`PASS`/`FAIL`/`FLAGGED` from the CSV), and refinement count. Prefer wiki-markup: `[Preview|https://…]`, `[Merge request|https://…]`.
+1. Comment with published location, canonical AC summary (`PASS`/`FAIL`/`FLAGGED`/`NOT_RUN`), run ID, revision/scope, evidence limitations and refinement count. Never describe classification-only coverage as verified success. Prefer wiki-markup: `[Preview|https://…]`, `[Merge request|https://…]`.
 2. Include `pages_url` from `submit_to_repo.py` when present (`--jira-comment-id` to update).
-3. Labels: `uxd-prototype-created` plus `rubric-pass` / `needs-attention` from Step 2.
+3. Labels: `uxd-prototype-created` plus `eval-pass` only for Step 2's verified scope, otherwise `needs-attention` when results need review.
 
 Uses Atlassian MCP if available; otherwise skip silently.
 
@@ -236,7 +280,7 @@ Same workflow again. `github` / `gitlab` force-push; `vercel` redeploys; `repo` 
 | Empty MR after push | `submit_to_repo.py` auto-recovers; report `verification.verified: false` if still failing. |
 | No Jira key in metadata | Skip Jira; log a warning. |
 | Already submitted | Proceed (new submission record). |
-| `--dry-run` with missing deps | Succeeds — validates local state only. |
+| `--dry-run` with selected invalid eval or missing evaluator deps | Stop validation; dry-run prevents writes, not evidence checks. |
 | Large prototype (5+ MB) | Warn before push. |
 
 ## Reference Docs

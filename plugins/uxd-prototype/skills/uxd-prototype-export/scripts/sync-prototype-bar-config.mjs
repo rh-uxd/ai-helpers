@@ -4,7 +4,7 @@
  *
  * Usage:
  *   node sync-prototype-bar-config.mjs --artifacts .artifacts/PROJ-298
- *   node sync-prototype-bar-config.mjs --artifacts .artifacts/PROJ-298 --eval-url /evals/PROJ-298/
+ *   node sync-prototype-bar-config.mjs --artifacts .artifacts/PROJ-298 --eval-url /prototype-evaluations/PROJ-298/
  *   node sync-prototype-bar-config.mjs --artifacts .artifacts/PROJ-298 --jira-base https://issues.example.com/browse/
  */
 import fs from 'node:fs';
@@ -201,7 +201,7 @@ function main() {
   }
   // Conventional relative path so Pages/static hosting can resolve once copied
   if (evalUrl == null) {
-    evalUrl = `/evals/${id}/`;
+    evalUrl = `/prototype-evaluations/${id}/`;
   }
 
   const sources = mergeSources(

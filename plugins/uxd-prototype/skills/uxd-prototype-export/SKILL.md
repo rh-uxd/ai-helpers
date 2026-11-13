@@ -129,11 +129,11 @@ node "${CLAUDE_SKILL_DIR}/scripts/sync-prototype-bar-config.mjs" \
   --artifacts ".artifacts/{ID}"
 
 bash "${CLAUDE_SKILL_DIR}/scripts/copy-eval-for-pages.sh" \
-  --artifacts ".artifacts/{ID}" \
+  --artifacts "artifacts/{ID}/prototype-evaluations/<selected-run>" \
   --pages-root public
 ```
 
-Sync merges Sources and flattens `states.json` into `prototype-bar.json`. `copy-eval-for-pages` copies the report to `public/evals/{ID}/index.html` and sets `views.eval` to `/evals/{ID}/`.
+Sync merges Sources and flattens `states.json` into `prototype-bar.json`. Pass the exact selected run to `copy-eval-for-pages`; it copies the report to `public/prototype-evaluations/{ID}/index.html` and sets `views.eval` to `/prototype-evaluations/{ID}/`. It does not choose the newest run.
 
 ## Step 2: Confirm Outputs
 
@@ -156,7 +156,7 @@ Shared capture: `scripts/serialize-page.js` and `templates/serialize-page.browse
 - **Ask which path** when the user only says "export."
 - **Do not treat static HTML as a live app** — it is a snapshot.
 - **Batch export needs a live URL** and Playwright; install-bar does not.
-- **Eval on Pages** requires copying the report into `public/evals/{ID}/` — the Export menu is client-side capture, not those pre-baked files.
+- **Eval on Pages** requires copying the report into `public/prototype-evaluations/{ID}/` — the Export menu is client-side capture, not those pre-baked files.
 
 ## Reference Docs
 

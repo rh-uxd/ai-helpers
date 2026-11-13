@@ -28,7 +28,7 @@ Family: **create → evaluate → publish** (optional export along the way). Pip
 | What to prototype (Jira URL/key, Figma link, description, or idea) | **Yes** | User; skill asks if omitted |
 | Workspace (`--workspace`) | No | Local path, git URL, or `standalone` (default) |
 | Push destination (`--target`) | No | `none` unless publishing |
-| Prior eval feedback | No | `artifacts/{ID}/eval/` when refining |
+| Prior eval feedback | No | Selected run under `artifacts/{ID}/prototype-evaluations/{run}/` when refining |
 
 If the user has not said what to prototype, **stop and ask** before writing files.
 
@@ -145,7 +145,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/frontmatter.py" set "artifacts/{ID}/rfe-sna
 
 Parse from the RFE: user stories, acceptance criteria, personas/roles, key entities, flows, and page states.
 
-- Personas: prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml`; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/`. If internal-ai-helpers is available, read `plugins/uxd-eval-config/knowledge/personas/<id>.md` for Sources; skip if missing.
+- Personas: prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml`; apply persona attributes from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/` only when selected. Use research citations explicitly supplied for the project; do not discover private repositories automatically.
 - **Page states:** run [references/state-brainstorm.md](references/state-brainstorm.md) before writing `states.json`. Prefer 3–7 distinct on-load end-states per page.
 - Write `artifacts/{ID}/user-stories.json`, `journeys.json`, and `states.json`. If the RFE is thin, record assumptions in `metadata.json`.
 - Keep journey ids as `journey-N` and `ac_ids` as source criterion ids (`AC-1`). Record each journey `persona`. Step 9 maps these into the design spec; do not invent a second numbering.
@@ -230,7 +230,7 @@ bash "${EXPORT_SKILL}/scripts/install-prototype-bar.sh" \
 
 `--source` is `artifacts/{ID}/prototype/` (standalone) or the workspace root from `workspace-analysis.json`. If auto-mount fails for React, import `<PrototypeBar />` in the app shell.
 
-Re-run after evaluate so the Eval tab gets the report (`public/evals/{ID}/`). Pass `--no-eval-copy` if the report is not needed.
+Copy the selected report to `public/prototype-evaluations/{ID}/` only when requested. Do not reinstall source assets after freezing the evaluated revision. Pass `--no-eval-copy` if no report copy is needed.
 
 ## Step 11: Code-Level Checks
 
@@ -291,13 +291,24 @@ If `--pipeline` / `--speedrun`, continue with [references/pipeline-mode.md](refe
 
 Apply targeted changes from user feedback or existing evaluation findings — do not rewrite the prototype. Full procedure: [references/refinement-procedure.md](references/refinement-procedure.md).
 
-Reads `artifacts/{ID}/eval/evaluation-report.csv` + `refinement-suggestions.json`. For explicitly requested evaluation loops, pass = zero FAIL and default max = 3 cycles. Ordinary refinement applies feedback, runs code-level checks, and hands back the prototype without re-evaluating.
+When using evaluation findings, read the selected run's validated `pe-context.json`,
+`pe-evaluation-snapshot.json`, `pe-evidence.json`, `pe-actions.json` and `pe-state.json` plus linked
+receipts. Check source/build/scope against the current prototype. Proposed actions
+do not authorize edits; classification or zero FAIL with missing, `FLAGGED` or
+`NOT_RUN` AC coverage does not establish verified AC success.
+
+Ordinary refinement applies feedback, runs code-level checks, and hands back the
+prototype without re-evaluating. Evaluator-selected fixes need separate approval
+for the actions, target files and verification scope. Preserve the parent run and
+verify the changed revision once, then stop for review, including unresolved results.
 
 ```
-/uxd-prototype-create refine {ID} [--decisions skip|auto|human] [--headless] [--max-cycles 3]
+/uxd-prototype-create refine {ID} [--decisions skip|auto|human] [--headless]
 ```
 
-`--headless` loops refine → evaluate until zero FAIL, max cycles, or plateau.
+`--headless`, pipeline mode and legacy `--max-cycles` settings do not bypass split
+evaluation checkpoints, grant browser/provider/edit permission or authorize a third
+pass. Initial evaluation is pass 1; the one approved post-fix verification is pass 2.
 
 ## Guardrails
 
