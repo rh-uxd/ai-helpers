@@ -1,0 +1,4 @@
+expected: Do not report a missing name; distinguish broad fallback name from absent
+  naming and suggest title association without inventing WCAG failure. Accept static
+  target and provider-owned trap. Keyboard remains Not tested; supplied tree is not
+  a newly performed run.

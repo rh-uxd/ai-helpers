@@ -1,0 +1,3 @@
+expected: Do not flag missing modal entry/trap/restoration. Identify nonmodal disclosure;
+  modal-only checks N/A. Attribute supplied evidence and do not claim new browser
+  testing.

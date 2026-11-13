@@ -1,0 +1,5 @@
+prompt: 'Consolidate supplied browser observations for a PF 6.7.0 modal: computed
+  name Review changes; opening focuses a tabindex=-1 introduction; Tab reaches Cancel
+  then Confirm; forward and reverse boundaries cycle within modal; background focus
+  is excluded; Escape and Cancel both restore the invoker. These are supplied browser
+  observations only. No source, visual/media, axe or screen-reader checks were performed.'

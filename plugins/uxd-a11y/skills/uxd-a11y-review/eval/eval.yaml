@@ -1,0 +1,47 @@
+name: uxd-a11y-review-eval
+description: Evaluate modal-slice applicability, provider responsibilities, and honest evidence boundaries.
+skill: uxd-a11y:uxd-a11y-review
+execution:
+  mode: case
+  arguments: '{prompt}'
+runner:
+  type: claude-code
+  plugin_dirs:
+  - plugins/uxd-a11y
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+permissions:
+  allow: []
+  deny:
+  - mcp__*
+dataset:
+  path: cases
+  schema: Each case contains input.yaml with a prompt and annotations.yaml with expected review behavior.
+    These are reasoning/supplied-evidence cases, not live browser execution.
+outputs:
+- path: artifacts
+  schema: Scoped modal observations, findings, and limitations; no invented execution.
+traces:
+  stdout: true
+  stderr: true
+  events: true
+judges:
+- name: evidence_and_applicability
+  description: Judge correctness and evidence attribution rather than matching terminology.
+  feedback_type: bool
+  prompt: 'Read the case expectations and evaluate the actual answer. Fail for invented execution/AT evidence,
+    unsupported overall pass, or a false positive rejecting a specified valid alternative. Do not require
+    exact wording.
+
+
+    {{ annotations }}
+
+    {{ conversation }}
+
+    {{ outputs }}
+
+    {{ tool_trace }}'
+thresholds:
+  evidence_and_applicability:
+    min_pass_rate: 1.0

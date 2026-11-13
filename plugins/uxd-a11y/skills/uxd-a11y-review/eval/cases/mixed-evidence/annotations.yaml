@@ -1,0 +1,4 @@
+expected: Preserve source naming success without overriding entry/background/dismissal
+  failures. Distinguish absent Escape pattern behavior from inability to dismiss at
+  all because Cancel works. No overall accessibility pass; AT/axe/visual untested.
+  Evidence remains supplied rather than fabricated tool execution.
