@@ -1,5 +1,6 @@
 # Dependency directories or local links to an external dependency cache
 /node_modules
+package-lock.json
 
 # Stray Playwright scripts from eval runs
 scripts/journey-test-*.mjs

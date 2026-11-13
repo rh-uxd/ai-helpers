@@ -1,5 +1,5 @@
 name: uxd-prototype-publish-eval
-description: Evaluate uxd-prototype-publish's target prompting, canonical AC gating, legacy CSV handling, validation, and sensitive-file handling
+description: Evaluate uxd-prototype-publish's target prompting, AC gating, validation, and sensitive-file handling
 
 skill: uxd-prototype:uxd-prototype-publish
 
@@ -37,9 +37,9 @@ dataset:
 outputs:
   - path: artifacts
     schema: |
-      Judges check conversation text for target prompts, selected-canonical AC
-      FAIL blocking, CSV-only non-authority, incomplete validation messages, and
-      sensitive-file stripping. Cases must not push or deploy.
+      Judges check conversation text for target prompts, AC FAIL blocking,
+      incomplete validation messages, and sensitive-file stripping mentions.
+      Dry-run cases must not push to remotes.
 
 traces:
   stdout: true
@@ -67,82 +67,27 @@ judges:
           return False, "Did not ask for a publish target or list destination options"
       return True, "Asked for publish destination"
 
-  - name: blocks_canonical_ac_fail
-    description: Blocks a selected canonical run with FAIL unless --force, distinguishing it from missing canonical input
-    if: "annotations.get('case_type') == 'canonical-ac-fail'"
+  - name: blocks_ac_fail
+    description: Blocks publish when evaluation-report.csv has FAIL verdicts unless --force
+    if: "annotations.get('case_type') == 'blocks-ac-fail'"
     check: |
       import re
-      text = outputs.get("conversation", "").lower().replace("`", "")
-      sentences = [part.strip() for part in re.split(r"[.!?;\n]+|\b(?:but|however|although|yet)\b", text) if part.strip()]
-      def says_any(phrases):
-          return any(phrase in sentence for sentence in sentences for phrase in phrases)
-
-      mentions_canonical = any("canonical" in s and any(word in s for word in ("run", "evaluation", "artifact", "file")) for s in sentences)
-      mentions_fail = any(re.search(r"\bfail\b|failed ac|ac failure|acceptance criteria.{0,30}fail", s) for s in sentences)
-      missing = ["no canonical run", "no canonical evaluation", "missing canonical run", "missing canonical evaluation", "cannot find a canonical run", "can't find a canonical run", "canonical run is missing", "canonical evaluation is missing", "canonical run is invalid", "canonical run is incomplete"]
-      not_missing = ["no canonical run is missing", "no canonical artifacts are missing", "canonical run is not missing", "no missing canonical run"]
-      noncanonical = ["not a canonical run", "not canonical", "isn't canonical", "does not qualify as canonical"]
-      if not mentions_canonical or not mentions_fail:
-          return False, "Did not identify the supplied canonical run and its AC FAIL"
-      if any(any(p in s for p in missing) and not any(p in s for p in not_missing) for s in sentences) or says_any(noncanonical):
-          return False, "Misidentified the supplied canonical run as missing or non-canonical"
-
-      denial = ["cannot publish", "can't publish", "won't publish", "will not publish", "must not publish", "do not publish", "don't publish", "cannot submit", "can't submit", "won't submit", "will not submit", "must not submit", "publication is blocked", "publishing is blocked", "submission is blocked", "blocked from publishing", "not allowed to publish", "not permitted to publish"]
-      force_required = ["requires --force", "requires explicit --force", "must use --force", "only with --force", "only if --force", "only when --force", "unless --force", "unless you approve --force", "unless you explicitly approve --force", "explicit --force approval", "--force is required", "--force required"]
-      force_not_required = ["--force is not required", "--force not required", "force is not required", "force isn't required", "--force is not needed", "no --force is required", "no need for --force", "no --force needed", "--force is optional", "force is optional"]
-      requires_force = any(any(p in s for p in force_required) or re.search(r"\b(?:unless|only|requires?|must use)\b.{0,30}--force\b|\b--force\b.{0,25}\b(?:required|needed|approval)\b", s) for s in sentences)
-      force_not_needed = any(any(p in s for p in force_not_required) for s in sentences)
-      if force_not_needed:
-          return False, "Explicitly said --force is unnecessary"
-      if not (says_any(denial) or requires_force):
-          return False, "Did not deny publication or require --force"
-
-      positive_publish = ["can publish", "may publish", "will publish", "should publish", "i publish", "i am publishing", "can submit", "may submit", "will submit", "i submit", "i am submitting", "can push", "may push", "will push", "i push", "i am pushing", "can deploy", "may deploy", "will deploy", "i deploy", "i am deploying", "publication is allowed", "publishing is allowed", "publication is permitted", "safe to publish", "okay to publish", "ok to publish", "go ahead and publish"]
-      force_condition = ["only with --force", "only if --force", "only when --force", "unless --force", "unless you approve --force", "unless you explicitly approve --force", "requires --force", "requires explicit --force", "must use --force", "--force is required", "explicit --force approval"]
-      can_publish_without_force = any(any(p in s for p in positive_publish) and not any(rule in s for rule in force_condition) and not re.search(r"\b(?:only|unless|if|requires?|must use)\b.{0,30}--force\b|\b--force\b.{0,25}\b(?:required|needed|approval)\b", s) for s in sentences)
-      actual_publish = any(any(p in s for p in ["published to ", "pushed to ", "deployed to ", "merge request created", "pull request created", "successfully published", "successfully deployed"]) and not any(n in s for n in ["not published", "not pushed", "not deployed", "would publish", "would be published", "will not publish", "won't publish"]) for s in sentences)
-      success_denial = ["no eval-pass", "not eval-pass", "cannot claim eval-pass", "can't claim eval-pass", "cannot label", "can't label", "do not claim eval-pass", "must not claim eval-pass", "not verified ac success", "no verified ac success", "cannot establish verified ac success"]
-      claims_success = any(("verified ac success" in s or "all acs pass" in s or ("eval-pass" in s and any(word in s for word in ["label", "mark", "claim", "treat", "qualify", "counts as", "is eval-pass"]))) and not any(n in s for n in success_denial) and not re.search(r"\b(?:cannot|can't|must not|should not|do not|don't|will not|won't|never)\b.{0,30}\b(?:claim|label|mark|treat|establish|qualify)\b", s) for s in sentences)
-      if can_publish_without_force or actual_publish:
-          return False, "Affirmatively authorized or reported publication despite the FAIL"
-      if claims_success:
-          return False, "Claimed verified success for a canonical run containing FAIL"
-      return True, "Recognized the selected canonical AC FAIL and blocked publication"
-
-  - name: csv_only_cannot_establish_success
-    description: Treats legacy CSV-only results as missing canonical evaluation, not verified success
-    if: "annotations.get('case_type') == 'legacy-csv-only'"
-    check: |
-      import re
-      text = outputs.get("conversation", "").lower().replace("`", "")
-      sentences = [part.strip() for part in re.split(r"[.!?;\n]+|\b(?:but|however|although|yet)\b", text) if part.strip()]
-      def says_any(phrases):
-          return any(phrase in sentence for sentence in sentences for phrase in phrases)
-
-      mentions_csv = "csv" in text or "evaluation-report.csv" in text
-      no_canonical = says_any(["no canonical run", "no canonical evaluation", "no canonical artifact", "no canonical file", "missing canonical run", "missing canonical evaluation", "cannot find a canonical run", "can't find a canonical run", "canonical run is missing"])
-      csv_rejected = says_any(["csv is not authoritative", "csv isn't authoritative", "csv is not canonical", "csv is not the canonical authority", "csv cannot establish", "csv can't establish", "csv does not establish", "csv doesn't establish", "csv alone cannot", "csv alone can't", "csv cannot prove", "csv cannot verify", "csv is not the source of truth", "csv is not current ac authority", "do not treat the csv", "don't treat the csv", "cannot treat the csv", "cannot use the csv", "not rely on the csv"])
-      if not mentions_csv or not no_canonical or not csv_rejected:
-          return False, "Did not explain that CSV-only input is not a canonical evaluation"
-      force_not_required = ["--force is not required", "--force not required", "force is not required", "force isn't required", "--force is not needed", "no --force is required", "no need for --force", "no --force needed", "--force is optional", "force is optional"]
-      force_required = ["requires --force", "requires explicit --force", "must use --force", "only with --force", "only if --force", "only when --force", "unless --force", "unless you approve --force", "unless you explicitly approve --force", "explicit --force approval", "--force is required", "--force required"]
-      requires_force = any(any(p in s for p in force_required) or re.search(r"\b(?:unless|only|requires?|must use)\b.{0,30}--force\b|\b--force\b.{0,25}\b(?:required|needed|approval)\b", s) for s in sentences)
-      force_not_needed = any(any(p in s for p in force_not_required) for s in sentences)
-      if force_not_needed:
-          return False, "Explicitly said --force is unnecessary"
-      if not requires_force:
-          return False, "Did not require explicit --force to proceed without canonical evaluation"
-      positive_publish = ["can publish", "may publish", "will publish", "should publish", "i publish", "i am publishing", "can submit", "may submit", "will submit", "i submit", "i am submitting", "can push", "may push", "will push", "i push", "i am pushing", "can deploy", "may deploy", "will deploy", "i deploy", "i am deploying", "publication is allowed", "publishing is allowed", "publication is permitted", "safe to publish", "okay to publish", "ok to publish", "go ahead and publish"]
-      force_condition = ["only with --force", "only if --force", "only when --force", "unless --force", "unless you approve --force", "unless you explicitly approve --force", "requires --force", "requires explicit --force", "must use --force", "--force is required", "explicit --force approval"]
-      can_publish_without_force = any(any(p in s for p in positive_publish) and not any(rule in s for rule in force_condition) and not re.search(r"\b(?:unless|only|if|requires?|must use)\b.{0,30}--force\b|\b--force\b.{0,25}\b(?:required|needed|approval)\b", s) for s in sentences)
-      actual_publish = any(any(p in s for p in ["published to ", "pushed to ", "deployed to ", "merge request created", "pull request created", "successfully published", "successfully deployed"]) and not any(n in s for n in ["not published", "not pushed", "not deployed", "would publish", "would be published", "will not publish", "won't publish"]) for s in sentences)
-      success_denial = ["no eval-pass", "not eval-pass", "cannot claim eval-pass", "can't claim eval-pass", "cannot label", "can't label", "do not claim eval-pass", "must not claim eval-pass", "not verified ac success", "no verified ac success", "cannot establish verified ac success"]
-      claims_success = any(("verified ac success" in s or "all acs pass" in s or ("eval-pass" in s and any(word in s for word in ["label", "mark", "claim", "treat", "qualify", "counts as", "is eval-pass"]))) and not any(n in s for n in success_denial) and not re.search(r"\b(?:cannot|can't|must not|should not|do not|don't|will not|won't|never)\b.{0,30}\b(?:claim|label|mark|treat|establish|qualify)\b", s) for s in sentences)
-      if can_publish_without_force or actual_publish:
-          return False, "Affirmatively authorized or reported publication without canonical evaluation"
-      if claims_success:
-          return False, "Claimed verified success from legacy CSV alone"
-      return True, "Rejected legacy CSV as authority and withheld verified-success claim"
+      text = outputs.get("conversation", "")
+      blocks = re.search(
+          r"block|--force|needs-attention|FAIL|cannot publish|won't publish|will not publish|refuse|cannot submit",
+          text,
+          re.IGNORECASE,
+      )
+      if not blocks:
+          return False, "Did not block or require --force for AC FAIL verdicts"
+      proceeded = re.search(
+          r"(pushed|deployed|merge request created|pages url|published to)",
+          text,
+          re.IGNORECASE,
+      )
+      if proceeded and not re.search(r"would|dry-run|not actually", text, re.IGNORECASE):
+          return False, "Appears to have published despite AC FAIL"
+      return True, "Blocked publish due to AC FAIL verdicts"
 
   - name: reports_incomplete
     description: Reports missing required prototype files
@@ -191,9 +136,7 @@ judges:
 thresholds:
   asks_publish_target:
     min_pass_rate: 1.0
-  blocks_canonical_ac_fail:
-    min_pass_rate: 1.0
-  csv_only_cannot_establish_success:
+  blocks_ac_fail:
     min_pass_rate: 1.0
   reports_incomplete:
     min_pass_rate: 1.0

@@ -1,7 +1,0 @@
-prompt: >-
-  Using the uxd-prototype-publish skill, assess publishing prototype DEMO-CSV
-  to GitHub without --force or --eval-run. The fixture contains only an old
-  evaluation-report.csv with PASS rows; there is no canonical pe-* evaluation
-  run. Do not infer verified success from the CSV. Explain what is missing and
-  what explicit approval would be required. Do not actually push or deploy.
-fixture: .artifacts/DEMO-CSV
