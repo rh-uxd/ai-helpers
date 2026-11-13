@@ -1,0 +1,1 @@
+expected: "Identify the cross-root naming relationship problem; do not treat a document-wide matching ID as sufficient. Recommend an in-scope label/association without inventing wording. Do not report the unrelated fixture as a changed-source issue, assume React/PF props, edit files, or invent computed-name/browser evidence."

@@ -8,7 +8,7 @@ Record target, task, relevant states/transitions, requested action, reference pr
 
 ## Keep observations attributable
 
-Each observation includes check ID (NAME-01/02 or MODAL-01–05), target/state, method (source/browser/manual AT), status, and evidence or limitation. Runtime evidence also records browser/viewport and relevant package version when known. Use source file/line or actual tool observations; do not fabricate selectors, runs, screenshots, or AT results.
+Each observation includes check ID from the applicable reference (for example, NAME-02, FORM-01, or MODAL-03), target/state, method (source/browser/manual AT), status, and evidence or limitation. Runtime evidence also records browser/viewport and relevant package version when known. Use source file/line or actual tool observations; do not fabricate selectors, runs, screenshots, or AT results.
 
 - **Pass:** evidence supports this expectation for this method/target/state.
 - **Fail:** evidence contradicts the expectation; classify its authority separately.
@@ -23,7 +23,7 @@ Source wiring Pass does not prove keyboard behavior. Preserve source and browser
 For each distinct issue, include stable report-local ID, target/state, expected/actual, evidence, recommendation, and:
 
 - Classification: WCAG violation, pattern deviation, provider issue, recommendation, or coverage gap. Cite the actual criterion or guidance; do not invent WCAG mappings.
-- Confidence: confirmed, likely, or needs verification.
+- Confidence: confirmed, likely, or needs verification. Distinguish certainty about an observed defect from certainty about its WCAG classification; a confirmed source conflict can still need runtime verification of its impact.
 - User impact where assessable: critical (blocks essential task), serious (major barrier), moderate (workaround exists), minor (limited friction). Unknown is valid for a gap. Keep tracker priority separate.
 
 Group repeated causes without discarding affected occurrences or evidence origins. Do not close an old finding from a different-state or different-revision pass.
@@ -34,6 +34,6 @@ Group repeated causes without discarding affected occurrences or evidence origin
 2. Coverage by target/state and method.
 3. Findings and outcome-focused next steps.
 
-A report with untested/inconclusive required checks cannot claim an overall pass. Use “No findings in tested coverage” when appropriate. Even all scoped checks passing does not establish whole-product conformance. Manual screen-reader announcements, visual/media behavior, and other criteria outside this modal slice remain explicitly untested/out of scope.
+A report with untested/inconclusive required checks cannot claim an overall pass. Use “No findings in tested coverage” when appropriate. Even all scoped checks passing does not establish whole-product conformance. Manual screen-reader announcements, visual/media behavior, and other criteria outside the reviewed scope remain explicitly untested/out of scope.
 
 Markdown is the default; preserve the same meaning if JSON is requested. Carry scope, unresolved findings and observations into another workflow rather than converting them to a bare pass/fail. Draft tracker-ready text when requested; do not file issues without authorization.

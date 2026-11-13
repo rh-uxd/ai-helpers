@@ -1,5 +1,5 @@
 name: uxd-a11y-keyboard-test-eval
-description: Evaluate modal-slice applicability, provider responsibilities, and honest evidence boundaries.
+description: Evaluate applicable runtime patterns, valid alternatives, and honest evidence boundaries.
 skill: uxd-a11y:uxd-a11y-keyboard-test
 execution:
   mode: case
@@ -21,7 +21,7 @@ dataset:
     These are reasoning/supplied-evidence cases, not live browser execution.
 outputs:
 - path: artifacts
-  schema: Scoped modal observations, findings, and limitations; no invented execution.
+  schema: Scoped runtime observations, findings, and limitations; no invented execution.
 traces:
   stdout: true
   stderr: true

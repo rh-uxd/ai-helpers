@@ -1,6 +1,6 @@
 {
   "name": "uxd-a11y",
-  "description": "Draft accessibility review workflows for native and PatternFly modal dialogs; broader coverage is in development.",
+  "description": "Modular source and runtime accessibility review for native, custom, and PatternFly interfaces, with explicit evidence and coverage limits.",
   "author": { "name": "UXD Team" },
   "repository": "https://github.com/rh-uxd/ai-helpers",
   "license": "MIT"
