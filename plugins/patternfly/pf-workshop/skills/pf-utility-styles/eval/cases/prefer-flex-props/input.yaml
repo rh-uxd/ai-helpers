@@ -1,0 +1,7 @@
+prompt: >-
+  Review FlexActions.tsx and FlexActions.scss for the best PatternFly-native
+  replacement. The project uses PatternFly 6.7.0 with prefix pf-v6-u- and loads
+  utility styles. The styles target an existing PatternFly Flex component. Use
+  the skill's component-prop preference, do not install packages, and do not
+  call MCP tools.
+fixture: FlexActions.tsx

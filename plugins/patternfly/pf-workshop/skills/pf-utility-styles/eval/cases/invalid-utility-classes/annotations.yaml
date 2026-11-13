@@ -1,0 +1,10 @@
+case_type: invalid-classes
+installed_prefix: pf-v6-u-
+expected_classes: []
+forbidden_classes: []
+expected_keep_terms: []
+expected_invalid_classes:
+  - pf-v5-u-mt-md
+  - pf-u-max-width-100
+  - pf-v6-u-not-real
+expected_props: []

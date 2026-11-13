@@ -268,6 +268,7 @@ PatternFly team tools and skill incubation — issue triage, release management,
 <tr><td nowrap><code>pf-summarize-jira-issues</code></td><td>Summarize your current sprint workload from Jira — assigned issues, contributor roles, and priorities.</td><td>—</td></tr>
 <tr><td nowrap><code>pf-summarize-pr-reviews</code></td><td>Summarize GitHub pull requests awaiting your review with status, age, and priority.</td><td>—</td></tr>
 <tr><td nowrap><code>pf-token-build</code></td><td>Build CSS design tokens for PatternFly core and copy them to the PatternFly repo.</td><td>—</td></tr>
+<tr><td nowrap><code>pf-utility-styles</code></td><td>Audit SCSS, CSS, and inline styles in the current project and report which declarations can be replaced by that project's PatternFly utility classes (pf-v5-u-* or pf-v6-u-*, matching the installed @patternfly/patternfly).</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-write-example-description</code></td><td>Write and refine example descriptions for PatternFly.org component and demo pages.</td><td>—</td></tr>
 </table>
 
@@ -281,7 +282,7 @@ PatternFly team tools and skill incubation — issue triage, release management,
 **Eval coverage**
 
 - Consumer: 50/50 (100%)
-- Workshop: 0/22 (0%)
+- Workshop: 1/23 (4%)
 
 ---
 
@@ -362,4 +363,5 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 | `pf-summarize-jira-issues` | Contributors and maintainers | Task context | Structured result | M |
 | `pf-summarize-pr-reviews` | Contributors and maintainers | Task context | Structured result | M |
 | `pf-token-build` | Contributors and maintainers | Task context | Structured result | S |
+| `pf-utility-styles` | Contributors and maintainers | Task context | Structured result | L |
 | `pf-write-example-description` | Contributors and maintainers | Task context | Structured result | M |
