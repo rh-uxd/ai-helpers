@@ -1,0 +1,197 @@
+{
+  "schema_version": 2,
+  "prototype_key": "DEMO-1",
+  "prototype_revision": "build-revision-1",
+  "packet_sha256": "sha256:bb7fcdac768d91903f33099ba0e50828e9930bca7915d980f629c7382ec7eea6",
+  "source_sha256": "sha256:7d2d80ba309d4580ba7e955e17e0b222d0e1e6d29085c31ba6d6649210476fd9",
+  "selected_pairs": [
+    {
+      "task_id": "task-save-draft",
+      "persona_id": "persona-junior"
+    }
+  ],
+  "inspection": {
+    "method": "browser",
+    "revision_verified": true,
+    "receipt": {
+      "path": "checks/inspection.json",
+      "sha256": "sha256:3e7e955318c15dbbcd23fa62ae02559093b4467fa2024966598633ca88fa3169"
+    }
+  },
+  "evidence": {
+    "captures": [
+      {
+        "id": "capture-observed",
+        "url": "https://demo.invalid/prototype",
+        "source_ref": "build-revision-1",
+        "screen_id": "screen-drafts",
+        "state_id": "state-empty",
+        "viewport": {
+          "width": 1,
+          "height": 1,
+          "device_scale_factor": 1
+        },
+        "captured_at": "2026-11-13T15:38:49.520Z",
+        "dom_digest": "sha256:7f8bce421681cf2099d4592cb5ae0a3a04f2112c97f5be55fce54ebd944a9d94",
+        "raw_image": {
+          "path": "evidence/observed.png",
+          "width": 1,
+          "height": 1,
+          "sha256": "sha256:b3c4b19781aef529995411399c5dc85cc432d9447d147db5a2c8cddf06917f56"
+        },
+        "page": {
+          "title": "Drafts",
+          "headings": [],
+          "controls": []
+        }
+      }
+    ],
+    "items": [
+      {
+        "id": "evidence-observed",
+        "capture_id": "capture-observed",
+        "kind": "full-page",
+        "purpose": "ac",
+        "subject": {
+          "role": "main",
+          "name": "Draft list",
+          "locator": "main"
+        },
+        "image": {
+          "path": "evidence/observed.png",
+          "width": 1,
+          "height": 1,
+          "sha256": "sha256:b3c4b19781aef529995411399c5dc85cc432d9447d147db5a2c8cddf06917f56"
+        }
+      }
+    ]
+  },
+  "phases": [
+    {
+      "task_id": "task-save-draft",
+      "persona_id": "persona-junior",
+      "invocation_id": "invocation-1",
+      "sequence": 1,
+      "session_id": "session-junior",
+      "measurement": {
+        "name": "journey",
+        "status": "failed",
+        "model_invoked": true,
+        "provider": "openai",
+        "provider_id": "openai",
+        "model": "synthetic-test-model",
+        "started_at": "2026-11-13T15:38:50.530Z",
+        "ended_at": "2026-11-13T15:38:50.535Z",
+        "duration_ms": null,
+        "input_files": 1,
+        "input_bytes": 10,
+        "output_bytes": 10,
+        "token_usage": {
+          "input": null,
+          "cached_input": null,
+          "output": null,
+          "reasoning_tokens": null
+        },
+        "llm_cost_usd": 0.1
+      },
+      "context_status": "captured",
+      "evidence_ids": [],
+      "submitted_context": {
+        "path": "checks/context-1.json",
+        "sha256": "sha256:af9ce9033e9cfc32c2b5ffbf1e0418bf804921402bad0dfa6b6be41bbee6d88d"
+      },
+      "returned_result": {
+        "path": "checks/result-1.json",
+        "sha256": "sha256:685603994558978732f1d26c3df9ca4c8465a44cc55e50c6099a0fd3b6d7435b"
+      }
+    },
+    {
+      "task_id": "task-save-draft",
+      "persona_id": "persona-junior",
+      "invocation_id": "invocation-2",
+      "sequence": 2,
+      "session_id": "session-junior",
+      "measurement": {
+        "name": "journey",
+        "status": "completed",
+        "model_invoked": true,
+        "provider": "openai",
+        "provider_id": "openai",
+        "model": "synthetic-test-model",
+        "started_at": "2026-11-13T15:38:50.540Z",
+        "ended_at": "2026-11-13T15:38:50.545Z",
+        "duration_ms": null,
+        "input_files": 1,
+        "input_bytes": 10,
+        "output_bytes": 10,
+        "token_usage": {
+          "input": null,
+          "cached_input": null,
+          "output": null,
+          "reasoning_tokens": null
+        },
+        "llm_cost_usd": null
+      },
+      "context_status": "captured",
+      "evidence_ids": [
+        "evidence-observed"
+      ],
+      "submitted_context": {
+        "path": "checks/context-2.json",
+        "sha256": "sha256:1bc7cf8aa26f5a376c5a2ed878c6aa4b42b4528e23c02d2b5c7d8d26a750b3bd"
+      },
+      "returned_result": {
+        "path": "checks/result-2.json",
+        "sha256": "sha256:0734ddc05f57b821725ddffad309ce61557896d9008381f2f6c3ed0e84d16aa9"
+      }
+    }
+  ],
+  "journeys": [
+    {
+      "id": "journey-save-draft-junior",
+      "task_id": "task-save-draft",
+      "persona_id": "persona-junior",
+      "ac_ids": [
+        "ac-1"
+      ],
+      "source": "Reviewed task packet",
+      "verdict": "FAIL",
+      "steps": [
+        {
+          "id": "step-verify-title",
+          "sequence": 1,
+          "invocation_id": "invocation-2",
+          "action": "verify",
+          "target": "draft title",
+          "outcome": "failure",
+          "evidence_ids": [
+            "evidence-observed"
+          ],
+          "note": "Synthetic failure observation."
+        }
+      ],
+      "execution": {
+        "status": "failed",
+        "stop_reason": "Explicit check found the draft title absent.",
+        "session_id": "session-junior",
+        "invocation_ids": [
+          "invocation-1",
+          "invocation-2"
+        ]
+      }
+    }
+  ],
+  "ac_results": [
+    {
+      "ac_id": "ac-1",
+      "verdict": "FAIL",
+      "rationale": "Draft title is absent.",
+      "evidence_ids": [
+        "evidence-observed"
+      ],
+      "action_ids": [],
+      "evaluated_by": "journey",
+      "updated_at": "2026-11-13T15:38:49.521Z"
+    }
+  ]
+}

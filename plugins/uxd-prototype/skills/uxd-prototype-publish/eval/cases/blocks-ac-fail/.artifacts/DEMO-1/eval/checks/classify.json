@@ -1,0 +1,10 @@
+[
+  {
+    "criterion_id": "AC-1",
+    "tier": "T1",
+    "verdict": "NOT_RUN",
+    "rationale": "",
+    "humanAction": "",
+    "reasonCode": "prototype-verifiable"
+  }
+]
