@@ -37,9 +37,8 @@ jobs:
 
       - name: Poll Jira
         env:
-          JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
-          JIRA_USER_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
-          JIRA_BASE_URL: ${{ vars.JIRA_BASE_URL }}
+          FULLSEND_JIRA_TOKEN: ${{ secrets.JIRA_TOKEN }}
+          FULLSEND_JIRA_EMAIL: ${{ secrets.JIRA_USER_EMAIL }}
           TARGET_REPO: ${{ github.repository }}
         run: |
           fullsend poll \
