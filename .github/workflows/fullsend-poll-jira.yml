@@ -31,7 +31,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           # Keep the poller CLI aligned with the reusable workflow release.
-          gh release download v0.54.0 --repo fullsend-ai/fullsend \
+          gh release download v0.56.1 --repo fullsend-ai/fullsend \
             -p 'fullsend_*_linux_amd64.tar.gz' -O - | tar xz
           sudo mv fullsend /usr/local/bin/
 
@@ -73,13 +73,13 @@ jobs:
     name: Harness
     needs: poll
     if: needs.poll.result == 'success' && needs.poll.outputs.matrix != ''
-    uses: fullsend-ai/fullsend/.github/workflows/reusable-dispatch.yml@90b7310ff8751a3c70e5d68214770dc168a1cbe7 # v0.54.0
+    uses: fullsend-ai/fullsend/.github/workflows/reusable-dispatch.yml@27c1d6ce1d384fa8b85b6789653fb3505d93c9d3 # v0.56.1
     with:
       matrix: ${{ needs.poll.outputs.matrix }}
       mint_url: ${{ vars.FULLSEND_MINT_URL }}
       gcp_region: ${{ vars.FULLSEND_GCP_REGION }}
       jira_base_url: ${{ vars.JIRA_BASE_URL }}
-      fullsend_version: v0.54.0
+      fullsend_version: v0.56.1
     secrets:
       FULLSEND_GCP_WIF_PROVIDER: ${{ secrets.FULLSEND_GCP_WIF_PROVIDER }}
       FULLSEND_GCP_PROJECT_ID: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
