@@ -1,4 +1,4 @@
-name: fullsend Jira poll
+name: Fullsend Jira Poll
 
 on:
   schedule:
