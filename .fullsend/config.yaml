@@ -17,6 +17,9 @@ agents:
   - name: review
     source: harness/review.yaml
     model: google-vertex/gemini-3.8-flash
+  - name: prototype
+    source: harness/prototype.yaml
+    model: google-vertex/gemini-3.8-flash
   - name: fix
     enabled: false
   - name: retro
@@ -26,6 +29,13 @@ agents:
 allowed_remote_resources:
   - https://raw.githubusercontent.com/fullsend-ai/fullsend/
   - https://raw.githubusercontent.com/fullsend-ai/agents/
+  - https://raw.githubusercontent.com/rh-uxd/ai-helpers/
+tracker:
+  jira:
+    base_url: https://redhat.atlassian.net
+    project: UXDOPS
+    poll:
+      query: 'project = UXDOPS AND labels = "repo:rh-uxd/ai-helpers" AND statusCategory != Done ORDER BY updated DESC'
 inference:
   provider: vertex
   region: global

@@ -44,9 +44,6 @@ jobs:
         run: |
           fullsend poll \
             --input-driver jira-poll \
-            --jira-url "${JIRA_BASE_URL}" \
-            --jira-project UXDOPS \
-            --jql 'project = UXDOPS AND labels = "repo:rh-uxd/ai-helpers" AND statusCategory != Done ORDER BY updated DESC' \
             --target-repo "${TARGET_REPO}" \
             --output dispatches.json \
             --fullsend-dir .fullsend
