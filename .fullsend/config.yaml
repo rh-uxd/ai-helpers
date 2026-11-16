@@ -35,6 +35,7 @@ tracker:
     base_url: https://redhat.atlassian.net
     project: UXDOPS
     poll:
+      enabled: true
       query: 'project = UXDOPS AND labels = "repo:rh-uxd/ai-helpers" AND statusCategory != Done ORDER BY updated DESC'
 inference:
   provider: vertex
