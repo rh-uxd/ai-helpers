@@ -1,5 +1,5 @@
 # Jira-specific routing overlay over the pinned upstream code harness.
-base: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/harness/code.yaml#sha256=8973a15fe53798c632d86c6d2e595a476bfb7cd2f9392961b63533e30d4f1e15
+base: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/harness/code.yaml#sha256=198b71dd86ef14c5244578ebaffb862b4c62de1c513ece01c0fb51fef1630f37
 
 # Code work requires an explicit, repository-routed handoff from Jira.
 trigger: >
