@@ -52,7 +52,13 @@
       "data/discovery/2026-11-06/baseline-identities.json",
       "data/discovery/2026-11-07/baseline-identities.json",
       "data/discovery/2026-11-08/baseline-identities.json",
-      "data/discovery/2026-11-09/baseline-identities.json"
+      "data/discovery/2026-11-09/baseline-identities.json",
+      "data/discovery/2026-11-10/baseline-identities.json",
+      "data/discovery/2026-11-11/baseline-identities.json",
+      "data/discovery/2026-11-12/baseline-identities.json",
+      "data/discovery/2026-11-13/baseline-identities.json",
+      "data/discovery/2026-11-14/baseline-identities.json",
+      "data/discovery/2026-11-16/baseline-identities.json"
     ]
   },
   {
@@ -196,6 +202,14 @@
       "data/codex-marketplaces/github.com/opendatahub-io/skills-registry.json",
       "data/codex-plugins/sources.json",
       "data/claude-code-plugins/sources.json"
+    ]
+  },
+  {
+    "name": "tal-hason/cursor-stuff",
+    "url": "https://github.com/tal-hason/cursor-stuff",
+    "description": "my private Cursor pipeline workflow",
+    "files": [
+      "agents/pf-coding-standards.md"
     ]
   }
 ]

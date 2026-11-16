@@ -38,20 +38,20 @@
     ]
   },
   {
+    "name": "Hyperkid123/nxtcm-ui-agent",
+    "url": "https://github.com/Hyperkid123/nxtcm-ui-agent",
+    "description": "",
+    "files": [
+      "instance/ui-config/agent/instance.yaml"
+    ]
+  },
+  {
     "name": "Joey629/Snappi",
     "url": "https://github.com/Joey629/Snappi",
     "description": "",
     "files": [
       "electron/patternfly-mcp.mjs",
       "electron/main.js"
-    ]
-  },
-  {
-    "name": "LuciferForge/mcp-directory",
-    "url": "https://github.com/LuciferForge/mcp-directory",
-    "description": "The largest index of MCP servers. 18,146+ Model Context Protocol servers searchable at protodex.io",
-    "files": [
-      "docs/servers/patternfly-patternfly-mcp.html"
     ]
   },
   {
@@ -125,7 +125,6 @@
     "url": "https://github.com/RedHatInsights/nxtcm-ui-agent",
     "description": "",
     "files": [
-      "instance/ui-config/agent/instance.yaml",
       "instance/renovate-config/agent/instance.yaml"
     ]
   },
