@@ -1,0 +1,123 @@
+name: Update Fullsend Version
+
+on:
+  schedule:
+    - cron: '42 10 * * 1'  # Weekly on Monday ~10:42am UTC
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Target version (e.g. v0.55.0). Leave blank to detect latest stable.'
+        required: false
+        type: string
+
+concurrency:
+  group: fullsend-update-version
+  cancel-in-progress: true
+
+jobs:
+  update:
+    if: github.repository == 'rh-uxd/ai-helpers'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Detect and update version
+        id: update
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          OUTPUT=$(./scripts/update-fullsend-version.sh ${INPUT_VERSION:+"$INPUT_VERSION"} 2>&1) || {
+            echo "$OUTPUT"
+            exit 1
+          }
+          echo "$OUTPUT"
+
+          # Parse structured ::out::KEY=VALUE lines from script
+          while IFS='=' read -r key value; do
+            echo "${key}=${value}" >> "$GITHUB_OUTPUT"
+          done < <(echo "$OUTPUT" | grep '^::out::' | sed 's/^::out:://')
+
+      - name: Check for existing PR
+        if: steps.update.outputs.changed == 'true'
+        id: existing
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEW_VER: ${{ steps.update.outputs.new_version }}
+        run: |
+          set -euo pipefail
+          BRANCH="chore/fullsend-${NEW_VER}"
+          EXISTING=$(gh pr list --head "$BRANCH" --state open --json number --jq '.[0].number // empty')
+          if [[ -n "$EXISTING" ]]; then
+            echo "PR #${EXISTING} already exists for ${NEW_VER} — skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Fullsend CLI and regenerate lock
+        if: steps.update.outputs.changed == 'true' && steps.existing.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NEW_VER: ${{ steps.update.outputs.new_version }}
+        run: |
+          set -euo pipefail
+          gh release download "$NEW_VER" --repo fullsend-ai/fullsend \
+            -p 'fullsend_*_linux_amd64.tar.gz' -O - | tar xz
+          sudo mv fullsend /usr/local/bin/
+          fullsend lock --all
+
+      - name: Validate
+        if: steps.update.outputs.changed == 'true' && steps.existing.outputs.skip != 'true'
+        run: make validate
+
+      - name: Create pull request
+        if: steps.update.outputs.changed == 'true' && steps.existing.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OLD_VER: ${{ steps.update.outputs.old_version }}
+          NEW_VER: ${{ steps.update.outputs.new_version }}
+        run: |
+          set -euo pipefail
+          BRANCH="chore/fullsend-${NEW_VER}"
+
+          # Guard against leftover remote branch with no PR
+          if git ls-remote --exit-code origin "refs/heads/${BRANCH}" >/dev/null 2>&1; then
+            echo "Remote branch ${BRANCH} already exists — deleting stale branch."
+            git push origin --delete "$BRANCH"
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$BRANCH"
+          git add \
+            .github/workflows/fullsend.yaml \
+            .github/workflows/fullsend-poll-jira.yml \
+            .github/workflows/prioritize.yml \
+            .fullsend/lock.yaml
+          git commit -m "chore(fullsend): bump ${OLD_VER} -> ${NEW_VER} (UXDOPS-3291)"
+          git push origin "$BRANCH"
+
+          CHANGED_FILES=$(git diff --name-only HEAD~1)
+          PR_BODY="## Summary
+          Automated Fullsend version update detected by the weekly poller (UXDOPS-3291).
+
+          - **Old version:** \`${OLD_VER}\`
+          - **New version:** \`${NEW_VER}\`
+          - **Release:** https://github.com/fullsend-ai/fullsend/releases/tag/${NEW_VER}
+
+          ### Files updated
+          \`\`\`
+          ${CHANGED_FILES}
+          \`\`\`
+
+          > This PR was created automatically. Review the changes and merge when ready.
+          > \`make validate\` passed before this PR was opened."
+
+          gh pr create \
+            --title "chore(fullsend): bump ${OLD_VER} -> ${NEW_VER}" \
+            --body "$PR_BODY"

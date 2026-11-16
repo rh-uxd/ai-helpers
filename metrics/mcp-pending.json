@@ -10,6 +10,11 @@
     "description": "feat: Python/uv MCP server implementation"
   },
   {
+    "name": "openshift/openshift-mcp-server",
+    "url": "https://github.com/openshift/openshift-mcp-server/pull/558",
+    "description": "Openshift patternfly apps"
+  },
+  {
     "name": "real-limitless/ProjectEverflow",
     "url": "https://github.com/real-limitless/ProjectEverflow/pull/11",
     "description": "feat: org chart tree, room channel/team CRUD, and real sandboxes"
