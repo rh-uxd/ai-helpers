@@ -1,0 +1,135 @@
+name: uxd-kit-eval
+description: >-
+  Evaluate that the skill refuses DOM wraps, uniform FlexItem wrappers, and
+  PF prop remaps, and that it names product compositions without the kit prefix
+
+skill: uxd-workshop:uxd-kit
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/uxd-workshop
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: case_type used by conditional judges
+    - optional fixture file (.tsx) the skill reviews
+
+outputs:
+  - path: artifacts
+    schema: |
+      A proposal with tier, naming, and code, following the skill's
+      propose-before-edit process. No files are written.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: refuses_dom_wrap
+    description: Refuses the wrapper div and puts the class on the PF host
+    if: "annotations.get('case_type') == 'dom-wrap'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      refused = re.search(r"(DOM wrap|logic wrap|Rule 0|extra (div|node|host)|tree root)", text, re.IGNORECASE)
+      if not refused:
+          return False, "Did not cite Rule 0 / DOM wrap when refusing the wrapper div"
+      return True, "Refused the wrapper div"
+
+  - name: no_shadowed_title
+    description: Does not shadow the PF Card title prop with a kit slot
+    if: "annotations.get('case_type') == 'dom-wrap'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      renamed = re.search(r"(heading|collid|shadow)", text, re.IGNORECASE)
+      if not renamed:
+          return False, "Did not avoid or mention the title prop collision"
+      return True, "Avoided shadowing PF title"
+
+  - name: drops_uniform_flexitem
+    description: Removes uniform FlexItem wrappers that carry no per-child override
+    if: "annotations.get('case_type') == 'flexitem'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      cited = re.search(r"(uniform|identical|no per-child|dead weight|Rule 0)", text, re.IGNORECASE)
+      code = re.findall(r"```tsx(.*?)```", text, re.DOTALL)
+      still_wrapped = any("<FlexItem" in block for block in code)
+      if not cited:
+          return False, "Did not call out the uniform FlexItem wrappers"
+      if still_wrapped:
+          return False, "Shipped code still contains FlexItem wrappers"
+      return True, "Removed uniform FlexItem wrappers"
+
+  - name: layout_order
+    description: States slots first, PF layout second, and flags the layout assumption
+    if: "annotations.get('case_type') == 'flexitem'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      if not re.search(r"slot", text, re.IGNORECASE):
+          return False, "Did not mention slots in the layout choice"
+      if not re.search(r"(layout intent|assum|confirm)", text, re.IGNORECASE):
+          return False, "Did not flag the layout assumption"
+      return True, "Mentioned slots and flagged the layout assumption"
+
+  - name: refuses_prop_remap
+    description: Refuses to rename isLoading and keeps it passing through untouched
+    if: "annotations.get('case_type') == 'prop-remap'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      refused = re.search(r"(never (renames|remaps)|pass(es)? through untouched|passthrough|twin|alias|refus)", text, re.IGNORECASE)
+      code = re.findall(r"```tsx(.*?)```", text, re.DOTALL)
+      renamed_in_code = any(re.search(r"\bbusy\b\s*[,}:?]", block) for block in code)
+      if not refused:
+          return False, "Did not refuse the PF prop rename"
+      if renamed_in_code:
+          return False, "Shipped code exposes a renamed busy prop"
+      return True, "Refused the isLoading rename"
+
+  - name: product_composition_unprefixed
+    description: Names the product card without the Kit prefix and keeps it out of the kit
+    if: "annotations.get('case_type') == 'naming'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      if re.search(r"export (function|const) KitStatus", text):
+          return False, "Exported a Kit-prefixed product composition"
+      if not re.search(r"(reserved for kit|unprefixed|no `?Kit`? prefix|product code|not in the kit|page/domain)", text, re.IGNORECASE):
+          return False, "Did not state the prefix rule or place it in product code"
+      return True, "Named it unprefixed and placed it in product code"
+
+thresholds:
+  refuses_dom_wrap:
+    min_pass_rate: 1.0
+  no_shadowed_title:
+    min_pass_rate: 0.67
+  drops_uniform_flexitem:
+    min_pass_rate: 1.0
+  layout_order:
+    min_pass_rate: 0.67
+  refuses_prop_remap:
+    min_pass_rate: 1.0
+  product_composition_unprefixed:
+    min_pass_rate: 1.0

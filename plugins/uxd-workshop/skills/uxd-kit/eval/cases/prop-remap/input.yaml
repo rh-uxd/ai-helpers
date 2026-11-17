@@ -1,0 +1,2 @@
+prompt: >-
+  Using the uxd-kit skill: add KitButton to our kit, wrapping PatternFly Button. Take kind="primary" | "danger" and map it onto PF variant/isDanger, and rename isLoading to busy. Please write it. Do not call network or MCP tools.

@@ -1,0 +1,2 @@
+prompt: >-
+  Using the uxd-kit skill: review fixture.tsx, which is going into our kit as an assembly, and give me the version you would ship. Do not edit files and do not call network or MCP tools.

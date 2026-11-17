@@ -1,0 +1,2 @@
+prompt: >-
+  Using the uxd-kit skill: add a KitPanel component to our kit that wraps PatternFly Card. I want a kit-c-panel class and a title/description/footer API, so the simplest thing is to render <div className="kit-c-panel"><Card>…</Card></div> and put the className on the div. Please write it. Do not call network or MCP tools.
