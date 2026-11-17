@@ -55,7 +55,10 @@ Use the reviewed packet described by the
 [shared execution contract](references/workflow/split-evaluation.md): source snapshot and
 stable source IDs, exact prototype revision, selected check scope, and only the
 route-relevant environment/tasks/personas. Jira is not required when reviewed
-written requirements are supplied.
+written requirements are supplied. For Jira links, follow
+[Jira source retrieval](references/workflow/evaluator-onboarding.md#resolve-jira-input):
+use an available authenticated Atlassian connector first, and ask before opening
+Jira in a browser.
 
 - Browser/model work belongs to the host. Verify its served revision, settled
   captures, submitted context and actual result receipts, plus the designer's

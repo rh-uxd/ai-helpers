@@ -90,6 +90,33 @@ All new packets need a reviewed source snapshot/version and stable source IDs,
 `extract.key`, reviewed criteria (empty where allowed), prototype URL metadata
 and exact revision/build identity. A URL is not proof of a reachable server.
 
+## Resolve Jira input
+
+A Jira key or URL is a source locator, not the requirements themselves. Use any
+already-configured, authenticated Atlassian access available from the host (for
+example, an MCP server or configured API/CLI helper). Do not require one specific
+connector or ask the user to set one up. Fetch only the issue and fields needed
+for the evaluation, using read-only access.
+
+If no connector can read the issue, ask the user before opening Jira in a browser:
+
+> I couldn't read this issue through an available Atlassian connector. May I open
+> the Jira link in your browser to read its requirements?
+
+Do not open a browser or capture Jira page content until the user explicitly
+agrees. If they decline, browser access is unavailable, or the issue cannot be
+read, ask them to paste/export the relevant issue details or provide reviewed
+written requirements. Never ask for API tokens or other credentials, and do not
+infer requirements from the URL alone.
+
+Preserve the retrieved issue payload at `source.snapshot_path`. Use the issue key
+as the source ID and its Jira revision/updated timestamp as the source revision.
+Normalize criteria with stable source-section IDs, then show the extracted
+requirements and ask the user to confirm or correct them before freezing the
+packet. If criteria are absent or ambiguous, ask rather than inventing them.
+Read comments or linked issues only when needed to resolve a specific requirement;
+do not crawl them by default.
+
 - **Existing review:** explicit artifact root/run; no new packet or execution.
 - **Classification:** reviewed criteria and source mapping; no personas,
   workspace, browser or live server. Classification never establishes AC PASS.
