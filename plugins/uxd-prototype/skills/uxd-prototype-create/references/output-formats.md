@@ -79,8 +79,8 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
     },
     {
       "kind": "other",
-      "label": "Vision journey map",
-      "url": "https://miro.com/app/board/example/"
+      "label": "Design context",
+      "url": "https://example.com/artifacts/design-context"
     }
   ],
   "build_mode": "existing-codebase",
@@ -108,7 +108,7 @@ Status values: `"draft"`, `"refined"`, `"reviewed"`, `"submitted"`.
 
 Optional fields: `journeys_path`, `states_path`, `design_spec_path`, `prototype_bar`, `exports` (populated when `--export` runs), `source_rfes` (multi-RFE compose), `sources` (normalized provenance for the Prototype Bar), `figma_url`.
 
-For vision work, keep `source.type` as `description` when the prototype is based on the brief and final narrative, and include the Miro board in `sources` as `{ "kind": "other", "label": "Vision journey map", "url": "<board-url>" }`. `kind: "other"` is supported by the Prototype Bar; the board remains the canonical map.
+For supporting artifacts supplied with `--context`, add accessible URLs to `sources` with a descriptive label and a supported `kind`. Use `kind: "other"` for artifacts outside the named source categories. Keep the primary source classification in `source.type`; additional context does not change it.
 
 ## artifacts/{ID}/prototype-bar.json
 
@@ -136,8 +136,8 @@ Or write it directly from `metadata.json` fields. Schema: see `uxd-prototype-exp
     },
     {
       "kind": "other",
-      "label": "Vision journey map",
-      "url": "https://miro.com/app/board/example/"
+      "label": "Design context",
+      "url": "https://example.com/artifacts/design-context"
     }
   ],
   "views": {

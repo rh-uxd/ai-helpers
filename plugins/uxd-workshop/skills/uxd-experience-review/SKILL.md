@@ -1,6 +1,6 @@
 ---
 name: uxd-experience-review
-version: 0.1.0
+version: 0.1.1
 description: >-
   Judge whether an experience narrative and prototype carry the framed problem,
   and draft the stakeholder demo. Use when reviewing a story-driven prototype
@@ -14,7 +14,7 @@ outputs: "A review scorecard, improvement list, and presentation plan"
 
 Judges whether a story-driven prototype carries the framed problem, and helps the designer prepare to show it. This is not a heuristic audit, an acceptance-criteria check, or a usability study.
 
-This skill reviews and recommends; it does not edit prototype code or content. The designer chooses which recommendations to apply. Pass those selected changes to `uxd-prototype-create` for targeted refinement, then review the updated experience.
+This skill reviews and recommends; it does not edit prototype code or content. The designer chooses which recommendations to apply. Record selected changes for targeted refinement and a later review of the updated experience.
 
 ## Inputs
 
@@ -25,7 +25,7 @@ This skill reviews and recommends; it does not edit prototype code or content. T
 | Paired vision journey map | Required for vision work | Miro URL or local JSON Canvas; omit for non-vision reviews |
 | Prototype | **Yes** | Path, URL, or running app the user points to |
 
-If the brief or narrative is missing, stop and name the skill that should produce it (`uxd-problem-brief-create`, `uxd-experience-narrative-create`). For a vision prototype, also require the paired journey map; if it is missing, ask for the Miro URL or local canvas. If no prototype is available, stop and ask where it lives. Do not search a default repository.
+If the brief or narrative is missing, ask for it before reviewing. For a vision prototype, also require the paired journey map; if it is missing, ask for the Miro URL or local canvas. If no prototype is available, stop and ask where it lives. Do not search a default repository.
 
 ## Outputs
 
@@ -41,7 +41,7 @@ Parse as: `<prototype-path-or-url> [--id <work-item-id>]`
 
 ## Step 1: See the prototype
 
-Read the brief, narrative, paired journey map when this is a vision, and the prototype source or running UI. For a Miro URL, read both frames through the available Miro connection, following `uxd-canvas-create`'s read guidance. Do not write to the board. If it cannot be read, ask for an export or JSON Canvas snapshot and state the limitation.
+Read the brief, narrative, paired journey map when this is a vision, and the prototype source or running UI. For a Miro URL, read both frames through the available Miro connection. Do not write to the board. If it cannot be read, ask for an export or JSON Canvas snapshot and state the limitation.
 
 When a server is already running, or the project documents how to start one, use that. If the prototype gates the experience behind a flag, scenario, or query parameter, enable it the way that project does. Do not assume a package script, port, or flag file.
 
@@ -69,7 +69,7 @@ This review judges the quality and consistency of the proposed experience. Do no
 
 Sort changes into **Must fix**, **Should fix**, and **Nice to have**. Each item names the screen, journey stage or step, and change. "Make it better" is not an item. "On the diagnosis screen, show the evidence behind the recommendation from To-Be stage 3" is.
 
-Write recommendations only. Do not implement them in this skill; identify the selected items for `uxd-prototype-create` to apply.
+Write recommendations only. Do not implement them in this skill; record which items the designer selected for implementation.
 
 ## Step 4: Presentation plan
 
@@ -98,9 +98,9 @@ After selected refinements have been applied, review the updated experience. If 
 - The report includes an explicit internal-coherence check and does not claim downstream impact
 - For a vision, the review checks whether the prototype reflects the mapped To-Be stages, screens, touchpoints, and support opportunities; explain deliberate differences
 - Improvements name a screen and a change
-- The report distinguishes recommendations from designer-selected refinements and records the handoff to `uxd-prototype-create`
+- The report distinguishes recommendations from designer-selected refinements and records their implementation status
 - The demo script has an opening, a path, and a close
 - At least three likely questions have answers
 - The review does not assume a product, port, flag filename, or design-system rule the target project does not use
 
-For acceptance criteria, usability, or a design-system critique, use `uxd-prototype-evaluate` or `uxd-evaluate-design-heuristics`. This skill stays on whether the experience carries the framed problem.
+Keep acceptance-criteria validation, usability testing, and design-system audits separate from this experience review.

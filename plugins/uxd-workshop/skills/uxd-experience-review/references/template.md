@@ -35,7 +35,7 @@
 
 ## Refinement Handoff
 - **Selected recommendations:** [Items selected by the designer, or none]
-- **Prototype refinement:** [Pending / completed with `uxd-prototype-create`]
+- **Prototype refinement:** [Pending / completed; link to the updated prototype]
 - **Follow-up review:** [Pending / completed]
 
 ## Presentation Plan

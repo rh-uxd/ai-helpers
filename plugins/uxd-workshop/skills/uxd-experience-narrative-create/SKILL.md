@@ -1,6 +1,6 @@
 ---
 name: uxd-experience-narrative-create
-version: 0.1.0
+version: 0.1.1
 description: >-
   Turn a problem brief and paired vision journey map into an editable Miro
   storyboard, then finalize it as an experience narrative and prototype-ready
@@ -23,15 +23,15 @@ Use this skill in two passes. First, turn the agreed paired journey map into an 
 | Persona reference | No | Persona cards in the target project or an installed plugin, when they match the brief |
 | Target codebase | No | Only to learn real navigation. Skip routes when no codebase is available. |
 
-If no brief exists, ask the user to run `uxd-problem-brief-create` or provide the brief. If a vision map is missing, ask them to create it with `uxd-canvas-create`. Do not silently replace the agreed map with a new, unreviewed story.
+If the brief or vision map is missing, ask for the required artifact. Do not silently replace the agreed map with a new, unreviewed story.
 
 ## Miro access
 
-When given a Miro URL, read the paired maps directly through the available Miro connection and follow the Miro read/write guidance in `uxd-canvas-create`. In the storyboard pass, show the proposed content and receive the designer's confirmation before adding a clearly labeled storyboard frame to the same board. Never alter or delete either journey-map frame. In the finalization pass, read the designer-edited storyboard and do not overwrite it. If direct Miro writing is unavailable, provide a Miro-ready storyboard in the artifact and say it needs to be transferred manually. If the board cannot be read, ask for a JSON Canvas snapshot or exports and state the access limitation.
+When given a Miro URL, read the paired maps directly through the available Miro connection. Preserve existing widget ids and update only the storyboard widgets when revising it. In the storyboard pass, show the proposed content and receive the designer's confirmation before adding a clearly labeled storyboard frame to the same board. Never alter or delete either journey-map frame. In the finalization pass, read the designer-edited storyboard and do not overwrite it. If direct Miro writing is unavailable, provide a Miro-ready storyboard in the artifact and say it needs to be transferred manually. If the board cannot be read, ask for a JSON Canvas snapshot or exports and state the access limitation.
 
 ## Outputs
 
-The storyboard pass writes `.artifacts/storyboard-draft.md` beside the brief (or `.artifacts/{ID}/storyboard-draft.md`) and adds the storyboard to Miro after confirmation. The map stage writes research coverage to `.artifacts/journey-map-research-check.md` (or `.artifacts/{ID}/journey-map-research-check.md`). The finalization pass writes `.artifacts/experience-narrative.md` (or `.artifacts/{ID}/experience-narrative.md`). Link the brief, paired map, research check, and edited storyboard so the prototype step can trace the handoff.
+The storyboard pass writes `.artifacts/storyboard-draft.md` beside the brief (or `.artifacts/{ID}/storyboard-draft.md`) and adds the storyboard to Miro after confirmation. The finalization pass writes `.artifacts/experience-narrative.md` (or `.artifacts/{ID}/experience-narrative.md`). Link the brief, paired map, any supplied research check, and edited storyboard so the source trail remains traceable.
 
 ## Arguments
 
@@ -105,7 +105,7 @@ Select the 3–5 screens or views needed to tell the story. Preserve all map ste
 - Evidence or assumption references
 - Route only when it was confirmed from the target codebase
 
-Do not invent routes. The prototype skill receives both this narrative and the source journey map, so retain a link to the board instead of copying the entire board into prose.
+Do not invent routes. Retain a link to the source board instead of copying the entire board into prose.
 
 ## Step 10: Write and review the narrative
 
@@ -122,5 +122,3 @@ Write final prose from [references/template.md](references/template.md). Read it
 - The payoff matches the brief's desired outcome
 - Screen count is focused; routes are based on inspected navigation
 - The narrative links to the source board or canvas and can be followed by someone outside the work
-
-When the designer is ready to build, pass both the Miro board URL (or local canvas path) and this narrative to `uxd-prototype-create`. Include `--workspace` when the prototype should extend an existing product.

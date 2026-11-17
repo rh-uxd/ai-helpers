@@ -39,7 +39,7 @@
 - **Readiness:** [Committed / being explored / aspirational]
 
 ### Journey map starters — provisional, for team mapping
-Use two separate map-shaped tables with 3–5 matching stages. Follow the playbook's map structure: lanes are rows and journey stages are columns. This is an AI-assisted hypothesis for the workshop, not a decision or final narrative. Cite evidence as `[E#]`, mark assumptions as `[A#]`, and leave unsupported details open. Use findings from `uxd-research-insights` to add a separate, preliminary stage-by-stage Research Coverage & Gaps row in both tables; state supported, partial, or not found and add a `Research gap:` question when coverage is partial or absent. Link each `[E#]` to its source in Miro and define each `[A#]` in a bottom reference strip.
+Use two separate map-shaped tables with 3–5 matching stages. Use the map structure below: lanes are rows and journey stages are columns. This is an AI-assisted hypothesis for the workshop, not a decision or final narrative. Cite evidence as `[E#]`, mark assumptions as `[A#]`, and leave unsupported details open. Use supplied research findings to add a separate, preliminary stage-by-stage Research Coverage & Gaps row in both tables; state supported, partial, or not found and add a `Research gap:` question when coverage is partial or absent. Link each `[E#]` to its source in Miro and define each `[A#]` in a bottom reference strip.
 
 #### As-Is journey map starter
 
@@ -69,6 +69,6 @@ Use two separate map-shaped tables with 3–5 matching stages. Follow the playbo
 | Research Coverage & Gaps | [Coverage of underlying need vs future claim; source links; gap question] | [Status + gap question] | [Status + gap question] |
 | Support & opportunities | [Concrete product or team response tied to supplied capability] | [Support response] | [Support response] |
 
-Add S4/S5 only when the user's journey needs more stages, adding matching stage columns to both tables. Keep the playbook's map lanes, `S#` labels, stage names, and order aligned. Do not imply every As-Is pain disappears in the To-Be; leave unknown future pains open.
+Add S4/S5 only when the user's journey needs more stages, adding matching stage columns to both tables. Keep the map lanes, `S#` labels, stage names, and order aligned. Do not imply every As-Is pain disappears in the To-Be; leave unknown future pains open.
 
-These coverage notes are preliminary. After the team edits and confirms the Miro journey map, `uxd-canvas-create` revisits the notes against the completed journey and records the updated coverage and gaps on the board and in `.artifacts/journey-map-research-check.md`.
+These coverage notes are preliminary. Preserve the stage-level sources and open questions so they can be reassessed when the team edits the journey map.
