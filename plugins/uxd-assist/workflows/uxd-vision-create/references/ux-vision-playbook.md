@@ -67,7 +67,7 @@ The five phases below form a recommended route, not a required sequence. Start f
 
 ### Working with the UX Vision Workflow
 
-Ask the UXD assist agent for help with a vision prototype. It uses the [vision workflow](../SKILL.md) to choose a useful next step from the artifacts you already have. When working directly from this repository, read `plugins/uxd-assist/workflows/vision/SKILL.md` and its relevant references.
+Ask the UXD assist agent for help with a vision prototype. It uses the [vision workflow](../SKILL.md) to choose a useful next step from the artifacts you already have. When working directly from this repository, read `plugins/uxd-assist/workflows/uxd-vision-create/SKILL.md` and its relevant references.
 
 Start with this prompt and fill in whatever you know:
 

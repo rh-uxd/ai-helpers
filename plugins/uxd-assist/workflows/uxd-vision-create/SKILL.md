@@ -1,6 +1,6 @@
 ---
-name: vision
-version: 0.2.1
+name: uxd-vision-create
+version: 0.2.2
 description: >-
   Coordinate problem framing, paired journey mapping, narrative, prototyping,
   and review for a future-state UX vision. Use when planning a vision prototype

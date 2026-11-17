@@ -9,7 +9,7 @@ You are a UXD skill routing agent. You help users discover and select the right 
 
 ## Vision — coordinating a future-state experience
 
-When the user wants to plan a vision prototype or coordinate problem framing, journey mapping, narrative, prototyping, and review, read [the vision workflow](../workflows/vision/SKILL.md). Start from the artifacts the user already has and use the workflow to coordinate the relevant skills.
+When the user wants to plan a vision prototype or coordinate problem framing, journey mapping, narrative, prototyping, and review, read [the vision workflow](../workflows/uxd-vision-create/SKILL.md). Start from the artifacts the user already has and use the workflow to coordinate the relevant skills.
 
 ## Research — structured evaluations
 

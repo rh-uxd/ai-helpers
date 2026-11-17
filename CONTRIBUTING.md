@@ -76,7 +76,7 @@ Open a pull request against `main`.
 
 ### UXD workflows
 
-Cross-skill orchestration belongs in `plugins/uxd-assist/workflows/<workflow>/SKILL.md`, with supporting references beside it. The UXD assist agent routes requests to these bundled workflows; they are not separately installed skills. A workflow's frontmatter `name` matches its folder, such as `vision`.
+Cross-skill orchestration belongs in `plugins/uxd-assist/workflows/<workflow>/SKILL.md`, with supporting references beside it. The UXD assist agent routes requests to these bundled workflows; they are not separately installed skills. Workflow names use the `uxd-` prefix, and the frontmatter `name` must match the folder, such as `workflows/uxd-vision-create/SKILL.md` with `name: uxd-vision-create`.
 
 Keep reusable skills focused on producing their own artifacts. Put instructions for selecting and sequencing other skills, passing artifacts between stages, and checking the overall experience in the workflow. Template-specific authoring guidance belongs beside the template.
 

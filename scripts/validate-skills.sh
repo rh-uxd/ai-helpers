@@ -40,9 +40,7 @@ while IFS= read -r skill_file; do
     fail "$skill_file" "Skill exceeds 500-line limit (${line_count} lines)"
   fi
 
-  # Workflow names match their folder (for example workflows/vision).
-  # Only independently discoverable skills require the domain prefix.
-  if [[ "$skill_file" != plugins/*/workflows/*/SKILL.md ]] && [[ -n "$fm_name" ]] && [[ ! "$fm_name" =~ ^($VALID_PREFIXES)- ]]; then
+  if [[ -n "$fm_name" ]] && [[ ! "$fm_name" =~ ^($VALID_PREFIXES)- ]]; then
     fail "$skill_file" "Skill name '${fm_name}' must start with a valid prefix (${VALID_PREFIXES})"
   fi
 done < <(find plugins -name 'SKILL.md' 2>/dev/null)
