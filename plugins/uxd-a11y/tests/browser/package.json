@@ -1,5 +1,5 @@
 {
-  "name": "uxd-a11y-modal-fixtures",
+  "name": "uxd-a11y-browser-fixtures",
   "private": true,
   "type": "module",
   "scripts": {

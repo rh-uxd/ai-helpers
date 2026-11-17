@@ -1,28 +1,9 @@
 import { test, expect } from '@playwright/test';
 
-async function evidence(page, testInfo, label) {
-  const state = await page.evaluate(() => {
-    const active = document.activeElement;
-    const close = document.getElementById('close');
-    return {
-      url: location.href, viewport: { width: innerWidth, height: innerHeight },
-      userAgent: navigator.userAgent,
-      active: { id: active?.id, tag: active?.tagName, text: active?.textContent?.trim() },
-      overflowScroll: document.getElementById('overflow').scrollTop,
-      selected: [...document.querySelectorAll('[role=tab]')].map(el => [el.id, el.getAttribute('aria-selected')]),
-      closeRect: close.getBoundingClientRect().toJSON(),
-      dialogRect: document.querySelector('dialog').getBoundingClientRect().toJSON(),
-      dialogScroll: document.querySelector('dialog').scrollTop
-    };
-  });
-  await testInfo.attach(label, { body: JSON.stringify(state, null, 2), contentType: 'application/json' });
-  await testInfo.attach(`${label}-semantics`, { body: await page.locator('body').ariaSnapshot(), contentType: 'text/plain' });
-  await testInfo.attach(`${label}-screenshot`, { body: await page.screenshot(), contentType: 'image/png' });
-  return state;
-}
+import { evidence } from '../helpers/evidence.js';
 
 test('runtime: visible bypass, manual tabs, reverse navigation, and child-mediated scrolling', async ({ page }, info) => {
-  await page.goto('/runtime.html');
+  await page.goto('/runtime/runtime.html');
   await page.keyboard.press('Tab');
   await expect(page.locator('#skip')).toBeFocused();
   await page.keyboard.press('Enter');
@@ -58,7 +39,7 @@ test('runtime: visible bypass, manual tabs, reverse navigation, and child-mediat
 });
 
 test('runtime: pointer-only Apply is a demonstrated keyboard barrier', async ({ page }, info) => {
-  await page.goto('/runtime.html');
+  await page.goto('/runtime/runtime.html');
   // Direct setup isolates activation; this is not evidence of full sequential navigation.
   await page.locator('#apply').focus();
   await page.keyboard.press('Enter');
@@ -74,7 +55,7 @@ test('runtime: pointer-only Apply is a demonstrated keyboard barrier', async ({ 
 for (const width of [375, 320]) {
   test(`runtime: usable dialog at ${width} CSS pixels`, async ({ page }, info) => {
     await page.setViewportSize({ width, height: 667 });
-    await page.goto('/runtime.html');
+    await page.goto('/runtime/runtime.html');
     // Direct focus sets up the overlay-specific check; opening/dismissal use actual keys.
     await page.locator('#open').focus();
     await page.keyboard.press('Enter');
@@ -91,7 +72,7 @@ for (const width of [375, 320]) {
 
 test('runtime: clipped dialog has an invisible focused control, but Escape still exits', async ({ page }, info) => {
   await page.setViewportSize({ width: 320, height: 667 });
-  await page.goto('/runtime.html?variant=clipped');
+  await page.goto('/runtime/runtime.html?variant=clipped');
   await page.locator('#open').focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('#close')).toBeFocused();

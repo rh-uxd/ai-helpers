@@ -47,6 +47,8 @@ Initial focus may be in the middle of the dialog's sequential order. Establish t
 
 When `@axe-core/playwright` is installed, use its supported builder API, record configured tags/scope, and retain violations and incomplete results. A zero-violations assertion alone does not clear incomplete findings.
 
+For resize coverage, follow the [persistent browser zoom procedure](visual-runtime.md#persistent-200-browser-zoom-procedure). Use an isolated persistent context and the browser's actual zoom setting; verify persistence after restart/reload and throughout interactions. Do not substitute `deviceScaleFactor`, CSS font injection, or a transient font override for verified browser zoom. Validate screenshot framing before treating a crop as a page defect.
+
 ## Cypress
 
 Use the installed version's native keyboard API where available, or an already configured real-keyboard integration. Verify commands before writing `cy.press` or `cy.realPress`; neither may be assumed in every project. Do not replace native Tab with `trigger('keydown')` and call it a browser traversal test.

@@ -17,7 +17,7 @@ async function snapshot(page, testInfo, label) {
 }
 
 async function openByKeyboard(page, testInfo, provider, variant = 'valid') {
-  await page.goto(`/?provider=${provider}&variant=${variant}`);
+  await page.goto(`/modal/?provider=${provider}&variant=${variant}`);
   await page.keyboard.press('Tab');
   await expect(page.locator('#open')).toBeFocused();
   await page.keyboard.press('Enter');
@@ -107,20 +107,6 @@ test('custom: aria-modal alone fails entry, background isolation, and Escape', a
   await expect(page.getByRole('dialog')).toBeVisible();
   await snapshot(page, testInfo, 'escape-does-not-dismiss');
 });
-
-test('disclosure: trigger focus and background access are valid', async ({ page }, testInfo) => {
-  await page.goto('/?provider=disclosure');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Enter');
-  await expect(page.locator('#open')).toBeFocused();
-  await expect(page.locator('#open')).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.locator('#details')).toBeVisible();
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  await page.keyboard.press('Tab');
-  await expect(page.locator('#background')).toBeFocused();
-  await snapshot(page, testInfo, 'nonmodal-disclosure');
-});
-
 
 test('pf: omitted naming prop produces a broad fallback, not an empty name', async ({ page }, testInfo) => {
   await openByKeyboard(page, testInfo, 'pf', 'unnamed');

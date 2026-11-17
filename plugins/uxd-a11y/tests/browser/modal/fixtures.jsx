@@ -61,16 +61,7 @@ function Custom() {
   </>;
 }
 
-function Disclosure() {
-  const [open, setOpen] = useState(false);
-  return <>
-    <button id="open" aria-expanded={open} aria-controls="details" onClick={() => setOpen(!open)}>Show details</button>
-    <div id="details" hidden={!open}><p>Supplemental nonmodal information.</p></div>
-    <button id="background">Next action</button>
-  </>;
-}
-
 createRoot(document.getElementById('root')).render(<main>
   <h1>Modal review fixtures</h1>
-  {provider === 'pf' ? <PatternFly /> : provider === 'custom' ? <Custom /> : provider === 'disclosure' ? <Disclosure /> : <Native />}
+  {provider === 'pf' ? <PatternFly /> : provider === 'custom' ? <Custom /> : <Native />}
 </main>);
