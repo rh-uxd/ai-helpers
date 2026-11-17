@@ -19,7 +19,7 @@ parse_frontmatter() {
   awk '/^---$/{if(++c==2)exit} c==1 && /^'"$field"':/{sub(/^'"$field"': */, ""); gsub(/["'"'"']/, ""); print; exit}' "$file"
 }
 
-# Skills and bundled workflows
+# Skills
 while IFS= read -r skill_file; do
   dir_name=$(basename "$(dirname "$skill_file")")
   fm_name=$(parse_frontmatter "$skill_file" "name")
