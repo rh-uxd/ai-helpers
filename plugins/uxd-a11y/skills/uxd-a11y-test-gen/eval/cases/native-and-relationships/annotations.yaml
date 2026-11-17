@@ -1,0 +1,1 @@
+expected: "Accept native required (toBeRequired or equivalent), validate every description token, accept empty-alt decoration and indeterminate progress. Do not demand redundant ARIA or invented runtime/AT results. Code should use supplied setup and appropriate input query."

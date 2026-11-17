@@ -2,7 +2,7 @@ import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
   testDir: '.',
-  testMatch: 'modal.spec.js',
+  testMatch: ['modal.spec.js', 'runtime.spec.js'],
   workers: 1,
   outputDir: './artifacts',
   reporter: [['list'], ['json', { outputFile: './artifacts/results.json' }]],

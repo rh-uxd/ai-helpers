@@ -1,4 +1,4 @@
-# Modal slice verification
+# Modal and runtime verification
 
 These fixtures exercise the expectations used by the draft skills. Browser assertions validate fixture behavior, not the quality of a model's review. Use the colocated skill evaluation scenarios for a separate review-quality check.
 
@@ -10,7 +10,7 @@ Stage dependencies outside the repository: its skill validator recursively scans
 
 ```bash
 modal_workspace=$(mktemp -d "${TMPDIR:-/tmp}/uxd-a11y-modal.XXXXXX")
-cp package.json package-lock.json index.html fixtures.jsx fixtures.css modal.spec.js playwright.config.js "$modal_workspace/"
+cp package.json package-lock.json index.html fixtures.jsx fixtures.css modal.spec.js runtime.html runtime.spec.js playwright.config.js "$modal_workspace/"
 cd "$modal_workspace"
 npm ci
 npx playwright install chromium
@@ -39,3 +39,9 @@ To use an existing Chromium executable instead of downloading one, set `MODAL_BR
 Playwright attaches active-element/DOM snapshots, screenshots and rendered semantic snapshots to `artifacts/results.json`. Forward traversal begins with real keyboard opening. Reverse-boundary and background-focus probes explicitly use direct setup; those probes are not a claimed natural keyboard path. Native browser-chrome transitions are recorded separately from focus entering background page content.
 
 This suite does not test screen-reader speech, pointer blocking, all browsers, complete visual/media criteria, or full WCAG conformance. A passing negative-case test means the seeded defect was observed, not that its fixture is accessible.
+
+## Runtime smoke checks
+
+`runtime.html` is a standalone native/custom HTML fixture, independent of the React/PF modal host. `runtime.spec.js` checks visible bypass, manual tabs (Enter/Space, arrows, forward/reverse entry/exit), child-mediated overflow access, a deliberately pointer-only button, and dialogs at 375 and 320 CSS px. The clipped variant intentionally hides its focused Close button while retaining Escape dismissal. Negative tests pass when the seeded barrier is observed; they do not declare the fixture accessible.
+
+These are controlled browser fixtures, not a production-product audit or independent model evaluation. Evidence attachments include focused element, geometry, viewport, user agent, rendered semantic snapshots, and screenshots. Direct-focus setup is explicitly labeled. No scanner, browser zoom/text resize, forced-colors, theme, or screen-reader results are implied.

@@ -1,0 +1,1 @@
+expected: "Use installed realPress and supported queries/assertions, not nonexistent cy.press/getByRole or :focusable/be.within inventions. Keyboard-open, both boundaries, both dismissal paths, safe actual controls; account for scan scope/incomplete results. No unexecuted pass or AT claims."
