@@ -40,6 +40,3 @@ AGENTS.local.md
 
 # Fullsend's resolved dependency cache (lock.yaml is the committed lockfile)
 /.fullsend/.fullsend-cache/
-
-# Local UXD accessibility planning documents
-/plugins/uxd-a11y/planning/
