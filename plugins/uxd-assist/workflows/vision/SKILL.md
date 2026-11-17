@@ -1,6 +1,6 @@
 ---
 name: vision
-version: 0.2.0
+version: 0.2.1
 description: >-
   Coordinate problem framing, paired journey mapping, narrative, prototyping,
   and review for a future-state UX vision. Use when planning a vision prototype
@@ -15,6 +15,23 @@ outputs: "A problem brief, paired vision journey map, experience narrative, inte
 Guide a team through a focused future-state experience: one user, one meaningful problem, and a credible change the product could deliver in the next 6–12 months. Read the relevant activity in [references/ux-vision-playbook.md](references/ux-vision-playbook.md) when workshop formats or facilitation details would help.
 
 Use this route as a menu, not a checklist. Start from existing artifacts and run only activities that help the team's next decision. Each skill owns its artifact; this workflow owns skill selection, cross-stage handoffs, and vision-specific checks. Use available capabilities; if a skill or connection is unavailable, state the limitation and work from supplied artifacts or offer a manual handoff.
+
+## 0. Introduce the workflow and agree on a plan
+
+At the start of a new vision effort, introduce the workflow using the `version` from this file's frontmatter:
+
+> Welcome to the UX Vision Workflow, version {version}. I'll help you turn a user problem into a future experience people can explore, starting from the work you already have.
+
+Briefly summarize the user's goal, available artifacts, and known constraints. Read supplied context as needed to understand the starting point, and ask only for missing information that would materially change the plan.
+
+Before invoking a stage skill or creating or editing artifacts, show a short numbered plan adapted from stages 1–5 below. Describe each proposed step in everyday language, its expected output, and where the user will review or contribute. Note which existing artifacts will be reused and omit unnecessary stages. For example, when a reviewed brief and paired map already exist:
+
+1. **Check the existing foundation** — reuse your brief and maps, and surface any material evidence gaps.
+2. **Shape the story together** — draft an editable storyboard for your review, then finalize the narrative and screen breakdown from your edits.
+3. **Build the prototype** — turn the agreed story into an interactive experience in your product workspace, with your input on meaningful design choices.
+4. **Review and refine** — assess the experience, apply the changes you select, and prepare a stakeholder walkthrough.
+
+Invite the user to adjust the scope, order, or outputs and wait for agreement before starting the proposed work. If the user has already authorized this concrete plan, show a brief recap and proceed without asking again. On resuming an effort, recap progress and remaining steps instead of repeating the welcome or onboarding; seek renewed agreement only when the plan materially changes.
 
 ## 1. Ground the problem
 
