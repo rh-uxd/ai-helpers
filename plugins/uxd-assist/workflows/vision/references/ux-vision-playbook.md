@@ -65,21 +65,17 @@ You can begin with a product area, a problem hypothesis, research, a concept, or
 
 The five phases below form a recommended route, not a required sequence. Start from the designer's current situation and the outcome they want. Reuse equivalent work, skip activities that will not help, and return to earlier questions when new information changes the direction. Some activities can happen in parallel.
 
-### Working with the UX Vision Orchestrator
+### Working with the UX Vision Workflow
 
-For pilot testing in ChatGPT, use the local repository copy as the source of truth. Open the product project folder in ChatGPT desktop Work, then tell ChatGPT to read `ux-visiontype-playbook/agents/uxd-vision-orchestrator.md` and use only the matching skill files under `ux-visiontype-playbook/skills/`. Explicitly tell it not to use installed skills with the same names, since those may be older versions. The repository README has copyable setup steps and a starter prompt.
+Ask the UXD assist agent for help with a vision prototype. It uses the [vision workflow](../SKILL.md) to choose a useful next step from the artifacts you already have. When working directly from this repository, read `plugins/uxd-assist/workflows/vision/SKILL.md` and its relevant references.
 
 Start with this prompt and fill in whatever you know:
 
-> For this pilot, use the local `ux-visiontype-playbook` repository as the source of truth. Read and follow `ux-visiontype-playbook/agents/uxd-vision-orchestrator.md`. For problem briefs, storyboards/narratives, and experience reviews, follow only the matching skill files under `ux-visiontype-playbook/skills/`. Do not use installed ChatGPT skills with the same or similar names; those may be older versions. Journey mapping and prototype creation are separate capabilities outside this checkout; use them only if available and useful. I'm working on a UX vision for [product area or user problem]. I want to get to a shareable vision prototype. I already have [research, brief, map, concept, prototype, or other artifacts]. I still need help with [open question or next outcome]. My constraints are [time, workspace, collaborators, or other constraints]. Help me choose a useful next step and explain what it will produce.
+> I'm working on a UX vision for [product area or user problem]. I want to get to a shareable vision prototype. I already have [research, brief, map, concept, prototype, or other artifacts]. I still need help with [open question or next outcome]. My constraints are [time, workspace, collaborators, or other constraints]. Use the UXD assist vision workflow to help me choose a useful next step and explain what it will produce.
 
-You can also ask for a specific task directly, for example: “I already have a brief and journey map. Help me turn them into a clickable vision prototype.” Start from the context you provide rather than restarting the playbook.
+You can also ask for a specific task directly, for example: “I already have a brief and journey map. Help me turn them into a clickable vision prototype.” Reuse the context provided rather than restarting the playbook.
 
-The orchestrator guidance helps choose a useful next move based on the project context. It may suggest one to three actions, explaining what each would produce and why it may help. You can accept, change, skip, or revisit a suggestion.
-
-The orchestrator treats skills as capabilities, not required stages. It keeps evidence, assumptions, decisions, and open questions visible as work moves between artifacts. It can also help prepare a partner conversation or async review; collaboration can improve the work but does not block progress.
-
-Use the route below when you want step-by-step guidance. The destination remains a grounded, coherent, shareable vision prototype; the route can change to fit the project.
+Treat skills as capabilities, not required stages. Suggest actions that help the designer's next decision and keep evidence, assumptions, decisions, and open questions visible between artifacts. Partner conversations and async reviews can improve the work without blocking progress.
 
 ### Phase 1: Vision Brief — Define the Problem Space
 

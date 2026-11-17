@@ -19,7 +19,7 @@ parse_frontmatter() {
   awk '/^---$/{if(++c==2)exit} c==1 && /^'"$field"':/{sub(/^'"$field"': */, ""); gsub(/["'"'"']/, ""); print; exit}' "$file"
 }
 
-# Skills
+# Skills and bundled workflows
 while IFS= read -r skill_file; do
   dir_name=$(basename "$(dirname "$skill_file")")
   fm_name=$(parse_frontmatter "$skill_file" "name")
@@ -40,7 +40,9 @@ while IFS= read -r skill_file; do
     fail "$skill_file" "Skill exceeds 500-line limit (${line_count} lines)"
   fi
 
-  if [[ -n "$fm_name" ]] && [[ ! "$fm_name" =~ ^($VALID_PREFIXES)- ]]; then
+  # Workflow names match their folder (for example workflows/vision).
+  # Only independently discoverable skills require the domain prefix.
+  if [[ "$skill_file" != plugins/*/workflows/*/SKILL.md ]] && [[ -n "$fm_name" ]] && [[ ! "$fm_name" =~ ^($VALID_PREFIXES)- ]]; then
     fail "$skill_file" "Skill name '${fm_name}' must start with a valid prefix (${VALID_PREFIXES})"
   fi
 done < <(find plugins -name 'SKILL.md' 2>/dev/null)
@@ -66,12 +68,13 @@ while IFS= read -r agent_file; do
   fi
 done < <(find plugins -path '*/agents/*.md' -not -path '*/agents/*/*.md' 2>/dev/null)
 
-SKILL_COUNT=$(find plugins -name 'SKILL.md' 2>/dev/null | wc -l | tr -d ' ')
+SKILL_COUNT=$(find plugins -path '*/skills/*/SKILL.md' 2>/dev/null | wc -l | tr -d ' ')
+WORKFLOW_COUNT=$(find plugins -path '*/workflows/*/SKILL.md' 2>/dev/null | wc -l | tr -d ' ')
 AGENT_COUNT=$(find plugins -path '*/agents/*.md' -not -path '*/agents/*/*.md' 2>/dev/null | wc -l | tr -d ' ')
 
 if [[ "$ERRORS" -gt 0 ]]; then
   echo "${ERRORS} error(s) found."
   exit 1
 else
-  echo "Validated ${SKILL_COUNT} skill(s) and ${AGENT_COUNT} agent(s), 0 errors."
+  echo "Validated ${SKILL_COUNT} skill(s), ${WORKFLOW_COUNT} workflow(s), and ${AGENT_COUNT} agent(s), 0 errors."
 fi

@@ -74,6 +74,12 @@ See [CONTRIBUTING-SKILLS.md](CONTRIBUTING-SKILLS.md) for a full walkthrough of s
 
 Open a pull request against `main`.
 
+### UXD workflows
+
+Cross-skill orchestration belongs in `plugins/uxd-assist/workflows/<workflow>/SKILL.md`, with supporting references beside it. The UXD assist agent routes requests to these bundled workflows; they are not separately installed skills. A workflow's frontmatter `name` matches its folder, such as `vision`.
+
+Keep reusable skills focused on producing their own artifacts. Put instructions for selecting and sequencing other skills, passing artifacts between stages, and checking the overall experience in the workflow. Template-specific authoring guidance belongs beside the template.
+
 ### Skills vs Agents
 
 - **Skills** (`skills/your-skill/SKILL.md`) — tasks that produce a result. Most contributions are skills.

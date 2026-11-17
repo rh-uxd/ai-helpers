@@ -1,6 +1,6 @@
 ---
-name: uxd-vision-workshop
-version: 0.1.0
+name: vision
+version: 0.2.0
 description: >-
   Guide a team from an evidence-grounded problem through a future-state UX
   narrative, prototype, and stakeholder review. Use when planning a vision
@@ -10,7 +10,7 @@ inputs: "A product area or problem, available user evidence, and optionally a ta
 outputs: "A problem brief, paired vision journey map, experience narrative, interactive prototype, and review plan"
 ---
 
-# UX Vision Workshop
+# UX Vision Workflow
 
 Guide a team through a focused future-state experience: one user, one meaningful problem, and a credible change the product could deliver in the next 6–12 months. The detailed activities are in [references/ux-vision-playbook.md](references/ux-vision-playbook.md).
 
