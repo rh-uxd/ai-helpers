@@ -57,22 +57,39 @@ stable source IDs, exact prototype revision, selected check scope, and only the
 route-relevant environment/tasks/personas. Jira is not required when reviewed
 written requirements are supplied.
 
-- Local runtime requires Node.js and the dependencies declared in `package.json`.
-  Dependency installation is setup work requiring approval, not automatic intake.
-- Source consistency requires Python 3 and a separately installed
-  `uxd-consistency-check` companion beside this skill. Its implementation is
-  maintained separately. If that check is selected and the companion is absent,
-  explain the missing dependency and stop that check; other routes do not need it.
-  Source policy is opt-in: neutral selects no corpus. Review explicit design-system,
-  namespaced local guideline inputs or frozen-manifest replay through the
-  [Quick contract](references/workflow/selected-inspections.md#explicit-source-policy-and-replay).
-  Internal source differences are review candidates, not normative violations.
 - Browser/model work belongs to the host. Verify its served revision, settled
   captures, submitted context and actual result receipts, plus the designer's
   relevant browser/provider approval. Do not bootstrap tools or invent evidence.
 - New Quick plans accept only `classify`, `consistency-source`, and
   `consistency-visual`. Historical heuristic results may be reviewed read-only in
   existing runs; they are not selectable for new work.
+
+## Requirements
+
+- Local CLI execution requires Node.js and the dependencies declared in
+  `package.json`. Dependency installation is setup work requiring approval, not
+  automatic intake. Before running the evaluator CLI, fail fast if Node.js is
+  missing:
+
+  ```bash
+  command -v node >/dev/null 2>&1 || { echo "Error: This skill requires Node.js." >&2; exit 1; }
+  ```
+
+- Source consistency additionally requires Python 3 and a separately installed
+  `uxd-consistency-check` companion beside this skill. Its implementation is
+  maintained separately. When source consistency is selected, fail clearly if
+  Python 3 is missing:
+
+  ```bash
+  command -v python3 >/dev/null 2>&1 || { echo "Error: Source consistency requires Python 3." >&2; exit 1; }
+  ```
+
+  If the companion is absent, explain the missing dependency and stop that check;
+  other routes do not need it. Source policy is opt-in: neutral selects no corpus.
+  Review explicit design-system, namespaced local guideline inputs or
+  frozen-manifest replay through the
+  [Quick contract](references/workflow/selected-inspections.md#explicit-source-policy-and-replay).
+  Internal source differences are review candidates, not normative violations.
 
 ## Execute the approved route
 
