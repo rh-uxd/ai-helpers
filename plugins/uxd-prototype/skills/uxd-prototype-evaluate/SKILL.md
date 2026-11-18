@@ -1,6 +1,6 @@
 ---
 name: uxd-prototype-evaluate
-version: 0.2.0
+version: 0.2.1
 description: >-
   Run selected Quick Checks or composed Full Evaluation from Jira or reviewed
   written requirements, with canonical evidence, explicit checkpoints and optional reports.
