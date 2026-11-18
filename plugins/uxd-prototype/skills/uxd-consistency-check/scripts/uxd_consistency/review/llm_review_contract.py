@@ -1,4 +1,10 @@
-"""Validate LLM product-guideline judgments against frozen rules and MR evidence."""
+# Documentation comments are AI-generated.
+"""Validate a supplied semantic review without calling a model.
+
+A plausible judgment is not proof of a real citation. Rebuild the committed
+scope, verify exact rule and source excerpts, and report semantic coverage
+apart from deterministic results.
+"""
 from __future__ import annotations
 
 import hashlib
@@ -6,9 +12,9 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 import re
 from typing import Any
 
-from guideline_snapshot import validate_readme_snapshot, bind_manifest_selection
-from scoped_sources import read_sources
-from review_scope import heading_sections, normalized_text, in_code_scope
+from uxd_consistency.guidelines.guideline_snapshot import validate_readme_snapshot, bind_manifest_selection
+from uxd_consistency.review.review_scope import heading_sections, normalized_text, in_code_scope
+from uxd_consistency.source.scoped_sources import read_sources
 
 STATUSES = {"violation", "no_issue_found", "uncertain", "not_applicable", "unsupported", "unavailable"}
 CONFIDENCE = {"high", "medium", "low"}
@@ -93,6 +99,8 @@ def _source_evidence(evidence: Any, *, files, inputs: dict[str, Any], approved_s
     offset = sum(len(line) for line in lines[:start - 1]) + occurrences[0]
     actual_start = view.count('\n', 0, offset) + 1
     actual_end = view.count('\n', 0, offset + len(excerpt) - 1) + 1
+    # A wider submitted range could include changed lines even when the
+    # quoted text itself is unchanged. Check its actual matched position.
     if not any(actual_start <= line <= actual_end for line in changed_lines[name]):
         raise ValueError('source excerpt location does not intersect a changed line')
     column = offset - (view.rfind('\n', 0, offset) + 1) + 1
@@ -157,6 +165,8 @@ def validate_llm_review(raw: Any, *, manifest: dict[str, Any], workspace: Path,
     tracked_only = inputs.get("tracked_only", False)
     if type(tracked_only) is not bool:
         raise ValueError("unsupported or ambiguous MR scope options")
+    # Recompute Git scope rather than trusting the paths, hashes, and line
+    # numbers in the submitted report.
     files, _, current_inputs = read_sources(Path(workspace).resolve(), changed=True,
         base_ref=inputs["base"], tracked_only=tracked_only, merge_base=True, approved_scope=approved_scope)
     for field in ("head", "base", "source_sha256", "files", "target_files", "changed_lines", "skipped_files"):

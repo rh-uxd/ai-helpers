@@ -1,4 +1,9 @@
-"""Offline candidate-index discovery; never selects or executes product policy."""
+# Documentation comments are AI-generated.
+"""Discover candidate guidelines from local indexes, not adopted policy.
+
+Seeing a link is not approval to review it. Parse the chosen README or sidecar,
+validate locator metadata, and leave document reads to explicit selection.
+"""
 import hashlib
 import json
 from pathlib import Path
@@ -6,9 +11,9 @@ import re
 from urllib.parse import urlsplit
 from urllib.parse import unquote
 
-from artifact_io import local_path
-from guideline_io import read_confined
 from guideline_sources import metadata as guideline_metadata
+from uxd_consistency.shared.artifact_io import local_path
+from uxd_consistency.shared.guideline_io import read_confined
 
 CONVENTIONAL_INDEX = Path(".design/product/design-guidelines/README.md")
 LEGACY_INDEXES = (Path(".design/guidelines/README.md"),
@@ -212,6 +217,8 @@ def _markdown_index(workspace, path, index_bytes):
             if not target.is_file():
                 raise ValueError("README guideline link must resolve to a regular Markdown file: " + relative)
             workspace_relative = target.relative_to(workspace).as_posix()
+            # Discovery cannot know an authored rule ID without opening the
+            # document. Use a stable candidate ID until selection reads it.
             source_id = "path-" + hashlib.sha256(workspace_relative.encode()).hexdigest()[:16]
             if source_id in seen:
                 raise ValueError("duplicate linked guideline identity: " + source_id)

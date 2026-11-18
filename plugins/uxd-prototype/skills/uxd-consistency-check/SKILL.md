@@ -25,6 +25,15 @@ Ask for a missing workspace and confirm it exists. Use the requester-selected ch
 
 Python 3.10+ for bundled standard-library tools ([requirements.txt](requirements.txt)); Git for changed-source scope. [requirements-visual.txt](requirements-visual.txt) is optional for explicitly requested live browser capture only.
 
+## Script layout
+
+Existing commands remain directly under [scripts](scripts/). Quick Checks calls `analyze.py`; the other commands select, freeze, validate, replay, or package evidence.
+
+- [Guidelines](scripts/uxd_consistency/guidelines/): discover local candidates, freeze approved rules, and stage local inputs.
+- [Source](scripts/uxd_consistency/source/): read the changed code and check deterministic report coverage.
+- [Review](scripts/uxd_consistency/review/): enforce the approved scope and validate citations.
+- [Shared](scripts/uxd_consistency/shared/): read local evidence safely and write artifacts.
+
 ## Procedure
 
 1. Read [project context](references/project-context.md), the [selection workflow](references/selection-workflow.md), and the [LLM contract](references/llm-review-contract.md). Select local Markdown directly for semantic review. RHOAI's `.design/product/design-guidelines/README.md` can suggest candidates without `sources.json`. README links are not consent. Never follow external links automatically. Deterministic `--guidelines` and frozen replay remain supported.

@@ -1,4 +1,10 @@
-"""Freeze only explicitly selected local rules for model review."""
+# Documentation comments are AI-generated.
+"""Freeze approved rule text and provenance for semantic review.
+
+Later findings must cite the same bytes and scope the user approved. Recheck
+selection, preserve the text and section bounds, and only claim a Git revision
+when its copy matches.
+"""
 import hashlib
 import json
 from pathlib import Path
@@ -7,9 +13,9 @@ import subprocess
 from guideline_selection import (artifact_root, current_proposal, immutable_bytes,
                                  read_selected_markdown, selected_source_path,
                                  source_path_label, validate_selection)
-from guideline_resolver import _confined, _workspace
 from guideline_sources import metadata
-from review_scope import code_scope, section_scope
+from uxd_consistency.guidelines.guideline_resolver import _confined, _workspace
+from uxd_consistency.review.review_scope import code_scope, section_scope
 
 
 def _fingerprint(value):
@@ -138,6 +144,8 @@ def validate_readme_snapshot(snapshot, workspace):
         raise ValueError("selected guideline snapshot requires at least one rule")
     modern = snapshot['schema_version'] == 'readme-guideline-snapshot-2.0.0'
     if modern:
+        # A snapshot hash proves that its bytes agree with each other, not
+        # that its rule, source, or scope matches the user's approval.
         proposal = validate_selection(workspace, snapshot['selection'])
         if (proposal['schema_version'] != '1.1.0' or proposal['method'] != 'model'
                 or snapshot['selection_sha256'] != proposal['sha256']

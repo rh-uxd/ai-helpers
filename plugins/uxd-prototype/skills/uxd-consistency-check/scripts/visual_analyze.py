@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # AI-generated script by GPT-6 Luna.
-"""Package workspace-local visual evidence; offline use requires only Python."""
+# Documentation comments are AI-generated.
+"""Package screenshots and optionally capture an explicitly supplied URL.
+
+Visual evidence may be useful without constituting a compliance check.
+Copy and hash evidence locally; load browser tooling only for a requested URL.
+"""
 import argparse
 import hashlib
 import json
@@ -54,6 +59,8 @@ def package_screenshots(workspace, screenshots, output=None, *, page=None,
     targets = [_safe_path(workspace, output.parent / f"screenshot-{index:03d}{suffix}")
                for index, suffix in enumerate(suffixes, 1)]
     dom_target = _safe_path(workspace, output.parent / "dom.html") if url else None
+    # Check the entire output set first so a collision doesn't launch the
+    # browser or leave a partially replaced evidence bundle.
     for target in [*targets, *([dom_target] if dom_target is not None else [])]:
         if target == output:
             raise ValueError("Manifest cannot alias a generated artifact")

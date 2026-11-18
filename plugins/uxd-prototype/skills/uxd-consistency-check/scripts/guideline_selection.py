@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
-"""Explicit consumer-local selection. Receipts record consent evidence, not signatures.
+# Documentation comments are AI-generated.
+"""Propose and record explicit guideline selection and review scope.
 
-No network, credentials, policy inference, or source-content instruction execution.
-Callers must supply genuine user/task approval; content policy_status is not consent.
+An index's policy status is not consent. Bind the local file, section, code
+scope, and method to a receipt, then recheck those details before reusing it.
+The receipt records approval evidence, not an authenticated signature.
 """
 import hashlib
 import json
@@ -10,10 +12,10 @@ from pathlib import Path
 import re
 import subprocess
 
-from artifact_io import local_path
-from guideline_io import read_confined, REQUEST_LIMIT
-from guideline_resolver import _confined, _workspace, read_index
 from guideline_sources import metadata as guideline_metadata
+from uxd_consistency.guidelines.guideline_resolver import _confined, _workspace, read_index
+from uxd_consistency.shared.artifact_io import local_path
+from uxd_consistency.shared.guideline_io import read_confined, REQUEST_LIMIT
 
 _UNSET = object()
 
@@ -37,7 +39,7 @@ def artifact_root(workspace):
 
 def immutable_bytes(path, data):
     """Never replace an existing snapshot or follow a replaced artifact ancestor."""
-    from guideline_io import immutable_write
+    from uxd_consistency.shared.guideline_io import immutable_write
     return immutable_write(path, data)
 
 
@@ -145,7 +147,7 @@ def propose_selection(workspace, index=None, *, source_ids=None, review_scope, m
     if method not in ('deterministic', 'manual', 'model') or (not modern and (not isinstance(review_scope, str) or not review_scope.strip())):
         raise ValueError('explicit review scope and method are required')
     if modern:
-        from review_scope import code_scope
+        from uxd_consistency.review.review_scope import code_scope
         review_scope = code_scope(review_scope, workspace)
     if guideline_scopes is not None and (not modern or not isinstance(guideline_scopes, dict)
             or set(guideline_scopes) - set(source_ids)):
@@ -191,7 +193,9 @@ def propose_selection(workspace, index=None, *, source_ids=None, review_scope, m
                 source['policy_status'] = status
                 source['scope'] = info.get('scope', source['scope'])
             if modern:
-                from review_scope import section_scope
+                from uxd_consistency.review.review_scope import section_scope
+                # Index headings describe candidates. Bind the actual range
+                # in the selected file so a model can't quote outside it.
                 selected_section = (guideline_scopes or {}).get(source['id'], source.get('guideline_scope'))
                 resolved = section_scope(text, selected_section)
                 source['guideline_scope'] = ({'kind': 'section', 'anchor': resolved['anchor']}
@@ -264,6 +268,8 @@ def confirm_selection(workspace, proposal, approval, *, exceptions=(), model_app
     validate_approval(approval, proposal['sha256'])
     if current_proposal(workspace, proposal) != proposal:
         raise ValueError('selection material changed; propose and confirm again')
+    # Source-selection consent also cannot stand in for separate approval
+    # to use a model, or for consent to rely on non-approved guidance.
     required = {s['id'] for s in proposal['sources'] if s['policy_status'] != 'approved'}
     if set(exceptions) != required:
         raise ValueError('non-approved policy requires explicit source exceptions')
@@ -287,7 +293,7 @@ def validate_selection(workspace, receipt):
     if receipt.get('schema_version') != proposal.get('schema_version') or proposal.get('schema_version') not in ('1.0.0', '1.1.0'):
         raise ValueError('unsupported selection contract version')
     if proposal['schema_version'] == '1.1.0':
-        from review_scope import code_scope
+        from uxd_consistency.review.review_scope import code_scope
         if code_scope(proposal['review_scope'], _workspace(workspace)) != proposal['review_scope']:
             raise ValueError('approved scope is not canonical')
     if proposal.get('product_identity_source') not in (None, 'index_metadata', 'explicit_instruction'):
@@ -332,8 +338,10 @@ def main():
     This CLI does not retrieve external guidelines.
     """
     import argparse
-    from guideline_resolver import _unique_object
-    from guideline_staging import (propose_staging, confirm_staging, reuse_staging, propose_adapter, confirm_adapter)
+    from uxd_consistency.guidelines.guideline_resolver import _unique_object
+    from uxd_consistency.guidelines.guideline_staging import (
+        propose_staging, confirm_staging, reuse_staging, propose_adapter, confirm_adapter,
+    )
     parser = argparse.ArgumentParser(description=main.__doc__)
     parser.add_argument('--workspace', required=True)
     parser.add_argument('--request', required=True, help='consumer-confined JSON operation file')

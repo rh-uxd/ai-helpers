@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 # AI-generated script by GPT-6 Luna.
-"""Check explicitly selected product policy offline; no baseline or peer audit."""
+# Documentation comments are AI-generated.
+"""Run supported deterministic checks or prepare committed scope for review.
+
+Quick Checks needs repeatable findings without guessing at design prose. Load
+only selected rules, read the requested source scope, and report exactly what
+was evaluated, incomplete, or skipped.
+"""
 import argparse
 from datetime import datetime, timezone
 from html.parser import HTMLParser
@@ -10,10 +16,10 @@ import re
 import sys
 import uuid
 
-from artifact_io import local_path, output_path, protect_inputs, write_json
 from guideline_sources import load_guidelines, load_manifest
-from scoped_sources import base_source, read_sources, mask_comments
-from report_contract import validate_report
+from uxd_consistency.shared.artifact_io import local_path, output_path, protect_inputs, write_json
+from uxd_consistency.source.report_contract import validate_report
+from uxd_consistency.source.scoped_sources import base_source, read_sources, mask_comments
 
 SCHEMA_VERSION = "1.0.0"
 
@@ -236,8 +242,8 @@ def main():
     approved_scope = None
     proposal = None
     if args.review_selection:
-        from guideline_io import read_confined
         from guideline_selection import validate_selection
+        from uxd_consistency.shared.guideline_io import read_confined
         if not args.changed:
             parser.error("--review-selection requires --changed and reviews committed source only")
         args.merge_base = True
@@ -263,7 +269,9 @@ def main():
         parser.error("--tracked-only and --merge-base require --changed")
     if proposal is not None:
         from guideline_selection import selected_source_path
-        from review_scope import normalized_text
+        from uxd_consistency.review.review_scope import normalized_text
+        # Extra deterministic inputs must not widen an approved semantic run.
+        # Match each document's path and bytes before using its selected text.
         documents = [dict(doc) for doc in documents]
         for doc in documents:
             selected = [s for s in proposal['sources'] if s['locator']['kind'] == 'local'
@@ -282,6 +290,8 @@ def main():
         applicable_documents, files, changed_lines, incomplete,
         previous_html=lambda name: base_source(workspace, inputs["base"], inputs.get("renamed_from", {}).get(name, name)),
     )
+    # Counts are per rule, not per occurrence. If a rule has errors and
+    # warnings in different files, count its strongest result once.
     error_ids = {finding["guideline_id"] for finding in findings if finding["severity"] == "error"}
     warning_ids = {finding["guideline_id"] for finding in findings} - error_ids
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S") + "-" + uuid.uuid4().hex[:12]

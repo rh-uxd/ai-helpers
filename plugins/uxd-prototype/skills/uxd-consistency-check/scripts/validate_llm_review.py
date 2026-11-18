@@ -1,16 +1,22 @@
 #!/usr/bin/env python3
-"""Validate a supplied semantic review and publish separate report/fix artifacts."""
+# Documentation comments are AI-generated.
+"""Validate a supplied semantic review and save local results.
+
+Keep the review separate from deterministic Quick Checks, and never apply its
+proposed fixes. Bind the review to the saved scope, guidelines, and prompt
+contract before writing new report and proposal files.
+"""
 import argparse
 import hashlib
 import json
 from pathlib import Path
 import sys
 
-from artifact_io import local_path, output_path, protect_inputs, write_json
-from guideline_io import read_confined
 from guideline_sources import validate_manifest
-from guideline_snapshot import validate_readme_snapshot
-from llm_review_contract import validate_llm_review
+from uxd_consistency.guidelines.guideline_snapshot import validate_readme_snapshot
+from uxd_consistency.review.llm_review_contract import validate_llm_review
+from uxd_consistency.shared.artifact_io import local_path, output_path, protect_inputs, write_json
+from uxd_consistency.shared.guideline_io import read_confined
 
 
 def main(argv=None):
@@ -43,6 +49,8 @@ def main(argv=None):
         validate_readme_snapshot(manifest, root)
     else:
         validate_manifest(manifest, manifest.get("design_system"))
+    # Use the installed contract's bytes, not the hash asserted by the
+    # review, so a result from a different prompt version cannot slip through.
     prompt_path = Path(__file__).resolve().parents[1] / "references/llm-review-contract.md"
     prompt_hash = hashlib.sha256(prompt_path.read_bytes()).hexdigest()
     selection = (json.loads(read_confined(root, local_path(args.selection, root)).decode('utf-8'))

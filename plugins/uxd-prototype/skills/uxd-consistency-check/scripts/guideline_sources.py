@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 # AI-generated script by GPT-6 Luna.
-"""Resolve selected local guideline snapshots without retrieval."""
+# Documentation comments are AI-generated.
+"""Load selected local Markdown or replay a frozen deterministic manifest.
+
+The same rule text and identity should reach every consumer. Parse only
+scalar metadata, namespace selected rules, and validate saved text and
+provenance without reopening original files.
+"""
 import argparse
 import hashlib
 import json
@@ -9,7 +15,7 @@ import re
 import sys
 from urllib.parse import urlsplit, urlunsplit
 
-from artifact_io import local_path, output_path, protect_inputs, write_json
+from uxd_consistency.shared.artifact_io import local_path, output_path, protect_inputs, write_json
 
 GUIDELINE_PATH = Path(".design/product-design/guidelines")
 
@@ -171,6 +177,8 @@ def validate_manifest(manifest, design_system=None):
         if not isinstance(document.get("sources"), list) or not document["sources"] or not all(isinstance(source, str) for source in document["sources"]):
             raise ValueError("invalid guideline manifest metadata sources")
         original_id = info.get("id", Path(document["sources"][0]).stem)
+        # A matching text hash is not enough: do not trust a saved `check`
+        # or severity that the original Markdown didn't actually specify.
         expected_metadata = {"severity": info.get("severity", "warning"), "check": info.get("check"),
                              "id": document.get("namespace", "") + ":" + original_id if namespaced else original_id,
                              "title": info.get("title", original_id), "category": info.get("category", "provided"),

@@ -1,5 +1,10 @@
 # AI-generated script by GPT-6 Luna.
-"""Local artifact safety and atomic JSON publication; no external side effects."""
+# Documentation comments are AI-generated.
+"""Validate artifact paths and publish JSON locally.
+
+Reports must not replace selected inputs or appear half-written. Check path
+boundaries and replace the destination only after a sibling temp file is complete.
+"""
 import json
 import os
 from pathlib import Path

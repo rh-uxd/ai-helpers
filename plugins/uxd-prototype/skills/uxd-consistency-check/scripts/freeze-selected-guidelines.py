@@ -1,13 +1,18 @@
 #!/usr/bin/env python3
-"""Freeze explicitly approved local Markdown for an LLM review."""
+# Documentation comments are AI-generated.
+"""Save the approved rule snapshot used by a semantic review.
+
+The reviewer and validator need an unchanged copy of the same guidance.
+Read a local selection receipt, delegate freezing, and return the artifact path.
+"""
 import argparse
 import json
 from pathlib import Path
 import sys
 
-from artifact_io import local_path
-from guideline_io import REQUEST_LIMIT, read_confined
-from guideline_snapshot import freeze_selected_sources
+from uxd_consistency.guidelines.guideline_snapshot import freeze_selected_sources
+from uxd_consistency.shared.artifact_io import local_path
+from uxd_consistency.shared.guideline_io import REQUEST_LIMIT, read_confined
 
 
 def main():

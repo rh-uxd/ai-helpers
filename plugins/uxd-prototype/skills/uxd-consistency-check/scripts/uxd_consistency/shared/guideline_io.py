@@ -1,7 +1,8 @@
-"""Descriptor-relative IO for the opt-in guideline workflow only.
+# Documentation comments are AI-generated.
+"""Read bounded local evidence and write immutable snapshots and receipts.
 
-Never follows a symlink, including a replaced ancestor; never blocks opening a
-FIFO or reads a device. Legacy analyzer input behavior is intentionally separate.
+Evidence must stay tied to the approved bytes. Open files relative to verified
+directory descriptors, reject non-regular files, and never overwrite snapshots.
 """
 from contextlib import contextmanager
 import os
@@ -18,6 +19,8 @@ def _parent_fd(path, *, create=False):
         raise ValueError('descriptor IO requires an absolute path without traversal')
     descriptors = []
     try:
+        # A one-time path check would not stop an ancestor from changing before
+        # open. Hold each verified directory while opening the next component.
         directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
         directory = os.open(path.anchor, directory_flags)
         descriptors.append(directory)

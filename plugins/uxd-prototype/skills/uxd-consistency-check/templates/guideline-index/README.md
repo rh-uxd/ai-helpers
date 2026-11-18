@@ -84,10 +84,10 @@ traversal and symlink components are rejected, including links that stay inside.
 
 ## Resolver API (stdlib, offline)
 
-From the installed checker `scripts/` import `guideline_resolver`:
+Put the installed checker `scripts/` on the Python import path:
 
 ```python
-from guideline_resolver import discover_indexes, read_index
+from uxd_consistency.guidelines.guideline_resolver import discover_indexes, read_index
 
 candidates = discover_indexes(workspace, index=None, root=None)
 metadata = read_index(workspace, chosen_index, topics=["controls"])

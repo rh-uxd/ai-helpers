@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""Offline seam check; install sibling evaluator's Node dependencies first."""
+# Documentation comments are AI-generated.
+"""Test the checker/evaluator boundary offline using tiny Git fixtures.
+
+Quick Checks must work with either install layout and preserve unevaluated
+coverage. Run the real evaluator with sibling and separate checker copies.
+Install the evaluator's Node dependencies first.
+"""
 
 import json
 import os

@@ -1,5 +1,11 @@
 # AI-generated script by GPT-6 Luna.
-"""Stdlib producer invariants; full JSON Schemas live under schemas/v1."""
+# Documentation comments are AI-generated.
+"""Check deterministic report consistency before writing it.
+
+Callers must not confuse missing coverage with success. Reconcile counts by
+rule, keep incomplete checks out of passes, and reject promoted candidates.
+Full JSON Schemas are in schemas/v1.
+"""
 
 
 def validate_report(report):

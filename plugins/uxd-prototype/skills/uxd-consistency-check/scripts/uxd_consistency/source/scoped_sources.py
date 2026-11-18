@@ -1,5 +1,11 @@
 # AI-generated script by GPT-6 Luna.
-"""Read source snapshots and exact Git delta lines without modifying a checkout."""
+# Documentation comments are AI-generated.
+"""Read source files and identify citable changed lines.
+
+An MR review must not attribute local edits or a pure rename to the committed
+change. Read the selected Git blobs and their diff, recording skipped paths.
+Standalone deterministic checks can also review a working copy.
+"""
 import hashlib
 import json
 import os
@@ -7,7 +13,7 @@ from pathlib import Path
 import re
 import subprocess
 
-from guideline_io import MATERIAL_LIMIT, read_confined
+from uxd_consistency.shared.guideline_io import MATERIAL_LIMIT, read_confined
 
 SOURCE_SUFFIXES = {".html", ".htm", ".jsx", ".tsx", ".js", ".ts", ".css", ".scss"}
 EXCLUDED = {"node_modules", "dist", "build", "vendor", "coverage", "tests", "test", "__pycache__"}
@@ -74,7 +80,7 @@ def added_lines(diff):
 
 def committed_sources(root, prefix, base, head, approved_scope):
     """Enumerate the diff before reading any source blobs."""
-    from review_scope import in_code_scope
+    from uxd_consistency.review.review_scope import in_code_scope
 
     scope_path = prefix.as_posix()
     # Git's NUL-delimited name/status output supplies both paths for a rename.
@@ -128,7 +134,7 @@ def read_sources(workspace, changed=False, base_ref="main", tracked_only=False, 
     aliases = {}
     raw_hashes = {}
     if approved_scope is not None:
-        from review_scope import code_scope, in_code_scope
+        from uxd_consistency.review.review_scope import code_scope, in_code_scope
         approved_scope = code_scope(approved_scope, workspace)
     head = None
     try:
@@ -183,6 +189,8 @@ def read_sources(workspace, changed=False, base_ref="main", tracked_only=False, 
                     relative = Path(path).relative_to(prefix).as_posix()
                     if relative in files:
                         lines[relative] = set(range(1, len(files[relative].splitlines()) + 1))
+    # The receipt binds exact source bytes; line positions are a separate
+    # view so newline normalization cannot hide a different revision.
     fingerprints = {name: raw_hashes[name] for name in sorted(files)}
     identity = hashlib.sha256(json.dumps(fingerprints, sort_keys=True).encode()).hexdigest()
     inputs = {"scope": "committed" if merge_base else "changed" if changed else "workspace",

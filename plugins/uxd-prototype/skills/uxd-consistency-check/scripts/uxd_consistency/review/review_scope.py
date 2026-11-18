@@ -1,4 +1,9 @@
-"""Small shared contracts for approved paths and frozen Markdown sections."""
+# Documentation comments are AI-generated.
+"""Resolve the approved code paths and Markdown sections.
+
+Selection and validation must agree on what is in scope. Canonical path
+comparisons prevent prefix matches; heading detection ignores fenced examples.
+"""
 from pathlib import Path, PurePosixPath
 import re
 import unicodedata
@@ -6,7 +11,7 @@ from urllib.parse import unquote
 
 
 def code_scope(value, workspace):
-    from guideline_resolver import _confined
+    from uxd_consistency.guidelines.guideline_resolver import _confined
     if (not isinstance(value, dict) or set(value) != {'kind', 'directories', 'files'}
             or value['kind'] != 'code_paths'):
         raise ValueError('structured approved code-path scope required')
@@ -65,6 +70,8 @@ def heading_sections(text):
                 entries.append({'heading': title, 'anchor': slug + (f'-{number}' if number else ''),
                                 'start': offset, 'level': len(match.group(1))})
         offset += len(line)
+    # The next peer or higher-level heading ends a section; child headings
+    # belong to that section and do not cut off approved text early.
     for index, entry in enumerate(entries):
         entry['end'] = next((later['start'] for later in entries[index + 1:] if later['level'] <= entry['level']), len(view))
     return view, entries

@@ -1,12 +1,18 @@
-"""Immutable selected evidence to explicit offline analyzer inputs; no implicit policy."""
+# Documentation comments are AI-generated.
+"""Stage approved local indexed rules for the deterministic analyzer.
+
+Staging keeps the original evidence and exact analyzer arguments reproducible.
+Copy bytes unchanged, keep unsupported material out of coverage, and require
+separately approved quote mappings for derived adapter rules.
+"""
 import hashlib
 from pathlib import Path
 
-from guideline_resolver import _confined, _workspace
 from guideline_selection import (artifact_root, immutable_bytes, persist, reuse_selection,
                                  validate_approval, validate_selection, verify)
 from guideline_sources import load_guidelines as _load_guidelines
-from guideline_io import read_confined
+from uxd_consistency.guidelines.guideline_resolver import _confined, _workspace
+from uxd_consistency.shared.guideline_io import read_confined
 
 
 def load_guidelines(workspace, provided=(), design_system='custom'):
@@ -103,6 +109,8 @@ def validate_staging(workspace, proposal):
     verify(proposal)
     if proposal.get('kind') != 'staging_proposal':
         raise ValueError('expected staging proposal')
+    # Rebuild from the saved originals so replay checks scope and identity,
+    # not merely the caller-supplied checksum.
     expected = seal(_build_staging(workspace, proposal['selection'], acquisitions=proposal['acquisitions'],
                                    adapters=proposal['adapters'], readonly=True))
     if expected['sha256'] != proposal['sha256']:

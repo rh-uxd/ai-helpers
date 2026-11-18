@@ -27,7 +27,7 @@ to 16 MiB; index Markdown/JSON and operation-request limits are smaller as noted
 below. Oversize/unsafe input errors rather than being silently truncated.
 
 ```python
-from guideline_resolver import discover_indexes, read_index
+from uxd_consistency.guidelines.guideline_resolver import discover_indexes, read_index
 
 candidates = discover_indexes(workspace, index=None, root=None)
 # Stop on absent; ask for an explicit candidate choice on ambiguous.
@@ -45,9 +45,9 @@ metadata only. Empty topics means no sources. No index gives `absent` and no
 policy evaluation, not a pass or proof no policy exists. Existing explicit
 `--guidelines` and frozen-manifest replay do not require an index.
 
-Evaluator consumers use the public `guideline_resolver` helpers
+Script callers can use the `uxd_consistency.guidelines.guideline_resolver` helpers
 `resolve_workspace`, `confined_path`, and `unique_object_hook` for validated paths
-and duplicate-key rejection. `guideline_io.parent_directory_fd` supports confined
+and duplicate-key rejection. `uxd_consistency.shared.guideline_io.parent_directory_fd` supports confined
 atomic artifact writes. These expose the same safety checks used internally.
 
 ## B. Selection and genuine approval
@@ -170,7 +170,7 @@ other selected local sources. Old external acquisition receipts cannot be staged
 
 ## D. Immutable staging, adapters and the evaluator seam
 
-From `guideline_staging`:
+From `uxd_consistency.guidelines.guideline_staging`:
 
 ```python
 stage_proposal = propose_staging(workspace, selection, adapters=adapter_receipts)
@@ -208,7 +208,7 @@ Preserve that entire argv **without shell evaluation**:
 ```python
 import subprocess
 from pathlib import Path
-from guideline_staging import reuse_staging
+from uxd_consistency.guidelines.guideline_staging import reuse_staging
 
 state = reuse_staging(workspace, stage)
 if state["status"] == "frozen_ready" and state["analysis_workspace"] is not None:
