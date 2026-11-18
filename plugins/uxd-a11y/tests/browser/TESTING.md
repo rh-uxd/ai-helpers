@@ -54,3 +54,15 @@ This suite does not test screen-reader speech, pointer blocking, all browsers, c
 `runtime/runtime.html` is a standalone native/custom HTML fixture, independent of the React/PF modal host. `runtime/runtime.spec.js` checks visible bypass, manual tabs (Enter/Space, arrows, forward/reverse entry/exit), child-mediated overflow access, a deliberately pointer-only button, and dialogs at 375 and 320 CSS px. The clipped variant intentionally hides its focused Close button while retaining Escape dismissal. Negative tests pass when the seeded barrier is observed; they do not declare the fixture accessible.
 
 These are controlled browser fixtures, not a production-product audit or independent model evaluation. Evidence attachments include focused element, geometry, viewport, user agent, rendered semantic snapshots, and screenshots. Direct-focus setup is explicitly labeled. No scanner, browser zoom/text resize, forced-colors, theme, or screen-reader results are implied.
+
+## Dismissal recipe regression
+
+`runtime/dismissal.spec.js` exercises a small custom-dialog fixture in three variants: Escape restores focus but leaves the overlay visible, Escape hides the retained overlay, and Escape removes it. The negative test proves focus return alone passes the broken case while a closure assertion rejects it. These are Playwright browser assertions supporting the recipe contract, not execution of Cypress APIs or complete modal behavior.
+
+To run just this regression after the temporary-workspace setup above:
+
+```bash
+npm test -- runtime/dismissal.spec.js
+```
+
+The Cypress-specific API/closure expectations are separately covered by the `cypress-dismissal-false-pass` test-generation eval case; its model judgment must be run separately.

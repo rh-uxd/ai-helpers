@@ -65,10 +65,11 @@ cy.focused().should($el => {
   expect($el.closest('[role="dialog"]').length).to.equal(1);
 });
 cy.press(Cypress.Keyboard.Keys.ESC);
+cy.get('[role="dialog"]').should('not.be.visible'); // This fixture retains a hidden dialog.
 cy.get('#actual-trigger').should('have.focus');
 ```
 
-Replace selectors and expected initial focus using real source. Use standard assertions or DOM containment rather than invented `be.within` matchers. If `cypress-axe` is configured, inject after loading the target and scan relevant states with `checkA11y` using its installed API. Preserve detailed results and incomplete-review work; do not silently disable problematic rules.
+Replace selectors and expected initial focus using real source. Assert the actual closed state before focus return for Escape and Cancel: use `not.be.visible` for a retained hidden dialog or `not.exist` when it is removed. Focus restoration alone can pass while a broken modal remains open. Use standard assertions or DOM containment rather than invented `be.within` matchers. If `cypress-axe` is configured, inject after loading the target and scan relevant states with `checkA11y` using its installed API. Preserve detailed results and incomplete-review work; do not silently disable problematic rules.
 
 ## Sources
 

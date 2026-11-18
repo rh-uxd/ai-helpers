@@ -5,6 +5,11 @@ on:
     types: [opened, reopened, synchronize, labeled]
     paths:
       - "plugins/**/skills/**"
+      - "plugins/uxd-a11y/references/**"
+      - "scripts/detect-changed-skills.sh"
+      - "scripts/parse-eval-results.sh"
+      - "scripts/tests/test_skill_eval_scripts.py"
+      - ".github/workflows/skill-evals.yml"
       - "plugins/**/agents/**-eval/**"
   workflow_dispatch:
     inputs:
@@ -33,6 +38,11 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - name: Test eval selection and reporting
+        run: |
+          python3 -m pip install --quiet pyyaml
+          python3 scripts/tests/test_skill_eval_scripts.py
 
       - name: Detect changed skills with evals
         id: detect
@@ -109,7 +119,7 @@ jobs:
         # Branch ref — plugin install does not support SHA pinning
         run: claude plugin install agent-eval-harness@agent-eval-harness-dev
 
-      - name: Run eval for ${{ matrix.skill }}
+      - name: Run eval without LLM judges for ${{ matrix.skill }}
         if: steps.creds.outputs.available == 'true'
         env:
           CLAUDE_CODE_USE_VERTEX: "1"
@@ -125,6 +135,7 @@ jobs:
             echo "Error: No eval.yaml found for ${SKILL_NAME}" >&2
             exit 1
           fi
+          echo "LLM judges are disabled. Accessibility answer correctness is ungraded; this run does not satisfy J1." >> "$GITHUB_STEP_SUMMARY"
           claude -p "/agent-eval-harness:eval-run --config ${EVAL_CONFIG} --no-llm-judges" \
             --model claude-haiku-4-5 \
             --allowedTools "Bash,Read,Write,Edit,Skill" \
@@ -168,9 +179,9 @@ jobs:
           if [[ ${#DIRS[@]} -eq 0 ]]; then
             echo "## Skill Eval Results" > /tmp/eval-comment.md
             echo "" >> /tmp/eval-comment.md
-            echo "No eval results found. Check the workflow logs for errors." >> /tmp/eval-comment.md
+            echo "No eval results found; correctness is unverified. Check the workflow logs for errors." >> /tmp/eval-comment.md
           else
-            bash scripts/parse-eval-results.sh "${DIRS[@]}" > /tmp/eval-comment.md
+            EVAL_LLM_JUDGES_SKIPPED=true bash scripts/parse-eval-results.sh "${DIRS[@]}" > /tmp/eval-comment.md
           fi
 
       - name: Post or update PR comment
