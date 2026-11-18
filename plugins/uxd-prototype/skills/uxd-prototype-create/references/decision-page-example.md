@@ -1,6 +1,6 @@
 # Decision page — what good looks like
 
-Use [decision-page-template.html](decision-page-template.html) as the skeleton for every decision page. Fill the slots; do not invent a new page aesthetic.
+Use `scripts/decision_kit.py render` with [decision-page-template.html](decision-page-template.html). Put option content in `decisions.json`; reuse the renderer and page chrome.
 
 Full procedure: [decision-workflow.md](decision-workflow.md).
 
@@ -10,7 +10,7 @@ Full procedure: [decision-workflow.md](decision-workflow.md).
 
 | Layer | What to use |
 |-------|-------------|
-| **Page chrome** (header, nav, cards, table, badges, footer) | PatternFly 6 CDN classes from the template |
+| **Page chrome** (header, cards, table, badges, footer) | PatternFly 6 CDN classes from the template |
 | **Option previews** (inside `.visual-preview`) | Real UI matching the **build target** |
 
 ### Preview source
@@ -32,11 +32,11 @@ Show a mini app frame (~full width of the card, scaled via `.preview-frame`):
 - Nav or list region vs detail region
 - Enough product-domain rows/labels that the structure reads at a glance
 
-Example distinction: card grid of “API keys” vs split list+detail of the same keys vs dashboard widgets vs a create wizard.
+Compare alternatives serving the same task, such as a side panel versus a dedicated page for editing an API key. Do not compare an unrelated dashboard or creation wizard merely to add options.
 
 ### Interaction
 
-Show the **same primary action** resolved three/four different ways — e.g. “Edit API key” as:
+Show the **same primary action** resolved through the viable alternatives — e.g. “Edit API key” as:
 
 - Inline edit on the row
 - Modal dialog
@@ -57,22 +57,27 @@ Compose the critical UI from actual components (PF `Table` + `Drawer`, or the ta
 
 ## Comparison table
 
-Always include 5–8 dimensions that matter for **this** decision (not generic filler). Prefer dimensions a designer can disagree with: browse speed, context preservation, mobile collapse, alignment with existing app nav, implementation cost in this codebase, etc.
+Include only dimensions that distinguish alternatives for **this** decision; there is no row quota. Prefer dimensions a designer can disagree with: browse speed, context preservation, mobile collapse, alignment with existing app nav, implementation cost in this codebase, etc.
 
 ---
 
-## Cross-links and browser entry
+## One report and a simple handoff
 
-- Every page’s tab nav links to **all** decision HTML files plus `index.html`.
-- After generation, print absolute `file://` URLs and `open` / `xdg-open` the index (see decision-workflow.md).
-- Relative `href`s only — pages must work when opened from disk.
+- Generate only `index.html`, with all decisions in one report. Omit navigation links and separate decision pages.
+- Use PatternFly card header/body/footer and label content markup. Keep the **AI suggestion** badge beside the option title and its short rationale inside that card.
+- Keep report CSS scoped so card, table, and typography adjustments do not change the rendered option previews. Use consistent spacing tokens and stack options on narrow screens.
+- The final section has one **Copy response** button and a readable preview of question titles and selected option names. Keep JSON internal and omit the bulk suggestion action and technical acceptance/reload explanations.
+- Open the report and provide one clickable absolute file path or served URL. The instruction is simply to copy the response and send it back to the agent.
 
 ---
 
 ## Anti-patterns (reject before showing the user)
 
 - Option cards that are prose-only with no `.visual-preview` content
-- Four options that differ only by accent color
+- Filler alternatives, including options that break established UX or accessibility practices
+- Options that differ only by accent color
+- An unexplained “Recommended” badge instead of “AI suggestion” with rationale
+- Rebuilding every comparison after each independent answer
 - “Item 1 / Item 2” or lorem placeholder copy
 - Custom dark CSS theme replacing PatternFly page chrome
-- Relative path mentioned in chat with no `file://` URL and no browser open
+- A relative path with no usable link or browser entry point

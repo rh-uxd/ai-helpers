@@ -7,7 +7,7 @@
  *     --base-url http://localhost:3000 \
  *     --journeys .artifacts/ID/journeys.json \
  *     --out .artifacts/ID/exports \
- *     [--scenarios .artifacts/ID/scenarios.json] \
+ *     [--scenarios artifacts/ID/states.json] \
  *     [--formats html,tree,pf-spec] \
  *     [--export-all-if-unset]
  */
@@ -52,7 +52,7 @@ function usage() {
   console.log(`Usage: node export-journey.mjs --base-url <url> --journeys <file> --out <dir> [options]
 
 Options:
-  --scenarios <file>      scenarios.json (default: sibling of journeys file)
+  --scenarios <file>      states.json (default: sibling states.json, then scenarios.json)
   --formats html,tree,pf-spec   Export formats (default: html)
   --export-all-if-unset         If no step has export:true, export all steps
   --timeout <ms>                Navigation timeout (default: 30000)
@@ -69,8 +69,11 @@ function joinUrl(base, route) {
 function withScenario(url, scenarioId) {
   const u = new URL(url);
   if (!scenarioId || scenarioId === 'default') {
+    u.searchParams.delete('state');
     u.searchParams.delete('scenario');
   } else {
+    // Older runtimes only read ?scenario=; current ones read ?state=.
+    u.searchParams.set('state', scenarioId);
     u.searchParams.set('scenario', scenarioId);
   }
   return u.toString();
@@ -91,7 +94,7 @@ function loadScenariosByRoute(scenariosPath) {
     for (const page of data.pages || []) {
       if (!page || !page.route) continue;
       const key = normalizePath(page.route);
-      const list = (page.scenarios || [])
+      const list = (page.states || page.scenarios || [])
         .filter((s) => s && s.id)
         .map((s) => ({
           id: s.id,
@@ -330,7 +333,10 @@ function writeExportIndex(outDir, summary) {
 function resolveScenariosPath(opts) {
   if (opts.scenarios) return opts.scenarios;
   if (!opts.journeys) return null;
-  const sibling = path.join(path.dirname(opts.journeys), 'scenarios.json');
+  const dir = path.dirname(opts.journeys);
+  const states = path.join(dir, 'states.json');
+  if (fs.existsSync(states)) return states;
+  const sibling = path.join(dir, 'scenarios.json');
   if (fs.existsSync(sibling)) return sibling;
   return null;
 }

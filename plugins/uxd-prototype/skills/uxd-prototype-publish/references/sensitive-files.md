@@ -37,11 +37,11 @@ Files and directories that must be stripped before publishing a prototype. Load 
 
 | Path | Why |
 |------|-----|
-| `public/evals/{ID}/` | Static evaluation report for Prototype Bar **Eval** on Pages |
+| `public/prototype-evaluations/{ID}/` | Static evaluation report for Prototype Bar **Eval** on Pages |
 | `public/uxd-prototype-bar/` | Bar assets + config used by Export / Eval chrome |
 | Other app static assets | Favicons, `_headers`, etc. required by webpack/Vite CopyPlugin |
 
-Removing the entire `public/` directory breaks Eval on GitLab/GitHub Pages: CI builds copy `public/evals/` into the deploy tree (often under a path prefix like `/mr-218/`).
+Removing the entire `public/` directory breaks report links: CI builds copy `public/prototype-evaluations/` into the deploy tree (often under `/mr-218/`).
 
 ## Verification
 

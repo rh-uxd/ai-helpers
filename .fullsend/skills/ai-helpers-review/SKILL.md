@@ -21,6 +21,23 @@ and the relevant validation or ownership configuration to understand existing
 coverage. Treat those tools as complementary signals, not as permission to
 skip a material contextual finding.
 
+## Validation coverage
+
+Use repository validation as the source of truth for deterministic invariants
+before making a contextual finding:
+
+- `make validate` covers manifests, skill and agent integrity, and eval
+  configuration structure.
+- `scripts/lint-evals.py` is the underlying eval-configuration check and should
+  not be restated as a model finding when it has already run successfully.
+- `validate-skills.sh` covers required frontmatter and name/path alignment. Do
+  not report those checks again unless the change creates a risk they cannot
+  express.
+
+Classify residual findings as policy or architectural judgment. Naming suffixes,
+side-effect metadata, and consumer routing may require that judgment because
+they depend on the skill's purpose and plugin architecture.
+
 ## Review-specific judgment
 
 - **Plugin architecture:** Flag hardcoded assumptions that couple one plugin
@@ -31,6 +48,10 @@ skip a material contextual finding.
   manifest parity requirements, naming conventions, frontmatter requirements,
   tool-agnostic wording, and eval expectations when the changed files make
   them relevant.
+- **Consumer routing:** For a new PatternFly user-facing skill, verify the
+  relevant `pf-assist` routing entry. Do not require a `pf-review` entry unless
+  the skill reviews or audits existing code and belongs in that review
+  workflow.
 - **Documentation currency:** Identify stale instructions, contradictory
   source-of-truth documents, or claims that no longer match the implementation.
 - **Automation and governance:** Review workflows, scripts, manifests, and
@@ -42,6 +63,9 @@ skip a material contextual finding.
 - Do not report generic formatting or style preferences.
 - Do not restate a deterministic CI, lint, security-scan, or ownership result
   unless the change creates a material risk that the check cannot express.
+- Do not report a deterministic validation issue when the authoritative check
+  has passed. Report missing validation only when the check was not run or its
+  coverage does not include the finding.
 - Do not treat ordinary plugin changes as protected-path violations when the
   repository's ownership rules already cover them.
 - Do not require a linked issue, eval, or other process artifact unless the

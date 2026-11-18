@@ -98,6 +98,7 @@ Legacy reports remain replayable evidence. New semantic validation uses 1.1 and 
 ## References and verification
 
 - [Project context, source safety and metadata](references/project-context.md)
+- To verify the evaluator handoff offline, run `python3 tests/smoke-with-evaluator.py` after installing the sibling evaluator's Node dependencies.
 - Run repository `make validate` for contributions, without generating docs.
 
 No publishing, issue creation, MR/PR writes, posts, or auto-merge occurs here. Those require separate authorization.

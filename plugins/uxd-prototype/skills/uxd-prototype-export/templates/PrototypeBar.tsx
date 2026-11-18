@@ -71,7 +71,7 @@ function kindLabel(kind?: string): string {
 
 function detectActiveView(): 'prototype' | 'eval' {
   const path = window.location?.pathname || '';
-  if (/\/evals\//.test(path) || document.documentElement.getAttribute('data-uxd-view') === 'eval') {
+  if (/\/(?:prototype-evaluations|evals)\//.test(path) || document.documentElement.getAttribute('data-uxd-view') === 'eval') {
     return 'eval';
   }
   return 'prototype';
@@ -84,7 +84,7 @@ function normalizePath(p: string): string {
   return noQuery || '/';
 }
 
-const SCENARIO_UNAVAILABLE_HINT = 'No scenarios available for the current page';
+const SCENARIO_UNAVAILABLE_HINT = 'No states available for the current page';
 
 async function helperHealthy(): Promise<boolean> {
   try {
@@ -125,7 +125,7 @@ function evalUrlCandidates(fallback: string, id?: string): string[] {
   if (base && base !== '/') push(`${base}${fromConfig}`);
   push(`/${fromConfig}`);
   if (id) {
-    const conventional = `evals/${encodeURIComponent(id)}/`;
+    const conventional = `prototype-evaluations/${encodeURIComponent(id)}/`;
     if (base && base !== '/') push(`${base}${conventional}`);
     push(`/${conventional}`);
   }
@@ -153,7 +153,7 @@ async function resolveEvalUrl(cfg: UxdPrototypeConfig): Promise<string | null> {
   if (!fallback) return null;
   // Hosted absolute URLs (Pages) — trust without probing (may be cross-origin)
   if (/^https?:\/\//i.test(fallback)) return fallback;
-  // Relative paths: try Pages path_prefix first (/mr-218/evals/…), then site-root /evals/…
+  // Relative report paths: try the Pages base path, then the site root.
   for (const url of evalUrlCandidates(fallback, cfg.id)) {
     if (await looksLikeEvalReport(url)) return url;
   }
@@ -167,7 +167,7 @@ function evalUnavailableHint(cfg?: UxdPrototypeConfig): string {
   const id = cfg?.id || '…';
   const base = getBaseHref();
   const prefix = base && base !== '/' ? base : '/';
-  return `Eval report not available on this deployment (expected ${prefix}evals/${id}/)`;
+  return `Eval report not available on this deployment (expected ${prefix}prototype-evaluations/${id}/)`;
 }
 
 const RETURN_URL_KEY = 'uxd-prototype-return-url';
@@ -195,7 +195,7 @@ function resolvePrototypeUrl(cfg: UxdPrototypeConfig): string {
   }
   try {
     const ref = document.referrer;
-    if (ref && !/\/evals\//.test(ref)) return ref;
+    if (ref && !/\/(?:prototype-evaluations|evals)\//.test(ref)) return ref;
   } catch {
     /* ignore */
   }
@@ -206,7 +206,7 @@ function resolvePrototypeUrl(cfg: UxdPrototypeConfig): string {
 function getActiveScenarioId(): string {
   if (window.UxdScenario) return window.UxdScenario.get();
   try {
-    return new URLSearchParams(window.location.search).get('scenario') || 'default';
+    return new URLSearchParams(window.location.search).get('state') || 'default';
   } catch {
     return 'default';
   }
@@ -588,17 +588,17 @@ export const PrototypeBar: React.FC = () => {
   const selectScenario = (id: string) => {
     setScenarioOpen(false);
     if (id === activeScenario) {
-      setStatus(`Scenario: ${id}`);
+      setStatus(`State: ${id}`);
       return;
     }
-    setStatus(`Scenario: ${id}`);
+    setStatus(`State: ${id}`);
     if (window.UxdScenario) {
       window.UxdScenario.set(id);
       return;
     }
     const url = new URL(window.location.href);
-    if (id === 'default') url.searchParams.delete('scenario');
-    else url.searchParams.set('scenario', id);
+    if (id === 'default') url.searchParams.delete('state');
+    else url.searchParams.set('state', id);
     window.location.assign(url.toString());
   };
 
@@ -700,7 +700,7 @@ export const PrototypeBar: React.FC = () => {
                 setScenarioOpen((v) => !v);
               }}
             >
-              Scenario ▾
+              State ▾
             </button>
             {scenarioMenuEnabled && (
               <ul className="uxd-pb-menu uxd-pb-scenario-menu" role="menu" hidden={!scenarioOpen}>

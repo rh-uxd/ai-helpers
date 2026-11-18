@@ -2,7 +2,15 @@
 
 We welcome contributions of new skills, agents, plugins, and documentation.
 
-Plugins work in **Claude Code** and **Cursor**. Each plugin has identical manifests in `.claude-plugin/` and `.cursor-plugin/` so each tool discovers it natively.
+Plugins have marketplace manifests:
+- **Claude Code and Codex**: both read `.claude-plugin/marketplace.json`
+- **Cursor**: reads `.cursor-plugin/marketplace.json`
+
+Codex does not require Claude Code to be installed — it reads the marketplace independently.
+
+Individual plugins should remain portable and tool-agnostic.
+
+For platform behavior, see the [Claude Code plugin docs](https://code.claude.com/docs/en/plugins), [Cursor plugin docs](https://cursor.com/docs/plugins), and [OpenAI plugin docs](https://developers.openai.com/plugins/build/plugins).
 
 ## Choose Your Path
 
@@ -22,7 +30,7 @@ PatternFly skills live under `plugins/patternfly/` and use the `pf-` prefix. You
 2. Create your skill: `make scaffold PLUGIN=pf-react SKILL=pf-my-skill`
 3. Edit the generated `SKILL.md` — see [CONTRIBUTING-SKILLS.md](CONTRIBUTING-SKILLS.md) for the full guide
 4. Test locally: invoke `/pf-react:pf-my-skill` on a real scenario
-5. Run `make validate` to check consistency
+5. Run `make validate` to check manifests, skills, agents, and eval configuration
 6. Open a pull request
 
 PRs are reviewed by the plugin's code owner (see [CODEOWNERS](.github/CODEOWNERS)). See [GOVERNANCE.md](GOVERNANCE.md) for the review process.
@@ -31,7 +39,9 @@ Not sure what to build? Look for issues labeled [`good first issue`](../../label
 
 ### UXD contributions
 
-New UXD skills start in `plugins/uxd-workshop/` and use the `uxd-` prefix. Once validated, they graduate to a consumer plugin (`uxd-research`, `uxd-design`, or `uxd-prototype`). UXD PRs are reviewed by UXD maintainers.
+New UXD skills start in `plugins/uxd-workshop/` and use the `uxd-` prefix. Once validated, they graduate to a consumer plugin (`uxd-research`, `uxd-design`, or `uxd-prototype`).
+
+UXD PRs are reviewed by UXD maintainers.
 
 **Quick start:**
 
@@ -42,11 +52,19 @@ New UXD skills start in `plugins/uxd-workshop/` and use the `uxd-` prefix. Once 
 
 ## How this marketplace is organized
 
-Plugins organize skills by domain. See the [full plugin table](CONTRIBUTING-SKILLS.md#step-5-pick-the-right-plugin) for what each plugin does and example skills.
+Plugins organize skills, workflows, and agents by domain. See the [full plugin table](CONTRIBUTING-SKILLS.md#step-5-pick-the-right-plugin) for what each plugin does and example skills.
 
-- **PatternFly skills** → `plugins/patternfly/<plugin>/` — use the `pf-` prefix
-- **UXD skills** → `plugins/uxd-research/`, `plugins/uxd-design/`, `plugins/uxd-prototype/` — use the `uxd-` prefix
-- Not sure where your skill belongs? Start in a workshop plugin (`pf-workshop` or `uxd-workshop`). Skills graduate to consumer plugins once validated.
+### Skills
+
+A skill gives the assistant reusable instructions for a specific task, such as turning a design into an implementation handoff. Its `skills/<skill>/SKILL.md` describes when to use it, what steps to follow, and what result to produce.
+
+### Agents
+
+An agent gives the assistant a specialized role. Its `agents/<agent>.md` defines how it uses domain knowledge to make judgments or route requests. For example, the UXD assist agent uses the user's task and context to find the relevant UXD skills.
+
+### Workflows
+
+A workflow is a templated sequence of skills that can guide an agent through a multi-part task. It suggests which skills to use, how to pass artifacts between stages, and how to review the overall result.
 
 ## Adding a skill
 
@@ -63,13 +81,6 @@ Not sure where it belongs? Put it in the workshop that matches your domain:
 See [CONTRIBUTING-SKILLS.md](CONTRIBUTING-SKILLS.md) for a full walkthrough of skill structure and naming.
 
 Open a pull request against `main`.
-
-### Skills vs Agents
-
-- **Skills** (`skills/your-skill/SKILL.md`) — tasks that produce a result. Most contributions are skills.
-- **Agents** (`agents/your-agent.md`) — domain knowledge the AI follows automatically.
-
-See [CONTRIBUTING-SKILLS.md](CONTRIBUTING-SKILLS.md#skill-vs-agent) for guidance on which to use.
 
 ## Creating a new plugin
 
@@ -97,7 +108,7 @@ plugins/<plugin-name>/
 └── agents/
 ```
 
-2. Write identical `plugin.json` files for both `.claude-plugin/` and `.cursor-plugin/`:
+2. Create `plugin.json` manifests in both `.claude-plugin/` and `.cursor-plugin/`. They can differ based on Cursor-specific metadata, but typically keep them identical for consistency. (See README for why we maintain two catalogs separately.)
 
 ```json
 {
@@ -110,7 +121,11 @@ plugins/<plugin-name>/
 }
 ```
 
-3. Add the plugin to both marketplace configs (`.claude-plugin/marketplace.json` and `.cursor-plugin/marketplace.json`). Exception: meta-plugins using `dependencies` (like `patternfly`) are Claude Code-only and only listed in the Claude marketplace.
+3. Add the plugin to both marketplace configs:
+   - `.claude-plugin/marketplace.json`
+   - `.cursor-plugin/marketplace.json`
+
+   Meta-plugins using `dependencies` (like `patternfly`) are only listed in the Claude marketplace because Cursor and Codex do not apply that dependency behavior.
 4. Move the relevant skills from the workshop into the new plugin
 5. Open a pull request
 
@@ -181,7 +196,13 @@ graph LR
 4. Update hand-written skill-to-plugin examples if they name the moved skill (for example the naming table in `CONTRIBUTING-SKILLS.md`). Leave generated docs alone — see below.
 5. Describe the plugin by its actual contents. Do not list skills that are still in the workshop.
 6. Keep the prefix examples in this file generic (one PatternFly line, one UXD workshop line). Do not add a new prefix bullet for the consumer plugin.
-7. Open a pull request. Do **not** run `scripts/generate-plugins-md.sh` or `make docs`, and do **not** hand-edit `PLUGINS.md`, the README plugin table or badge counts, the CONTRIBUTING-SKILLS plugin table, or per-plugin READMEs. CI regenerates those on merge to main.
+7. Open a pull request.
+
+   Do **not**:
+   - Run `scripts/generate-plugins-md.sh` or `make docs`.
+   - Hand-edit `PLUGINS.md`, the README plugin table or badge counts, the CONTRIBUTING-SKILLS plugin table, or per-plugin READMEs.
+
+   CI regenerates those files on merge to `main`.
 
 #### Demotion
 
@@ -214,7 +235,13 @@ graph LR
 5. Open a pull request against `main`
 6. Skillsaw lints content quality (advisory); CodeRabbit reviews structure and security
 7. A maintainer reviews for intent and quality
-8. On merge, CI regenerates `PLUGINS.md`, the README plugin table and badge counts, the CONTRIBUTING-SKILLS plugin table, and per-plugin READMEs — do not include those changes in the PR
+8. On merge, CI regenerates:
+   - `PLUGINS.md`
+   - The README plugin table and badge counts
+   - The CONTRIBUTING-SKILLS plugin table
+   - Per-plugin READMEs
+
+   Do not include those generated changes in the PR.
 
 ### Quality checklist
 
@@ -223,7 +250,7 @@ Before opening your PR, verify:
 - [ ] Skill name uses the correct prefix (`uxd-` for UXD skills, `pf-` for PF skills)
 - [ ] Frontmatter has `name` and `description` (`name` matches the directory name)
 - [ ] Description follows the [formula](CONTRIBUTING-SKILLS.md#writing-descriptions): `[Action verb] [what it does]. [Use when + triggers.]`
-- [ ] Tool-agnostic — no Claude-specific or Cursor-specific references
+- [ ] Tool-agnostic — no client-specific references
 - [ ] Under 500 lines (shorter is better)
 - [ ] Tested locally on a real scenario
 - [ ] If new plugin: `.claude-plugin/` and `.cursor-plugin/` manifests are identical

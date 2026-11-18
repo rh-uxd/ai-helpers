@@ -1,0 +1,7 @@
+prompt: >-
+  Use uxd-prototype-create. We are reviewing two independent decisions for
+  PROJ-298: edit-context (A side panel, B dedicated page), and bulk-actions
+  (A toolbar, B per-row menu). Both are pending in the existing decision kit;
+  their review pages have already been generated. Here is my response:
+  {"prototypeId":"PROJ-298","choices":{"edit-context":"B"}}.
+  Record this answer. I have not chosen bulk-actions yet.

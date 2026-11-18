@@ -1,0 +1,185 @@
+name: pf-context-gen-eval
+description: Tests that pf-context-gen produces structured, AI-optimized PatternFly context files with correct import paths, prop curation, and composition relationships.
+
+skill: pf-react:pf-context-gen
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-react
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml with a prompt: field containing a user request for PF context
+    - annotations.yaml with scope (single|group|feature|non-pf) for conditional judges
+
+outputs:
+  - path: artifacts
+    schema: |
+      A markdown context file with Quick Start, Components (Import + Key Props table + Usage),
+      Composition (for multi-component), and Common Patterns sections.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: has_quick_start
+    description: Output includes a Quick Start section with a code snippet
+    if: "annotations.get('scope') != 'non-pf'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_section = bool(re.search(r'##\s+Quick\s+Start', text, re.IGNORECASE))
+      has_code = bool(re.search(r'```tsx', text))
+      if has_section and has_code:
+          return (True, "Quick Start section found with tsx code block")
+      missing = []
+      if not has_section:
+          missing.append("Quick Start section")
+      if not has_code:
+          missing.append("tsx code block")
+      return (False, f"Missing: {', '.join(missing)}")
+
+  - name: has_import_paths
+    description: Output includes explicit import statements with @patternfly package names
+    if: "annotations.get('scope') != 'non-pf'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      imports = re.findall(r'from\s+["\']@patternfly/', text)
+      if len(imports) >= 1:
+          return (True, f"Found {len(imports)} @patternfly import path(s)")
+      return (False, "No @patternfly import paths found — skill requires explicit package imports")
+
+  - name: has_props_table
+    description: Output includes a props table with structured columns
+    if: "annotations.get('scope') != 'non-pf'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_table = bool(re.search(r'\|\s*Prop\s*\|\s*Type\s*\|', text, re.IGNORECASE))
+      if has_table:
+          return (True, "Props table with Prop and Type columns found")
+      return (False, "No structured props table found — skill specifies Prop|Type|Default|Purpose format")
+
+  - name: has_composition_for_group
+    description: Multi-component requests include composition/relationship information
+    if: "annotations.get('scope') == 'group' or annotations.get('scope') == 'feature'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_table = bool(re.search(r'\|\s*Relationship\s*\|', text, re.IGNORECASE))
+      patterns = [
+          r'composition',
+          r'relationship',
+          r'parent.*child',
+          r'wrapper',
+          r'sibling',
+          r'provider',
+          r'wraps?\b',
+          r'inside\b.*\bcomponent',
+          r'children\b',
+      ]
+      matches = sum(1 for p in patterns if re.search(p, text, re.IGNORECASE))
+      if has_table and matches >= 2:
+          return (True, f"Structured composition table found with {matches} relationship terms")
+      if has_table:
+          return (True, "Structured composition table found")
+      if matches >= 3:
+          return (True, f"Found {matches} composition-related terms (no structured table)")
+      return (False, f"Only {matches} composition term(s) and no structured relationship table — multi-component context should map how components relate")
+
+  - name: curates_props
+    description: Output focuses on behavioral props, not a full type dump
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      has_full_interface = bool(re.search(r'interface\s+\w+Props\s*\{', text))
+      has_all_props = bool(re.search(r'(HTMLAttributes|React\.HTMLProps|extends\s+React)', text))
+      if has_full_interface or has_all_props:
+          return (False, "Output dumps full TypeScript interface — skill requires curated behavioral props only")
+      return (True, "Props appear curated (no full interface dump)")
+
+  - name: declines_non_pf
+    description: Non-PatternFly requests are declined or redirected
+    if: "annotations.get('scope') == 'non-pf'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      refusal_patterns = [
+          r'\b(?:cannot|can\'t|won\'t|will not|do not|don\'t)\b.{0,80}\b(?:generate|provide|create|support|handle)\b',
+          r'\b(?:outside|out of)\b.{0,40}\b(?:scope|focus)\b',
+          r'\b(?:only|specifically)\b.{0,40}\b(?:patternfly|pf)\b.{0,40}\b(?:context|component|request)',
+      ]
+      redirect_patterns = [
+          r'\b(?:use|try|refer to|consult|look at)\b.{0,80}\b(?:documentation|docs|another skill|appropriate framework)\b',
+          r'\b(?:patternfly|pf)\b.{0,80}\b(?:alternative|equivalent|instead)\b',
+      ]
+      refused = any(re.search(pattern, text, re.IGNORECASE) for pattern in refusal_patterns)
+      redirected = any(re.search(pattern, text, re.IGNORECASE) for pattern in redirect_patterns)
+      if refused or redirected:
+          return (True, "Non-PF request was explicitly declined or redirected")
+      return (False, "Non-PF request was not explicitly declined or redirected")
+
+  - name: no_non_pf_implementation
+    description: Non-PatternFly requests do not receive framework-specific implementation context
+    if: "annotations.get('scope') == 'non-pf'"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      implementation_patterns = [
+          r'from\s+["\']@mui/',
+          r'<DataGrid\b',
+          r'\b(?:rows|columns|paginationModel|sortModel|filterModel)\s*=',
+      ]
+      if any(re.search(pattern, text, re.IGNORECASE) for pattern in implementation_patterns):
+          return (False, "Non-PF request received Material UI DataGrid implementation details")
+      return (True, "No Material UI DataGrid implementation details found")
+
+thresholds:
+  has_quick_start:
+    min_pass_rate: 0.67
+  has_import_paths:
+    min_pass_rate: 1.0
+  has_props_table:
+    min_pass_rate: 0.67
+  has_composition_for_group:
+    min_pass_rate: 0.67
+  curates_props:
+    min_pass_rate: 1.0
+  declines_non_pf:
+    min_pass_rate: 1.0
+  no_non_pf_implementation:
+    min_pass_rate: 1.0

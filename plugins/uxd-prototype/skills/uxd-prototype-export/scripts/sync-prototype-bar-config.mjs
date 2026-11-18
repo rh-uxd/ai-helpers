@@ -4,7 +4,7 @@
  *
  * Usage:
  *   node sync-prototype-bar-config.mjs --artifacts .artifacts/PROJ-298
- *   node sync-prototype-bar-config.mjs --artifacts .artifacts/PROJ-298 --eval-url /evals/PROJ-298/
+ *   node sync-prototype-bar-config.mjs --artifacts .artifacts/PROJ-298 --eval-url /prototype-evaluations/PROJ-298/
  *   node sync-prototype-bar-config.mjs --artifacts .artifacts/PROJ-298 --jira-base https://issues.example.com/browse/
  */
 import fs from 'node:fs';
@@ -146,7 +146,11 @@ function flattenScenarios(scenariosDoc) {
   const out = [];
   for (const page of scenariosDoc.pages) {
     if (!page || !page.route) continue;
-    const list = Array.isArray(page.scenarios) ? page.scenarios : [];
+    const list = Array.isArray(page.states)
+      ? page.states
+      : Array.isArray(page.scenarios)
+        ? page.scenarios
+        : [];
     for (const s of list) {
       if (!s || !s.id) continue;
       const entry = {
@@ -172,7 +176,10 @@ function main() {
   const id = path.basename(artifacts);
   const metaPath = path.join(artifacts, 'metadata.json');
   const outcomePath = path.join(artifacts, 'outcome-context.json');
-  const scenariosPath = path.join(artifacts, 'scenarios.json');
+  const statesPath = path.join(artifacts, 'states.json');
+  const scenariosPath = fs.existsSync(statesPath)
+    ? statesPath
+    : path.join(artifacts, 'scenarios.json');
   const outPath = path.join(artifacts, 'prototype-bar.json');
   const reportUrlPath = path.join(artifacts, 'report-url.txt');
 
@@ -194,7 +201,7 @@ function main() {
   }
   // Conventional relative path so Pages/static hosting can resolve once copied
   if (evalUrl == null) {
-    evalUrl = `/evals/${id}/`;
+    evalUrl = `/prototype-evaluations/${id}/`;
   }
 
   const sources = mergeSources(

@@ -1,0 +1,8 @@
+prompt: >-
+  Use uxd-prototype-create. We have agreed on the plan; now identify any
+  design choices before building. The prototype is a profile form with name,
+  email, and an explicit Save button. The existing product has a single-page
+  settings form pattern, inline field validation, accessible labels, and a
+  keyboard-accessible save/cancel flow. Follow that pattern. --decisions human
+  --depth over. Do not write files in this exercise; explain whether there are
+  genuine tradeoffs to review.

@@ -5,9 +5,10 @@
 # categories the AI may draw from — it is NOT a fixed checklist.
 #
 # Only used when --decisions is auto or human (skip builds without a decision kit).
-# The AI identifies 4–7 decisions by default (configurable via --depth: under 2–3,
-# normal 4–7, over 8–12) that have genuine tradeoffs for the specific RFE. Some
-# RFEs may surface entirely different decisions than those listed here.
+# Surface only unresolved, consequential tradeoffs with viable alternatives.
+# Zero decisions is valid. --depth controls exploration effort, never counts.
+# Established UX, accessibility, and codebase conventions are defaults, not votes.
+# These categories and options are examples, not a menu to present wholesale.
 #
 # See SKILL.md Step 7 for the dynamic planning process.
 # See decision-workflow.md for the decision artifact format and storage schema.
@@ -70,12 +71,12 @@ reference_decisions:
     question: How should users interact with the core content?
     context_from: layout_decision
     preview_hint: >
-      Same primary action shown four ways (inline, modal, drawer, page) with
+      Same primary action shown through the viable alternatives with
       real controls — not numbered stick-figure flows.
     options:
       - id: inline-edit
         name: Inline Editing
-        description: Edit content directly where it appears. Click to edit, blur to save.
+        description: Edit content directly where it appears, using the product’s established save and validation behavior.
         when_to_use: Quick edits, spreadsheet-like interfaces, content management
       - id: modal-dialogs
         name: Modal Dialogs
@@ -106,7 +107,7 @@ reference_decisions:
         when_to_use: Mixed audience (novice + expert), complex domains
       - id: dense
         name: High Density
-        description: Show as much data as possible. Compact spacing, smaller text, more columns.
+        description: Show more relevant data through compact spacing and columns while preserving readable text and accessible controls.
         when_to_use: Power users, monitoring, data analysis, operational views
       - id: spacious
         name: Spacious / Focused
@@ -122,6 +123,7 @@ reference_decisions:
     name: Visual Tone
     question: What aesthetic direction should the prototype convey?
     context_from: rfe_product_context
+    note: Only explore tone when the product does not already establish it and the choice changes the task experience.
     options:
       - id: utilitarian
         name: Utilitarian / Enterprise
@@ -156,8 +158,8 @@ reference_decisions:
     note: >
       This decision is generated dynamically based on the RFE's specific
       needs and the prior decisions. The options are drawn from the design
-      system component library. Typically 2-4 component choices are surfaced
-      for the most critical UI elements in the prototype.
+      system component library. Surface a choice only when multiple components
+      are suitable and the difference changes the user experience.
       Previews MUST render the actual components (PatternFly CDN or the target
       app's component markup) composing that UI — not labeled wireframe boxes.
     preview_hint: >

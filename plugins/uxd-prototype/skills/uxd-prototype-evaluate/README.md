@@ -1,131 +1,81 @@
 # uxd-prototype-evaluate
 
-Evaluate a running prototype against a Jira ticket's acceptance criteria, optionally fix failures, then run persona usability walkthroughs. Writes an HTML evidence report.
+Selected prototype checks and canonical evidence, coordinated by the
+[uxd-evaluator agent](../../agents/uxd-evaluator.md). The agent recommends the
+smallest useful workflow or a direct handoff to another skill. Standalone research
+and design reviews remain separate; they are not evaluator checks.
 
-**Contract (inputs, outputs, flags, two-phase flow, artifact paths):** [SKILL.md](SKILL.md)
+## Routes
 
-## Prerequisites
+Default: **no-fix**. Review findings first; applying selected fixes requires a
+separate request and approval, followed by at most one verification pass.
 
-| Requirement | How to get it | Required? |
-|-------------|---------------|-----------|
-| Node.js >= 18 | `brew install node` or `nvm install 18` | Yes |
-| Python 3 | `brew install python3` | Yes |
-| Atlassian MCP | Configure in your IDE | Yes (for live Jira) |
-| Playwright Chromium | `npm install` then `npx playwright install chromium` in the skill dir (marketplace install does not run `postinstall`) | Yes |
+- **Quick Checks:** only selected classification (`classify`), source consistency
+  (`consistency-source`) or visual consistency (`consistency-visual`). No implicit
+  personas, edits or reporting.
+- **Agentic Walkthroughs:** independently callable through the sibling
+  `uxd-prototype-walkthrough` skill, for exact approved task/persona pairs.
+- **Full Evaluation:** selected Quick checks, an immutable review checkpoint, then
+  separately approved continuation. Fixes require their own decision and one
+  post-fix verification pass.
+- **Existing findings:** inspect validated canonical JSON and receipts without
+  rerunning checks or changing source requirements. Historical heuristic results,
+  if present, are read-only history and cannot schedule new work.
+
+See [SKILL.md](SKILL.md), [onboarding](references/workflow/evaluator-onboarding.md), and the
+[execution contract](references/workflow/split-evaluation.md) for inputs and commands.
+
+## Subagent support
+
+`uxd-evaluator` is a subagent supplied by this plugin, not a second assistant in
+UXD Assist. The matching plugin manifests register its file for clients that
+support plugin agents; registration alone does not start an evaluation.
+After installation, check that your client lists it before relying on delegation.
+If it is unavailable, use this skill directly with the same intake/approval rules.
+Manifest validation is not proof that every client can discover or invoke it.
+
+## File organization
+
+Check-specific instructions live under `references/` and their helpers under
+`scripts/`, grouped by capability: classification, consistency, inspection
+handoffs and task verification. Shared workflow, artifacts and reporting stay
+separate instead of being copied into every check.
+
+## Conditional setup
+
+Local merging/validation requires Node.js >= 18 and the declared Node dependencies.
+Install dependencies from this skill directory only after setup approval:
 
 ```bash
-bash scripts/preflight-check.sh
-```
-
-```bash
-cd plugins/uxd-prototype/skills/uxd-prototype-evaluate
 npm install
-npx playwright install chromium
 ```
 
-Consistency uses the `uxd-consistency-check` sibling shipped in this same `uxd-prototype` plugin distribution. No separate checker repository or clone/bootstrap is needed. The analyzer stays offline and runs only explicitly selected product guidance; no bundled design-system audit is used. `bootstrap-consistency-checker.sh` checks that the bundled sibling is present; it does not install or clone anything. Set `UXD_CONSISTENCY_CHECKER_DIR` only for a deliberately separate checker installation; it must be an absolute skill-directory path and never falls back to another checker. For designer-facing summaries, follow the checker's [report template](../uxd-consistency-check/references/designer-report-template.md).
+Classification and existing-result review need no browser or Jira connection.
+Reviewed written requirements are supported alongside Jira input. Source consistency
+requires Python 3 and a separately installed `uxd-consistency-check` companion;
+its implementation is maintained separately. A missing selected companion blocks
+that check, not unrelated routes.
 
-Usability context (`.context/usability-testing/`) still bootstraps on first pipeline run when a git URL is set:
+Browser/model inspections use the host's authorized tools and actual input/result
+receipts. Install browser tooling only when the selected work needs it. No automatic
+clones, context bootstrap, broad permission allowlists or provider calls are part
+of onboarding. JSON permission records cannot grant human consent.
 
-```bash
-export USABILITY_TESTING_REPO="git@example.com:org/usability-testing.git"
-```
+## Results
 
-Product-specific remotes, MLflow, and Pages URLs come from the `uxd-eval-config` plugin (internal marketplace). Personas: `plugins/uxd-prototype/knowledge/personas/`. Overlay details: `references/skill-overlays.md`.
+Fresh project-owned runs under `artifacts/<KEY>/prototype-evaluations/<run-name>/` contain
+`pe-context.json`, `pe-evaluation-snapshot.json`, `pe-evidence.json`,
+`pe-actions.json` and `pe-state.json`, plus hashed input/evidence/result receipts.
+Use `scripts/artifacts/validate-canonical-artifacts.js` to validate them. Reports are opt-in:
+`scripts/run-report.js` renders derived canonical HTML; it does not publish.
+Never overwrite a prior run. Each JSON starts with `created_at` and `updated_at`.
 
-## Quick start
+## Authored evaluations
 
-```
-/uxd-prototype-evaluate PROJ-298 http://localhost:3000 --workspace=/path/to/prototype
-/uxd-prototype-evaluate review PROJ-298
-```
+Agent and walkthrough `eval/eval.yaml` definitions and case prompts are reviewable
+plugin source. This skill's evaluator preparation suite also lives under `eval/`.
+These fixtures are not proof of actual model/host acceptance until separately run
+and reviewed.
 
-## Optional Google Sheet sync
-
-Set `tracking.sheet_id` in `config/product-overlay.yaml` (or `EVAL_SHEET_ID`). Leave empty to disable. Requires `gcloud auth login --enable-gdrive-access`.
-
-## Validators
-
-| Script | Purpose |
-|--------|---------|
-| `scripts/validate-phase-b-output.js` | Phase B persona output schemas and score contracts |
-| `scripts/validate-artifact-schemas.js` | Schema validation for pipeline artifacts |
-| `scripts/validate-report-rendering.js` | Report rendering quality checks |
-
-Run the existing offline validator fixtures:
-
-```bash
-bash tests/run-script-tests.sh
-```
-
-### Consume confirmed product guidance
-
-Follow [the consistency phase](references/phases/eval-consistency.md) and the
-sibling checker's selection flow first; discovery or `approved` policy status
-never supplies user consent. This entrypoint consumes a confirmed staging
-receipt, not an index or an unconfirmed proposal:
-
-```bash
-python3 -S "$EVALUATOR_SKILL_DIR/scripts/run-consistency-selection.py" \
-  --workspace "$WORKSPACE" --staging-receipt "$STAGING_RECEIPT" \
-  --artifacts-dir "$ARTIFACTS_DIR"
-node "$EVALUATOR_SKILL_DIR/scripts/validate-consistency.js" "$ARTIFACTS_DIR" --json
-node "$EVALUATOR_SKILL_DIR/scripts/render-report.js" "$ARTIFACTS_DIR"
-```
-
-Handle exit `1` as findings, `2` as a blocking error (do not reuse an older
-report as a current success). The selected narrow analysis root is preserved;
-only product guidelines run. `consistency-selection.json` keeps manual evidence
-and unknown currentness separate from deterministic coverage. The HTML links
-to consumer-local frozen artifacts; preserve that artifact tree when browsing.
-These relative links are not a standalone HTML publication bundle. Remote
-acquisition/model review still require their own permissions and available
-tools. Existing explicit local input and frozen-manifest replay paths remain
-supported; see the phase guide for cleanup/replay limits.
-
-## Claude Code permissions
-
-The eval pipeline shells out to bundled Node/bash scripts and Playwright. To auto-approve them, add to the project's `.claude/settings.json` (or `~/.claude/settings.json`):
-
-```json
-{
-  "permissions": {
-    "allow": [
-      "Bash(node:*validate-artifact-schemas*)",
-      "Bash(node:*validate-phase-b-output*)",
-      "Bash(node:*validate-report-rendering*)",
-      "Bash(node:*render-report*)",
-      "Bash(node:*render-mini-report*)",
-      "Bash(node:*classify-ac-tier*)",
-      "Bash(node:*compute-patience-drain*)",
-      "Bash(node:*generate-journey-script*)",
-      "Bash(node:*validate-verdicts*)",
-      "Bash(node:*hydrate-persona-results*)",
-      "Bash(node:*resolve-root*)",
-      "Bash(node:*append-iteration-log*)",
-      "Bash(node:*build-leaderboard*)",
-      "Bash(node:*generate-dashboard*)",
-      "Bash(node:*log-run*)",
-      "Bash(bash:*pipeline-setup*)",
-      "Bash(bash:*publish-report*)",
-      "Bash(bash:*bootstrap-usability-testing*)",
-      "Bash(bash:*bootstrap-consistency-checker*)",
-      "Bash(npx:playwright*)",
-      "Bash(npm:install*)",
-      "Bash(python3:*eval_state*)"
-    ]
-  }
-}
-```
-
-Contributors in this repo get these via `.claude/settings.json` (accepted once via the workspace trust dialog).
-
-## Phase procedures
-
-Orchestration: `SKILL.md` and `references/orchestration.md`. Per-phase files live in `references/phases/`. Ignore `references/draft-phase-a-cli-workflow.md` — not implemented.
-
-## Related
-
-- `uxd-prototype-create` — builds the prototype; refine from eval findings
-- `uxd-prototype-export` — Prototype Bar Eval tab and `export-helper.mjs`
-- `uxd-prototype-publish` — blocked by AC FAIL unless `--force`
+Prototype edits, exports and publishing use their respective skills with their own
+scope and approval gates; an evaluation recommendation authorizes none of them.

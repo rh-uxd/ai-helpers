@@ -1,12 +1,16 @@
-.PHONY: validate lint security scaffold help docs
+.PHONY: validate validate-evals lint security scaffold help docs
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
-validate: ## Run manifest and skill validation (same as CI)
+validate: ## Run all repository validation, including eval configuration checks
 	@bash scripts/validate-manifests.sh
 	@bash scripts/validate-skills.sh
+	@$(MAKE) validate-evals
+
+validate-evals: ## Validate eval configuration structure
+	@python3 scripts/lint-evals.py
 
 lint: ## Run skillsaw content linter (zero-install via uvx)
 	@command -v uvx >/dev/null 2>&1 || { \

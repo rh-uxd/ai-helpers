@@ -29,8 +29,8 @@ CSS dependencies required for paint.
 | Manifest | `{out}/export-manifest.json` |
 | Ad-hoc / bar | `{out}/current/{slug}-{timestamp}.html` |
 
-Batch export navigates with `?scenario=<id>` (omitted for `default`), runs any
-journey step `actions`, then captures. See `scenarios-schema.md`.
+Batch export navigates with `?state=<id>` (omitted for `default`), runs any
+journey step `actions`, then captures. See `states-schema.md`.
 
 ---
 
@@ -65,7 +65,7 @@ non-PF wrappers, and includes a deduplicated import list plus structure warnings
 
 Use this when a future implementation agent should rebuild the UI from an exact
 PF tree instead of guessing from screenshots. Scenario coverage comes from
-`scenarios.json` + journey step actions (batch export), not heuristic discovery.
+`states.json` + journey step actions (batch export), not heuristic discovery.
 
 ### Source
 
@@ -85,7 +85,7 @@ PF tree instead of guessing from screenshots. Scenario coverage comes from
 ```json
 {
   "source": "dom-pf",
-  "url": "http://localhost:3000/api-keys?scenario=empty",
+  "url": "http://localhost:3000/api-keys?state=empty",
   "title": "API keys",
   "scenarioId": "empty",
   "componentList": [

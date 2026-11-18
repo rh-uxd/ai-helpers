@@ -1,0 +1,8 @@
+prompt: >-
+  Use uxd-prototype-create in ordinary create mode. We agreed on the plan and
+  generation is complete in an existing PatternFly React workspace. The new
+  settings page has a form, a drawer, and empty/error states. No pipeline,
+  headless loop, export, or evaluation was requested. The project has lint,
+  build, type-check, and browser/E2E commands. Explain your remaining checks
+  and final handoff. For this exercise, describe the steps only; do not run
+  commands, write files, start a server, or open a browser.

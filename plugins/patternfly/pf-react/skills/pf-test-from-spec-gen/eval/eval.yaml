@@ -1,0 +1,159 @@
+name: pf-test-from-spec-gen-eval
+description: Tests that pf-test-from-spec-gen generates requirement-traced test cases from specs, not from implementation details.
+skill: pf-react:pf-test-from-spec-gen
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory contains:
+    - input.yaml with a prompt: field containing a spec, requirements doc, or
+      acceptance criteria for a PF component
+    - annotations.yaml with has_ambiguity (true/false) indicating whether
+      the spec contains intentionally vague or underspecified requirements
+
+outputs:
+  - path: artifacts
+    schema: |
+      A complete .test.tsx file with traceability comments, organized describe
+      blocks, and SPEC-UNCLEAR annotations where applicable.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: has_traceability
+    description: Output includes a requirement-to-test mapping comment block
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      patterns = [
+          r'requirement\s+coverage',
+          r'REQ-\d+',
+          r'generated\s+from',
+          r'requirement.*→|requirement.*->',
+      ]
+      matches = sum(1 for p in patterns if re.search(p, text, re.IGNORECASE))
+      if matches >= 2:
+          return (True, f"Found {matches} traceability markers — tests map back to requirements")
+      return (False, f"Only {matches} traceability marker(s) — skill should produce a requirement-to-test mapping")
+
+  - name: uses_testing_library
+    description: Output uses React Testing Library queries and userEvent
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      rtl = bool(re.search(r'(getByRole|getByLabelText|getByText|findByRole|screen\.)', text))
+      ue = bool(re.search(r'userEvent', text))
+      if rtl and ue:
+          return (True, "Uses React Testing Library queries and userEvent")
+      missing = []
+      if not rtl:
+          missing.append("RTL queries")
+      if not ue:
+          missing.append("userEvent")
+      return (False, f"Missing {', '.join(missing)} — skill requires Testing Library + userEvent")
+
+  - name: tests_from_spec_not_code
+    description: Tests target behaviors described in the spec rather than implementation details
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      impl_patterns = [
+          r'wrapper\.state\(',
+          r'wrapper\.instance\(',
+          r'\.getDerivedStateFromProps',
+          r'shallow\(',
+          r'enzyme',
+      ]
+      impl_count = sum(1 for p in impl_patterns if re.search(p, text, re.IGNORECASE))
+      behavior_patterns = [
+          r'(getByRole|getByText|getByLabelText)',
+          r'(toBeInTheDocument|toBeVisible|toHaveTextContent)',
+          r'user\.(click|type|keyboard|tab)',
+      ]
+      behavior_count = sum(1 for p in behavior_patterns if re.search(p, text))
+      if impl_count == 0 and behavior_count >= 2:
+          return (True, f"Tests focus on behavior ({behavior_count} patterns), no implementation detail testing")
+      if impl_count > 0:
+          return (False, f"Found {impl_count} implementation-detail pattern(s) — tests should target user-visible behavior from the spec")
+      return (False, f"Only {behavior_count} behavior pattern(s) — expected more user-centric assertions")
+
+  - name: flags_ambiguity
+    description: Ambiguous specs produce SPEC-UNCLEAR annotations
+    if: "annotations.get('has_ambiguity') == True"
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      patterns = [
+          r'SPEC-UNCLEAR',
+          r'spec\s+(is\s+)?unclear',
+          r'needs?\s+clarification',
+          r'ambiguous',
+          r'not\s+specified',
+      ]
+      matches = sum(1 for p in patterns if re.search(p, text, re.IGNORECASE))
+      if matches >= 1:
+          return (True, f"Correctly flagged {matches} ambiguity/clarification point(s)")
+      return (False, "Did not flag ambiguous spec items — skill should annotate unclear requirements with SPEC-UNCLEAR")
+
+  - name: organizes_by_category
+    description: Tests are organized into describe blocks by requirement category
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      for path, content in outputs.get("files", {}).items():
+          text += "\n" + content
+      categories = [
+          r'describe\s*\(\s*[\'"].*render',
+          r'describe\s*\(\s*[\'"].*interact',
+          r'describe\s*\(\s*[\'"].*state',
+          r'describe\s*\(\s*[\'"].*async',
+          r'describe\s*\(\s*[\'"].*access',
+          r'describe\s*\(\s*[\'"].*error',
+          r'describe\s*\(\s*[\'"].*loading',
+          r'describe\s*\(\s*[\'"].*keyboard',
+          r'describe\s*\(\s*[\'"].*valid',
+      ]
+      found = sum(1 for c in categories if re.search(c, text, re.IGNORECASE))
+      if found >= 2:
+          return (True, f"Tests organized into {found} describe blocks by category")
+      return (False, f"Only {found} categorized describe block(s) — skill should organize tests by requirement category")
+
+thresholds:
+  has_traceability:
+    min_pass_rate: 1.0
+  uses_testing_library:
+    min_pass_rate: 1.0
+  tests_from_spec_not_code:
+    min_pass_rate: 1.0
+  flags_ambiguity:
+    min_pass_rate: 1.0
+  organizes_by_category:
+    min_pass_rate: 0.67

@@ -551,7 +551,7 @@ function activeScenarioId() {
     }
     if (typeof location !== 'undefined' && location.search) {
       const params = new URLSearchParams(location.search);
-      return params.get('scenario') || 'default';
+      return params.get('state') || params.get('scenario') || 'default';
     }
   } catch (e) {
     /* ignore */
