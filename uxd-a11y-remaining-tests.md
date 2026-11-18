@@ -28,14 +28,14 @@ Shared `plugins/uxd-a11y/references/` edits now trigger CI and select all five d
 
 ## Files to transfer to another tester
 
-The `plugins/uxd-a11y/planning/` directory is excluded **locally**, through `.git/info/exclude`. These links work in the current workspace but their targets will not accompany a clean clone. `/private/tmp` workspaces can expire. Transfer the needed files explicitly; do not force-add ignored evidence or assume a remote tester has it.
+The `plugins/uxd-a11y/planning/` directory is excluded **locally**, through `.git/info/exclude`. The local paths below are transfer instructions, not repository links: these files will not accompany a clean clone. `/private/tmp` workspaces can expire. Transfer the needed files explicitly; do not force-add ignored evidence or assume a remote tester has it.
 
 Minimum handoff:
 
 - This document and the plugin source at the agreed revision.
-- **J1:** the entire [judge handoff directory](plugins/uxd-a11y/planning/release-j1-2026-11-17/), especially `probes.json`, `results.md`, `preflight.py`, `preflight-2026-11-18.json`, `setup-freeze.txt`, and `rendered/`.
-- **C1:** the entire [client handoff directory](plugins/uxd-a11y/planning/release-c1-2026-11-18/), including the package hash inventory, discovery output and Cursor failure logs.
-- [Current release checklist](plugins/uxd-a11y/planning/release-readiness-2026-11-17.md) and [handoff history](plugins/uxd-a11y/planning/HANDOFF.md). Later dated entries supersede historical status text.
+- **J1:** the entire judge handoff directory (`plugins/uxd-a11y/planning/release-j1-2026-11-17/`, local only), especially `probes.json`, `results.md`, `preflight.py`, `preflight-2026-11-18.json`, `setup-freeze.txt`, and `rendered/`.
+- **C1:** the entire client handoff directory (`plugins/uxd-a11y/planning/release-c1-2026-11-18/`, local only), including the package hash inventory, discovery output and Cursor failure logs.
+- Current release checklist (`plugins/uxd-a11y/planning/release-readiness-2026-11-17.md`, local only) and handoff history (`plugins/uxd-a11y/planning/HANDOFF.md`, local only). Later dated entries supersede historical status text.
 - For D1, the actual project, revision and approved task when they become available; no substitute synthetic project is required now.
 
 Save returned evidence in a dated directory, with an explicit transfer destination agreed with the owner. Keep credentials and unrelated personal client logs out of the handoff.
