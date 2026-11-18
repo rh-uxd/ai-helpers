@@ -15,7 +15,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[2]
 BASH = os.environ.get('TEST_BASH', shutil.which('bash'))
 A11Y = {f'uxd-a11y-{name}' for name in
-        ('source-audit', 'keyboard-test', 'review', 'design-review', 'test-gen')}
+        ('source-audit', 'keyboard-audit', 'review', 'design-review', 'test-gen')}
 
 
 class EvalScripts(unittest.TestCase):

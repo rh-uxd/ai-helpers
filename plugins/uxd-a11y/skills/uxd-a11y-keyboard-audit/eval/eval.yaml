@@ -1,6 +1,6 @@
-name: uxd-a11y-keyboard-test-eval
+name: uxd-a11y-keyboard-audit-eval
 description: Evaluate applicable runtime patterns, valid alternatives, and honest evidence boundaries.
-skill: uxd-a11y:uxd-a11y-keyboard-test
+skill: uxd-a11y:uxd-a11y-keyboard-audit
 execution:
   mode: case
   arguments: '{prompt}'

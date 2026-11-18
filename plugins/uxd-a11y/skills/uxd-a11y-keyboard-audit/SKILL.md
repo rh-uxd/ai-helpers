@@ -1,6 +1,6 @@
 ---
-name: uxd-a11y-keyboard-test
-description: Test keyboard access and focus in running interfaces. Use for navigation, composite widgets, overlays, and task transitions in native, custom, or PatternFly UI.
+name: uxd-a11y-keyboard-audit
+description: Audit keyboard access and focus in running interfaces. Use for navigation, composite widgets, overlays, and task transitions in native, custom, or PatternFly UI.
 version: 0.2.0
 audience: "UI developers, QA, and accessibility reviewers"
 inputs: "Running URL, user task, and optional prior observations"
