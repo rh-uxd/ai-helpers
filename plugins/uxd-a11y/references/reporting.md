@@ -22,11 +22,13 @@ Source wiring Pass does not prove keyboard behavior. Preserve source and browser
 
 For each distinct issue, include stable report-local ID, target/state, expected/actual, evidence, recommendation, and:
 
-- Classification: WCAG violation, pattern deviation, provider issue, recommendation, or coverage gap. Cite the actual criterion or guidance; do not invent WCAG mappings.
+- Classification: WCAG violation, pattern deviation, provider issue, recommendation, or coverage gap. Cite the actual criterion or guidance with a clickable link to the authoritative source, preferably its specific section; a criterion number or document title alone is insufficient. Do not invent WCAG mappings or URLs.
 - Confidence: confirmed, likely, or needs verification. Distinguish certainty about an observed defect from certainty about its WCAG classification; a confirmed source conflict can still need runtime verification of its impact.
 - User impact where assessable: critical (blocks essential task), serious (major barrier), moderate (workaround exists), minor (limited friction). Unknown is valid for a gap. Keep tracker priority separate.
 
 Group repeated causes without discarding affected occurrences or evidence origins. Do not close an old finding from a different-state or different-revision pass.
+
+Place citations alongside the finding they support. Use descriptive Markdown links (HTML anchors in HTML reports), and link supporting evidence such as source lines, screenshots, or tool artifacts when a usable URL or local file link is available. If a source or evidence item cannot be linked, provide its exact reference or location and state the limitation; do not fabricate a link. Preserve citation labels and URLs as explicit fields in JSON output.
 
 ## Final output
 

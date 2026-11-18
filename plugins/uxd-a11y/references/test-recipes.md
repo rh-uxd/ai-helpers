@@ -53,7 +53,9 @@ For resize coverage, follow the [persistent browser zoom procedure](visual-runti
 
 Use the installed version's native keyboard API where available, or an already configured real-keyboard integration. Verify commands before writing `cy.press` or `cy.realPress`; neither may be assumed in every project. Do not replace native Tab with `trigger('keydown')` and call it a browser traversal test.
 
-With supported `cy.press`, the pattern is:
+Before relying on `cy.press`, verify the observable native default action in the installed runner/browser, not only dispatched key events. Enter activation or native-dialog Escape can differ from standalone browser behavior; preserve failures and use a verified browser path for that outcome. Do not replace a failed keyboard check with a click and report keyboard success.
+
+With verified `cy.press` behavior for the target, the pattern is:
 
 ```js
 cy.get('#actual-trigger').focus(); // Explicit isolated setup.
