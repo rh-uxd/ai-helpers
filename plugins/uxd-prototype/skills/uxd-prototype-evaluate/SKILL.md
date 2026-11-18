@@ -17,9 +17,9 @@ Conversational routing, planning, readiness, review checkpoints, synthesis and
 cross-skill handoffs follow the
 [responsibility contract](references/workflow/evaluator-responsibilities.md), including
 its ownership and execution limits. This skill executes only the selected work.
-If the host cannot select the evaluator subagent, use the
-[intake guide](references/workflow/evaluator-onboarding.md) directly. A separate
-subagent is optional; the same review and approval rules still apply.
+If the host selects `uxd-evaluator`, follow its [subagent instructions](subagents/eval-assist.md).
+Otherwise, use the [intake guide](references/workflow/evaluator-onboarding.md).
+Apply the same review and approval rules in both cases.
 
 ## Choose only the needed work
 

@@ -15,12 +15,14 @@ Family: `uxd-prototype-create` → `uxd-prototype-evaluate` → **publish**.
 
 ## Inputs
 
+Use `artifacts/{ID}/`. Use the legacy `.artifacts/{ID}/` only if the current directory is absent. Do not mix files across roots.
+
 | Input | Source | Required |
 |-------|--------|----------|
-| Prototype files | `.artifacts/{ID}/prototype/` or workspace files | **Yes** |
-| `metadata.json` | `.artifacts/{ID}/metadata.json` | **Yes** |
-| Changeset | `.artifacts/{ID}/changeset.md` | Yes (workspace mode) |
-| Workspace analysis | `.artifacts/{ID}/workspace-analysis.json` | Yes (repo target, workspace mode) |
+| Prototype files | `prototype/` or workspace files | **Yes** |
+| `metadata.json` | Artifact root | **Yes** |
+| Changeset | `changeset.md` | Yes (workspace mode) |
+| Workspace analysis | `workspace-analysis.json` | Yes (repo target, workspace mode) |
 | Canonical evaluation run | Explicit `--eval-run <run-directory>`; five validated JSON files and linked receipts | Recommended; required for verified AC claims |
 | Pages base URL | `--pages-base-url` or product config | Optional (repo target) |
 
@@ -72,14 +74,14 @@ If the user says "share", "publish", "deploy", "submit", or "I'm done" without a
 
 **Workspace mode** (`workspace-analysis.json` present): workspace path accessible, `changeset.md` lists at least one file, `metadata.json` has required fields.
 
-**Standalone mode** (`.artifacts/{ID}/prototype/` present): `index.html` (or at least one HTML file) and `metadata.json`.
+**Standalone mode** (`prototype/` present): `index.html` (or at least one HTML file) and `metadata.json`.
 
 If validation fails: "Prototype `{ID}` is incomplete. Missing: [list]. Fix before publishing."
 
 ## Step 2: Check Eval Results
 
 Select the reviewed canonical run explicitly; do not infer it from a CSV or pick
-the newest directory. A complete canonical run directly under `.artifacts/{ID}/eval/`
+the newest directory. A complete canonical run directly under the chosen artifact root's `eval/`
 is also supported. New runs live under `artifacts/{ID}/prototype-evaluations/{run}/`.
 Read validated `pe-context.json`, `pe-evaluation-snapshot.json`, `pe-evidence.json`,
 `pe-actions.json` and `pe-state.json` plus their linked receipts. Follow the sibling
@@ -186,7 +188,7 @@ If the destination branch already exists but is not checked out, select it and
 verify its source revision before submission; the publisher will not switch to
 an existing branch after validating another revision.
 
-**Standalone mode:** `git init` in `.artifacts/{ID}/prototype`, commit, add remote, push.
+**Standalone mode:** `git init` in the chosen artifact root's `prototype/`, commit, add remote, push.
 
 ### Targets: github, gitlab, vercel (sanitized deploys)
 
@@ -248,10 +250,10 @@ Uses Atlassian MCP if available; otherwise skip silently.
 
 ## Step 5: Update Metadata
 
-Set `.artifacts/{ID}/metadata.json` `status` to `submitted` with `submission.target`, `date`, and `url`. A git-URL `--target` stores `submission.target` as `"repo"`; the MR base lives in `workspace-analysis.json` as `upstream_url`.
+Set `metadata.json` in the chosen artifact root to `status: submitted` with `submission.target`, `date`, and `url`. A git-URL `--target` stores `submission.target` as `"repo"`; the MR base lives in `workspace-analysis.json` as `upstream_url`.
 
 ```bash
-python3 "${CLAUDE_SKILL_DIR}/../uxd-prototype-create/scripts/frontmatter.py" set ".artifacts/{ID}/rfe-snapshot.md" \
+python3 "${CLAUDE_SKILL_DIR}/../uxd-prototype-create/scripts/frontmatter.py" set "<chosen-artifact-root>/rfe-snapshot.md" \
   status="submitted" updated_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 ```
 

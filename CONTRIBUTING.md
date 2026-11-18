@@ -52,11 +52,19 @@ UXD PRs are reviewed by UXD maintainers.
 
 ## How this marketplace is organized
 
-Plugins organize skills by domain. See the [full plugin table](CONTRIBUTING-SKILLS.md#step-5-pick-the-right-plugin) for what each plugin does and example skills.
+Plugins organize skills, workflows, and agents by domain. See the [full plugin table](CONTRIBUTING-SKILLS.md#step-5-pick-the-right-plugin) for what each plugin does and example skills.
 
-- **PatternFly skills** → `plugins/patternfly/<plugin>/` — use the `pf-` prefix
-- **UXD skills** → `plugins/uxd-research/`, `plugins/uxd-design/`, `plugins/uxd-prototype/` — use the `uxd-` prefix
-- Not sure where your skill belongs? Start in a workshop plugin (`pf-workshop` or `uxd-workshop`). Skills graduate to consumer plugins once validated.
+### Skills
+
+A skill gives the assistant reusable instructions for a specific task, such as turning a design into an implementation handoff. Its `skills/<skill>/SKILL.md` describes when to use it, what steps to follow, and what result to produce.
+
+### Agents
+
+An agent gives the assistant a specialized role. Its `agents/<agent>.md` defines how it uses domain knowledge to make judgments or route requests. For example, the UXD assist agent uses the user's task and context to find the relevant UXD skills.
+
+### Workflows
+
+A workflow is a templated sequence of skills that can guide an agent through a multi-part task. It suggests which skills to use, how to pass artifacts between stages, and how to review the overall result.
 
 ## Adding a skill
 
@@ -73,13 +81,6 @@ Not sure where it belongs? Put it in the workshop that matches your domain:
 See [CONTRIBUTING-SKILLS.md](CONTRIBUTING-SKILLS.md) for a full walkthrough of skill structure and naming.
 
 Open a pull request against `main`.
-
-### Skills vs Agents
-
-- **Skills** (`skills/your-skill/SKILL.md`) — tasks that produce a result. Most contributions are skills.
-- **Agents** (`agents/your-agent.md`) — domain knowledge the AI follows automatically.
-
-See [CONTRIBUTING-SKILLS.md](CONTRIBUTING-SKILLS.md#skill-vs-agent) for guidance on which to use.
 
 ## Creating a new plugin
 

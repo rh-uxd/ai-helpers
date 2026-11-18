@@ -54,9 +54,16 @@ import time
 # Artifact readers
 # ---------------------------------------------------------------------------
 
+def artifact_dir(rfe_key):
+    """Use the creator's artifact root, or the legacy root for older runs."""
+    current = Path('artifacts') / rfe_key
+    legacy = Path('.artifacts') / rfe_key
+    return legacy if not current.is_dir() and legacy.is_dir() else current
+
+
 def read_workspace_analysis(rfe_key):
     """Read workspace analysis JSON for clone metadata."""
-    path = f'.artifacts/{rfe_key}/workspace-analysis.json'
+    path = artifact_dir(rfe_key) / 'workspace-analysis.json'
     if not os.path.isfile(path):
         print(f'Error: workspace analysis not found at {path}', file=sys.stderr)
         sys.exit(1)
@@ -70,7 +77,7 @@ def parse_changeset_files(rfe_key):
     Only matches top-level list items that look like file paths (contain a /
     or a file extension). Skips sub-bullets and non-path backtick content.
     """
-    path = f'.artifacts/{rfe_key}/changeset.md'
+    path = artifact_dir(rfe_key) / 'changeset.md'
     if not os.path.isfile(path):
         print(f'Error: changeset not found at {path}', file=sys.stderr)
         sys.exit(1)
@@ -207,7 +214,7 @@ def read_review_score(rfe_key, eval_run=None, workspace_path=None, force=False,
     No discovery of a newest run, legacy fallback, model call or publication.
     Explicit include_report attaches derived HTML only after evidence/source gates.
     """
-    run = Path(eval_run or f'.artifacts/{rfe_key}/eval').absolute()
+    run = (Path(eval_run) if eval_run else artifact_dir(rfe_key) / 'eval').absolute()
     canonical = ('pe-context.json', 'pe-evaluation-snapshot.json', 'pe-evidence.json',
                  'pe-actions.json', 'pe-state.json')
     if eval_run is None and not any(os.path.lexists(run / name)
@@ -295,7 +302,7 @@ process.stdout.write(JSON.stringify({
 
 def read_metadata(rfe_key):
     """Read prototype metadata JSON, if it exists."""
-    path = f'.artifacts/{rfe_key}/metadata.json'
+    path = artifact_dir(rfe_key) / 'metadata.json'
     if not os.path.isfile(path):
         return {}
     with open(path) as f:
@@ -304,7 +311,7 @@ def read_metadata(rfe_key):
 
 def read_decisions(rfe_key):
     """Read decisions JSON and return the decisions list."""
-    path = f'.artifacts/{rfe_key}/decisions/decisions.json'
+    path = artifact_dir(rfe_key) / 'decisions' / 'decisions.json'
     if not os.path.isfile(path):
         return []
     with open(path) as f:
@@ -314,7 +321,7 @@ def read_decisions(rfe_key):
 
 def read_rfe_summary(rfe_key):
     """Read the RFE snapshot and extract the first paragraph of description."""
-    path = f'.artifacts/{rfe_key}/rfe-snapshot.md'
+    path = artifact_dir(rfe_key) / 'rfe-snapshot.md'
     if not os.path.isfile(path):
         return None
     with open(path) as f:
@@ -893,7 +900,7 @@ def main():
     target_branch = resolve_target_branch(analysis, target_branch_flag)
 
     if not workspace_path or not os.path.isdir(workspace_path):
-        code_path = f'.artifacts/{rfe_key}/code'
+        code_path = artifact_dir(rfe_key) / 'code'
         if os.path.isdir(code_path):
             workspace_path = code_path
 
