@@ -24,7 +24,7 @@ jobs:
           strict: false
           fail-on: error
           verbose: false
-        continue-on-error: true
+        continue-on-error: false
 
       - name: Post summary
         if: always()
