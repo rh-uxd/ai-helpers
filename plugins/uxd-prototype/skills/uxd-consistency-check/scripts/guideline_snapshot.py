@@ -1,11 +1,12 @@
-"""Freeze only explicitly selected README-linked local rules for model review."""
+"""Freeze only explicitly selected local rules for model review."""
 import hashlib
 import json
 from pathlib import Path
 import subprocess
 
-from guideline_io import read_confined
-from guideline_selection import artifact_root, current_proposal, immutable_bytes, validate_selection
+from guideline_selection import (artifact_root, current_proposal, immutable_bytes,
+                                 read_selected_markdown, selected_source_path,
+                                 source_path_label, validate_selection)
 from guideline_resolver import _confined, _workspace
 from guideline_sources import metadata
 from review_scope import code_scope, section_scope
@@ -16,7 +17,7 @@ def _fingerprint(value):
                                 ensure_ascii=False).encode()).hexdigest()
 
 
-def freeze_selected_readme_sources(workspace, selection):
+def freeze_selected_sources(workspace, selection):
     root = _workspace(workspace)
     proposal = validate_selection(root, selection)
     if proposal.get("method") != "model":
@@ -28,9 +29,10 @@ def freeze_selected_readme_sources(workspace, selection):
     documents = []
     for source in proposal["sources"]:
         if source["locator"].get("kind") != "local":
-            raise ValueError("LLM local snapshot accepts only explicitly selected local README links")
-        path = _confined(Path(proposal["index"]).parent / source["locator"]["path"], root)
-        data = read_confined(root, path)
+            raise ValueError("LLM snapshot accepts only explicitly selected local Markdown")
+        path = selected_source_path(root, proposal, source)
+        label = source_path_label(root, path)
+        data = read_selected_markdown(root, path)
         sha = hashlib.sha256(data).hexdigest()
         if sha != source["material_sha256"]:
             raise ValueError("selected guideline bytes changed; renewed confirmation required")
@@ -39,11 +41,11 @@ def freeze_selected_readme_sources(workspace, selection):
         authored_id = info.get("id")
         if source.get("identity_kind") == "source_authored" and authored_id != source["identity"]:
             raise ValueError("source-authored guideline identity differs from the confirmed selection")
-        if source.get("identity_kind") == "path_derived" and source["identity"] != path.relative_to(root).as_posix():
-            raise ValueError("path-derived guideline identity differs from the exact selected relative path")
+        if source.get("identity_kind") == "path_derived" and source["identity"] != label:
+            raise ValueError("path-derived guideline identity differs from the exact selected path")
         documents.append({"id": source["identity"], "selection_id": source["id"],
             "identity_kind": source["identity_kind"],
-            "identity": source["identity"], "path": path.relative_to(root).as_posix(),
+            "identity": source["identity"], "path": label,
             "sources": [str(path)], "heading": source["heading"],
             "heading_anchor": source["heading_anchor"], "text": text, "sha256": sha,
             "title": info.get("title", source["title"]), "authority": source.get("authority"),
@@ -69,7 +71,7 @@ def freeze_selected_readme_sources(workspace, selection):
 
 def local_provenance(root, path, data, revision):
     """A local HEAD is verified only if that commit contains exactly these bytes."""
-    if revision:
+    if revision and path.is_relative_to(root):
         try:
             top = subprocess.check_output(['git', '-C', str(root), 'rev-parse', '--show-toplevel'], stderr=subprocess.DEVNULL).decode().strip()
             relative = path.relative_to(Path(top)).as_posix()
@@ -97,16 +99,16 @@ def bind_manifest_selection(workspace, manifest, selection):
         if doc['kind'] == 'baseline':
             continue
         matches = [s for s in proposal['sources'] if s['locator']['kind'] == 'local'
-            and str(Path(proposal['index']).parent / s['locator']['path']) in doc['sources']
+                   and str(selected_source_path(root, proposal, s)) in doc['sources']
             and s['material_sha256'] == doc['sha256']]
         if len(matches) != 1:
             raise ValueError('manifest bytes/path are not bound to the approved selection')
         source = matches[0]
         used.add(source['id'])
-        path = Path(proposal['index']).parent / source['locator']['path']
+        path = source_path_label(root, selected_source_path(root, proposal, source))
         info = metadata(doc['text'])
-        identity = info.get('id') or path.relative_to(root).as_posix()
-        documents.append({**doc, 'selection_id': source['id'], 'path': path.relative_to(root).as_posix(),
+        identity = info.get('id') or path
+        documents.append({**doc, 'selection_id': source['id'], 'path': path,
             'identity': identity, 'identity_kind': 'source_authored' if info.get('id') else 'path_derived',
             'rule_id': info.get('id'), 'guideline_scope': source['guideline_scope'],
             'section_bounds': section_scope(doc['text'], source['guideline_scope']),
@@ -129,7 +131,8 @@ def validate_readme_snapshot(snapshot, workspace):
     expected = _fingerprint({key: value for key, value in snapshot.items() if key != "snapshot_sha256"})
     if snapshot.get("snapshot_sha256") != expected:
         raise ValueError("selected guideline snapshot hash mismatch")
-    if snapshot.get("workspace") != str(_workspace(workspace)):
+    root = _workspace(workspace)
+    if snapshot.get("workspace") != str(root):
         raise ValueError("selected guideline snapshot belongs to another workspace")
     if not isinstance(snapshot.get("documents"), list) or not snapshot["documents"]:
         raise ValueError("selected guideline snapshot requires at least one rule")
@@ -152,17 +155,21 @@ def validate_readme_snapshot(snapshot, workspace):
         if hashlib.sha256(document.get("text", "").encode("utf-8")).hexdigest() != document.get("sha256"):
             raise ValueError("selected guideline text hash mismatch")
         path = document.get("path")
-        if not isinstance(path, str) or Path(path).is_absolute() or ".." in Path(path).parts:
-            raise ValueError("selected guideline path must be workspace-relative")
+        if (not isinstance(path, str) or not path or ".." in Path(path).parts
+                or (Path(path).is_absolute() and (not modern or proposal["index"] is not None))):
+            raise ValueError("selected guideline path is not a relative path or an explicit upload")
         if document["identity_kind"] == "path_derived" and document.get("identity") != path:
             raise ValueError("path-derived identity must retain the exact relative source path")
         if document["identity_kind"] == "source_authored" and document.get("rule_id") != document.get("identity"):
             raise ValueError("source-authored identity differs from the frontmatter ID")
         if modern:
             source = next((s for s in proposal['sources'] if s['id'] == document['selection_id']), None)
-            if (source is None or source['material_sha256'] != document['sha256']
-                    or str(Path(proposal['index']).parent / source['locator']['path']) not in document['sources']
-                    or document['path'] != (Path(proposal['index']).parent / source['locator']['path']).relative_to(Path(workspace)).as_posix()
+            if source is None or source['locator']['kind'] != 'local':
+                raise ValueError('snapshot source is not a selected local file')
+            source_path = selected_source_path(root, proposal, source)
+            if (source['material_sha256'] != document['sha256']
+                    or str(source_path) not in document['sources']
+                    or document['path'] != source_path_label(root, source_path)
                     or document['guideline_scope'] != source['guideline_scope']
                     or document['section_bounds'] != section_scope(document['text'], source['guideline_scope'])
                     or document['design_system'] != source['document_design_system']):
@@ -176,7 +183,9 @@ def validate_readme_snapshot(snapshot, workspace):
             if (set(provenance) != {'ref', 'status', 'sha256'} or provenance['sha256'] != document['sha256']
                     or provenance['status'] not in ('verified_git_blob', 'working_tree_content', 'unverifiable_legacy_ref')
                     or (provenance['status'] != 'verified_git_blob' and provenance['ref'] is not None)
-                    or (provenance['status'] == 'verified_git_blob' and provenance['ref'] != proposal['repository_ref'])):
+                    or (provenance['status'] == 'verified_git_blob' and (
+                        not provenance['ref'] or provenance != local_provenance(
+                            root, source_path, document['text'].encode('utf-8'), proposal['repository_ref'])))):
                 raise ValueError('invalid frozen guideline provenance')
     if modern and {d['selection_id'] for d in snapshot['documents']} != {s['id'] for s in proposal['sources']}:
         raise ValueError('snapshot selected-source membership mismatch')

@@ -85,4 +85,27 @@ with tempfile.TemporaryDirectory() as directory:
     assert partial["source_analysis"]["coverage"]["incomplete_rules"]["repo:styling"]["files"] == ["app.jsx"]
     assert partial["status"] == "degraded"
 
-print("Passed: selected repo/upload, delta, no automatic prose pass, clean HTML, partial JSX")
+    (workspace / "root-class.md").write_text(
+        "---\nid: root\ncheck: required-html-class\nrequired_class: must-have\nseverity: error\n---\n"
+        "The root must have class `must-have`.\n"
+    )
+    initial = '<!doctype html>\n<html\n  class="must-have"\n  lang="en">\n<body>Before</body>\n</html>\n'
+    html.write_text(initial)
+    run(workspace, "git", "add", "index.html", "root-class.md")
+    run(workspace, *git, "commit", "-qm", "Add multiline root policy")
+    base = run(workspace, "git", "rev-parse", "HEAD")
+    for name, content, expected_line in [
+        ("replace-class", initial.replace('class="must-have"', 'dir="ltr"'), 3),
+        ("delete-class", initial.replace('  class="must-have"\n', ""), 2),
+        ("delete-root", initial.replace('<html\n  class="must-have"\n  lang="en">\n', ""), None),
+    ]:
+        html.write_text(content)
+        run(workspace, *git, "commit", "-qam", name)
+        result = evaluate(name, ["repo=root-class.md"])
+        assert result["status"] == "failed", result
+        assert [f["line"] for f in result["source_analysis"]["source_mode"]["violations"]] == [expected_line]
+    html.write_text(initial.replace("Before", "After"))
+    run(workspace, *git, "commit", "-qam", "Keep root unchanged from the base")
+    assert evaluate("untouched-root", ["repo=root-class.md"])["status"] == "degraded"
+
+print("Passed: repo/upload, delta, prose and JSX coverage, multiline root changes and deletions")

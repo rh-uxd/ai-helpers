@@ -6,12 +6,9 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 import re
 from typing import Any
 
-from artifact_io import local_path
-from guideline_sources import validate_manifest
 from guideline_snapshot import validate_readme_snapshot, bind_manifest_selection
 from scoped_sources import read_sources
 from review_scope import heading_sections, normalized_text, in_code_scope
-from guideline_io import read_confined
 
 STATUSES = {"violation", "no_issue_found", "uncertain", "not_applicable", "unsupported", "unavailable"}
 CONFIDENCE = {"high", "medium", "low"}
@@ -25,44 +22,39 @@ def _nonempty(value: Any, label: str) -> str:
     return value
 
 
-def _heading_and_quote(document: dict[str, Any], citation: Any, root: Path) -> tuple[str, str, str, str, str]:
+def _heading_and_quote(document: dict[str, Any], citation: Any, root: Path):
     if not isinstance(citation, dict) or set(citation) != {"path", "heading", "quote", "sha256", "ref"}:
         raise ValueError("guideline citation has missing or unsupported fields")
     path = _nonempty(citation["path"], "guideline path")
-    heading = _nonempty(citation["heading"], "guideline heading")
+    heading = citation["heading"]
     quote = _nonempty(citation["quote"], "guideline quote")
     if citation["sha256"] != document["sha256"]:
         raise ValueError("guideline citation hash differs from the frozen rule")
     if citation['ref'] != document['provenance']['ref']:
         raise ValueError('guideline ref is not established by frozen provenance')
-    sources = {Path(value).as_posix() for value in document["sources"]}
-    if document.get("path"):
-        sources.add(Path(document["path"]).as_posix())
-    if path not in sources:
+    label = document["path"]
+    if path not in {label, (root / label).as_posix()}:
         raise ValueError("guideline path is not an exact selected source")
     text, headings = heading_sections(document['text'])
-    candidates = [entry for entry in headings if entry['heading'] == heading]
     bounds = document['section_bounds']
-    candidates = [entry for entry in candidates if bounds['start'] <= entry['start'] < bounds['end']]
-    if len(candidates) != 1:
-        raise ValueError("guideline heading is not present in the frozen source")
-    selected_heading = candidates[0]
-    if normalized_text(quote) not in text[selected_heading['start']:min(selected_heading['end'], bounds['end'])]:
-        raise ValueError("guideline quote is not an exact excerpt under the cited heading")
-    source_path = Path(path)
-    if source_path.is_absolute():
-        try:
-            href_path = source_path.resolve().relative_to(root).as_posix()
-        except ValueError as error:
-            raise ValueError("guideline citation path is outside the review workspace") from error
+    if heading is None and bounds["kind"] == "whole_document":
+        selected = text[bounds["start"]:bounds["end"]]
+        anchor = None
     else:
-        if ".." in source_path.parts:
-            raise ValueError("guideline citation path escapes the review workspace")
-        href_path = source_path.as_posix()
-    return path, heading, quote, href_path, selected_heading['anchor']
+        _nonempty(heading, "guideline heading")
+        candidates = [entry for entry in headings if entry["heading"] == heading
+                      and bounds["start"] <= entry["start"] < bounds["end"]]
+        if len(candidates) != 1:
+            raise ValueError("guideline heading is not present in the frozen source")
+        selected_heading = candidates[0]
+        selected = text[selected_heading["start"]:min(selected_heading["end"], bounds["end"])]
+        anchor = selected_heading["anchor"]
+    if normalized_text(quote) not in selected:
+        raise ValueError("guideline quote is not an exact excerpt in the cited section or document")
+    return heading, quote, label, anchor
 
 
-def _source_evidence(evidence: Any, *, workspace: Path, inputs: dict[str, Any], approved_scope) -> dict[str, Any] | None:
+def _source_evidence(evidence: Any, *, files, inputs: dict[str, Any], approved_scope) -> dict[str, Any] | None:
     if evidence is None:
         return None
     if not isinstance(evidence, dict) or set(evidence) != {"file", "line_start", "line_end", "excerpt"}:
@@ -74,15 +66,11 @@ def _source_evidence(evidence: Any, *, workspace: Path, inputs: dict[str, Any], 
         raise ValueError("source evidence must cite a file in the changed MR scope")
     if not in_code_scope(name, approved_scope):
         raise ValueError('source evidence is outside approved code-path scope')
-    target = local_path(workspace / Path(*relative.parts), workspace)
-    if not target.is_file():
-        raise ValueError("source evidence file is missing")
-    content = read_confined(workspace, target)
-    expected_hash = inputs.get("files", {}).get(name)
-    if not isinstance(expected_hash, str) or hashlib.sha256(content).hexdigest() != expected_hash:
-        raise ValueError("source file differs from the pinned MR scope")
-    view = normalized_text(content.decode('utf-8'))
-    lines = view.splitlines(keepends=True)
+    # Match locations in the pinned Git blob, not the mutable checkout. Git
+    # counts LF boundaries only; CRLF has the same line positions as LF.
+    view = files[name].replace("\r\n", "\n")
+    expected_hash = inputs["files"][name]
+    lines = re.findall(r"[^\n]*\n|[^\n]+$", view)
     start, end = evidence["line_start"], evidence["line_end"]
     if type(start) is not int or type(end) is not int or not 1 <= start <= end <= len(lines):
         raise ValueError("invalid source line range")
@@ -91,7 +79,7 @@ def _source_evidence(evidence: Any, *, workspace: Path, inputs: dict[str, Any], 
         raise ValueError("pinned MR changed-line evidence is required")
     if not any(start <= line <= end for line in changed_lines[name]):
         raise ValueError("source evidence does not intersect a changed line")
-    excerpt = normalized_text(_nonempty(evidence["excerpt"], "source excerpt"))
+    excerpt = _nonempty(evidence["excerpt"], "source excerpt").replace("\r\n", "\n")
     region = ''.join(lines[start - 1:end])
     occurrences = []
     position = region.find(excerpt)
@@ -161,16 +149,17 @@ def validate_llm_review(raw: Any, *, manifest: dict[str, Any], workspace: Path,
         raise ValueError('scope report lacks the approved code-path scope/original-byte hash contract')
     if scope_report.get("run_id") != run_id:
         raise ValueError("LLM review run ID differs from the pinned scope report")
-    if inputs.get("scope") != "changed" or not inputs.get("head") or not inputs.get("base"):
-        raise ValueError("LLM review requires an MR changed-file/diff scope")
+    if (inputs.get("scope") != "committed" or inputs.get("merge_base") is not True
+            or not inputs.get("head") or not inputs.get("base")):
+        raise ValueError("LLM review requires a committed Git MR scope")
     if not isinstance(inputs.get("changed_lines"), dict):
         raise ValueError("scope report lacks pinned changed-line evidence")
     tracked_only = inputs.get("tracked_only", False)
-    if type(tracked_only) is not bool or inputs.get("merge_base", False) is not False:
+    if type(tracked_only) is not bool:
         raise ValueError("unsupported or ambiguous MR scope options")
-    _, _, current_inputs = read_sources(Path(workspace).resolve(), changed=True,
-        base_ref=inputs["base"], tracked_only=tracked_only, merge_base=False, approved_scope=approved_scope)
-    for field in ("head", "base", "source_sha256", "files", "target_files", "changed_lines"):
+    files, _, current_inputs = read_sources(Path(workspace).resolve(), changed=True,
+        base_ref=inputs["base"], tracked_only=tracked_only, merge_base=True, approved_scope=approved_scope)
+    for field in ("head", "base", "source_sha256", "files", "target_files", "changed_lines", "skipped_files"):
         if inputs.get(field) != current_inputs.get(field):
             raise ValueError("scope report differs from the current pinned MR delta: " + field)
     documents = {document['id']: document for document in manifest['documents']}
@@ -206,8 +195,8 @@ def validate_llm_review(raw: Any, *, manifest: dict[str, Any], workspace: Path,
         applicable = document['design_system'] in (manifest['design_system'], 'any')
         if not applicable and status != 'not_applicable':
             raise ValueError('trusted applicability metadata requires not_applicable')
-        guideline_path, heading, quote, guideline_href_path, anchor = _heading_and_quote(document, review["guideline"], root)
-        evidence = _source_evidence(review["source_evidence"], workspace=root, inputs=inputs, approved_scope=approved_scope)
+        heading, quote, guideline_path, anchor = _heading_and_quote(document, review["guideline"], root)
+        evidence = _source_evidence(review["source_evidence"], files=files, inputs=inputs, approved_scope=approved_scope)
         if status in {"violation", "no_issue_found", "uncertain"} and evidence is None:
             raise ValueError("evaluated judgments require exact changed-source evidence")
         rationale = _nonempty(review["rationale"], "rationale")
@@ -239,8 +228,8 @@ def validate_llm_review(raw: Any, *, manifest: dict[str, Any], workspace: Path,
                  "severity": review["severity"], "confidence": review["confidence"],
                  "applicability": {'selected': manifest['design_system'], 'document': document['design_system'],
                                    'outcome': 'applicable' if applicable else 'not_applicable'},
-                 "guideline": {"path": guideline_href_path, "heading": heading, "anchor": anchor,
-                               "href": f"{guideline_href_path}#{anchor}",
+                  "guideline": {"path": guideline_path, "heading": heading, "anchor": anchor,
+                                "href": f"{guideline_path}#{anchor}" if anchor else guideline_path,
                                "quote": quote, "sha256": document["sha256"], "ref": document['provenance']['ref'],
                                "ref_status": document['provenance']['status'], 'selected_scope': document['guideline_scope']},
                  "source_evidence": evidence, "rationale": rationale, "limitations": limitations,
@@ -285,8 +274,8 @@ def validate_llm_review(raw: Any, *, manifest: dict[str, Any], workspace: Path,
         "prompt_sha256": prompt_hash, "guideline_ref": guideline_ref, "workspace": str(root),
         "guideline_manifest_sha256": manifest_fingerprint,
         'approved_scope': approved_scope, 'selection_sha256': manifest['selection_sha256'],
-        "scope": {key: inputs[key] for key in ("scope", "head", "base", "source_sha256", "target_files",
-                                                  "tracked_only", "merge_base", "changed_lines")},
+         "scope": {key: inputs[key] for key in ("scope", "head", "base", "source_sha256", "target_files",
+                                                   "tracked_only", "merge_base", "changed_lines", "skipped_files")},
         "coverage": {"selected_rules": sorted(documents), "llm_reviewed_rules": sorted(seen),
                      "statuses": counts, "llm": {"status": "completed", "reviewed_rules": sorted(seen)},
                      "deterministic": {"status": deterministic_status,

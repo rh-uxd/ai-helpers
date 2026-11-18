@@ -8,7 +8,9 @@ never enables PF auditing. Do not write product policy or modify source/designs.
 
 ## A. Candidate indexes, not adopted policy
 
-Prefer product-owned Markdown with relevant assets/code examples. The confirmed
+Prefer product-owned Markdown. For semantic review, pass explicitly selected
+`guidelines` directly to `propose-selection` as shown below; no README, sidecar,
+or product label is required. The confirmed
 local RHOAI index is `.design/product/design-guidelines/README.md`; its relative
 Markdown links work without adjacent `sources.json`. That sidecar is optional for
 external Docs/Drive sections, Figma locators, multiple authorities or other
@@ -63,6 +65,13 @@ From `guideline_selection`:
   the index or create source metadata. If index metadata already identifies a
   different product, the proposal is rejected. `method` is `deterministic`,
   `manual`, or `model`.
+- For direct Markdown semantic review, omit `index`, `source_ids`, and
+  `guideline_scopes`. Supply `method="model"`, the same structured `review_scope`,
+  and `guidelines=[{"path": "docs/button-labels.md", "scope": {"kind": "section", "anchor": "rule"}}]`.
+  A path can be workspace-relative or the exact absolute path to an uploaded
+  local Markdown file. Whole-file review requires `{"kind":"whole_document"}`.
+  Files are not copied, edited, or followed through symlinks. The same proposal
+  and approval steps apply to both input forms.
 - `design_system` is an explicitly chosen nonempty applicability label, not a
   policy mode; it defaults to `custom`. Preserve the exact value. Never infer it
   from product names, dependencies or colors. It is sealed into the proposal and

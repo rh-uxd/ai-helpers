@@ -67,13 +67,65 @@ def validate_approval(approval, sha):
         raise ValueError('explicit scoped approval evidence matching proposal is required')
 
 
-def propose_selection(workspace, index, *, source_ids, review_scope, method, design_system='custom',
-                      product_identity=None, _pinned_repository_ref=_UNSET, guideline_scopes=None):
+def source_path_label(workspace, path):
+    return path.relative_to(workspace).as_posix() if path.is_relative_to(workspace) else path.as_posix()
+
+
+def selected_source_path(workspace, proposal, source):
+    path = source['locator']['path']
+    if proposal['index'] is not None:
+        return _confined(Path(proposal['index']).parent / path, workspace)
+    return local_path(path, workspace)
+
+
+def read_selected_markdown(workspace, path):
+    # Only an explicitly named upload may be outside the workspace. Its parent
+    # is the IO boundary; descriptor-relative reading still rejects symlinks.
+    return read_confined(workspace if path.is_relative_to(workspace) else path.parent, path)
+
+
+def _direct_catalog(workspace, guidelines):
+    if not isinstance(guidelines, list) or not guidelines:
+        raise ValueError('select at least one explicit local Markdown file')
+    sources = []
+    seen = set()
+    for entry in guidelines:
+        if (not isinstance(entry, dict) or set(entry) != {'path', 'scope'}
+                or not isinstance(entry['path'], str) or not entry['path'].strip() or '://' in entry['path']):
+            raise ValueError('each explicit guideline requires a local path and section or whole-document scope')
+        path = local_path(entry['path'], workspace)
+        if path.suffix.lower() not in {'.md', '.markdown'}:
+            raise ValueError('explicit semantic guidance must be local Markdown')
+        label = source_path_label(workspace, path)
+        if label in seen:
+            raise ValueError('duplicate explicit guideline path')
+        seen.add(label)
+        sources.append({'id': 'path-' + hashlib.sha256(label.encode()).hexdigest()[:16],
+                        'identity': label, 'identity_kind': 'path_derived',
+                        'locator': {'kind': 'local', 'path': label},
+                        'guideline_scope': entry['scope'], 'rule_ids': [],
+                        'heading': None, 'heading_anchor': None, 'scope': None,
+                        'title': path.stem})
+    return {'index': None, 'index_sha256': None, 'sidecar_sha256': None, 'product': None,
+            'release': None, 'schema_version': 'direct-markdown', 'sources': sources}
+
+
+def propose_selection(workspace, index=None, *, source_ids=None, review_scope, method, design_system='custom',
+                      product_identity=None, _pinned_repository_ref=_UNSET, guideline_scopes=None, guidelines=None):
     if not isinstance(design_system, str) or not design_system.strip():
         raise ValueError('explicit applicability label must be a nonempty string')
     workspace = _workspace(workspace)
-    metadata = read_index(workspace, index)
-    catalog = read_index(workspace, index, topics=metadata['topics'])
+    modern = method == 'model' and isinstance(review_scope, dict)
+    if guidelines is not None:
+        if index is not None or source_ids is not None or guideline_scopes is not None or not modern:
+            raise ValueError('explicit Markdown requires model review and cannot be combined with an index selection')
+        catalog = _direct_catalog(workspace, guidelines)
+        source_ids = [source['id'] for source in catalog['sources']]
+    else:
+        if index is None:
+            raise ValueError('select explicit Markdown or an index')
+        metadata = read_index(workspace, index)
+        catalog = read_index(workspace, index, topics=metadata['topics'])
     catalog_product = catalog['product']
     if product_identity is not None:
         if not isinstance(product_identity, str) or not product_identity.strip():
@@ -84,13 +136,12 @@ def propose_selection(workspace, index, *, source_ids, review_scope, method, des
         product_identity_source = 'explicit_instruction'
     else:
         product = catalog_product
-        product_identity_source = 'index_metadata'
-    if not isinstance(product, str) or not product.strip():
+        product_identity_source = 'index_metadata' if index is not None else None
+    if index is not None and (not isinstance(product, str) or not product.strip()):
         raise ValueError('identify the product before selecting product design guidelines')
     if (not isinstance(source_ids, list) or not source_ids or len(set(source_ids)) != len(source_ids)
             or set(source_ids) - {s['id'] for s in catalog['sources']}):
         raise ValueError('explicit indexed source IDs are required')
-    modern = method == 'model' and isinstance(review_scope, dict)
     if method not in ('deterministic', 'manual', 'model') or (not modern and (not isinstance(review_scope, str) or not review_scope.strip())):
         raise ValueError('explicit review scope and method are required')
     if modern:
@@ -103,7 +154,7 @@ def propose_selection(workspace, index, *, source_ids, review_scope, method, des
         _confined(review_scope, workspace)
     repository_ref = (_repository_ref(workspace) if _pinned_repository_ref is _UNSET
                       else _pinned_repository_ref)
-    readme_link_mode = catalog['schema_version'] == 'readme-links-1.0.0'
+    authored_metadata = catalog['schema_version'] in {'readme-links-1.0.0', 'direct-markdown'}
     sources = []
     authored_rule_ids = set()
     for source in catalog['sources']:
@@ -112,13 +163,14 @@ def propose_selection(workspace, index, *, source_ids, review_scope, method, des
         source = dict(source)
         material = None
         if source['locator']['kind'] == 'local':
-            path = _confined(Path(catalog['index']).parent / source['locator']['path'], workspace)
-            if not path.is_file():
-                raise ValueError('selected local material must be a regular file')
-            data = read_confined(workspace, path)
+            path = selected_source_path(workspace, catalog, source)
+            data = read_selected_markdown(workspace, path)
             material = hashlib.sha256(data).hexdigest()
-            if readme_link_mode:
-                info = guideline_metadata(data.decode('utf-8'))
+            text = data.decode('utf-8')
+            if not text.strip():
+                raise ValueError('selected Markdown is empty')
+            info = guideline_metadata(text) if modern or authored_metadata else {}
+            if authored_metadata:
                 authored_id = info.get('id')
                 if authored_id is not None and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', authored_id):
                     raise ValueError('invalid source-authored guideline ID: ' + authored_id)
@@ -141,12 +193,11 @@ def propose_selection(workspace, index, *, source_ids, review_scope, method, des
             if modern:
                 from review_scope import section_scope
                 selected_section = (guideline_scopes or {}).get(source['id'], source.get('guideline_scope'))
-                resolved = section_scope(data.decode('utf-8'), selected_section)
+                resolved = section_scope(text, selected_section)
                 source['guideline_scope'] = ({'kind': 'section', 'anchor': resolved['anchor']}
                     if resolved['kind'] == 'section' else {'kind': 'whole_document'})
                 source['section_bounds'] = resolved
-                info = guideline_metadata(data.decode('utf-8'))
-                if not readme_link_mode:
+                if not authored_metadata:
                     authored_id = info.get('id')
                     if authored_id is not None and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._-]*', authored_id):
                         raise ValueError('invalid source-authored guideline ID: ' + authored_id)
@@ -157,8 +208,10 @@ def propose_selection(workspace, index, *, source_ids, review_scope, method, des
                     if source['rule_ids'] and source['rule_ids'] != [authored_id]:
                         raise ValueError('indexed rule IDs do not match the selected document identity')
                     source.update(identity_kind='source_authored' if authored_id else 'path_derived',
-                        identity=authored_id or path.relative_to(workspace).as_posix(), rule_id=authored_id,
-                        heading=source['title'], heading_anchor=resolved.get('anchor', ''))
+                         identity=authored_id or path.relative_to(workspace).as_posix(), rule_id=authored_id,
+                         heading=source['title'], heading_anchor=resolved.get('anchor', ''))
+                if index is None:
+                    source.update(heading=resolved.get('heading'), heading_anchor=resolved.get('anchor'))
                 source['document_design_system'] = info.get('design_system', design_system)
                 source['applicability_origin'] = 'source_authored' if 'design_system' in info else 'inherited'
         source['material_sha256'] = material
@@ -179,6 +232,14 @@ def current_proposal(workspace, proposal):
     identity_source = proposal.get('product_identity_source')
     if identity_source not in (None, 'index_metadata', 'explicit_instruction'):
         raise ValueError('invalid product identity source')
+    if proposal['index'] is None:
+        return propose_selection(
+            workspace, review_scope=proposal['review_scope'], method=proposal['method'],
+            design_system=proposal['design_system'], product_identity=proposal['product'],
+            _pinned_repository_ref=proposal['repository_ref'],
+            guidelines=[{'path': s['locator']['path'], 'scope': s['guideline_scope']}
+                        for s in proposal['sources']],
+        )
     current = propose_selection(workspace, proposal['index'], source_ids=[s['id'] for s in proposal['sources']],
                               review_scope=proposal['review_scope'], method=proposal['method'],
                               design_system=proposal.get('design_system', 'custom'),

@@ -35,8 +35,8 @@
       "type": "object", "required": ["path", "heading", "anchor", "href", "quote", "sha256", "ref"],
       "properties": {
         "path": {"type": "string", "minLength": 1},
-        "heading": {"type": "string", "minLength": 1},
-        "anchor": {"type": "string", "minLength": 1},
+        "heading": {"type": ["string", "null"], "minLength": 1},
+        "anchor": {"type": ["string", "null"], "minLength": 1},
         "href": {"type": "string", "minLength": 1},
         "quote": {"type": "string", "minLength": 1},
         "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},

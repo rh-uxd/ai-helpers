@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Freeze explicitly approved local README-linked guidelines for an LLM review."""
+"""Freeze explicitly approved local Markdown for an LLM review."""
 import argparse
 import json
 from pathlib import Path
@@ -7,7 +7,7 @@ import sys
 
 from artifact_io import local_path
 from guideline_io import REQUEST_LIMIT, read_confined
-from guideline_snapshot import freeze_selected_readme_sources
+from guideline_snapshot import freeze_selected_sources
 
 
 def main():
@@ -20,7 +20,7 @@ def main():
     if not selection_path.is_file():
         raise ValueError("selection receipt must be a regular file")
     selection = json.loads(read_confined(root, selection_path, REQUEST_LIMIT).decode("utf-8"))
-    result = freeze_selected_readme_sources(root, selection)
+    result = freeze_selected_sources(root, selection)
     snapshot = result["snapshot"]
     print(json.dumps({"status": "frozen", "path": str(Path(result["path"]).relative_to(root)),
         "snapshot_sha256": snapshot["snapshot_sha256"], "repository_ref": snapshot["repository_ref"],

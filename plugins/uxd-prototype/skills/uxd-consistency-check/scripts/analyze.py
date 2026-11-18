@@ -12,7 +12,7 @@ import uuid
 
 from artifact_io import local_path, output_path, protect_inputs, write_json
 from guideline_sources import load_guidelines, load_manifest
-from scoped_sources import read_sources, mask_comments
+from scoped_sources import base_source, read_sources, mask_comments
 from report_contract import validate_report
 
 SCHEMA_VERSION = "1.0.0"
@@ -24,11 +24,13 @@ class RootHTMLParser(HTMLParser):
     def __init__(self):
         super().__init__()
         self.classes = []
-        self.position = None
+        self.line = None
+        self.markup = None
 
     def handle_starttag(self, tag, attrs):
-        if tag == "html" and self.position is None:
-            self.position = self.getpos()
+        if tag == "html" and self.line is None:
+            self.line = self.getpos()[0]
+            self.markup = self.get_starttag_text()
             # HTML attribute names are normalized; class tokens remain case-sensitive.
             self.classes = next((value or "" for name, value in attrs if name == "class"), "").split()
 
@@ -94,7 +96,7 @@ def jsx_style_candidates(text):
     return list(dict.fromkeys(matches))
 
 
-def evaluate(documents, files, changed_lines=None, incomplete=None):
+def evaluate(documents, files, changed_lines=None, incomplete=None, *, previous_html=None):
     findings = []
     evaluated = []
     incomplete = {} if incomplete is None else incomplete
@@ -106,13 +108,18 @@ def evaluate(documents, files, changed_lines=None, incomplete=None):
             continue
         # A stylesheet cannot supply a root HTML element.
         suffixes = {"required-html-class": {".html", ".htm"}}.get(check)
-        targets = {file: text for file, text in files.items()
-                   if suffixes is None or Path(file).suffix.lower() in suffixes}
+        if suffixes is None:
+            targets = {file: text for file, text in files.items()
+                       if changed_lines is None or changed_lines.get(file)}
+        else:
+            targets = {file: text for file, text in files.items()
+                       if Path(file).suffix.lower() in suffixes and (changed_lines is None or file in changed_lines)}
         if not targets:
             continue
         # Only complete syntax coverage can turn zero matches into a pass.
         finding_start = len(findings)
         incomplete_files = []
+        checked_targets = 0
         for file, text in targets.items():
             text = mask_comments(text)
             suffix = Path(file).suffix.lower()
@@ -134,17 +141,39 @@ def evaluate(documents, files, changed_lines=None, incomplete=None):
                     raise ValueError("required-html-class needs a required_class scalar")
                 root = RootHTMLParser()
                 root.feed(text)
+                cited_line = root.line
+                if changed_lines is not None:
+                    delta = changed_lines[file]
+                    span = range(root.line, root.line + root.markup.count("\n") + 1) if root.markup else ()
+                    touched = sorted(delta.intersection(span))
+                    if touched:
+                        cited_line = touched[0]
+                    else:
+                        # The after-side hunk has no lines when an attribute or
+                        # the entire start tag is deleted. Compare the base tag.
+                        if previous_html is None:
+                            continue
+                        previous = previous_html(file)
+                        if previous is None:
+                            if not delta:  # no current lines in a new file
+                                continue
+                        else:
+                            before = RootHTMLParser()
+                            before.feed(mask_comments(previous))
+                            if before.markup == root.markup:
+                                continue
                 if required not in root.classes:
-                    offset = (sum(len(line) for line in text.splitlines(keepends=True)[:root.position[0] - 1])
-                              + root.position[1]) if root.position else 0
+                    offset = sum(len(line) for line in text.splitlines(keepends=True)[:cited_line - 1]) if cited_line else None
                     matches = [(offset, "Missing required root HTML class: " + required)]
 
+            checked_targets += 1
             for offset, value in matches:
-                line = text.count("\n", 0, offset) + 1
-                end_line = line + value.count("\n")
+                line = text.count("\n", 0, offset) + 1 if offset is not None else None
                 # CSS/SCSS files flag the whole file when they appear in the diff at all (no per-line granularity).
                 whole_file = check == "no-custom-css" and suffix in {".css", ".scss"}
-                if changed_lines is not None and not (bool(changed_lines.get(file)) if whole_file else any(number in changed_lines.get(file, set()) for number in range(line, end_line + 1))):
+                if check == "no-custom-css" and changed_lines is not None and not whole_file and not any(
+                    number in changed_lines[file] for number in range(line, line + value.count("\n") + 1)
+                ):
                     continue
                 candidate = check == 'no-custom-css' and suffix in {'.jsx', '.tsx', '.js', '.ts'}
                 severity = 'warning' if candidate else document["severity"]
@@ -162,7 +191,7 @@ def evaluate(documents, files, changed_lines=None, incomplete=None):
         if incomplete_files:
             incomplete[document['id']] = {'status': 'incomplete', 'files': sorted(incomplete_files),
                 'reason': 'Bounded JSX candidate scan; JavaScript/JSX absence is not a deterministic pass.'}
-        if not incomplete_files or len(findings) > finding_start:
+        if checked_targets and (not incomplete_files or len(findings) > finding_start):
             evaluated.append(document['id'])
     return findings, evaluated
 
@@ -209,6 +238,9 @@ def main():
     if args.review_selection:
         from guideline_io import read_confined
         from guideline_selection import validate_selection
+        if not args.changed:
+            parser.error("--review-selection requires --changed and reviews committed source only")
+        args.merge_base = True
         selection = json.loads(read_confined(workspace, local_path(args.review_selection, workspace)).decode('utf-8'))
         proposal = validate_selection(workspace, selection)
         if proposal['schema_version'] != '1.1.0' or proposal['method'] != 'model':
@@ -230,11 +262,12 @@ def main():
     if (args.tracked_only or args.merge_base) and not args.changed:
         parser.error("--tracked-only and --merge-base require --changed")
     if proposal is not None:
+        from guideline_selection import selected_source_path
         from review_scope import normalized_text
         documents = [dict(doc) for doc in documents]
         for doc in documents:
             selected = [s for s in proposal['sources'] if s['locator']['kind'] == 'local'
-                and str(Path(proposal['index']).parent / s['locator']['path']) in doc['sources']
+                and str(selected_source_path(workspace, proposal, s)) in doc['sources']
                 and s['material_sha256'] == doc['sha256']]
             if len(selected) != 1:
                 raise ValueError('deterministic guideline is outside approved source selection')
@@ -242,12 +275,13 @@ def main():
             doc['review_text'] = normalized_text(doc['text'])[bounds['start']:bounds['end']]
     files, changed_lines, inputs = read_sources(workspace, args.changed, args.base_ref, args.tracked_only, args.merge_base,
                                                 approved_scope=approved_scope)
-    # In changed mode, skip files that had no lines in the diff (changed_lines maps to empty set for unchanged files).
-    targets = files if changed_lines is None else {file: text for file, text in files.items() if changed_lines.get(file)}
     # "any" is the wildcard design_system sentinel; guidelines with it apply to every design system.
     applicable_documents = [doc for doc in documents if doc.get("design_system") in {args.design_system, "any"}]
     incomplete = {}
-    findings, evaluated = evaluate(applicable_documents, targets, changed_lines, incomplete)
+    findings, evaluated = evaluate(
+        applicable_documents, files, changed_lines, incomplete,
+        previous_html=lambda name: base_source(workspace, inputs["base"], inputs.get("renamed_from", {}).get(name, name)),
+    )
     error_ids = {finding["guideline_id"] for finding in findings if finding["severity"] == "error"}
     warning_ids = {finding["guideline_id"] for finding in findings} - error_ids
     run_id = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S") + "-" + uuid.uuid4().hex[:12]
