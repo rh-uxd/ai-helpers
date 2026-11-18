@@ -2,7 +2,7 @@
 
 Create a product-owned README index **only when requested**. Start with the
 README-only example below; add optional [sources.json](sources.json) for richer
-metadata or external locators. This proposed layout is not an
+metadata. This proposed layout is not an
 organization-wide standard. Existing indexes can stay in their current locations.
 Replace these template notes and illustrative entries when adopting an index;
 do not invent product ownership or approval.
@@ -33,9 +33,8 @@ release: unspecified
 The optional sidecar's example locator is `rules/controls.md`; relevant examples and assets are
 listed in the sidecar. These placeholders are not bundled policy and need not
 exist during sidecar metadata discovery. README-linked local Markdown must exist,
-but its contents are not opened during discovery. Prefer product-owned Markdown with assets and code
-examples when useful. External sources should identify a specific document,
-section, or frame, not a folder, entire Figma file, or site crawl.
+but its contents are not opened during discovery. Prefer product-owned Markdown
+with assets and code examples when useful. External locators remain references only.
 
 ## Human editing and metadata contract
 
@@ -77,9 +76,9 @@ signed URLs in any metadata.
 URLs must be HTTP(S) without credentials, query or fragment. Preserve meaningful
 section/branch/node identity in structured fields instead of stripping it away.
 Provider keys use letters/digits, `_`, `-`; node IDs use `12:34`, not `12-34`.
-Values are validated, never normalized. Empty node lists and null sections are
-only discovery hints: acquisition must resolve/approve exact scope separately.
-These locator shapes describe metadata, not connector availability or retrieval.
+Values are validated, never normalized. External locator shapes are retained for
+existing metadata, not connector availability or retrieval. Select local Markdown
+for review.
 Local paths and all index overrides are confined to the consumer workspace;
 traversal and symlink components are rejected, including links that stay inside.
 
@@ -117,8 +116,7 @@ failures raise `OSError`. A missing default index is `absent`, not a pass.
 
 Topic requests only expose metadata, not consent. `approved` in an index is not
 user approval, authority verification, supported-rule coverage, or a compliance
-pass. Selection receipts, bounded acquisition, immutable staging, adapters and the evaluator
-reuse seam are documented in the checker's
+pass. Selection receipts, immutable local staging, and adapters are documented in the checker's
 [selection workflow](../../references/selection-workflow.md). The template's null
 product must be replaced with a real product identity before selection. This may
 come from index metadata or the explicit `product_identity` selection argument

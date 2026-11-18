@@ -1,6 +1,6 @@
 # Bounded LLM guideline review
 
-Use the LLM as the semantic reviewer only after the user explicitly selects the product guidance and authorizes model review. A README is a local index: its relative Markdown links are candidate sources, not consent to review every link. Never follow README or sidecar external links automatically. `sources.json` is optional metadata for external or richer structured locators.
+Use the LLM as the semantic reviewer only after the user explicitly selects the product guidance and authorizes model review. A README is a local index: its relative Markdown links are candidate sources, not consent to review every link. `sources.json` is optional metadata. External references do not provide reviewable guidance; ask for a local Markdown copy rather than fetching them.
 
 ## Freeze the selected local rules
 

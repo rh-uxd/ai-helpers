@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # AI-generated script by GPT-6 Luna.
-"""Resolve local guideline snapshots. Remote retrieval belongs to the assistant."""
+"""Resolve selected local guideline snapshots without retrieval."""
 import argparse
 import hashlib
 import json

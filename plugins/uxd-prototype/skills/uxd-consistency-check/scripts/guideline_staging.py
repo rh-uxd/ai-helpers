@@ -3,7 +3,6 @@ import hashlib
 from pathlib import Path
 
 from guideline_resolver import _confined, _workspace
-from guideline_acquisition import acquisition_source
 from guideline_selection import (artifact_root, immutable_bytes, persist, reuse_selection,
                                  validate_approval, validate_selection, verify)
 from guideline_sources import load_guidelines as _load_guidelines
@@ -39,50 +38,38 @@ def snapshot(workspace, path, *, expected=None, category='originals', identity='
 
 def _build_staging(workspace, selection, *, acquisitions=(), adapters=(), readonly=False):
     from functools import partial
+    if acquisitions:
+        raise ValueError('external acquisition receipts cannot be staged; select local Markdown instead')
     take_snapshot = partial(snapshot, readonly=readonly)
     proposal = validate_selection(workspace, selection)
-    by_source = {}
-    for acquisition in acquisitions:
-        identity = acquisition_source(workspace, acquisition, selection)
-        if identity in by_source:
-            raise ValueError('multiple acquisitions for one source require an explicit choice')
-        by_source[identity] = acquisition
+    if proposal['index'] is None:
+        raise ValueError('staging requires an index selection; freeze directly selected Markdown for model review')
     originals = []
     candidates = []
     manual = []
     for source in proposal['sources']:
-        if source['locator']['kind'] == 'local':
-            path = Path(proposal['index']).parent / source['locator']['path']
-            if readonly:
-                path = artifact_root(workspace) / 'originals' / source['material_sha256'] / path.name
-            items = [take_snapshot(workspace, path, expected=source['material_sha256'])]
-        else:
-            acquisition = by_source.get(source['id'])
-            if acquisition is None or acquisition['status'] != 'acquired':
-                manual.append({'source_id': source['id'], 'locator': source['locator'],
-                               'status': 'unavailable', 'reason': 'selected source has no successful acquisition'})
-                continue
-            items = acquisition['originals']
-        for item in items:
-            original = take_snapshot(workspace, item['path'], expected=item['sha256'])
-            original = {**original, 'source_id': source['id'], 'locator': source['locator']}
-            originals.append(original)
-            staged = take_snapshot(workspace, original['path'], expected=original['sha256'], category='staged', identity=source['id'])
-            # Original filename and bytes are preserved; never rewrite incompatible input.
-            try:
-                if Path(staged['path']).suffix.lower() != '.md' or proposal['method'] != 'deterministic':
-                    raise ValueError('selected evidence is not deterministic Markdown input')
-                if source['locator']['kind'] == 'figma':
-                    raise ValueError('Figma metadata/assets are manual evidence, not rule definitions')
-                if source['locator'].get('section') is not None:
-                    raise ValueError('section review requires an explicit mapped adapter, not whole-document rules')
-                manifest = load_guidelines(workspace, [source['id'] + '=' + staged['path']], proposal.get('design_system', 'custom'))
-                if source['rule_ids'] and set(source['rule_ids']) != {d['original_id'] for d in manifest['documents']}:
-                    raise ValueError('indexed rule IDs do not match document identities')
-            except (ValueError, UnicodeError) as error:
-                manual.append({**original, 'status': 'unevaluated', 'method': proposal['method'], 'reason': str(error)})
-                continue
-            candidates.append({**staged, 'source_id': source['id'], 'namespace': source['id']})
+        if source['locator']['kind'] != 'local':
+            manual.append({'source_id': source['id'], 'locator': source['locator'],
+                           'status': 'unavailable', 'reason': 'external sources require a separately selected local Markdown copy'})
+            continue
+        path = Path(proposal['index']).parent / source['locator']['path']
+        if readonly:
+            path = artifact_root(workspace) / 'originals' / source['material_sha256'] / path.name
+        original = take_snapshot(workspace, path, expected=source['material_sha256'])
+        original = {**original, 'source_id': source['id'], 'locator': source['locator']}
+        originals.append(original)
+        staged = take_snapshot(workspace, original['path'], expected=original['sha256'], category='staged', identity=source['id'])
+        # Original filename and bytes are preserved; never rewrite incompatible input.
+        try:
+            if Path(staged['path']).suffix.lower() != '.md' or proposal['method'] != 'deterministic':
+                raise ValueError('selected evidence is not deterministic Markdown input')
+            manifest = load_guidelines(workspace, [source['id'] + '=' + staged['path']], proposal.get('design_system', 'custom'))
+            if source['rule_ids'] and set(source['rule_ids']) != {d['original_id'] for d in manifest['documents']}:
+                raise ValueError('indexed rule IDs do not match document identities')
+        except (ValueError, UnicodeError) as error:
+            manual.append({**original, 'status': 'unevaluated', 'method': proposal['method'], 'reason': str(error)})
+            continue
+        candidates.append({**staged, 'source_id': source['id'], 'namespace': source['id']})
     for adapter in adapters:
         verify(adapter)
         if adapter.get('kind') != 'adapter_receipt':
@@ -98,10 +85,11 @@ def _build_staging(workspace, selection, *, acquisitions=(), adapters=(), readon
         candidates.append({**derived, 'namespace': 'adapter-' + adapted['source_id'],
                            'source_id': adapted['source_id'], 'adapter_receipt': adapter['sha256']})
     load_guidelines(workspace, [c['namespace'] + '=' + c['path'] for c in candidates], proposal.get('design_system', 'custom'))
+    # Preserve v1 field values so existing local-only proposals still verify.
     return {'schema_version': '1.0.0', 'kind': 'staging_proposal',
                    'selection': selection, 'originals': originals, 'candidates': candidates,
-                   'manual_evidence': manual, 'acquisitions': list(acquisitions), 'adapters': list(adapters),
-                   'requires_material_approval': any(o['locator']['kind'] != 'local' for o in originals)}
+                   'manual_evidence': manual, 'acquisitions': [], 'adapters': list(adapters),
+                   'requires_material_approval': False}
 
 
 def propose_staging(workspace, selection, *, acquisitions=(), adapters=()):
@@ -123,6 +111,8 @@ def validate_staging(workspace, proposal):
 
 
 def confirm_staging(workspace, proposal, *, material_approval=None):
+    if material_approval is not None:
+        raise ValueError('external material approval is no longer supported')
     validate_staging(workspace, proposal)
     validate_selection(workspace, proposal['selection'])
     if proposal.get('kind') != 'staging_proposal':
@@ -131,8 +121,6 @@ def confirm_staging(workspace, proposal, *, material_approval=None):
         raise ValueError('selected material changed; renewed confirmation required')
     for original in proposal['originals']:
         snapshot(workspace, original['path'], expected=original['sha256'])
-    if proposal['requires_material_approval']:
-        validate_approval(material_approval, proposal['sha256'])
     arguments = []
     for candidate in proposal['candidates']:
         snapshot(workspace, candidate['path'], expected=candidate['sha256'], category='staged', identity=candidate['source_id'])
@@ -148,7 +136,7 @@ def confirm_staging(workspace, proposal, *, material_approval=None):
     return persist(workspace, 'staging', {'schema_version': '1.0.0', 'kind': 'staging_receipt',
                    'proposal': proposal, 'guidelines': arguments, 'manual_evidence': proposal['manual_evidence'],
                    'analysis_workspace': analysis_workspace, 'analyzer_args': analyzer_args,
-                   'material_approval': material_approval})
+                   'material_approval': None})
 
 
 def reuse_staging(workspace, receipt):
@@ -157,8 +145,6 @@ def reuse_staging(workspace, receipt):
     if receipt.get('kind') != 'staging_receipt':
         raise ValueError('expected staging receipt')
     proposed = validate_staging(workspace, receipt['proposal'])
-    if proposed['requires_material_approval']:
-        validate_approval(receipt['material_approval'], proposed['sha256'])
     state = reuse_selection(workspace, proposed['selection'])
     if state['status'] == 'confirmation_required':
         return {'status': 'confirmation_required', 'reason': 'selected material changed'}

@@ -325,16 +325,14 @@ def reuse_selection(workspace, receipt):
 
 
 def main():
-    """One offline JSON RPC-style CLI shared by selection/acquisition/staging.
+    """One offline JSON CLI for local selection and staging.
 
     Input: {operation: <allowlisted hyphenated name>, arguments: {...}}.
-    Approval evidence must come from the host/user, never source content. This CLI
-    never dispatches tools: acquisition requests must be run by the authorized host.
+    Approval evidence must come from the host/user, never source content.
+    This CLI does not retrieve external guidelines.
     """
     import argparse
     from guideline_resolver import _unique_object
-    from guideline_acquisition import (plan_acquisition, authorize_request, record_response,
-                                       propose_local_export, confirm_local_export)
     from guideline_staging import (propose_staging, confirm_staging, reuse_staging, propose_adapter, confirm_adapter)
     parser = argparse.ArgumentParser(description=main.__doc__)
     parser.add_argument('--workspace', required=True)
@@ -342,9 +340,7 @@ def main():
     parser.add_argument('--guideline-args', action='store_true', help='for confirm-staging only: emit exact NAMESPACE=PATH lines')
     args = parser.parse_args()
     operations = {'propose-selection': propose_selection, 'confirm-selection': confirm_selection,
-                  'reuse-selection': reuse_selection, 'plan-acquisition': plan_acquisition,
-                  'authorize-request': authorize_request, 'record-response': record_response,
-                  'propose-local-export': propose_local_export, 'confirm-local-export': confirm_local_export,
+                  'reuse-selection': reuse_selection,
                   'propose-staging': propose_staging, 'confirm-staging': confirm_staging, 'reuse-staging': reuse_staging,
                   'propose-adapter': propose_adapter, 'confirm-adapter': confirm_adapter}
     try:
