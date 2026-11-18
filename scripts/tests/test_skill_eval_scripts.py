@@ -68,7 +68,10 @@ class EvalScripts(unittest.TestCase):
     def report(self, judges, skipped):
         with tempfile.TemporaryDirectory() as tmp:
             Path(tmp, 'summary.yaml').write_text(json.dumps({'judges': judges, 'per_case': {}}))
-            env = dict(os.environ, EVAL_LLM_JUDGES_SKIPPED=str(skipped).lower())
+            env = dict(os.environ)
+            env.pop('EVAL_LLM_JUDGES_SKIPPED', None)
+            if skipped is not None:
+                env['EVAL_LLM_JUDGES_SKIPPED'] = str(skipped).lower()
             return subprocess.check_output(
                 [BASH, str(ROOT / 'scripts/parse-eval-results.sh'), tmp],
                 cwd=ROOT, env=env, text=True)
@@ -83,6 +86,18 @@ class EvalScripts(unittest.TestCase):
 
     def test_code_failure_still_fails_when_llm_judges_skipped(self):
         self.assertIn('Overall: **FAIL**', self.report({'a-skipped': {'pass_rate': None}, 'code-check': {'pass_rate': 0.0}}, True))
+
+    def test_unexpected_ungraded_judge_fails_report(self):
+        for skipped in (False, None):
+            for result in ({'pass_rate': None}, {}):
+                with self.subTest(skipped=skipped, result=result):
+                    output = self.report({'ungraded': result, 'passing': {'pass_rate': 1.0}}, skipped)
+                    self.assertIn('| ungraded | n/a | n/a | UNGRADED |', output)
+                    self.assertIn('Result: **FAIL**', output)
+                    self.assertIn('Overall: **FAIL**', output)
+                    self.assertNotIn('Result: **PASS**', output)
+                    self.assertNotIn('Overall: **PASS**', output)
+                    self.assertNotIn('FAIL_FLAG', output)
 
     def test_existing_graded_report_is_preserved(self):
         self.assertIn('Overall: **PASS**', self.report({'judge': {'pass_rate': 1.0}}, False))

@@ -82,6 +82,8 @@ for name, info in sorted(judges.items()):
     rate = info.get('pass_rate')
     if rate is None:
         print(f'| {name} | n/a | n/a | UNGRADED |')
+        if os.environ.get('EVAL_LLM_JUDGES_SKIPPED') != 'true':
+            print('FAIL_FLAG')
         continue
     pct = f'{rate * 100:.0f}%'
     min_rate = thresholds.get(name, {}).get('min_pass_rate', 1.0)
