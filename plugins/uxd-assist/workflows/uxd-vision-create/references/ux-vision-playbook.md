@@ -164,23 +164,13 @@ Print or share the findings so workshop participants can reference them directly
 - If creating a map, ask `uxd-canvas-create` for a vision journey map using its paired As-Is/To-Be template. Create one Miro board with two matching frames and keep the Miro board as the shared source for the map.
 - Bring the brief's separate As-Is and To-Be map-shaped Journey starters and retain their matching `S#` stage columns and order. If the brief lacks them, have `uxd-canvas-create` draft a concise outline from the available evidence before seeding the board; mark assumptions and leave unsupported future claims open.
 
-#### Connect Miro MCP to Codex
+#### Connect Miro MCP to your AI tool
 
-If you are using Codex and want it to read and edit the Miro board directly, connect Miro's hosted MCP server. Direct Miro access is optional; use the supported export or canvas handoff when it is unavailable:
+To read and edit a Miro board directly, connect Miro's hosted MCP server. If direct access is unavailable, use the supported export or canvas handoff instead.
 
-1. In a terminal, add the Miro MCP server:
-   ```bash
-   codex mcp add miro --url https://mcp.miro.com
-   ```
-2. Open the authorization link Codex provides, sign in to Miro, and approve the requested access to read and write boards.
-3. Start a new Codex chat or restart Codex so it loads the Miro MCP tools.
-4. Check the connection:
-   ```bash
-   codex mcp list
-   ```
-   The list should show `miro` as enabled.
-
-The server is added to your global Codex configuration. Treat the authorization link as private; do not share it because it is specific to your sign-in flow.
+1. In your AI tool's connector or MCP settings, add the Miro connector or configure a remote MCP server with the URL `https://mcp.miro.com`.
+2. Complete Miro's authorization flow and select the team that owns the board.
+3. Verify the connection by giving your AI tool the board URL and asking it to confirm that it can access it.
 
 **The map structure:** Both frames use the same phases and rows. The shared actor, scenario, and future horizon sit above the frames.
 
@@ -438,17 +428,17 @@ Keep the vision in an isolated branch or workspace, following the target project
 
 ## Skill Reference
 
-The orchestrator guidance adapts the route to the designer's context. The skills below are capabilities to use where they help; they do not define a required order. For the ChatGPT pilot, follow the local files under `skills/` and do not invoke installed versions of the same skills. The map and prototype capabilities come from separate `uxd-design` and `uxd-prototype` sources and are not part of this local update.
+The orchestrator guidance adapts the route to the designer's context. Use the skills below where they help. When running the workflow from a local checkout, follow the linked workshop skill files in place of installed copies. Use the `uxd-design` and `uxd-prototype` plugins for mapping and prototyping.
 
 | Skill | Phase | What It Does | Source |
 |-------|-------|-------------|--------|
 | Optional research lookup | Pre-work | Retrieves evidence or participant quotes when an approved source and lookup skill are available | Optional; use supplied evidence otherwise |
-| `uxd-problem-brief-create` | 1. Define | Frames the current problem, affected person, evidence, desired outcome, and scope | Local: `skills/uxd-problem-brief-create/SKILL.md` |
+| `uxd-problem-brief-create` | 1. Define | Frames the current problem, affected person, evidence, desired outcome, and scope | [Local workshop skill](../../../../uxd-workshop/skills/uxd-problem-brief-create/SKILL.md) |
 | `uxd-canvas-create` | 2. Map | Creates a paired As-Is/To-Be vision journey map and checks research coverage and gaps | `uxd-design` plugin |
-| `uxd-experience-narrative-create` | 3. Story | Drafts a Miro-editable To-Be storyboard, then turns the edited board into final prose and a screen breakdown | Local: `skills/uxd-experience-narrative-create/SKILL.md` |
+| `uxd-experience-narrative-create` | 3. Story | Drafts a Miro-editable To-Be storyboard, then turns the edited board into final prose and a screen breakdown | [Local workshop skill](../../../../uxd-workshop/skills/uxd-experience-narrative-create/SKILL.md) |
 | `uxd-prototype-create` | 4. Build | Creates an interactive prototype from the available problem context, designs, maps, storyboard, and narrative | `uxd-prototype` plugin |
 | `uxd-prototype-evaluate` | Optional validation | Evaluates a prototype against a Jira story's acceptance criteria and usability | `uxd-prototype` plugin; requires Jira context and a reachable prototype or workspace |
-| `uxd-experience-review` | 5. Review | Checks coherence with available problem framing, evidence, design artifacts, and supplied product principles; prepares a stakeholder demo | Local: `skills/uxd-experience-review/SKILL.md` |
+| `uxd-experience-review` | 5. Review | Checks coherence with available problem framing, evidence, design artifacts, and supplied product principles; prepares a stakeholder demo | [Local workshop skill](../../../../uxd-workshop/skills/uxd-experience-review/SKILL.md) |
 
 When the designer follows the full recommended route, the brief frames the problem, the paired map makes the current and future journey visible, and the map-completion check records research coverage and gaps. The narrative skill can draft an editable storyboard in Miro and then finalize the prose. Prototype creation uses whichever of these artifacts are available and relevant. Experience review checks coherence and fit when a review is useful; selected refinements can be applied and reviewed again. Optional ticket-based evaluation is a separate check when a Jira story exists.
 
