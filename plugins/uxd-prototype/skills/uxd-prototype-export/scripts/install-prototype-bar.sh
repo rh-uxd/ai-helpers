@@ -474,7 +474,7 @@ esac
 
 echo "Prototype Bar install complete."
 
-# With --artifacts: copy eval report into public/evals/{ID}/ for static Pages.
+# With --artifacts: copy a selected report into public/prototype-evaluations/{ID}/.
 if [[ -n "$ARTIFACTS" ]]; then
   if [[ "$NO_EVAL_COPY" == "true" ]]; then
     echo "── Eval copy skipped (--no-eval-copy)."
@@ -498,7 +498,7 @@ if [[ -n "$ARTIFACTS" ]]; then
       bash "$SCRIPT_DIR/copy-eval-for-pages.sh" \
         --artifacts "$ARTIFACTS" \
         --pages-root "$PAGES_ROOT" \
-        --evals-dir evals
+        --evals-dir prototype-evaluations
     elif [[ -n "$EVAL_REPORT" && -z "$PAGES_ROOT" ]]; then
       echo "── Eval report found but no public/ or dist/ in source — skipping Pages copy."
       echo "   Run copy-eval-for-pages.sh manually after build if needed."

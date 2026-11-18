@@ -29,7 +29,7 @@ Use code-level checks for creation and ordinary refinement. Open the design-choi
 | Supporting context (`--context`) | No | Artifact URL or local path; repeat for multiple sources |
 | Workspace (`--workspace`) | No | Local path, git URL, or `standalone` (default) |
 | Push destination (`--target`) | No | `none` unless publishing |
-| Prior eval feedback | No | `artifacts/{ID}/eval/` when refining |
+| Eval feedback | No | Selected `artifacts/{ID}/prototype-evaluations/{run}/` |
 
 If the user has not said what to prototype, **stop and ask** before writing files.
 
@@ -149,7 +149,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/frontmatter.py" set "artifacts/{ID}/rfe-sna
 
 Extract from the primary source and supplied context: user stories, acceptance criteria, personas/roles, key entities, flows, and page states. Preserve reviewed sequences and source identifiers; record unsupported details as assumptions. User-reviewed artifact content uses `source: "user"` in journey entries.
 
-- Personas: prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml`; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/`. If internal-ai-helpers is available, read `plugins/uxd-eval-config/knowledge/personas/<id>.md` for Sources; skip if missing.
+- Personas: prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml`; apply only selected overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/`. Use only supplied research citations; do not search private repos.
 - **Page states:** run [references/state-brainstorm.md](references/state-brainstorm.md) before writing `states.json`. Prefer 3–7 distinct on-load end-states per page.
 - Write `artifacts/{ID}/user-stories.json`, `journeys.json`, and `states.json`. If the RFE is thin, record assumptions in `metadata.json`.
 - Keep journey ids as `journey-N` and `ac_ids` as source criterion ids (`AC-1`). Record each journey `persona`. Step 9 maps these into the design spec; do not invent a second numbering.
@@ -229,12 +229,12 @@ EXPORT_SKILL="${CLAUDE_SKILL_DIR}/../uxd-prototype-export"
 bash "${EXPORT_SKILL}/scripts/install-prototype-bar.sh" \
   --artifacts "artifacts/{ID}" \
   --source "<prototype-dir-or-workspace>" \
-  --mode standalone|workspace
+  --mode "<standalone-or-workspace>" --no-eval-copy
 ```
 
 `--source` is `artifacts/{ID}/prototype/` (standalone) or the workspace root from `workspace-analysis.json`. If auto-mount fails for React, import `<PrototypeBar />` in the app shell.
 
-Re-run after evaluate so the Eval tab gets the report (`public/evals/{ID}/`). Pass `--no-eval-copy` if the report is not needed.
+Install before freezing the evaluated revision. For approved report attachment, follow [Publish Step 2a](../uxd-prototype-publish/SKILL.md#step-2a-static-eval-path-for-prototype-bar).
 
 ## Step 11: Code-Level Checks
 
@@ -293,15 +293,18 @@ If `--pipeline` / `--speedrun`, continue with [references/pipeline-mode.md](refe
 
 ## Refinement
 
-Apply targeted changes from user feedback or existing evaluation findings. When the user selects recommendations, apply only those selections; preserve supplied context and do not rewrite the prototype. Full procedure: [references/refinement-procedure.md](references/refinement-procedure.md).
-
-Reads `artifacts/{ID}/eval/evaluation-report.csv` + `refinement-suggestions.json`. For explicitly requested evaluation loops, pass = zero FAIL and default max = 3 cycles. Ordinary refinement applies feedback, runs code-level checks, and hands back the prototype without re-evaluating.
+Follow the [refinement procedure](references/refinement-procedure.md). Apply only the requested
+changes and selected recommendations; preserve supplied context. Run code checks and hand back
+the prototype without re-evaluating.
 
 ```
-/uxd-prototype-create refine {ID} [--decisions skip|auto|human] [--headless] [--max-cycles 3]
+/uxd-prototype-create refine {ID} [--decisions skip|auto|human] [--headless]
 ```
 
-`--headless` loops refine → evaluate until zero FAIL, max cycles, or plateau.
+For evaluator findings, validate the selected run and receipts against source/build/scope.
+Claim AC success only with nonempty, fully verified selected AC coverage.
+Get separate approval for fixes, files, and verification. Preserve the parent run; verify
+once, then stop for review. No flag bypasses checkpoints or grants permissions.
 
 ## Guardrails
 

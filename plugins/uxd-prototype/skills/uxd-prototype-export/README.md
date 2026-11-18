@@ -20,7 +20,7 @@ npm install
 | `scripts/export-current.sh` | Capture one URL via Playwright |
 | `scripts/export-journey.mjs` | Batch-export `export: true` steps × scenarios |
 | `scripts/export-helper.mjs` | Local writer + `GET /evals/:id` on `127.0.0.1:9417` |
-| `scripts/copy-eval-for-pages.sh` | Copy report to `public/evals/{ID}/` for static Pages |
+| `scripts/copy-eval-for-pages.sh` | Copy selected report to `public/prototype-evaluations/{ID}/` for static Pages |
 | `scripts/serialize-page.js` | Shared DOM → HTML serializer |
 
 Schemas: `references/journeys-schema.md`, `references/states-schema.md`, `references/export-formats.md`, `references/prototype-bar-config.md`.

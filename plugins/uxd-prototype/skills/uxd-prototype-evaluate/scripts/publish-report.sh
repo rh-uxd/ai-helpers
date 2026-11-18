@@ -5,13 +5,12 @@ set -euo pipefail
 # Overwrites the report at the same URL if re-run for the same prototype.
 #
 # Usage:
-#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh .artifacts/PROJ-298/eval/
-#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh .artifacts/PROJ-298/eval/ --mode=branch
+#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/prototype-evaluations/full-1/
+#   bash ${CLAUDE_SKILL_DIR}/scripts/publish-report.sh artifacts/PROJ-298/prototype-evaluations/full-1/ --mode=branch
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 CONFIG_FILE="$PROJECT_ROOT/config/publish.yaml"
-INDEX_TEMPLATE="$PROJECT_ROOT/templates/report-index.html"
 
 # ── Parse arguments ──────────────────────────────────────────────────────────
 
@@ -27,8 +26,8 @@ for arg in "$@"; do
 done
 
 if [[ -z "$ARTIFACTS_DIR" ]]; then
-  echo "Usage: publish-report.sh <artifacts-dir> [--mode=pages|branch]" >&2
-  echo "  e.g. publish-report.sh .artifacts/PROJ-298/eval/" >&2
+  echo "Usage: publish-report.sh <run-dir> [--mode=pages|branch]" >&2
+  echo "  canonical: publish-report.sh artifacts/PROJ-298/prototype-evaluations/full-1/" >&2
   exit 1
 fi
 
@@ -40,11 +39,21 @@ if [[ ! -f "$REPORT_FILE" ]]; then
   exit 1
 fi
 
-# Key root holds prototype-bar.json; eval outputs live under …/<KEY>/eval/
+if ! command -v node >/dev/null 2>&1; then
+  echo "Error: Node.js is required to validate report publication input." >&2
+  exit 1
+fi
+node "$SCRIPT_DIR/reporting/validate-publish-input.js" "$ARTIFACTS_DIR"
+
+# Find the prototype key, not the individual run name.
 KEY_DIR="$ARTIFACTS_DIR"
 PROTO_KEY="$(basename "$ARTIFACTS_DIR")"
+GLOBAL_EVAL_NAME="prototype-evaluations"
 if [[ "$PROTO_KEY" == "eval" ]]; then
   KEY_DIR="$(dirname "$ARTIFACTS_DIR")"
+  PROTO_KEY="$(basename "$KEY_DIR")"
+elif [[ "$(basename "$(dirname "$ARTIFACTS_DIR")")" == "prototype-evaluations" || "$(basename "$(dirname "$ARTIFACTS_DIR")")" == "evaluation" ]]; then
+  KEY_DIR="$(dirname "$(dirname "$ARTIFACTS_DIR")")"
   PROTO_KEY="$(basename "$KEY_DIR")"
 fi
 
@@ -54,12 +63,24 @@ inject_prototype_bar() {
   local inject="$SCRIPT_DIR/../../uxd-prototype-export/scripts/inject-prototype-bar-into-html.mjs"
   [[ -f "$html_path" && -f "$inject" ]] || return 0
   command -v node >/dev/null 2>&1 || return 0
-  node "$inject" --html "$html_path" --artifacts "$KEY_DIR" --view eval 2>/dev/null || true
+  # Keep this copy's navigation on the configured report route without changing
+  # the designer's existing config before publication has succeeded.
+  local report_config="$WORK_DIR/report-bar.json"
+  node - "$KEY_DIR/prototype-bar.json" "$report_config" "$PROTO_KEY" "/$REPORTS_ROUTE/$PROTO_KEY/" <<'NODE'
+const fs = require('fs');
+const [source, output, id, url] = process.argv.slice(2);
+let config = {};
+try {
+  const saved = JSON.parse(fs.readFileSync(source, 'utf8'));
+  if (saved && typeof saved === 'object' && !Array.isArray(saved)) config = saved;
+} catch {}
+fs.writeFileSync(output, JSON.stringify({ ...config, id, views: { ...config.views, eval: url } }));
+NODE
+  node "$inject" --html "$html_path" --artifacts "$KEY_DIR" --config "$report_config" --view eval 2>/dev/null || true
 }
 
-# Cross-key leaderboard lives under consumer .artifacts/eval/
-# Derive from KEY_DIR (…/.artifacts/<KEY>) so we never resolve from the skill install cwd.
-EVAL_GLOBAL_DIR="$(cd "$(dirname "$KEY_DIR")" && mkdir -p eval && cd eval && pwd)"
+# Keep the cross-key index beside the project key folders, not inside a run.
+EVAL_GLOBAL_DIR="$(cd "$(dirname "$KEY_DIR")" && mkdir -p "$GLOBAL_EVAL_NAME" && cd "$GLOBAL_EVAL_NAME" && pwd)"
 
 # ── Read config ──────────────────────────────────────────────────────────────
 
@@ -72,6 +93,14 @@ GITLAB_PAGES_REPO="${GITLAB_PAGES_REPO:-$(read_yaml_value gitlab_pages_repo)}"
 PAGES_BASE_URL="${PAGES_BASE_URL:-$(read_yaml_value pages_base_url)}"
 PAGES_BRANCH="${PAGES_BRANCH:-$(read_yaml_value pages_branch)}"
 REPORTS_DIR="${REPORTS_DIR:-$(read_yaml_value reports_dir)}"
+REPORTS_DIR="${REPORTS_DIR:-public/prototype-evaluations}"
+# Pages serves public/ as its root. Derive URLs and branch-mode paths from the
+# same setting, so changing reports_dir cannot leave links pointing at /evals/.
+REPORTS_ROUTE="${REPORTS_DIR#public/}"
+if [[ ! "$REPORTS_DIR" =~ ^[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*$ || "/$REPORTS_DIR/" == *"/../"* || "/$REPORTS_DIR/" == *"/./"* || "$REPORTS_ROUTE" == "public" ]]; then
+  echo "Error: reports_dir must be a relative report directory such as public/prototype-evaluations" >&2
+  exit 1
+fi
 JIRA_BASE_URL="${JIRA_BASE_URL:-$(read_yaml_value jira_base_url)}"
 DEFAULT_MODE="$(read_yaml_value default_mode)"
 BRANCH_REMOTE="$(read_yaml_value branch_remote)"
@@ -97,7 +126,7 @@ publish_pages() {
   fi
 
   local BRANCH="${PAGES_BRANCH:-main}"
-  local RDIR="${REPORTS_DIR:-public/evals}"
+  local RDIR="$REPORTS_DIR"
 
   # Shallow clone the target branch
   git clone --depth 1 --branch "$BRANCH" "$GITLAB_PAGES_REPO" "$WORK_DIR/pages-repo" 2>/dev/null
@@ -109,47 +138,9 @@ publish_pages() {
   cp "$REPORT_FILE" "$REPORTS_PATH/$PROTO_KEY/index.html"
   inject_prototype_bar "$REPORTS_PATH/$PROTO_KEY/index.html"
 
-  # Copy data files for dashboard index generation
-  [[ -f "$ARTIFACTS_DIR/evaluation-report.csv" ]] && cp "$ARTIFACTS_DIR/evaluation-report.csv" "$REPORTS_PATH/$PROTO_KEY/"
-  [[ -f "$ARTIFACTS_DIR/journey-log.json" ]] && cp "$ARTIFACTS_DIR/journey-log.json" "$REPORTS_PATH/$PROTO_KEY/"
-
-  # Copy screenshots directory (fallback for any relative paths not inlined as base64)
-  if [[ -d "$ARTIFACTS_DIR/screenshots" ]]; then
-    cp -r "$ARTIFACTS_DIR/screenshots" "$REPORTS_PATH/$PROTO_KEY/screenshots"
-  fi
-
-  # Write metadata.json with MR/repo info if available from extract state
-  local EXTRACT_STATE="$ARTIFACTS_DIR/extract-state.json"
-  if [[ -f "$EXTRACT_STATE" ]]; then
-    cp "$EXTRACT_STATE" "$REPORTS_PATH/$PROTO_KEY/extract-state.json"
-  fi
-  # Generate metadata from environment or extract-state
-  if command -v node >/dev/null 2>&1; then
-    node -e "
-      const fs = require('fs');
-      const path = require('path');
-      const dir = '$REPORTS_PATH/$PROTO_KEY';
-      const meta = {};
-      const es = path.join(dir, 'extract-state.json');
-      if (fs.existsSync(es)) {
-        const d = JSON.parse(fs.readFileSync(es, 'utf8'));
-        if (d.ticket_summary || d.story_title || d.title) meta.title = d.ticket_summary || d.story_title || d.title;
-        if (d.mr_url || d.merge_request_url) meta.mrUrl = d.mr_url || d.merge_request_url;
-        if (d.repo_url || d.repository_url) meta.repoUrl = d.repo_url || d.repository_url;
-        if (d.branch) meta.branch = d.branch;
-      }
-      if (Object.keys(meta).length > 0) {
-        fs.writeFileSync(path.join(dir, 'metadata.json'), JSON.stringify(meta, null, 2));
-      }
-    " 2>/dev/null || true
-  fi
-
-  # ponytail: only final report published — no iter snapshots or originals
-
-  # Regenerate the data.json for the React dashboard
-  # Always use local generate-dashboard.js — remote generate-data.cjs has a
-  # variable shadowing bug (html module vs html string variable on line 89).
-  node "$(dirname "$0")/generate-dashboard.js" "$REPORTS_PATH"
+  # Canonical HTML is self-contained. Publish only that derived report and
+  # rebuild the link index, never old CSV/journey projections or private inputs.
+  node "$(dirname "$0")/reporting/generate-dashboard.js" "$REPORTS_PATH"
 
   # Copy leaderboard if it exists (sibling to index.html for navigation)
   local LEADERBOARD="${EVAL_GLOBAL_DIR:+$EVAL_GLOBAL_DIR/pain-leaderboard.html}"
@@ -169,7 +160,7 @@ publish_pages() {
     echo "Published successfully."
   fi
 
-  local REPORT_URL="${PAGES_BASE_URL}/evals/${PROTO_KEY}/"
+  local REPORT_URL="${PAGES_BASE_URL%/}/${REPORTS_ROUTE}/${PROTO_KEY}/"
   echo "$REPORT_URL" > "$ARTIFACTS_DIR/report-url.txt"
   echo "$REPORT_URL"
 }
@@ -207,12 +198,12 @@ publish_branch() {
   fi
 
   cd "$BRANCH_DIR"
-  mkdir -p "evals/$PROTO_KEY"
-  cp "$REPORT_FILE" "evals/$PROTO_KEY/index.html"
-  inject_prototype_bar "evals/$PROTO_KEY/index.html"
+  mkdir -p "$REPORTS_ROUTE/$PROTO_KEY"
+  cp "$REPORT_FILE" "$REPORTS_ROUTE/$PROTO_KEY/index.html"
+  inject_prototype_bar "$REPORTS_ROUTE/$PROTO_KEY/index.html"
 
   # Regenerate index
-  node "$(dirname "$0")/generate-dashboard.js" "$BRANCH_DIR/evals"
+  node "$SCRIPT_DIR/reporting/generate-dashboard.js" "$BRANCH_DIR/$REPORTS_ROUTE"
 
   git add -A
   if git diff --cached --quiet; then
@@ -231,113 +222,11 @@ publish_branch() {
   git worktree remove "$BRANCH_DIR" 2>/dev/null || true
 
   # Construct raw file URL (GitLab format)
-  local RAW_URL="${GITLAB_PAGES_REPO%.git}/-/raw/${BRANCH}/evals/${PROTO_KEY}/index.html"
+  local RAW_URL="${GITLAB_PAGES_REPO%.git}/-/raw/${BRANCH}/${REPORTS_ROUTE}/${PROTO_KEY}/index.html"
   # Convert SSH URL to HTTPS for raw access
   RAW_URL="$(echo "$RAW_URL" | sed 's|git@\([^:]*\):|https://\1/|')"
   echo "$RAW_URL" > "$ARTIFACTS_DIR/report-url.txt"
   echo "$RAW_URL"
-}
-
-# ── Index page generation ────────────────────────────────────────────────────
-
-generate_index() {
-  local EVALS_DIR="$1"
-  local INDEX_FILE="$EVALS_DIR/index.html"
-  local ROWS_FILE STATS_FILE
-  ROWS_FILE="$(mktemp)"
-  STATS_FILE="$(mktemp)"
-
-  local total_evals=0
-  local total_pass=0
-  local usability_sum=0
-  local usability_count=0
-
-  for report_dir in "$EVALS_DIR"/*/; do
-    [[ -f "$report_dir/index.html" ]] || continue
-    local key
-    key="$(basename "$report_dir")"
-    [[ "$key" == "." || "$key" == ".." ]] && continue
-
-    total_evals=$((total_evals + 1))
-
-    local eval_date
-    eval_date="$(date -r "$report_dir/index.html" +%Y-%m-%d 2>/dev/null || date +%Y-%m-%d)"
-
-    local title=""
-    title="$(grep -o '<title>[^<]*</title>' "$report_dir/index.html" 2>/dev/null | head -1 | sed 's/<[^>]*>//g' || echo "")"
-    [[ -z "$title" ]] && title="$key"
-
-    local ac_result="—" ac_display="" usability="—" usability_class=""
-    local csv_file="$report_dir/evaluation-report.csv"
-    if [[ -f "$csv_file" ]]; then
-      local p f fl
-      p=$(grep -c ',PASS,' "$csv_file" 2>/dev/null || echo 0)
-      f=$(grep -c ',FAIL,' "$csv_file" 2>/dev/null || echo 0)
-      fl=$(grep -c ',FLAGGED,' "$csv_file" 2>/dev/null || echo 0)
-      local total_ac=$((p + f + fl))
-      ac_result="${p}/${total_ac}"
-      if [[ "$f" -eq 0 ]]; then
-        ac_display="<span class=\"badge badge-pass\">Pass</span> ${ac_result}"
-        total_pass=$((total_pass + 1))
-      elif [[ "$fl" -gt 0 ]]; then
-        ac_display="<span class=\"badge badge-mixed\">Mixed</span> ${ac_result}"
-      else
-        ac_display="<span class=\"badge badge-fail\">Fail</span> ${ac_result}"
-      fi
-    fi
-
-    local jl_file="$report_dir/journey-log.json"
-    if [[ -f "$jl_file" ]]; then
-      local score
-      score=$(grep -o '"overall_score"[[:space:]]*:[[:space:]]*"[^"]*"' "$jl_file" 2>/dev/null | head -1 | sed 's/.*: *"//;s/".*//')
-      if [[ -z "$score" ]]; then
-        score=$(grep -o '"overall_score"[[:space:]]*:[[:space:]]*[0-9.]*' "$jl_file" 2>/dev/null | head -1 | sed 's/.*: *//')
-      fi
-      if [[ -n "$score" ]]; then
-        usability="$score"
-        local num_score
-        num_score=$(echo "$score" | sed 's|/21||')
-        if command -v bc >/dev/null 2>&1; then
-          if [[ $(echo "$num_score >= 15" | bc 2>/dev/null) == "1" ]]; then usability_class="score-good"
-          elif [[ $(echo "$num_score >= 10" | bc 2>/dev/null) == "1" ]]; then usability_class="score-ok"
-          else usability_class="score-low"; fi
-          usability_sum=$(echo "$usability_sum + $num_score" | bc)
-          usability_count=$((usability_count + 1))
-        fi
-      fi
-    fi
-
-    echo "<tr><td><a href=\"${key}/\">${key}</a></td><td>${title}</td><td>${ac_display}</td><td><span class=\"score ${usability_class}\">${usability}</span></td><td class=\"date-cell\">${eval_date}</td><td><a href=\"${JIRA_BASE_URL}/${key}\" target=\"_blank\">Jira</a></td></tr>" >> "$ROWS_FILE"
-  done
-
-  local avg_usability="—"
-  if [[ "$usability_count" -gt 0 ]] && command -v bc >/dev/null 2>&1; then
-    avg_usability="$(echo "scale=1; $usability_sum / $usability_count" | bc)/21"
-  fi
-  local pass_rate="—"
-  if [[ "$total_evals" -gt 0 ]]; then
-    pass_rate="$((total_pass * 100 / total_evals))%"
-  fi
-
-  cat > "$STATS_FILE" <<STATSEOF
-<div class="stat-card"><div class="stat-value">${total_evals}</div><div class="stat-label">Total Evals</div></div>
-<div class="stat-card"><div class="stat-value">${pass_rate}</div><div class="stat-label">Pass Rate</div></div>
-<div class="stat-card"><div class="stat-value">${avg_usability}</div><div class="stat-label">Avg Usability</div></div>
-<div class="stat-card"><div class="stat-value">${total_pass}/${total_evals}</div><div class="stat-label">All AC Pass</div></div>
-STATSEOF
-
-  if [[ -f "$INDEX_TEMPLATE" ]]; then
-    sed "s|{{STATS_CARDS}}|$(cat "$STATS_FILE")|" "$INDEX_TEMPLATE" | sed "/{{REPORT_ROWS}}/r $ROWS_FILE" | sed '/{{REPORT_ROWS}}/d' > "$INDEX_FILE"
-  else
-    cat > "$INDEX_FILE" <<'INDEXEOF'
-<!DOCTYPE html><html><head><title>Evaluation Reports</title></head><body>
-<h1>Evaluation Reports</h1><table><thead><tr><th>Key</th><th>Title</th><th>Result</th><th>Usability</th><th>Date</th><th>Jira</th></tr></thead><tbody>
-INDEXEOF
-    cat "$ROWS_FILE" >> "$INDEX_FILE"
-    echo "</tbody></table></body></html>" >> "$INDEX_FILE"
-  fi
-
-  rm -f "$ROWS_FILE" "$STATS_FILE"
 }
 
 # ── Sync Prototype Bar config (Sources + views.eval) ─────────────────────────
@@ -358,15 +247,13 @@ sync_prototype_bar_config() {
     eval_url="$(tr -d '[:space:]' < "$ARTIFACTS_DIR/report-url.txt")"
   fi
   if [[ -z "$eval_url" && -n "$PAGES_BASE_URL" ]]; then
-    eval_url="${PAGES_BASE_URL%/}/evals/${PROTO_KEY}/"
+    eval_url="${PAGES_BASE_URL%/}/${REPORTS_ROUTE}/${PROTO_KEY}/"
   fi
   if [[ -z "$eval_url" ]]; then
-    eval_url="/evals/${PROTO_KEY}/"
+    eval_url="/${REPORTS_ROUTE}/${PROTO_KEY}/"
   fi
 
-  local overlay_jira
-  overlay_jira="$(node "$SCRIPT_DIR/overlay-get.js" publish.jira_base_url 2>/dev/null || true)"
-  local jira_base="${JIRA_BASE_URL:-${overlay_jira:-https://issues.example.com/browse/}}"
+  local jira_base="${JIRA_BASE_URL:-$(read_yaml_value jira_base_url)}"
   # prototype-bar.json lives at the key root, not under eval/
   node "$export_sync" \
     --artifacts "$KEY_DIR" \
