@@ -52,7 +52,7 @@ Start with the user’s requested changes. When applying eval artifacts, priorit
 
 For each item determine severity (critical/major/minor), effort (small/medium/large), and specific code changes.
 
-Plan 3–7 refinements per iteration: critical FAILs first, then major usability, then minor.
+Plan only actionable refinements supported by the selected feedback. For evaluation-driven loops, prioritize critical FAILs first, then major usability issues, then minor findings. For user-selected feedback, make only the selected changes. Do not add unrelated refinements to reach a target count.
 
 For UI changes, follow [patternfly-compliance.md](patternfly-compliance.md): look up new or changed interactions in `pf-catalog-interaction-patterns`, and verify the target version's APIs and wrappers before editing.
 

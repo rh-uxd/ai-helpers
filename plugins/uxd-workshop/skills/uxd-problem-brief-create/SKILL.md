@@ -1,6 +1,6 @@
 ---
 name: uxd-problem-brief-create
-version: 0.1.0
+version: 0.1.1
 description: >-
   Frame a product problem as a brief: who is affected, the current condition,
   evidence versus assumptions, and what is in scope. Use when framing a problem,
@@ -12,7 +12,7 @@ outputs: "A problem brief in markdown"
 
 # Problem Brief
 
-Produces an agreed problem frame. The statement describes the current condition and why it matters. It does not propose capabilities, a time horizon, screens, or a prototype.
+Produces an agreed problem frame. The statement describes the current condition and why it matters. For a future-state vision, the brief may also include separate, provisional As-Is and To-Be journey map starters; they do not change the problem statement or represent an agreed design.
 
 Work one section at a time. Confirm what you heard before moving on. If a discovery brief already exists, start from it instead of re-interviewing.
 
@@ -21,7 +21,7 @@ Work one section at a time. Confirm what you heard before moving on. If a discov
 | Input | Required | Source |
 |-------|----------|--------|
 | Problem, feature request, or discovery brief | **Yes** | User. Ask if omitted. |
-| Evidence (research, tickets, analytics, observation) | Recommended | User, or a research-lookup skill if one is available |
+| Evidence (research, tickets, analytics, observation) | Recommended | User-provided research, tickets, analytics, or observations |
 
 ## Outputs
 
@@ -49,7 +49,7 @@ Summarize in 2–3 sentences before continuing.
 
 Look for what the team already knows before writing the pain.
 
-If a research-lookup skill is available, use it for the people and the situation. Capture quotes, findings, method, sample size, date, and links. If it is unavailable or returns nothing, say so and continue.
+Use the supplied research relevant to the target user and problem. Capture findings, source details, and links that directly support the brief. If none is available, say so and continue. For vision work, record preliminary stage-by-stage coverage while creating the Journey starters; these notes describe the available evidence, not validation of a future design.
 
 Label every claim as **evidence** or **assumption**. A thin evidence base does not block the brief.
 
@@ -73,9 +73,27 @@ If the frame is a whole product, ask which single situation the team needs to ag
 
 ## Step 5: Stakeholders
 
-Ask who needs to agree that this is the problem, and what each of them cares about. Do not invent names. A presentation plan belongs in `uxd-experience-review`, when there is something to show.
+Ask who needs to agree that this is the problem, and what each of them cares about. Do not invent names. Keep presentation planning separate from problem framing.
 
-## Step 6: Write the brief
+## Optional: Verified project context
+
+When a target workspace is already identified and its conventions matter to the prototype handoff, inspect its documentation and include a separate, optional Project Context section. Record only verified details, such as the relevant product area, established design history, or branch/visibility conventions. Keep this information out of the problem statement and do not block the brief if the workspace is not known.
+
+## Step 6: Draft the journey map starters (vision work only)
+
+If the brief supports a future-state vision, use the agreed user, situation, evidence, desired outcome, scope, time horizon, and enabling capabilities to sketch a paired As-Is/To-Be journey. Keep this distinct from the problem statement and label it **provisional — for team mapping**.
+
+- Use two separate map-shaped tables, one As-Is and one To-Be, with 3–5 high-level stages for the same person and scenario. Use the map lanes below as rows and the journey stages as columns: `Steps & actions`, `Touchpoints`, `Screens & artifacts`, `Mindsets & needs`, `Emotions`, `Pain & friction`, `Evidence & assumptions`, and `Support & opportunities`.
+- Give corresponding stage columns the same stable `S#` label, stage name, and order in both tables.
+- In As-Is, describe current behavior and needs; cite evidence as `[E#]` and label unverified claims `[A#]`.
+- In To-Be, describe possible future behavior and support; tie it to a capability and horizon already supplied, and mark future-state claims `[A#]` until the team confirms them. Note remaining or new friction, or leave it open.
+- In `Evidence & assumptions`, cite `[E#]` sources and label hypotheses `[A#]`. In a separate `Research Coverage & Gaps` row in both tables, include a preliminary coverage status for each stage: supported, partial, or no relevant finding found. Where coverage is partial or absent, mark the unsupported user problem or need `[A#]` and add a concise `Research gap:` question. Do not imply that existing research predicts or validates a future design.
+- Keep it an outline, not polished narrative, a feature specification, or a screen-by-screen plan. Leave missing evidence, capabilities, or horizon as open questions; do not invent them.
+- If the future horizon or enabling capabilities are missing, ask for them as separate context. They do not belong in the problem statement.
+
+For non-vision briefs, skip these sections.
+
+## Step 7: Write the brief
 
 Write the brief from [references/template.md](references/template.md). Keep every heading.
 
@@ -89,5 +107,4 @@ Read it back. Revise until the statement has no solution in it, evidence and ass
 - Evidence and assumptions are labeled
 - Scope is one situation
 - At least one stakeholder is named by role, with what they care about
-
-When the user wants to show an experience that responds to this problem, the next skill is `uxd-experience-narrative-create`.
+- For vision briefs, the provisional Journey starter has separate As-Is and To-Be tables using the map lanes listed above; matching stage columns and `S#` labels; separate Evidence & assumptions and Research Coverage & Gaps rows with stage-level statuses and gap questions; linked `[E#]` source references; and definitions for the `[A#]` assumptions used

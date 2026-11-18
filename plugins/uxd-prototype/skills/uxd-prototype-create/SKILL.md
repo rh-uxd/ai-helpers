@@ -1,6 +1,6 @@
 ---
 name: uxd-prototype-create
-version: "2.0.0"
+version: "2.0.1"
 description: >-
   Create or refine a UX prototype from a Jira ticket, Figma design, feature
   description, or rough idea. Enumerates user journeys and page states
@@ -13,19 +13,20 @@ description: >-
 
 # Create Prototype
 
-Builds a prototype from a Jira ticket, Figma file, feature description, or rough idea. Asks clarifying questions for anything missing, then writes a runnable prototype plus structured artifacts that `uxd-prototype-evaluate`, `uxd-prototype-export`, and `uxd-prototype-publish` consume.
+Build a runnable prototype and structured artifacts for `uxd-prototype-evaluate`, `uxd-prototype-export`, and `uxd-prototype-publish`.
 
 Family: **create → evaluate → publish** (optional export along the way). Pipeline mode: [references/pipeline-mode.md](references/pipeline-mode.md).
 
-**Workspace vs target:** `--workspace` is the codebase you build in (clone, generate, verify). `--target` is only where the MR/PR lands. Never clone or generate against the target repo.
+Build in `--workspace`. Use `--target` only as the MR/PR destination.
 
-**Create and hand off:** use code-level checks during creation and ordinary refinement. Start the prototype server and open its entry page only at the final handoff for the user to review; do not browse routes, exercise journeys/states, or run interaction/keyboard tests as part of Create. Opening the design-choice report for user input is separate from testing the prototype. Browser evaluation belongs to `uxd-prototype-evaluate` when explicitly requested, including an explicit pipeline or headless run; `--export` may also use the browser for requested captures.
+Use code-level checks for creation and ordinary refinement. Open the design-choice report when requesting user input and launch the prototype at handoff. Reserve browser testing for explicit evaluation requests, including pipeline or headless runs. Use the browser for captures when `--export` is requested.
 
 ## Inputs
 
 | Input | Required | Source |
 |-------|----------|--------|
 | What to prototype (Jira URL/key, Figma link, description, or idea) | **Yes** | User; skill asks if omitted |
+| Supporting context (`--context`) | No | Artifact URL or local path; repeat for multiple sources |
 | Workspace (`--workspace`) | No | Local path, git URL, or `standalone` (default) |
 | Push destination (`--target`) | No | `none` unless publishing |
 | Prior eval feedback | No | `artifacts/{ID}/eval/` when refining |
@@ -41,7 +42,7 @@ Written under `artifacts/{ID}/` in the consumer project (never `${CLAUDE_SKILL_D
 | Prototype | `prototype/` (standalone HTML) or `code/` (workspace clone) |
 | RFE snapshot, metadata, changeset, summary | `rfe-snapshot.md`, `metadata.json`, `changeset.md`, `prototype-summary.yaml` |
 | Journeys + states | `journeys.json`, `states.json` |
-| Design spec | `{ID}-design-spec.md` (QE companion; template [references/templates/design-spec.md](references/templates/design-spec.md), rules [references/design-spec.md](references/design-spec.md)) |
+| Design spec | `{ID}-design-spec.md` (QE companion) |
 | Prototype Bar config | `prototype-bar.json` |
 | Design decisions | `decisions/` (only when `--decisions` is `auto` or `human`) |
 | Optional exports | `exports/` when `--export` |
@@ -52,10 +53,11 @@ Schemas: [references/output-formats.md](references/output-formats.md).
 
 $ARGUMENTS
 
-Parse as: `<source> [--workspace <path-or-url-or-standalone>] [--target <dest>] [--decisions skip|auto|human] …`
+Parse as: `<source> [--context <url-or-path>] [--workspace <path-or-url-or-standalone>] [--target <dest>] [--decisions skip|auto|human] …`
 
 | Flag | Values | Default | Description |
 |------|--------|---------|-------------|
+| `--context` | URL or local artifact path; repeatable | none | Supporting material to read alongside the primary source |
 | `--workspace` | path, git URL, or `standalone` | `standalone` | Codebase to build in |
 | `--workspace-branch` | branch name | from URL / default branch | Clone branch |
 | `--target` | `repo`, `github`, `gitlab`, `vercel`, `none`, or a git URL | `none` (pipeline) | Publish destination only. A git URL means open an MR/PR against that repo (implies `repo`) |
@@ -109,22 +111,24 @@ Map these to `skip`, `auto`, and `human` internally. Default to **Build with sen
 
 ### Describe the experience and proceed
 
-Give a short plan in everyday language, for example:
-
-> I'll create a standalone settings prototype where people can edit their profile, save changes, and see validation feedback. I'll follow established form patterns and note any assumptions. I'll also add a prototype bar: a small toolbar for switching sample states, viewing sources, and opening evaluation results when available. The prototype will stay local unless you ask to publish it.
-
-Describe the actual feature, starting point, design-choice approach, and relevant next steps. Explain “prototype bar” once if enabled; omit disabled or irrelevant extras. Do not echo a flag/configuration dump (`Workspace: standalone`, `Target: none`, etc.). Ask for confirmation if the plan still needs agreement; if the user already authorized this concrete plan, proceed without another permission loop.
+Summarize the feature, starting point, design choices, and next steps in everyday language. If enabled, explain that the Prototype Bar switches sample states and opens sources and available evaluation results. Confirm the plan if the user has yet to agree to it.
 
 ---
 
-## Step 1: Fetch RFE Source
+## Step 1: Read the source material
+
+Read the primary source and each `--context` artifact before planning. Treat context as read-only; use local files directly and available connections for remote artifacts. For inaccessible content, explain the gap and request an export or excerpt.
+
+Preserve user-reviewed details, source links, and evidence and assumption labels. Ask which source to follow if artifacts materially conflict. Record accessible context URLs in `metadata.json`'s `sources` with labels and a supported `kind` (`other` if uncategorized). Keep local paths in the source snapshot without inventing URLs.
+
+### Jira and other source lookup
 
 1. **Local artifacts** — `artifacts/*/rfe-snapshot.md` with valid frontmatter (may have been edited).
 2. **Jira MCP** (preferred): `getJiraIssue` with the issue key. Resolve `cloudId` from a full Jira URL hostname, or via `getAccessibleAtlassianResources` when only a key is given. Prefer `responseContentFormat: "markdown"`.
 3. **Fetch script** (fallback): `python3 "${CLAUDE_SKILL_DIR}/scripts/fetch_jira.py" PROJ-298 --json` (needs `JIRA_SERVER`, `JIRA_USER`, `JIRA_TOKEN`).
 4. **User-provided description or idea** — use what the user supplied. Ask only for missing details that would change the experience; record routine assumptions instead of requiring a full requirements template.
 
-If both local artifacts and Jira exist, ask which to use. Local may be edited; Jira is canonical.
+If both a local snapshot and Jira are available, ask which to use. Jira is canonical, and snapshots may have edits. See [edge cases](references/edge-cases.md) for thin or API-only tickets, Jira outages, and clone failures.
 
 ## Step 2: Select RFEs
 
@@ -143,7 +147,7 @@ python3 "${CLAUDE_SKILL_DIR}/scripts/frontmatter.py" set "artifacts/{ID}/rfe-sna
 
 ## Step 4: Extract User Stories and Journeys
 
-Parse from the RFE: user stories, acceptance criteria, personas/roles, key entities, flows, and page states.
+Extract from the primary source and supplied context: user stories, acceptance criteria, personas/roles, key entities, flows, and page states. Preserve reviewed sequences and source identifiers; record unsupported details as assumptions. User-reviewed artifact content uses `source: "user"` in journey entries.
 
 - Personas: prefer IDs from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/catalog.yaml`; apply overlays from `${CLAUDE_PLUGIN_ROOT}/knowledge/personas/overlays/`. If internal-ai-helpers is available, read `plugins/uxd-eval-config/knowledge/personas/<id>.md` for Sources; skip if missing.
 - **Page states:** run [references/state-brainstorm.md](references/state-brainstorm.md) before writing `states.json`. Prefer 3–7 distinct on-load end-states per page.
@@ -289,7 +293,7 @@ If `--pipeline` / `--speedrun`, continue with [references/pipeline-mode.md](refe
 
 ## Refinement
 
-Apply targeted changes from user feedback or existing evaluation findings — do not rewrite the prototype. Full procedure: [references/refinement-procedure.md](references/refinement-procedure.md).
+Apply targeted changes from user feedback or existing evaluation findings. When the user selects recommendations, apply only those selections; preserve supplied context and do not rewrite the prototype. Full procedure: [references/refinement-procedure.md](references/refinement-procedure.md).
 
 Reads `artifacts/{ID}/eval/evaluation-report.csv` + `refinement-suggestions.json`. For explicitly requested evaluation loops, pass = zero FAIL and default max = 3 cycles. Ordinary refinement applies feedback, runs code-level checks, and hands back the prototype without re-evaluating.
 
@@ -307,21 +311,3 @@ Reads `artifacts/{ID}/eval/evaluation-report.csv` + `refinement-suggestions.json
 - **States must be visually distinct** on load. Modal and drawer interactions belong in journey `actions`.
 - **Workspace code checks are mandatory** — lint/build failures introduced by the prototype must be fixed. Prototype launch is for the final user handoff; browser walkthroughs require a separate evaluation request.
 - **PatternFly selection and checks are mandatory** for PatternFly prototypes in both modes, including refinement and `--decisions=skip`. Follow the compliance reference for missing helpers or a workspace using another design system.
-
-## Reference Docs
-
-| Doc | When to load |
-|-----|-------------|
-| [output-formats.md](references/output-formats.md) | Writing create artifact files |
-| [design-spec.md](references/design-spec.md) | Rules for `{ID}-design-spec.md` |
-| [templates/design-spec.md](references/templates/design-spec.md) | Design spec template to fill |
-| [patternfly-compliance.md](references/patternfly-compliance.md) | Before component selection and during code-level checks |
-| [journeys-schema.md](../uxd-prototype-export/references/journeys-schema.md) | `journeys.json` shape (owned by export) |
-| [states-schema.md](../uxd-prototype-export/references/states-schema.md) | State field rules (`id`, `name`, `description`, `default`) |
-| [state-brainstorm.md](references/state-brainstorm.md) | Planning page states |
-| [state-mocks.md](references/state-mocks.md) | Wiring `?state=` mocks |
-| [workspace-suggestions.md](references/workspace-suggestions.md) | Suggesting an existing prototype from Jira/project context |
-| [decision-workflow.md](references/decision-workflow.md) | `--decisions=auto` or `human` |
-| [refinement-procedure.md](references/refinement-procedure.md) | Applying eval feedback |
-| [pipeline-mode.md](references/pipeline-mode.md) | `--pipeline` / `--speedrun` |
-| [edge-cases.md](references/edge-cases.md) | Thin RFEs, clone failures, Jira down, API-only tickets |
