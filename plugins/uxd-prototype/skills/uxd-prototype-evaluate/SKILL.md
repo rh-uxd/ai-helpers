@@ -5,6 +5,8 @@ description: >-
   Run selected Quick Checks or composed Full Evaluation from Jira or reviewed
   written requirements, with canonical evidence, explicit checkpoints and optional reports.
   Use for source-linked prototype verification and review of existing findings.
+inputs: Reviewed requirements, exact prototype revision, and selected checks
+outputs: Canonical evidence and findings, with an optional HTML report
 ---
 
 # Evaluate Prototype
