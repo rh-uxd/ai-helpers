@@ -68,37 +68,55 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: "20"
-
-      - name: Install Claude Code
-        # Pin to a known-good version. Check https://www.npmjs.com/package/@anthropic-ai/claude-code for updates.
-        run: npm install -g @anthropic-ai/claude-code@2.1.190
-
-      - name: Add eval harness marketplace
-        run: claude plugin marketplace add https://github.com/opendatahub-io/agent-eval-harness.git
-
-      - name: Install eval harness plugin
-        # Branch ref — plugin install does not support SHA pinning
-        run: claude plugin install agent-eval-harness@agent-eval-harness-dev
-
-      - name: Check API key availability
-        id: check-key
+      - name: Check eval credentials
+        id: creds
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GCP_CREDS: ${{ secrets.GCP_EVAL_CREDENTIALS }}
+          IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
         run: |
-          if [[ -z "$ANTHROPIC_API_KEY" ]]; then
-            echo "::warning::ANTHROPIC_API_KEY not available (fork PR). Add 'run-evals' label for maintainer-triggered run."
+          if [[ "$IS_FORK" == "true" ]]; then
+            echo "::warning::Eval credentials unavailable for fork PRs. Add 'run-evals' label for maintainer-triggered run."
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          elif [[ -z "$GCP_CREDS" ]]; then
+            echo "::warning::GCP_EVAL_CREDENTIALS secret not configured. Skipping evals."
             echo "available=false" >> "$GITHUB_OUTPUT"
           else
             echo "available=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Authenticate to GCP
+        if: steps.creds.outputs.available == 'true'
+        id: auth
+        uses: google-github-actions/auth@ba79af03959ebeac9769e648f473a284504d9193 # v2
+        with:
+          credentials_json: ${{ secrets.GCP_EVAL_CREDENTIALS }}
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        if: steps.creds.outputs.available == 'true'
+        with:
+          node-version: "20"
+
+      - name: Install Claude Code
+        if: steps.creds.outputs.available == 'true'
+        run: npm install -g @anthropic-ai/claude-code@2.1.190
+
+      - name: Add eval harness marketplace
+        if: steps.creds.outputs.available == 'true'
+        run: claude plugin marketplace add https://github.com/opendatahub-io/agent-eval-harness.git
+
+      - name: Install eval harness plugin
+        if: steps.creds.outputs.available == 'true'
+        # Branch ref — plugin install does not support SHA pinning
+        run: claude plugin install agent-eval-harness@agent-eval-harness-dev
+
       - name: Run eval for ${{ matrix.skill }}
-        if: steps.check-key.outputs.available == 'true'
+        if: steps.creds.outputs.available == 'true'
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_CODE_USE_VERTEX: "1"
+          ANTHROPIC_VERTEX_PROJECT_ID: ${{ vars.GCP_EVAL_PROJECT_ID }}
+          CLOUD_ML_REGION: global
+          CLAUDE_MODEL: claude-haiku-4-5
+          OTEL_EXPORTER_OTLP_ENDPOINT: ""
           SKILL_NAME: ${{ matrix.skill }}
         # dontAsk is safe — ephemeral CI runner, no persistent state
         run: |
@@ -108,6 +126,7 @@ jobs:
             exit 1
           fi
           claude -p "/agent-eval-harness:eval-run --config ${EVAL_CONFIG} --no-llm-judges" \
+            --model claude-haiku-4-5 \
             --allowedTools "Bash,Read,Write,Edit,Skill" \
             --permission-mode dontAsk \
             --max-turns 200
