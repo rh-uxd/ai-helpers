@@ -134,6 +134,7 @@ Accessibility auditing, reporting, and documentation
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
 <tr><td nowrap><code>pf-a11y-audit</code></td><td>Audit PatternFly components and pages against WCAG and ARIA best practices.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-a11y-keyboard</code></td><td>Test keyboard accessibility of PatternFly UIs via live browser interaction.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-a11y-review</code></td><td>Audit a running PatternFly experience across automated rules, keyboard and focus behavior, viewport and media conditions, and rendered semantics.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-a11y-test-gen</code></td><td>Generate accessibility test files for any frontend framework covering ARIA attributes, keyboard interaction, and focus management.</td><td>stable</td></tr>
 </table>
 
@@ -302,7 +303,7 @@ PatternFly team tools and skill incubation — issue triage, release management,
 
 **Eval coverage**
 
-- Consumer: 56/56 (100%)
+- Consumer: 57/57 (100%)
 - Workshop: 0/21 (0%)
 
 ---
@@ -324,7 +325,7 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 | `uxd-design-handoff` | UXD practitioners | Input Required Source Design artifact (prototype files, Figma screenshots, text description) ... | The handoff spec is written to a local file (markdown by default, JSON when --format=json). I... | M |
 | `uxd-figma-read` | UXD practitioners | Task context | Structured result | M |
 | `uxd-prototype-create` | UXD practitioners | Input Required Source What to prototype (Jira URL/key, Figma link, description, or idea) Yes ... | Written under artifacts/{ID}/ in the consumer project (never ${CLAUDESKILLDIR}): Output Locat... | XL |
-| `uxd-prototype-evaluate` | UXD practitioners | Use the reviewed packet described by the shared execution contract: source snapshot and stabl... | Each run owns pe-context.json, pe-evaluation-snapshot.json, pe-evidence.json, pe-actions.json... | XL |
+| `uxd-prototype-evaluate` | UXD practitioners | Reviewed evaluation packet with source snapshot, stable source IDs, exact prototype revision, and selected check scope | Each run owns pe-context.json, pe-evaluation-snapshot.json, pe-evidence.json, pe-actions.json... | XL |
 | `uxd-prototype-export` | UXD practitioners | Input Required Source What to export (current page, journey batch, or install bar) Yes User; ... | Under .artifacts/{ID}/exports/ unless --out is set: Output Description index.html + export-ma... | L |
 | `uxd-prototype-publish` | UXD practitioners | Use artifacts/{ID}/. Use the legacy .artifacts/{ID}/ only if the current directory is absent.... | Output Description Published prototype GitLab MR, GitHub Pages, GitLab Pages, or Vercel URL U... | L |
 | `uxd-prototype-walkthrough` | UXD practitioners | Independent: prepare only missing source/build, environment, task and audience details. Sugge... | Independent execution produces an immutable run directory containing pe-context.json, pe-eval... | S |
@@ -337,6 +338,7 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 | `uxd-problem-brief-create` | UX designers and product managers | A problem, feature request, or discovery brief, plus optional evidence | A problem brief in markdown | M |
 | `pf-a11y-audit` | PatternFly designers and developers | Task context | Per finding: [ERRORWARNINFO] file/path.tsx:42 — description (WCAG X.X.X) Found: what was dete... | L |
 | `pf-a11y-keyboard` | PatternFly designers and developers | Source Required Description URL Yes URL to a running application (localhost or deployed) Focu... | Structured result | L |
+| `pf-a11y-review` | PatternFly developers and product teams using PatternFly | A running page, component demo, or user flow and its accessibility review scope | A consolidated accessibility report with findings, evidence, coverage, and limitations | L |
 | `pf-a11y-test-gen` | PatternFly designers and developers | Source Required Description Component/module file Yes Path to the component or UI module to g... | Structured result | L |
 | `pf-adversarial-review` | PatternFly designers and developers | The user provides a file path, directory, or component to review. Default to the current work... | Structured result | M |
 | `pf-i18n-audit` | PatternFly designers and developers | The user provides a directory, file path, or set of components to audit. Default to the curre... | Structured result | M |
