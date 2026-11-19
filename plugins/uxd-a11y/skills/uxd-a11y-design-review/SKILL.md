@@ -11,6 +11,8 @@ Review the accessibility portion of design quality. Broader UX heuristics remain
 
 ## References
 
+Before assessing a usable image or specification, read Reporting and Design checks below, plus the relevant sections of Visual checks. Read the conditional references only when their topics apply. Resolve these paths relative to this skill; listing files is not a substitute for reading them. If a required reference cannot be read, report that limitation rather than claiming to have applied it.
+
 - [Reporting](../../references/reporting.md) — scope, evidence, classification, confidence, and coverage.
 - [Design checks](../../references/design-checks.md) — visual evidence limits, target sizes, state coverage, and optional scores/comparisons.
 - [Visual checks](../../references/visual-runtime.md) — reuse contrast thresholds and measurement distinctions; runtime procedures remain unexecuted for static inputs.
