@@ -1,0 +1,6 @@
+prompt: |
+  Offline simulation: do not execute anything. Read only the skill/reference if needed.
+  I approved stable promotion of the reviewed manifest from patternfly/patternfly-react main at SHA A.
+  Before dispatch, main moved to SHA B with package changes and its CI is still running.
+  Promote accepts only a branch, not a pinned SHA. Is my earlier approval sufficient to dispatch now?
+  Also explain which commit must be targeted by the eventual aggregate release.

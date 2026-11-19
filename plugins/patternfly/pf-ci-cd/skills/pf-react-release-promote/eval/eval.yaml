@@ -1,0 +1,71 @@
+name: pf-react-release-promote-eval
+description: Offline release decisions covering independent versions, approval gates, and recovery hazards
+skill: pf-ci-cd:pf-react-release-promote
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow:
+    - Read
+  deny:
+    - Bash
+    - Write
+    - Edit
+    - WebFetch
+    - WebSearch
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each input.yaml supplies a complete simulated release snapshot in prompt.
+    No real checkout, network access, credentials, or release execution is needed.
+    annotations.yaml supplies required concept regex groups and forbidden claims.
+
+outputs:
+  - path: artifacts
+    schema: |
+      Conversation containing a release decision and proposed next steps only.
+      Regex judges check key concepts, not proof that a live release is safe.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: case_guidance
+    description: Identifies the release-specific decisions and blockers in the supplied snapshot
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      groups = outputs.get("annotations", {}).get("required_concepts", [])
+      if not groups:
+          return False, "Missing required concept annotations"
+      missing = [group for group in groups if not any(re.search(pattern, text, re.I | re.S) for pattern in group)]
+      return not missing, f"Missing concept groups: {missing}" if missing else "Required release guidance present"
+
+  - name: avoids_unsafe_claims
+    description: Does not claim execution or propose the case's specifically unsafe action
+    check: |
+      import re
+      text = outputs.get("conversation", "")
+      patterns = outputs.get("annotations", {}).get("forbidden_claims", [])
+      matches = [pattern for pattern in patterns if re.search(pattern, text, re.I | re.S)]
+      return not matches, f"Unsafe claims matched: {matches}" if matches else "No case-specific unsafe claim"
+
+thresholds:
+  case_guidance:
+    min_pass_rate: 1.0
+  avoids_unsafe_claims:
+    min_pass_rate: 1.0

@@ -1,0 +1,7 @@
+prompt: |
+  Offline simulation: do not execute anything. Use only this snapshot and the skill/reference.
+  The manual Promote workflow takes patternfly-version=6.7.0. Its setup installs with yarn install --immutable
+  and builds before executing .github/promote.sh. The script's dependency-update block is commented out.
+  Docs depends on @patternfly/patternfly 6.7.0-prerelease.3; core, icons, styles, and tokens have that
+  devDependency. Registry stable CSS 6.7.0 exists. Existing range policy uses caret for stable CSS.
+  Is supplying the input sufficient? Describe what needs to happen before the promotion build.

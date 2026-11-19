@@ -1,0 +1,6 @@
+prompt: |
+  Offline simulation: use only this snapshot and read the skill/reference if needed. Do not run tools against a real repository.
+  Prepare the 6.7.0 train. Main has core 6.7.0-prerelease.7.
+  A prior next-cycle version commit was reverted. The local tag @patternfly/react-core@6.8.0-prerelease.0
+  still exists, but it does not exist on the remote and that version is absent from npm.
+  Can we preview in this checkout or delete the tag first? Explain the safe next step and whether preview is read-only.

@@ -1,0 +1,6 @@
+prompt: |
+  Offline simulation: do not execute anything. Use only this snapshot and skill/reference.
+  Stable core 6.7.0, charts 8.7.0, and docs 7.7.0 are fully verified; aggregate v6.7.0 targets stable commit S.
+  I approved only stable promotion, not next-cycle setup. The proposed policy is preminor with preid prerelease.
+  A remote core 6.8.0-prerelease.0 tag already exists, but that version is absent from npm.
+  What are the proposed next versions, does lerna version publish them to npm, and may we run setup now?
