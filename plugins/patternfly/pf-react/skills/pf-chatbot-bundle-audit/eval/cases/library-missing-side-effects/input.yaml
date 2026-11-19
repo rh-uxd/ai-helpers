@@ -1,0 +1,1 @@
+prompt: "Audit this reusable ChatBot package for downstream tree-shaking problems. Report fixes, but do not modify files. The project is in the current directory."

@@ -1,0 +1,6 @@
+applies: true
+version: "6.8.0-prerelease.9"
+scanned_files: 1
+issue: excluded-code-modal
+finding_file: src/main.tsx
+expect_preload: false

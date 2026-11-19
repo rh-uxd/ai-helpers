@@ -2,9 +2,9 @@
   {
     "name": "0xmortuex/claude-code-skills",
     "url": "https://github.com/0xmortuex/claude-code-skills",
-    "description": "A curated pack of 16 Claude Code skills for the unglamorous work that ships software - ship-it, readme-forge, security-sweep, git-rescue, devlog, and more. Each one researched first: only problems no prominent existing skill solves. No 40-skill kitchen sink.",
+    "description": "A curated pack of 46 Claude Code skills for the unglamorous work that ships software - ship-it, readme-forge, security-sweep, git-rescue, devlog, and more. Each one researched first: only problems no prominent existing skill solves.",
     "files": [
-      "BACKLOG.md"
+      "docs/backlog-archive-2026-q3.md"
     ]
   },
   {
@@ -24,12 +24,59 @@
     ]
   },
   {
+    "name": "andre-motta/model-routing-eval",
+    "url": "https://github.com/andre-motta/model-routing-eval",
+    "description": "Cheapest model and effort that still passes, per coding-task tier. agent-eval-harness dataset behind the Red Hat AI Enablement session on token and model cost optimization.",
+    "files": [
+      "setup.sh",
+      "harness/build_uxd.py",
+      "eval-uxd.yaml"
+    ]
+  },
+  {
+    "name": "findscripter/everything-skills",
+    "url": "https://github.com/findscripter/everything-skills",
+    "description": "Find agent skills by task, connect them into workflows, and install by volume. Includes reproducible examples and an external skill repository directory.",
+    "files": [
+      "data/skill-repos.part87.audit.md",
+      "data/upstream-body-association-2026-10-23.json",
+      "data/discovery/2026-10-22/additions.json",
+      "data/discovery/2026-10-23/baseline.json",
+      "data/upstream-review-completed-2026-10-23.json",
+      "data/skill-repos.part87.search-provenance.json",
+      "data/upstream-commit-tree-bindings-2026-10-23.json",
+      "data/discovery/2026-11-01/baseline-identities.json",
+      "data/discovery/2026-11-02/baseline-identities.json",
+      "data/discovery/2026-11-03/baseline-identities.json",
+      "data/discovery/2026-11-05/baseline-identities.json",
+      "data/discovery/2026-11-06/baseline-identities.json",
+      "data/discovery/2026-11-07/baseline-identities.json",
+      "data/discovery/2026-11-08/baseline-identities.json",
+      "data/discovery/2026-11-09/baseline-identities.json",
+      "data/discovery/2026-11-10/baseline-identities.json",
+      "data/discovery/2026-11-11/baseline-identities.json",
+      "data/discovery/2026-11-12/baseline-identities.json",
+      "data/discovery/2026-11-13/baseline-identities.json",
+      "data/discovery/2026-11-14/baseline-identities.json",
+      "data/discovery/2026-11-16/baseline-identities.json"
+    ]
+  },
+  {
     "name": "flightctl/ai-workflows",
     "url": "https://github.com/flightctl/ai-workflows",
     "description": "Reusable AI workflows a team member can install globally or per-project, in any environment: Cursor, Claude Code and others.",
     "files": [
       "ux-design/README.md",
       "install.sh"
+    ]
+  },
+  {
+    "name": "fullsend-ai/agents",
+    "url": "https://github.com/fullsend-ai/agents",
+    "description": "First-class agents for fullsend",
+    "files": [
+      "skills/pr-review/sub-agents/user-experience.md",
+      "profiles/fullsend-github-public-ro.yaml"
     ]
   },
   {
@@ -73,6 +120,17 @@
       "skills/2998-patternfly/12791-pf-figma-diff/references/troubleshooting.md",
       "skills/3006-pf-workshop/12841-pf-figma-diff/references/troubleshooting.md",
       "skills/3011-uxd-research/12864-uxd-research-heuristic-eval/references/report-templates.md"
+    ]
+  },
+  {
+    "name": "kosif199022-jpg/kosif-tool",
+    "url": "https://github.com/kosif199022-jpg/kosif-tool",
+    "description": "KOSIF TOOL: Claude motion style library, original production prompts and source video links",
+    "files": [
+      ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3011-uxd-research/SOURCE.md",
+      ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3000-pf-code-review/SOURCE.md",
+      ".claude/skills/kosif-superpowers/vendor/100-superskills/skills/accessibility-wcag/references/sources.md",
+      ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3011-uxd-research/12864-uxd-research-heuristic-eval/references/report-templates.md"
     ]
   },
   {
@@ -120,6 +178,9 @@
       "docs/architecture.md",
       "src/docs.json",
       "src/collection.patternFlyApi.json",
+      "tooling/collections/__tests__/update.patternFlyDocsHelpers.test.ts",
+      "tooling/collections/__tests__/update.patternFlyDocs.test.ts",
+      "tooling/collections/__tests__/helpers.test.ts",
       "src/__tests__/__snapshots__/collection.patternFlyDocs.test.ts.snap"
     ]
   },
@@ -138,7 +199,17 @@
     "url": "https://github.com/sudosubin/agents.nix",
     "description": "Nixpkgs overlay for AI agent skills from skills.sh and skillsdirectory.com",
     "files": [
-      "data/codex-marketplaces/github.com/opendatahub-io/skills-registry.json"
+      "data/codex-marketplaces/github.com/opendatahub-io/skills-registry.json",
+      "data/codex-plugins/sources.json",
+      "data/claude-code-plugins/sources.json"
+    ]
+  },
+  {
+    "name": "tal-hason/cursor-stuff",
+    "url": "https://github.com/tal-hason/cursor-stuff",
+    "description": "my private Cursor pipeline workflow",
+    "files": [
+      "agents/pf-coding-standards.md"
     ]
   }
 ]

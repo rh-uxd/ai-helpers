@@ -1,0 +1,347 @@
+name: pf-rhds-layout-gen-eval
+description: Evaluate pf-rhds-layout-gen's PF+RHDS layout scaffolding — PageHeader/PageFooter wrappers, masthead prop, isPlain, isViewport, and RHDS React wrapper imports
+
+skill: pf-react:pf-rhds-layout-gen
+
+execution:
+  mode: case
+  arguments: "{prompt}"
+
+runner:
+  type: claude-code
+  plugin_dirs:
+    - plugins/patternfly/pf-react
+
+models:
+  skill: claude-sonnet-4-6
+  judge: claude-sonnet-4-6
+
+permissions:
+  allow: []
+  deny:
+    - "mcp__*"
+
+dataset:
+  path: cases
+  schema: |
+    Each case directory IS the workspace (cwd for claude --print).
+    Fixture files (package.json) go directly in the case dir.
+    - input.yaml: prompt field with a realistic user request
+    - annotations.yaml: ALL of the following keys are required in every case:
+        expect_rhds (bool), expect_decline (bool), rhds_only (bool), pf_old (bool),
+        pattern (string — one of: header, footer, plain, drawer, combined, standard, none),
+        has_header (bool), has_footer (bool),
+        fixture (string — "package.json"; auto-loaded by the framework as annotation_fixture_content)
+      Optional: bare_tags_requested (bool)
+    - package.json: fixture reflecting the case's dependency profile (PF 6.7+ with RHDS, PF 6.7+ only, PF below 6.7, or RHDS-only)
+
+outputs:
+  - path: artifacts
+    schema: |
+      The skill produces a React layout component. Judges check conversation
+      text and file artifacts for PF6 wrapper components, correct prop names,
+      RHDS React wrapper imports, and layout-specific props.
+
+traces:
+  stdout: true
+  stderr: true
+  events: true
+  metrics: true
+
+judges:
+  - name: annotations_complete
+    description: Every case declares all required annotation keys with correct types so gate judges cannot be silently skipped
+    check: |
+      annots = outputs.get("annotations", {})
+      required_bools = ['expect_rhds', 'expect_decline', 'rhds_only', 'pf_old', 'has_header', 'has_footer']
+      optional_bools = ['bare_tags_requested']
+      required_strs = ['pattern', 'fixture']
+      allowed_patterns = {'header', 'footer', 'plain', 'drawer', 'combined', 'standard', 'none'}
+      missing = [k for k in required_bools + required_strs if k not in annots]
+      if missing:
+          return False, f"Missing required annotation keys: {', '.join(missing)}"
+      all_bools = required_bools + [k for k in optional_bools if k in annots]
+      bad_type = [k for k in all_bools if not isinstance(annots[k], bool)]
+      if bad_type:
+          return False, f"Annotation keys must be bool: {', '.join(bad_type)}"
+      bad_str = [k for k in required_strs if not isinstance(annots[k], str)]
+      if bad_str:
+          return False, f"Annotation keys must be str: {', '.join(bad_str)}"
+      if annots['pattern'] not in allowed_patterns:
+          return False, f"Invalid pattern value '{annots['pattern']}' — must be one of: {', '.join(sorted(allowed_patterns))}"
+      return True, "All required annotation keys present with correct types"
+
+  - name: annotations_vs_fixture
+    description: Cross-validates declared annotations against the case's package.json fixture to prevent silent gate misrouting
+    check: |
+      import json, re
+      annots = outputs.get("annotations", {})
+      fixture = outputs.get("annotation_fixture_content")
+      if not fixture:
+          return False, "Missing package.json fixture content — ensure fixture: package.json is set in the case annotation file"
+      try:
+          pkg = json.loads(fixture) if isinstance(fixture, str) else fixture
+      except (json.JSONDecodeError, TypeError):
+          return False, "Could not parse package.json fixture"
+      deps = {**pkg.get("dependencies", {}), **pkg.get("devDependencies", {}), **pkg.get("peerDependencies", {})}
+      has_pf = "@patternfly/react-core" in deps
+      has_rhds = any(k.startswith("@rhds/") or k.startswith("@red-hat-design-system/") for k in deps)
+      pf_ver = deps.get("@patternfly/react-core", "")
+      pf_old = False
+      if has_pf and pf_ver:
+          ver_match = re.search(r'(\d+\.\d+\.\d+)', pf_ver)
+          if ver_match:
+              parts = ver_match.group(1).split(".")
+              pf_old = int(parts[0]) < 6 or (int(parts[0]) == 6 and int(parts[1]) < 7)
+      issues = []
+      if annots.get("rhds_only") and has_pf:
+          issues.append("rhds_only=True but fixture has @patternfly/react-core")
+      if annots.get("rhds_only") and not has_rhds:
+          issues.append("rhds_only=True but fixture has no @rhds/* package")
+      if annots.get("pf_old") and not pf_old:
+          issues.append(f"pf_old=True but fixture PF version '{pf_ver}' is not below 6.7.0")
+      if not annots.get("pf_old") and pf_old:
+          issues.append(f"pf_old=False but fixture PF version '{pf_ver}' is below 6.7.0")
+      if annots.get("expect_rhds") and not has_rhds:
+          issues.append("expect_rhds=True but fixture has no @rhds/* package")
+      if not annots.get("expect_rhds") and has_rhds and not annots.get("expect_decline"):
+          issues.append("expect_rhds=False without expect_decline=True but fixture has @rhds/* package")
+      if issues:
+          return False, "Annotation/fixture mismatch: " + "; ".join(issues)
+      return True, "Annotations consistent with package.json fixture"
+
+  - name: uses_page_header_wrapper
+    description: Uses PageHeader wrapper component (not Masthead or bare element) for RHDS header
+    if: "annotations.get('has_header') == True"
+    check: |
+      import re
+      file_text = ""
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str):
+              file_text += "\n" + content
+      if re.search(r'<PageHeader[\s>/]', file_text):
+          if re.search(r'<Masthead[^>]*>\s*<rh-navigation', file_text, re.DOTALL):
+              return False, "Wrapped RHDS header in Masthead instead of PageHeader"
+          return True, "Uses PageHeader wrapper for RHDS header"
+      text = outputs.get("conversation", "") + file_text
+      if re.search(r'\bPageHeader\b', text):
+          return False, "Mentions PageHeader in prose but not in generated code"
+      if re.search(r'<Masthead[^>]*>\s*<rh-navigation', text, re.DOTALL):
+          return False, "Wrapped RHDS header in Masthead instead of PageHeader"
+      return False, "Missing PageHeader wrapper — used Masthead or bare element instead"
+
+  - name: uses_page_footer_wrapper
+    description: Uses PageFooter wrapper component for RHDS footer
+    if: "annotations.get('has_footer') == True"
+    check: |
+      import re
+      file_text = ""
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str):
+              file_text += "\n" + content
+      if re.search(r'<PageFooter[\s>/]', file_text):
+          return True, "Uses PageFooter wrapper for RHDS footer"
+      text = outputs.get("conversation", "") + file_text
+      if re.search(r'\bPageFooter\b', text):
+          return False, "Mentions PageFooter in prose but not in generated code"
+      return False, "Missing PageFooter wrapper for RHDS footer"
+
+  - name: correct_masthead_prop
+    description: Passes custom header via Page's `masthead` prop, not `header`
+    if: "annotations.get('has_header') == True"
+    check: |
+      import re
+      file_text = ""
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str):
+              file_text += "\n" + content
+      if re.search(r'<Page[^>]*\bmasthead\s*[={]', file_text):
+          return True, "Correctly uses masthead prop on Page in generated code"
+      text = outputs.get("conversation", "") + file_text
+      if re.search(r'\bmasthead\b', text):
+          return False, "Mentions masthead in prose but masthead prop not applied to <Page> in generated code"
+      if re.search(r'<Page[^>]*\bheader\s*[={]', text):
+          return False, "Used header= prop instead of masthead= on Page"
+      return False, "Missing masthead prop on Page for custom header"
+
+  - name: rhds_typed_imports
+    description: Imports RHDS components with TypeScript-safe approach (React wrappers or side-effect imports with type declarations)
+    if: "annotations.get('expect_rhds') == True"
+    check: |
+      import re
+      file_text = ""
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str):
+              file_text += "\n" + content
+      react_import = re.search(
+          r"import\s+\{[^}]+\}\s+from\s+['\"]@rhds/elements/react/rh-[\w-]+/rh-[\w-]+\.js['\"]",
+          file_text,
+      )
+      if react_import:
+          return True, "Imports RHDS components from @rhds/elements/react/ in generated code"
+      side_effect = re.search(
+          r"import\s+['\"]@rhds/elements/rh-[\w-]+/rh-[\w-]+\.js['\"]",
+          file_text,
+      )
+      if side_effect:
+          if re.search(r'IntrinsicElements', file_text):
+              return True, "Uses side-effect imports with JSX.IntrinsicElements type declaration in generated code"
+          return False, "Uses side-effect import without JSX.IntrinsicElements type declaration — will fail TypeScript"
+      text = outputs.get("conversation", "") + file_text
+      if re.search(r"@rhds/elements/react/rh-[\w-]+", text) or re.search(r"@rhds/elements/rh-[\w-]+", text):
+          return False, "Mentions RHDS import in prose but not in generated code"
+      return False, "Missing RHDS import (expected React wrapper or side-effect import with type declaration)"
+
+  - name: rhds_ts_safe
+    description: Bare custom element tags in JSX have a matching IntrinsicElements declaration
+    if: "annotations.get('expect_rhds') == True"
+    check: |
+      import re
+      file_text = ""
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str):
+              file_text += "\n" + content
+      bare_tag = re.search(r'<(rh-navigation-primary|rh-footer)[\s>]', file_text)
+      if not bare_tag:
+          return True, "Uses React wrapper components — no bare tags to type"
+      has_type_decl = re.search(r'IntrinsicElements', file_text)
+      if not has_type_decl:
+          return False, f"Uses bare <{bare_tag.group(1)}> tag without IntrinsicElements declaration in generated code — will fail TypeScript"
+      return True, "Bare custom element tags have IntrinsicElements type declaration in generated code"
+
+  - name: bare_tags_enforced
+    description: When the user explicitly asks for bare custom element tags, the output must contain both the bare tag and an IntrinsicElements declaration
+    if: "annotations.get('bare_tags_requested', False) == True"
+    check: |
+      import re
+      file_text = ""
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str):
+              file_text += "\n" + content
+      bare_tag = re.search(r'<(rh-navigation-primary|rh-footer)[\s>]', file_text)
+      if not bare_tag:
+          return False, "User requested bare custom element tags but output uses React wrappers instead"
+      has_type_decl = re.search(r'IntrinsicElements', file_text)
+      if not has_type_decl:
+          return False, f"Uses bare <{bare_tag.group(1)}> tag without IntrinsicElements declaration in generated files"
+      return True, "Bare custom element tags with IntrinsicElements declaration as requested"
+
+  - name: uses_is_plain
+    description: Uses isPlain prop on Page for chrome-free plain page layout
+    if: "annotations.get('pattern') == 'plain' or annotations.get('pattern') == 'combined'"
+    check: |
+      import re
+      file_text = ""
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str):
+              file_text += "\n" + content
+      if re.search(r'<Page[^>]*\bisPlain\b', file_text):
+          return True, "Uses isPlain prop on Page in generated code"
+      text = outputs.get("conversation", "") + file_text
+      if re.search(r'\bisPlain\b', text):
+          return False, "Mentions isPlain in prose but not applied to <Page> in generated code"
+      return False, "Missing isPlain prop on Page for plain layout"
+
+  - name: uses_is_viewport
+    description: Uses isViewport prop on Drawer for full-height viewport drawer
+    if: "annotations.get('pattern') == 'drawer'"
+    check: |
+      import re
+      file_text = ""
+      for path, content in outputs.get("files", {}).items():
+          if isinstance(content, str):
+              file_text += "\n" + content
+      if re.search(r'<Drawer[^>]*\bisViewport\b', file_text):
+          return True, "Uses isViewport prop on Drawer in generated code"
+      text = outputs.get("conversation", "") + file_text
+      if re.search(r'\bisViewport\b', text):
+          return False, "Mentions isViewport in prose but not applied to <Drawer> in generated code"
+      return False, "Missing isViewport prop on Drawer for full-height layout"
+
+  - name: gate_pf_only
+    description: Declines and redirects to pf-project-gen when project has PF but no RHDS
+    if: "annotations.get('expect_decline') == True and annotations.get('rhds_only', False) == False and annotations.get('pf_old', False) == False"
+    check: |
+      import re
+      files = outputs.get("files", {})
+      file_text = ""
+      for path, content in files.items():
+          if isinstance(content, str):
+              file_text += "\n" + content
+      rhds_in_files = re.search(r'(rh-navigation-primary|rh-footer|@rhds/|PageHeader|PageFooter|NavigationPrimary)', file_text)
+      if rhds_in_files:
+          return False, f"Generated RHDS patterns for a project without RHDS packages: {rhds_in_files.group()}"
+      if files:
+          return False, "Generated file artifacts for a project that should be declined"
+      text = outputs.get("conversation", "")
+      if not re.search(r'pf-project-gen', text):
+          return False, "Did not redirect the user to pf-project-gen for standard PF layouts"
+      return True, "Declined and redirected to pf-project-gen"
+
+  - name: gate_rhds_only
+    description: Declines when project has RHDS but no PatternFly
+    if: "annotations.get('rhds_only', False) == True"
+    check: |
+      import re
+      files = outputs.get("files", {})
+      for path, content in files.items():
+          if not isinstance(content, str):
+              continue
+          pf_layout = re.search(r'(<Page[\s>]|<PageSection|<Masthead|<PageHeader|<Drawer[\s>])', content)
+          if pf_layout:
+              return False, f"Generated PF layout for a project without PatternFly: {pf_layout.group()}"
+      if files:
+          return False, "Generated file artifacts for a project that should be declined"
+      text = outputs.get("conversation", "")
+      if not re.search(r'@patternfly/react-core', text):
+          return False, "Did not mention that @patternfly/react-core is required"
+      return True, "Declined and explained @patternfly/react-core is required"
+
+  - name: gate_pf_old
+    description: Declines and recommends upgrade when PF is below 6.7.0
+    if: "annotations.get('pf_old', False) == True"
+    check: |
+      import re
+      files = outputs.get("files", {})
+      file_text = ""
+      for path, content in files.items():
+          if isinstance(content, str):
+              file_text += "\n" + content
+      new_api = re.search(r'(<PageHeader[\s>/]|<PageFooter[\s>/]|<Page[^>]*\bisPlain\b|<Drawer[^>]*\bisViewport\b)', file_text)
+      if new_api:
+          return False, f"Emitted 6.7.0-only API ({new_api.group()}) for a project on an older PF version"
+      if files:
+          return False, "Generated file artifacts for a project that should be declined"
+      text = outputs.get("conversation", "")
+      upgrade_mention = re.search(r'6\.7\.0|upgrade', text, re.IGNORECASE)
+      if not upgrade_mention:
+          return False, "Did not mention upgrading to 6.7.0 or later"
+      return True, "Declined and recommended PF upgrade to 6.7.0+"
+
+thresholds:
+  annotations_complete:
+    min_pass_rate: 1.0
+  annotations_vs_fixture:
+    min_pass_rate: 1.0
+  uses_page_header_wrapper:
+    min_pass_rate: 1.0
+  uses_page_footer_wrapper:
+    min_pass_rate: 1.0
+  correct_masthead_prop:
+    min_pass_rate: 1.0
+  rhds_typed_imports:
+    min_pass_rate: 1.0
+  rhds_ts_safe:
+    min_pass_rate: 1.0
+  bare_tags_enforced:
+    min_pass_rate: 1.0
+  uses_is_plain:
+    min_pass_rate: 1.0
+  uses_is_viewport:
+    min_pass_rate: 1.0
+  gate_pf_only:
+    min_pass_rate: 1.0
+  gate_pf_old:
+    min_pass_rate: 1.0
+  gate_rhds_only:
+    min_pass_rate: 1.0

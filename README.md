@@ -3,15 +3,17 @@
 [![License](https://img.shields.io/github/license/rh-uxd/ai-helpers)](./LICENSE)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 [![Plugins](https://img.shields.io/badge/plugins-14-blueviolet)](./PLUGINS.md)
-[![Skills](https://img.shields.io/badge/skills-67-blue)](./PLUGINS.md)
-[![Agents](https://img.shields.io/badge/agents-8-teal)](./PLUGINS.md)
+[![Skills](https://img.shields.io/badge/skills-72-blue)](./PLUGINS.md)
+[![Agents](https://img.shields.io/badge/agents-9-teal)](./PLUGINS.md)
 [![skillsaw grade](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Frh-uxd%2Fai-helpers%2Fmain%2F.skillsaw-badge.json)](https://github.com/rh-uxd/ai-helpers/blob/main/.skillsaw-baseline.json)
 
 AI skills for PatternFly and UXD teams — component development, design, accessibility, and migration. Skills are available in **Claude Code**, **Cursor**, and **Codex** (desktop app and CLI). The `patternfly` dependency bundle auto-installs sub-plugins only in Claude Code.
 
 Official setup docs: [Claude Code plugins](https://code.claude.com/docs/en/plugins), [Cursor plugins](https://cursor.com/docs/plugins), [OpenAI plugins and local marketplaces](https://developers.openai.com/plugins/build/plugins), and [Codex CLI](https://developers.openai.com/codex/cli/).
 
-> **Codex marketplace support:** Codex also supports a native repo marketplace at `.agents/plugins/marketplace.json`. This repository uses the existing `.claude-plugin/marketplace.json` because Codex can read it independently, so a second catalog would duplicate maintenance. A Codex-specific marketplace can be added if Codex-only metadata or policies become necessary.
+> **Marketplace catalogs:** Claude Code and Codex both read `.claude-plugin/marketplace.json`. Cursor reads `.cursor-plugin/marketplace.json` separately. Codex does not require Claude Code to be installed.
+>
+> **Why two catalogs?** Cursor uses a separate plugin format and ecosystem, so we maintain `.cursor-plugin/marketplace.json` independently. Claude Code and Codex share `.claude-plugin/` because Codex reads the Claude Code format natively — no duplication needed.
 
 <p align="center">
   <img src="assets/install-plugins-terminal.gif" alt="Browsing and installing plugins interactively in Claude Code" width="600">

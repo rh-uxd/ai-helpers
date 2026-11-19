@@ -66,9 +66,15 @@ Create UX prototypes from Jira tickets, Figma designs, or feature descriptions
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
 <tr><td nowrap><code>uxd-prototype-create</code></td><td>Create or refine a UX prototype from a Jira ticket, Figma design, feature description, or rough idea.</td><td>stable</td></tr>
-<tr><td nowrap><code>uxd-prototype-evaluate</code></td><td>Evaluate a running prototype against a Jira ticket's acceptance criteria, automatically fix what fails, then run persona-based usability walkthroughs.</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-prototype-evaluate</code></td><td>Run selected Quick Checks or composed Full Evaluation from Jira or reviewed written requirements, with canonical evidence, explicit checkpoints and optional reports.</td><td>stable</td></tr>
 <tr><td nowrap><code>uxd-prototype-export</code></td><td>Export a prototype page or journey step as static HTML, a React component tree, or a PatternFly implementation spec, and install the Prototype Bar (Sources, Prototype|Eval, State, Export).</td><td>stable</td></tr>
 <tr><td nowrap><code>uxd-prototype-publish</code></td><td>Publish a prototype to a git merge request, GitHub Pages, GitLab Pages, or Vercel.</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-prototype-walkthrough</code></td><td>Run selected task and persona browser walkthroughs with revision-bound evidence and canonical results.</td><td>stable</td></tr>
+</table>
+
+<table>
+<tr><th>Agent</th><th>Description</th><th>Eval</th></tr>
+<tr><td nowrap><code>uxd-evaluator</code></td><td>Prototype evaluation routing and evidence ownership across Quick Checks, Agentic Walkthroughs, and Full Evaluation.</td><td>stable</td></tr>
 </table>
 
 
@@ -95,10 +101,9 @@ UXD skill incubator — new skills start here before graduating to consumer plug
 
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
-<tr><td nowrap><code>uxd-experience-narrative-create</code></td><td>Turn a problem brief into a scene-by-scene experience a prototype can show.</td><td>—</td></tr>
+<tr><td nowrap><code>uxd-experience-narrative-create</code></td><td>Turn a problem brief and paired vision journey map into an editable Miro storyboard, then finalize it as an experience narrative and prototype-ready screen breakdown.</td><td>—</td></tr>
 <tr><td nowrap><code>uxd-experience-review</code></td><td>Judge whether an experience narrative and prototype carry the framed problem, and draft the stakeholder demo.</td><td>—</td></tr>
 <tr><td nowrap><code>uxd-problem-brief-create</code></td><td>Frame a product problem as a brief: who is affected, the current condition, evidence versus assumptions, and what is in scope.</td><td>—</td></tr>
-<tr><td nowrap><code>uxd-vision-workshop</code></td><td>Guide a team from an evidence-grounded problem through a future-state UX narrative, prototype, and stakeholder review.</td><td>—</td></tr>
 </table>
 
 
@@ -218,15 +223,20 @@ React component development — coding standards, testing, and structure
 <table>
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
 <tr><td nowrap><code>pf-chart-gen</code></td><td>Generate PatternFly chart components with theming, responsive sizing, and accessibility.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-chatbot-bundle-audit</code></td><td>Audit PatternFly ChatBot imports for tree-shaking opportunities.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-component-check</code></td><td>Audit PatternFly React component nesting, wrapper hierarchies, and layout structure.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-component-reuse-check</code></td><td>Detects custom React components in newly created or modified (uncommitted) code that overlap with PatternFly React components, suggests the PatternFly equivalent, and can replace the custom component then build to verify.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-context-gen</code></td><td>Generate AI-friendly context files for PatternFly components.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-deploy</code></td><td>Deploy a PatternFly React project to GitHub Pages using pfcli deploy.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-design-comments-setup</code></td><td>Integrate @patternfly/design-comments into React apps for on-page design feedback, pinned comment threads, GitHub Issues sync, and Jira linking.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-form-gen</code></td><td>Generate PatternFly form components with validation, layout, and accessibility.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-import-check</code></td><td>Audit PatternFly imports for correctness and bundle-size anti-patterns.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-project-gen</code></td><td>Scaffolds PatternFly React projects with PF6-safe dependencies, imports, and starter layout.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-reproduce-issue</code></td><td>Reproduce a PatternFly bug from a GitHub issue description.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-rhds-layout-gen</code></td><td>Generate layout code for embedding RHDS header and footer web components inside a PatternFly Page.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-rhds-theme-audit</code></td><td>Audit and fix theme synchronization between PatternFly React and Red Hat Design System web components, then generate a usage guide.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-table-gen</code></td><td>Generate PatternFly table components with sorting, filtering, pagination, and expandable rows.</td><td>stable</td></tr>
+<tr><td nowrap><code>pf-test-from-spec-gen</code></td><td>Generate requirement-traced React Testing Library tests from a component spec or acceptance criteria.</td><td>stable</td></tr>
 <tr><td nowrap><code>pf-test-gen</code></td><td>Generate a unit test file for a React component using Testing Library.</td><td>stable</td></tr>
 </table>
 
@@ -275,8 +285,8 @@ PatternFly team tools and skill incubation — issue triage, release management,
 
 **Eval coverage**
 
-- Consumer: 45/45 (100%)
-- Workshop: 0/22 (0%)
+- Consumer: 51/51 (100%)
+- Workshop: 0/21 (0%)
 
 ---
 
@@ -292,17 +302,17 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 | `uxd-design-handoff` | UXD practitioners | Input Required Source Design artifact (prototype files, Figma screenshots, text description) ... | The handoff spec is written to a local file (markdown by default, JSON when --format=json). I... | M |
 | `uxd-figma-read` | UXD practitioners | Task context | Structured result | M |
 | `uxd-prototype-create` | UXD practitioners | Input Required Source What to prototype (Jira URL/key, Figma link, description, or idea) Yes ... | Written under artifacts/{ID}/ in the consumer project (never ${CLAUDESKILLDIR}): Output Locat... | XL |
-| `uxd-prototype-evaluate` | UXD practitioners | Input Example Required Jira story key PROJ-298 Yes Prototype URL http://localhost:3000 Condit... | Per-key eval files under ${UXDPROJECTROOT}/.artifacts/<KEY>/eval/ (ARTIFACTSDIR): File Descri... | XL |
+| `uxd-prototype-evaluate` | UXD practitioners | Use the reviewed packet described by the [shared execution contract](references/workflow/spli... | Each run owns pe-context.json, pe-evaluation-snapshot.json, pe-evidence.json, pe-actions.json... | XL |
 | `uxd-prototype-export` | UXD practitioners | Input Required Source What to export (current page, journey batch, or install bar) Yes User; ... | Under .artifacts/{ID}/exports/ unless --out is set: Output Description index.html + export-ma... | L |
-| `uxd-prototype-publish` | UXD practitioners | Input Source Required Prototype files .artifacts/{ID}/prototype/ or workspace files Yes metad... | Output Description Published prototype GitLab MR, GitHub Pages, GitLab Pages, or Vercel URL U... | L |
+| `uxd-prototype-publish` | UXD practitioners | Use artifacts/{ID}/. Use the legacy .artifacts/{ID}/ only if the current directory is absent.... | Output Description Published prototype GitLab MR, GitHub Pages, GitLab Pages, or Vercel URL U... | L |
+| `uxd-prototype-walkthrough` | UXD practitioners | Independent: prepare only missing source/build, environment, task and audience details. Sugge... | Independent execution produces an immutable run directory containing pe-context.json, pe-eval... | S |
 | `uxd-discovery` | UXD practitioners | Input Type Required Default Problem source Jira issue key/URL, feature description, or proble... | Output Format Description Discovery brief Structured markdown Problem statement, user groups,... | M |
 | `uxd-evaluate-code-heuristics` | UXD practitioners | The caller provides code to review: a diff, a set of changed files, or a directory. The skill... | Structured result | M |
 | `uxd-evaluate-design-heuristics` | UXD practitioners | The skill expects one or more of the following, provided by the user or by an upstream skill:... | Given the required inputs, this skill produces: Verdict — Pass or Fail. Any dimension scoring... | L |
 | `uxd-research-heuristic-eval` | UXD practitioners | Input Type Required Default Interface to evaluate Screenshots, image files, text descriptions... | Output Format Location Evaluation report .md and .html [project-dir]/heuristic-eval-[date].[ext] | XL |
-| `uxd-experience-narrative-create` | UX designers | A problem brief, optional time horizon and enabling capabilities, optional target codebase | An experience narrative with a screen breakdown | M |
-| `uxd-experience-review` | UX designers | A problem brief, an experience narrative, and a prototype | A review scorecard, improvement list, and presentation plan | M |
+| `uxd-experience-narrative-create` | UX designers | A problem brief, a completed as-is/to-be journey map, an optional edited Miro storyboard, and optional target codebase | A Miro-editable To-Be storyboard, final experience narrative, and structured prototype handoff | M |
+| `uxd-experience-review` | UX designers | A problem brief, an experience narrative, a prototype, a paired vision map when available, and optional product principles | A review scorecard, improvement list, and presentation plan | M |
 | `uxd-problem-brief-create` | UX designers and product managers | A problem, feature request, or discovery brief, plus optional evidence | A problem brief in markdown | M |
-| `uxd-vision-workshop` | UX designers, product managers, and engineering partners | A product area or problem, available user evidence, and optionally a target prototype workspace | A problem brief, experience narrative, interactive prototype, and review plan | L |
 | `pf-a11y-audit` | PatternFly designers and developers | Task context | Per finding: [ERRORWARNINFO] file/path.tsx:42 — description (WCAG X.X.X) Found: what was dete... | L |
 | `pf-a11y-keyboard` | PatternFly designers and developers | Source Required Description URL Yes URL to a running application (localhost or deployed) Focu... | Structured result | L |
 | `pf-a11y-test-gen` | PatternFly designers and developers | Source Required Description Component/module file Yes Path to the component or UI module to g... | Structured result | L |
@@ -325,15 +335,20 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 | `pf-react-migration-scan` | PatternFly designers and developers | Task context | Structured result | M |
 | `pf-release-candidate-update` | PatternFly designers and developers | Task context | Structured result | M |
 | `pf-chart-gen` | PatternFly designers and developers | The user provides one of: A description of the chart type and data (e.g., "bar chart showing ... | Output the complete chart component ready to save. Include the import block, data transformat... | S |
+| `pf-chatbot-bundle-audit` | PatternFly designers and developers | Task context | Structured result | M |
 | `pf-component-check` | PatternFly designers and developers | Task context | Structured result | L |
 | `pf-component-reuse-check` | PatternFly designers and developers | Task context | Structured result | M |
+| `pf-context-gen` | PatternFly designers and developers | The user provides one of: A component name or list of components (e.g., "Table", "Form + Form... | Output a single markdown context file with this structure: markdown PatternFly Context: [Comp... | M |
 | `pf-deploy` | PatternFly designers and developers | Task context | Structured result | S |
 | `pf-design-comments-setup` | PatternFly designers and developers | Task context | Structured result | S |
 | `pf-form-gen` | PatternFly designers and developers | The user provides one of: A description of the form's purpose and fields (e.g., "create a use... | Output the complete form component ready to save. Include the import block, component functio... | S |
 | `pf-import-check` | PatternFly designers and developers | The user provides a file path, directory, or component to check. Default to scanning the proj... | For each finding, provide: Severity: high medium low File path and line number Current import... | S |
 | `pf-project-gen` | PatternFly designers and developers | Task context | Structured result | S |
 | `pf-reproduce-issue` | PatternFly designers and developers | The user provides one of: A GitHub issue URL (e.g., https://github.com/patternfly/patternfly-... | Produce a reproduction report: | S |
+| `pf-rhds-layout-gen` | PatternFly designers and developers | The user provides one of: A request for an RHDS <rh-navigation-primary> header or <rh-footer>... | Output a single, runnable component file. Include all necessary imports (PF React components ... | M |
+| `pf-rhds-theme-audit` | PatternFly designers and developers | Task context | 1. Audit summary — report what was found (theme toggle method, redundant mappings, missing pr... | M |
 | `pf-table-gen` | PatternFly designers and developers | The user provides one of: A description of the data and desired table features (e.g., "sortab... | Output the complete table component ready to save. Include the import block, type definitions... | S |
+| `pf-test-from-spec-gen` | PatternFly designers and developers | The user provides one of: A requirements document, PRD section, or acceptance criteria (paste... | Output a complete test file with: 1. Traceability comment mapping tests to requirements 2. Or... | M |
 | `pf-test-gen` | PatternFly designers and developers | The user will provide a component file path or component code. Read the component source befo... | Output the complete test file ready to save. Name it ComponentName.test.tsx matching the sour... | S |
 | `pf-analytics-repo-pruning` | Contributors and maintainers | File: repos.json (project root or path the user supplies). Expect a top-level repos array; ea... | Structured result | S |
 | `pf-bug-triage` | Contributors and maintainers | The user provides an issue (title, body, labels, and optionally linked files or component nam... | Produce a triage comment or summary using this template: markdown | S |

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ai-helpers.uxd/schemas/v1/evaluation-plan.schema.json",
+  "title": "Reviewed evaluation plan v1",
+  "type": "object",
+  "properties": {
+    "schema_version": { "const": 1 },
+    "goal": { "$ref": "shared.schema.json#/$defs/bounded_text" },
+    "packet_sha256": { "$ref": "shared.schema.json#/$defs/sha256" },
+    "reviewed_at": { "$ref": "shared.schema.json#/$defs/timestamp" },
+    "questions": {
+      "type": "array", "minItems": 1, "maxItems": 50,
+      "items": {
+        "type": "object",
+        "properties": { "id": { "$ref": "shared.schema.json#/$defs/identifier" }, "text": { "$ref": "shared.schema.json#/$defs/bounded_text" } },
+        "required": ["id", "text"], "additionalProperties": false
+      }
+    },
+    "allowed_checks": { "type": "array", "items": { "$ref": "#/$defs/check" }, "minItems": 1, "maxItems": 5, "uniqueItems": true },
+    "limits": {
+      "type": "object",
+      "properties": {
+        "max_model_invocations": { "type": ["integer", "null"], "minimum": 0 },
+        "max_cost_usd": { "type": ["number", "null"], "minimum": 0 },
+        "stop_conditions": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/bounded_text" }, "minItems": 1, "maxItems": 20 }
+      },
+      "required": ["max_model_invocations", "max_cost_usd", "stop_conditions"], "additionalProperties": false
+    },
+    "steps": {
+      "type": "array", "minItems": 1, "maxItems": 5,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "$ref": "shared.schema.json#/$defs/identifier" },
+          "check": { "$ref": "#/$defs/check" },
+          "question_ids": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/identifier" }, "minItems": 1, "maxItems": 50, "uniqueItems": true },
+          "rationale": { "$ref": "shared.schema.json#/$defs/bounded_text" },
+          "expected_evidence": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/bounded_text" }, "minItems": 1, "maxItems": 20 },
+          "depends_on": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/identifier" }, "maxItems": 4, "uniqueItems": true }
+        },
+        "required": ["id", "check", "question_ids", "rationale", "expected_evidence", "depends_on"], "additionalProperties": false
+      }
+    }
+  },
+  "required": ["schema_version", "goal", "packet_sha256", "reviewed_at", "questions", "allowed_checks", "limits", "steps"],
+  "additionalProperties": false,
+  "$defs": {
+    "check": { "enum": ["classify", "consistency-source", "heuristic", "consistency-visual", "walkthroughs"] },
+    "usage": {
+      "type": "object",
+      "properties": { "model_invocations": { "type": "integer", "minimum": 0 }, "llm_cost_usd": { "type": ["number", "null"], "minimum": 0 }, "known_cost_usd": { "type": "number", "minimum": 0 } },
+      "required": ["model_invocations", "llm_cost_usd", "known_cost_usd"], "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "properties": {
+        "schema_version": { "const": 1 },
+        "plan_sha256": { "$ref": "shared.schema.json#/$defs/sha256" },
+        "inherited_phase_count": { "type": "integer", "minimum": 0, "maximum": 200 },
+        "prior_usage": { "$ref": "#/$defs/usage" },
+        "change": {
+          "type": "object",
+          "properties": { "kind": { "enum": ["initial", "continue", "verification", "within-envelope", "expanded"] }, "reason": { "$ref": "shared.schema.json#/$defs/bounded_text" }, "recorded_at": { "$ref": "shared.schema.json#/$defs/timestamp" }, "allow_rerun": { "type": "boolean" } },
+          "required": ["kind", "reason", "recorded_at", "allow_rerun"], "additionalProperties": false
+        },
+        "execution": {
+          "type": "array", "maxItems": 5,
+          "items": {
+            "type": "object",
+            "properties": {
+              "step_id": { "$ref": "shared.schema.json#/$defs/identifier" },
+              "status": { "enum": ["completed", "failed", "blocked", "incomplete", "not-run"] },
+              "phase_indexes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 199 }, "uniqueItems": true, "maxItems": 200 },
+              "evidence_ids": { "type": "array", "items": { "$ref": "shared.schema.json#/$defs/identifier" }, "uniqueItems": true, "maxItems": 2000 },
+              "reason": { "$ref": "shared.schema.json#/$defs/bounded_text" }
+            },
+            "required": ["step_id", "status", "phase_indexes", "evidence_ids", "reason"], "additionalProperties": false
+          }
+        },
+        "own_usage": { "$ref": "#/$defs/usage" },
+        "lineage_usage": { "$ref": "#/$defs/usage" },
+        "budget_status": { "enum": ["within-known", "unknown", "exceeded"] }
+      },
+      "required": ["schema_version", "plan_sha256", "inherited_phase_count", "prior_usage", "change", "execution", "own_usage", "lineage_usage", "budget_status"], "additionalProperties": false
+    }
+  }
+}

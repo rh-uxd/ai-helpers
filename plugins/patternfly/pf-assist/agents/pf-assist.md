@@ -35,11 +35,14 @@ These skills apply when specific signals are present:
 | `/pf-component-reuse-check` | pf-react | Uncommitted changes contain custom components that may overlap PatternFly APIs |
 | `/pf-css-token-check` | pf-design-audit | Inline styles with hardcoded spacing, font sizes, or border values |
 | `/pf-test-gen` | pf-react | Components exist without corresponding test files |
+| `/pf-test-from-spec-gen` | pf-react | User provides a spec, acceptance criteria, or requirements and the component may not exist yet |
 | `/pf-figma-check` | pf-design-audit | Figma URLs are in the conversation |
 | `/pf-figma-token-check` | pf-design-audit | Figma URLs are in the conversation |
 | `/pf-icon-finder` | pf-design-audit | Figma mockups contain icons to identify |
 | `/pf-project-gen` | pf-react | User is scaffolding a new project |
+| `/pf-rhds-layout-gen` | pf-react | Project has `@patternfly/react-core` 6.7.0+ plus `@rhds/elements`, or user asks for an RHDS header/footer, a plain page layout, or a full-height viewport drawer |
 | `/pf-ai-audit` | pf-design-audit | Feature involves AI-powered UX (chatbots, assistants, generation) |
+| `/pf-chatbot-bundle-audit` | pf-react | `@patternfly/chatbot` is in dependencies or ChatBot bundle size is a concern |
 
 ## Synthesis guidance
 

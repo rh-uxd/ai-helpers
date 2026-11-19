@@ -1,0 +1,1 @@
+prompt: "I need to use an RHDS rh-navigation-primary header inside my PatternFly React page instead of the default Masthead. My project has both @patternfly/react-core 6.x and @rhds/elements installed. Show me how to set up the layout component."

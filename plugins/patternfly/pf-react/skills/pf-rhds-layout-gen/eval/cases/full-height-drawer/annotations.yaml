@@ -1,0 +1,8 @@
+expect_rhds: false
+expect_decline: false
+rhds_only: false
+pf_old: false
+pattern: drawer
+has_header: false
+has_footer: false
+fixture: package.json

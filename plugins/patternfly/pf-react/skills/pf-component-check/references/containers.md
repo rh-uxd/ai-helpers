@@ -181,7 +181,7 @@ Skipping **`ModalHeader`**, **`ModalBody`**, or **`ModalFooter`** breaks the int
 ```
 Drawer (context provider)
 └── DrawerContent panelContent={<DrawerPanelContent />}
-    └── DrawerContentBody (main content, provides padding)
+    └── DrawerContentBody (main content, provides padding — optional when DrawerContent has no main-column children)
 
 DrawerPanelContent (passed as prop)
 ├── DrawerHead (panel header)
@@ -199,6 +199,7 @@ DrawerPanelContent (passed as prop)
 |------|---------|
 | `isExpanded` | Panel visibility |
 | `isInline` | Inline mode (no overlay) |
+| `isViewport` | Fixed to fill the viewport (place after Page as a sibling) |
 | `position` | 'start' \| 'end' \| 'bottom' |
 | `onExpand` | Callback when panel expands |
 
@@ -218,7 +219,7 @@ DrawerPanelContent (passed as prop)
 
 ### Critical pattern and anti-patterns
 
-`panelContent` is a **prop** on `DrawerContent`, not a child. Main column content belongs in **`DrawerContentBody`**.
+`panelContent` is a **prop** on `DrawerContent`, not a child. Main column content belongs in **`DrawerContentBody`** (optional when `DrawerContent` has no main-column children).
 
 #### Anti-pattern: panel as child, main column without DrawerContentBody
 
