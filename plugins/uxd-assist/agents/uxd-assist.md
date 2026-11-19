@@ -35,13 +35,13 @@ When Figma URLs are in the conversation, or the user requests design critique, c
 
 ## Slides — local decks and shared copies
 
-When the user asks for a slide deck, a readout presentation, a design-review deck, or a user-journey deck, these skills are available:
+When the user asks for a slide deck, a readout presentation, a design-review deck, or a user-journey deck, these incubating skills are available when the UXD Workshop plugin is installed:
 
 | Skill | What it does |
 |-------|-------------|
-| `/uxd-general:uxd-slides-create` | Author a local deck from a briefing, research-readout, design-review, user-journey, or vision deck template. When the user wants Google Slides or Figma Slides, continue into publish in the same session |
-| `/uxd-general:uxd-slides-export` | Build the local HTML, CSS, and JavaScript viewer |
-| `/uxd-general:uxd-slides-publish` | Publish the shared copy to Google Slides or Figma Slides |
+| `/uxd-workshop:uxd-slides-create` | Author a local deck from a briefing, research-readout, design-review, user-journey, or vision deck template. When the user wants Google Slides or Figma Slides, continue into publish in the same session |
+| `/uxd-workshop:uxd-slides-export` | Build the local HTML, CSS, and JavaScript viewer |
+| `/uxd-workshop:uxd-slides-publish` | Publish the shared copy to Google Slides or Figma Slides |
 
 Create writes the local deck first. When the user already wants Google Slides or Figma Slides, create continues into publish in that same session. Export stays local. Publish writes `canonical` and marks the deck published.
 
