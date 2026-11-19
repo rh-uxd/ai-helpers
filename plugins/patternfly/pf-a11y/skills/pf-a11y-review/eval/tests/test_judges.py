@@ -48,6 +48,21 @@ class MediaConditionJudgeTests(unittest.TestCase):
         )
         self.assertTrue(evaluate("distinguishes_media_conditions", text))
 
+    def test_accepts_use_x_not_y_wording_from_reference(self):
+        text = self.prefix + (
+            "Use browser zoom or text-size controls, not deviceScaleFactor, as evidence "
+            "for zoom or text-resize results."
+        )
+        self.assertTrue(evaluate("distinguishes_media_conditions", text))
+
+    def test_accepts_reverse_substitute_wording(self):
+        text = self.prefix + "deviceScaleFactor is not a substitute for browser zoom."
+        self.assertTrue(evaluate("distinguishes_media_conditions", text))
+
+    def test_rejects_reversed_use_x_not_y_advice(self):
+        text = self.prefix + "Use deviceScaleFactor instead of browser zoom."
+        self.assertFalse(evaluate("distinguishes_media_conditions", text))
+
     def test_rejects_denial_of_distinction(self):
         text = self.prefix + (
             "Device pixel ratio is not different from browser zoom or text resize."
@@ -65,6 +80,22 @@ class MissingCapabilityJudgeTests(unittest.TestCase):
     def test_rejects_affirmative_false_pass_in_either_order(self):
         text = self.prefix + "The clean axe unit-test result proves the page is fully accessible."
         self.assertFalse(evaluate("reports_missing_capabilities_honestly", text))
+
+    def test_rejects_false_pass_separate_from_evidence_sentence(self):
+        text = self.prefix + "The axe unit tests passed. Overall pass."
+        self.assertFalse(evaluate("reports_missing_capabilities_honestly", text))
+
+    def test_rejects_claim_that_follows_capability_negation(self):
+        text = self.prefix + (
+            "We cannot test keyboard behavior, but the page is fully accessible."
+        )
+        self.assertFalse(evaluate("reports_missing_capabilities_honestly", text))
+
+    def test_accepts_honest_tested_coverage_statement(self):
+        text = self.prefix + (
+            "No findings in tested coverage; keyboard checks remain Not tested."
+        )
+        self.assertTrue(evaluate("reports_missing_capabilities_honestly", text))
 
 
 class ProductOverlayJudgeTests(unittest.TestCase):

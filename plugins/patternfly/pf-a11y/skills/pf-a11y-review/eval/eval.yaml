@@ -72,13 +72,22 @@ judges:
       has_text_resize = re.search(r'(?i)(text.{0,20}200%|200%.{0,20}text)', text)
       has_reflow = re.search(r'(?i)reflow|320\s*(?:CSS\s*)?(?:px|pixels)', text)
       dpr_term = re.compile(r'(?i)device\s*pixel\s*ratio|deviceScaleFactor|\bDPR\b')
-      zoom_term = re.compile(r'(?i)zoom|text\s+resiz(?:e|ing)')
-      invalid_equivalence = re.compile(r'(?i)\bnot\s+(?:different|distinct|separate)\s+from\b')
+      zoom_term = re.compile(r'(?i)zoom|text\s+resiz(?:e|ing)|text.size controls')
+      invalid_equivalence = re.compile(
+          r'(?i)\bnot\s+(?:different|distinct|separate)\s+from\b'
+          r'|\buse\s+(?:device\s*pixel\s*ratio|deviceScaleFactor|DPR)\b[^.!?]*\b(?:instead of|rather than)\b[^.!?]*'
+          r'\b(?:browser zoom|text\s+resiz(?:e|ing)|text.size controls)\b'
+      )
       valid_distinction = re.compile(
-          r'(?i)\b(?:not|never)\s+(?:the\s+same\s+as|equivalent\s+to|interchangeable\s+with)\b'
+          r'(?i)\b(?:not|never)\s+(?:the\s+same\s+as|equivalent\s+to|interchangeable\s+with|a\s+substitute\s+for)\b'
           r'|\b(?:different|distinct|separate|differs?)\s+from\b'
           r'|\b(?:do not|don.t|must not|should not)\s+(?:treat|consider|use).{0,40}'
           r'(?:same|equivalent|interchangeable)'
+          r'|\b(?:browser zoom|text\s+resiz(?:e|ing)|text.size controls)\b.{0,80}\bnot\b.{0,80}'
+          r'\b(?:device\s*pixel\s*ratio|deviceScaleFactor|DPR)\b'
+          r'|\b(?:device\s*pixel\s*ratio|deviceScaleFactor|DPR)\b.{0,80}'
+          r'\b(?:is not|isn.t)\b.{0,80}\b(?:a\s+substitute\s+for|equivalent\s+to|the\s+same\s+as)\b.{0,80}'
+          r'\b(?:browser zoom|text\s+resiz(?:e|ing)|text.size controls)\b'
       )
       comparison_sentences = [
           sentence for sentence in re.split(r'(?<=[.!?])\s+|\n+', text)
@@ -105,16 +114,16 @@ judges:
       not_tested = re.search(r'(?i)not tested|unable to test|coverage gap', text)
       limitation = re.search(r'(?i)(browser|keyboard|focus|accessibility tree).{0,100}(unavailable|missing|cannot|not available|not tested)', text)
       claim_term = re.compile(r'(?i)fully accessible|overall pass|passes accessibility|accessible overall')
-      limited_evidence = re.compile(r'(?i)axe|source|static|unit.?test|automated')
       negated_claim = re.compile(
-          r'(?i)\b(?:do|does|did|must|should|would)\s+not\b'
-          r'|\b(?:cannot|can.t|never)\b'
-          r'|\bno\s+(?:overall\s+pass|accessibility\s+pass)\b'
-          r'|\bnot\s+(?:infer|prove|establish|mean|demonstrate)\b'
+          r'(?i)\bno\s+overall\s+pass\b'
+          r'|\bnot\s+(?:fully\s+accessible|accessible\s+overall|passes\s+accessibility)\b'
+          r'|\b(?:do not|don.t|must not|should not|cannot|can.t)\s+'
+          r'(?:infer|conclude|treat|establish|prove)\b.{0,80}'
+          r'(?:fully\s+accessible|overall\s+pass|passes\s+accessibility|accessible\s+overall)'
       )
       claim_sentences = [
           sentence for sentence in re.split(r'(?<=[.!?])\s+|\n+', text)
-          if claim_term.search(sentence) and limited_evidence.search(sentence)
+          if claim_term.search(sentence)
       ]
       false_pass = any(not negated_claim.search(sentence) for sentence in claim_sentences)
       if not not_tested or not limitation:

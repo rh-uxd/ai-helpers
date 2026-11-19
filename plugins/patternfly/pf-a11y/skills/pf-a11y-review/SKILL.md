@@ -18,11 +18,15 @@ Run a phased accessibility review that treats automated checks as a baseline rat
 
 ## Input
 
-| Source | Required | Description |
-|---|---|---|
-| Review target | Yes | Running URL, component demo, or clearly identified user flow |
-| Scope | No | Routes, overlays, states, themes, or tasks to prioritize |
-| Product overlay | No | Local commands, page registries, test data, known exceptions, and tracker conventions |
+Parse the request as: `[<review-target>] [--target <url-or-flow>] [--scope <path-or-description>] [--overlay <path>]`
+
+| Input | Required | Default | Description |
+|---|---|---|---|
+| `<review-target>` or `--target` | Yes, unless supplied as context | none | Running URL, component demo, or clearly identified user flow |
+| `--scope` | No | all reachable in-scope surfaces | Route, overlay, state, theme, or task description, or the path to a product scope definition |
+| `--overlay` | No | none | Path to local commands, page registries, test data, known exceptions, and tracker conventions |
+
+The explicit flags are useful for automations and repository-specific wrappers. A bare target remains valid for interactive use. If no target is supplied by either form, ask for one rather than guessing.
 
 ## Capabilities and fallbacks
 
