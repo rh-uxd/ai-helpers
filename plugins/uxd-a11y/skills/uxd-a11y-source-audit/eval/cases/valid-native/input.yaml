@@ -1,0 +1,4 @@
+prompt: Review this modal source only; do not change it. A button calls dialog.showModal().
+  The dialog is <dialog aria-labelledby="title"><h2 id="title">Review changes</h2><p
+  tabindex="-1" autofocus>Read these changes.</p><form method="dialog"><button>Cancel</button></form></dialog>.
+  No browser evidence is available.

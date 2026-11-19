@@ -1,0 +1,3 @@
+expected: Report runtime checks Not tested with capability reason. Do not claim any
+  key presses, active-element observations or keyboard Pass. Explain source is insufficient
+  and provide specific follow-up checks, allowing static initial focus.

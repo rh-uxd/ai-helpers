@@ -14,6 +14,14 @@ fi
 echo "## Skill Eval Results"
 echo ""
 
+# The workflow deliberately disables LLM judges. Do not turn successful
+# execution (or an empty judge table) into an answer-correctness pass.
+LLM_JUDGES_SKIPPED="${EVAL_LLM_JUDGES_SKIPPED:-false}"
+if [[ "$LLM_JUDGES_SKIPPED" == "true" ]]; then
+  echo "**LLM judgments: UNGRADED.** LLM judges were disabled; LLM answer correctness is unverified."
+  echo ""
+fi
+
 OVERALL_PASS=true
 
 for DIR in "$@"; do
@@ -71,7 +79,12 @@ with open(sys.argv[1]) as f:
     data = yaml.safe_load(f)
 judges = data.get('judges', {})
 for name, info in sorted(judges.items()):
-    rate = info.get('pass_rate', 0)
+    rate = info.get('pass_rate')
+    if rate is None:
+        print(f'| {name} | n/a | n/a | UNGRADED |')
+        if os.environ.get('EVAL_LLM_JUDGES_SKIPPED') != 'true':
+            print('FAIL_FLAG')
+        continue
     pct = f'{rate * 100:.0f}%'
     min_rate = thresholds.get(name, {}).get('min_pass_rate', 1.0)
     min_pct = f'{min_rate * 100:.0f}%'
@@ -127,7 +140,9 @@ print('</details>')
 
   echo ""
 
-  if [[ "$SKILL_PASS" == "true" ]]; then
+  if [[ "$LLM_JUDGES_SKIPPED" == "true" && "$SKILL_PASS" == "true" ]]; then
+    echo "Result: **UNGRADED for LLM correctness** (any code-judge results are shown above)"
+  elif [[ "$SKILL_PASS" == "true" ]]; then
     echo "Result: **PASS**"
   else
     echo "Result: **FAIL**"
@@ -137,7 +152,9 @@ print('</details>')
   echo ""
 done
 
-if [[ "$OVERALL_PASS" == "true" ]]; then
+if [[ "$LLM_JUDGES_SKIPPED" == "true" && "$OVERALL_PASS" == "true" ]]; then
+  echo "Overall: **UNGRADED for LLM correctness**"
+elif [[ "$OVERALL_PASS" == "true" ]]; then
   echo "Overall: **PASS**"
 else
   echo "Overall: **FAIL**"

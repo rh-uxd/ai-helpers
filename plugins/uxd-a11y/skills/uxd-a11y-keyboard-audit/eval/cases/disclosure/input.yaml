@@ -1,0 +1,4 @@
+prompt: Interpret these supplied observations; do not rerun. A native button Show
+  details has aria-expanded and aria-controls. Enter expands a nonmodal supplemental
+  paragraph; focus remains on the button. Tab reaches Next action. There is no dialog
+  or blocking task. Is failure to move focus or trap Tab a defect?

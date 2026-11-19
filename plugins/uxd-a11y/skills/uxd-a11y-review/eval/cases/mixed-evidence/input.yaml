@@ -1,0 +1,5 @@
+prompt: 'Consolidate this same-revision modal review without rerunning. Source inspection:
+  role=dialog, aria-modal=true, aria-labelledby=title resolves, close handler exists.
+  Browser observation: keyboard Enter leaves focus on Open; Tab reaches Background
+  action; Escape from Cancel does not close; Cancel activation does close. No AT,
+  axe, or visual tests were run. Report findings and coverage.'

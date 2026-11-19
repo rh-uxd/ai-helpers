@@ -1,0 +1,1 @@
+expected: "Accept input-focus/active-descendant model and disclosure trigger focus; do not force option DOM focus, modal traps, or automatic focus transfer. Preserve supplied-evidence limits and untested states."

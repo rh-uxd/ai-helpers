@@ -1,0 +1,1 @@
+expected: "Find invalid mixed switch state, unresolved second name-reference token, and focusable control inside aria-hidden. Do not claim the button necessarily has no accessible name, or assert absent keyboard handlers when unavailable. Recommend role-appropriate state and relationship/hiding fixes; mark behavior needing evidence."

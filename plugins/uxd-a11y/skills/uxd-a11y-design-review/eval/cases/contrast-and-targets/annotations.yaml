@@ -1,0 +1,1 @@
+expected: "Use attributed spec evidence, not invented visual inspection. Identify normal-text contrast and color-only meaning concerns. Do not treat 18px regular as large text or require 44px for AA. Missing focus/responsive states are unassessed, not actual implementation failures. No conformance pass."

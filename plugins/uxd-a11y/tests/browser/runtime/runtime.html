@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Runtime accessibility fixtures</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font: 1rem/1.5 system-ui; margin: 1rem; color: #171717; background: white; }
+  :focus-visible { outline: 3px solid #005fcc; outline-offset: 3px; }
+  button, [role=button], a { padding: .4rem; }
+  [role=tab][aria-selected=true] { font-weight: bold; border-bottom: 4px solid; }
+  #overflow { height: 100px; overflow: auto; border: 1px solid; margin-block: 1rem; }
+  #overflow button { display: block; margin: 1rem; }
+  dialog { width: min(30rem, calc(100vw - 2rem)); max-height: calc(100dvh - 2rem); overflow: auto; }
+  .broken-overlay { width: 350px; height: 180px; max-width: none; max-height: none; overflow: clip; padding: 1rem; position: fixed; inset: 0 auto auto 0; margin: 0; }
+  .broken-overlay #close { position: absolute; top: 210px; left: 10px; }
+</style>
+<a href="#main" id="skip">Skip to main</a>
+<nav aria-label="Example"><a href="#main">Home</a></nav>
+<main id="main" tabindex="-1">
+  <h1>Runtime review fixtures</h1>
+  <div role="tablist" aria-label="Settings">
+    <button id="tab-a" role="tab" aria-selected="true" aria-controls="panel-a">Profile</button>
+    <button id="tab-b" role="tab" aria-selected="false" aria-controls="panel-b" tabindex="-1">Notifications</button>
+  </div>
+  <section id="panel-a" role="tabpanel" aria-labelledby="tab-a"><button id="profile">Edit profile</button></section>
+  <section id="panel-b" role="tabpanel" aria-labelledby="tab-b" hidden><button id="notifications">Edit notifications</button></section>
+  <div id="overflow"><button id="row-1">First action</button><button id="row-2">Middle action</button><button id="row-3">Last action</button></div>
+  <!-- Deliberate negative fixture: only pointer activation is implemented. -->
+  <div id="apply" role="button" tabindex="0">Apply</div>
+  <p role="status" id="status"></p>
+  <button id="open">Review changes</button>
+  <dialog aria-labelledby="title"><h2 id="title">Review changes</h2><p>Read before continuing.</p><button id="close">Close</button></dialog>
+</main>
+<script>
+  const tabs = [...document.querySelectorAll('[role=tab]')];
+  for (const tab of tabs) {
+    tab.addEventListener('keydown', event => {
+      if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+      event.preventDefault();
+      const next = tabs[(tabs.indexOf(tab) + (event.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+      tabs.forEach(item => item.tabIndex = item === next ? 0 : -1);
+      next.focus();
+    });
+    tab.addEventListener('click', () => {
+      tabs.forEach(item => {
+        item.setAttribute('aria-selected', String(item === tab));
+        item.tabIndex = item === tab ? 0 : -1;
+        document.getElementById(item.getAttribute('aria-controls')).hidden = item !== tab;
+      });
+    });
+  }
+  const dialog = document.querySelector('dialog');
+  if (new URLSearchParams(location.search).get('variant') === 'clipped') dialog.className = 'broken-overlay';
+  document.getElementById('open').onclick = () => dialog.showModal();
+  document.getElementById('close').onclick = () => dialog.close();
+  document.getElementById('apply').onclick = () => document.getElementById('status').textContent = 'Applied';
+</script>
+</html>

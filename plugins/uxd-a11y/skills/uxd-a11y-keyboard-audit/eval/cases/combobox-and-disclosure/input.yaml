@@ -1,0 +1,1 @@
+prompt: "Assess supplied keyboard evidence only. An editable combobox retains DOM focus on its input; Down changes aria-activedescendant to an existing owned option, Enter commits, Escape closes. A nonmodal disclosure retains trigger focus, exposes expanded state, and its content is next in the tab sequence. Both remain keyboard escapable. No browser tools available."

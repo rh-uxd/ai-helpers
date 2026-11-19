@@ -1,0 +1,7 @@
+prompt: 'Review this PF 6.7.0 consumer modal. Source: <Modal isOpen={open} onClose={()
+  => setOpen(false)} elementToFocus="#intro"><ModalHeader title="Review changes" labelId="title"/><ModalBody><p
+  id="intro" tabIndex={-1}>Read these changes.</p></ModalBody><ModalFooter><Button
+  onClick={() => setOpen(false)}>Cancel</Button></ModalFooter></Modal>. Supplied rendered
+  observation at the same revision: role dialog, aria-modal=true, accessible name
+  includes Close Review changes Read these changes Cancel. No keyboard run is supplied.
+  Do not edit.'

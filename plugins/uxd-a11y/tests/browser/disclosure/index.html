@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Disclosure review fixture</title>
+<style>:focus-visible { outline: 3px solid #06c; outline-offset: 3px; }</style>
+<main>
+  <h1>Disclosure review fixture</h1>
+  <button id="open" aria-expanded="false" aria-controls="details">Show details</button>
+  <div id="details" hidden><p>Supplemental nonmodal information.</p></div>
+  <button id="background">Next action</button>
+</main>
+<script>
+  const trigger = document.getElementById('open');
+  const details = document.getElementById('details');
+  trigger.addEventListener('click', () => {
+    details.hidden = !details.hidden;
+    trigger.setAttribute('aria-expanded', String(!details.hidden));
+  });
+</script>
+</html>

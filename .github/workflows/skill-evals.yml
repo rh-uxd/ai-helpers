@@ -5,6 +5,11 @@ on:
     types: [opened, reopened, synchronize, labeled]
     paths:
       - "plugins/**/skills/**"
+      - "plugins/uxd-a11y/references/**"
+      - "scripts/detect-changed-skills.sh"
+      - "scripts/parse-eval-results.sh"
+      - "scripts/tests/test_skill_eval_scripts.py"
+      - ".github/workflows/skill-evals.yml"
       - "plugins/**/agents/**-eval/**"
   workflow_dispatch:
     inputs:
@@ -34,6 +39,11 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Test eval selection and reporting
+        run: |
+          python3 -m pip install --quiet pyyaml
+          python3 scripts/tests/test_skill_eval_scripts.py
+
       - name: Detect changed skills with evals
         id: detect
         env:
@@ -53,7 +63,17 @@ jobs:
 
   run-evals:
     needs: detect-changes
-    if: needs.detect-changes.outputs.has_evals == 'true'
+    # PR content must never execute with an API key. Only reviewed default-branch
+    # content may run, after approval in the protected skill-evals environment.
+    if: >-
+      needs.detect-changes.outputs.has_evals == 'true' &&
+      github.event_name == 'workflow_dispatch' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    # Before enabling: an administrator must configure required reviewers,
+    # prevent self-review, and allow deployment only from the default branch.
+    # Store the dedicated eval key ONLY here, never as a repo/org secret.
+    # Merely naming an environment does not configure its protection rules.
+    environment: skill-evals
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -72,14 +92,10 @@ jobs:
         id: creds
         env:
           GCP_CREDS: ${{ secrets.GCP_EVAL_CREDENTIALS }}
-          IS_FORK: ${{ github.event.pull_request.head.repo.fork }}
         run: |
-          if [[ "$IS_FORK" == "true" ]]; then
-            echo "::warning::Eval credentials unavailable for fork PRs. Add 'run-evals' label for maintainer-triggered run."
-            echo "available=false" >> "$GITHUB_OUTPUT"
-          elif [[ -z "$GCP_CREDS" ]]; then
-            echo "::warning::GCP_EVAL_CREDENTIALS secret not configured. Skipping evals."
-            echo "available=false" >> "$GITHUB_OUTPUT"
+          if [[ -z "$GCP_CREDS" ]]; then
+            echo "::error::Configure GCP_EVAL_CREDENTIALS in the protected skill-evals environment."
+            exit 1
           else
             echo "available=true" >> "$GITHUB_OUTPUT"
           fi
@@ -109,7 +125,7 @@ jobs:
         # Branch ref — plugin install does not support SHA pinning
         run: claude plugin install agent-eval-harness@agent-eval-harness-dev
 
-      - name: Run eval for ${{ matrix.skill }}
+      - name: Run eval without LLM judges for ${{ matrix.skill }}
         if: steps.creds.outputs.available == 'true'
         env:
           CLAUDE_CODE_USE_VERTEX: "1"
@@ -118,13 +134,14 @@ jobs:
           CLAUDE_MODEL: claude-haiku-4-5
           OTEL_EXPORTER_OTLP_ENDPOINT: ""
           SKILL_NAME: ${{ matrix.skill }}
-        # dontAsk is safe — ephemeral CI runner, no persistent state
+        # Shell tools can read the API key; only approved, trusted content may run.
         run: |
           EVAL_CONFIG=$(find plugins -path "*/${SKILL_NAME}/eval/eval.yaml" -o -path "*/${SKILL_NAME}-eval/eval.yaml" | head -1)
           if [[ -z "$EVAL_CONFIG" ]]; then
             echo "Error: No eval.yaml found for ${SKILL_NAME}" >&2
             exit 1
           fi
+          echo "LLM judges are disabled. Accessibility answer correctness is ungraded; this run does not satisfy J1." >> "$GITHUB_STEP_SUMMARY"
           claude -p "/agent-eval-harness:eval-run --config ${EVAL_CONFIG} --no-llm-judges" \
             --model claude-haiku-4-5 \
             --allowedTools "Bash,Read,Write,Edit,Skill" \
@@ -168,9 +185,9 @@ jobs:
           if [[ ${#DIRS[@]} -eq 0 ]]; then
             echo "## Skill Eval Results" > /tmp/eval-comment.md
             echo "" >> /tmp/eval-comment.md
-            echo "No eval results found. Check the workflow logs for errors." >> /tmp/eval-comment.md
+            echo "PR eval execution is disabled to protect credentials. Run evals manually on the default branch after merge and environment approval; correctness is unverified." >> /tmp/eval-comment.md
           else
-            bash scripts/parse-eval-results.sh "${DIRS[@]}" > /tmp/eval-comment.md
+            EVAL_LLM_JUDGES_SKIPPED=true bash scripts/parse-eval-results.sh "${DIRS[@]}" > /tmp/eval-comment.md
           fi
 
       - name: Post or update PR comment
