@@ -33,9 +33,9 @@ A skip link is the first focusable element on the page, allowing keyboard users 
 
 If no PatternFly `SkipToContent` component is detected, use best judgment based on context. A custom implementation that achieves the same effect is acceptable. Single-component demos or isolated test pages may not require a skip link — mark as N/A with explanation.
 
-### Default severity
+### Default impact
 
-Major
+Serious
 
 ---
 
@@ -64,9 +64,9 @@ Tab and Shift+Tab move focus sequentially through all interactive and truncated 
 - Focus order broken by CSS positioning that visually reorders elements without changing DOM order.
 - Truncated content not keyboard-accessible (tooltip or expansion not reachable).
 
-### Default severity
+### Default impact
 
-Major
+Serious
 
 ---
 
@@ -93,7 +93,7 @@ Scrollable containers must be focusable and scrollable via keyboard so that keyb
 - Container is focusable but arrow keys do not scroll (key events intercepted or not handled).
 - No accessible label on the scrollable region — assistive technology users have no indication the region is scrollable.
 
-### Default severity
+### Default impact
 
 Critical
 
@@ -124,9 +124,9 @@ Interactive elements must respond to the correct keyboard activation keys based 
 - Non-native elements with a role and only an `onClick` handler (e.g., `<div role="button" onClick={...}>`, `<div role="checkbox" onClick={...}>`) — `onClick` is not triggered by keyboard on non-native elements, so neither Space nor Enter will activate them without explicit `onKeyDown` handling.
 - Links implemented as `<a>` without `href` but with `onClick` — may not respond to Enter without explicit keyboard handling.
 
-### Default severity
+### Default impact
 
-Major
+Serious
 
 ---
 
@@ -160,9 +160,9 @@ Within menu-like contexts (Menu, Select, Dropdown), arrow keys move between item
 - Escape does not close the menu.
 - Focus is lost after selection or after pressing Escape.
 
-### Default severity
+### Default impact
 
-Major
+Serious
 
 ---
 
@@ -190,7 +190,7 @@ When an interactive element triggers a new context to appear (drawer, modal, pop
 - After dismissal, focus does not return to the trigger.
 - After dismissal, focus moves to the top of the page.
 
-### Default severity
+### Default impact
 
 Critical
 
@@ -221,7 +221,7 @@ One of the following must be true:
 - `aria-controls` is set but focus management is missing, leaving keyboard-only users stranded.
 - Context receives focus on open but pressing Escape does not return focus to the trigger (see also Criterion 6).
 
-### Default severity
+### Default impact
 
 Critical
 
@@ -254,6 +254,6 @@ Modal and modal-like components (Modal, full-screen overlays, blocking dialogs) 
 - Background content remains interactive while modal is open.
 - No way to close the modal via keyboard (no Escape handler, close button not focusable).
 
-### Default severity
+### Default impact
 
 Critical
