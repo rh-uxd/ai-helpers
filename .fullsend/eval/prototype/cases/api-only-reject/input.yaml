@@ -1,0 +1,9 @@
+issue:
+  title: "Add REST endpoint for batch pod deletion"
+  body: |
+    API-only change: add a new REST endpoint DELETE /api/v1/pods/batch that
+    accepts a list of pod names and deletes them in parallel. No UI changes
+    needed. This is a backend-only feature for the CLI and automation tools.
+    The endpoint should return a 207 multi-status response with per-pod results.
+  labels:
+    - ready-to-prototype

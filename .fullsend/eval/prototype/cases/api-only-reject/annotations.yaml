@@ -1,0 +1,12 @@
+expected_tier: reject
+expected_outcome: preflight_rejected_api_only
+checks:
+  - name: api_only_detected
+    description: Pre-script detects API-only ticket and rejects with specific message
+    severity: high
+  - name: no_sandbox_started
+    description: No sandbox created — no AI tokens used
+    severity: high
+  - name: specific_comment
+    description: Comment explains this is not a UI feature, not a generic "add more info"
+    severity: medium

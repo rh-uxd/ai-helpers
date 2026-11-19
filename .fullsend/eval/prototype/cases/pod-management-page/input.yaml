@@ -1,0 +1,38 @@
+issue:
+  title: "Prototype a Pod Management page for OpenShift"
+  body: |
+    ## Feature Description
+
+    As a cluster administrator, I need a Pod Management page in the OpenShift
+    console where I can view, filter, and monitor all pods running across my
+    namespaces. The page should follow the standard OpenShift console layout
+    with a persistent left navigation sidebar, a page header showing the
+    current context, and a paginated data table as the primary content area.
+
+    The left navigation should include links to other resource pages
+    (Deployments, Services, Routes, ConfigMaps) that load with placeholder
+    content. The home page table should display pod metadata including name,
+    namespace, status, restarts, CPU and memory usage, node assignment, and age.
+
+    Pod statuses should use color-coded labels:
+    - Running (green)
+    - Pending (blue)
+    - Succeeded (gray)
+    - Failed (red)
+    - Unknown (orange)
+
+    ## Acceptance Criteria
+
+    - [ ] Page uses PatternFly Page + PageSidebar + Nav layout
+    - [ ] Left nav has 5 items; non-home pages load with placeholder content
+    - [ ] Table uses @patternfly/react-table with Thead, Tbody, Tr, Th, Td
+    - [ ] Pagination component below the table
+    - [ ] Pod status displayed with PF Label component and appropriate colors
+    - [ ] Empty state uses PF EmptyState component
+    - [ ] Loading state uses PF Skeleton component
+    - [ ] Error state uses PF EmptyState with danger icon
+    - [ ] States switchable via ?state= URL parameter
+    - [ ] Table sortable by at least Name and Status columns
+    - [ ] 25 rows of realistic mock pod data
+  labels:
+    - ready-to-prototype

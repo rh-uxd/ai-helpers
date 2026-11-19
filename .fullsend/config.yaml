@@ -17,6 +17,8 @@ agents:
   - name: review
     source: harness/review.yaml
     model: google-vertex/gemini-3.8-flash
+  - name: prototype
+    source: harness/prototype.yaml
   - name: fix
     enabled: false
   - name: retro
@@ -26,6 +28,7 @@ agents:
 allowed_remote_resources:
   - https://raw.githubusercontent.com/fullsend-ai/fullsend/
   - https://raw.githubusercontent.com/fullsend-ai/agents/
+  - https://raw.githubusercontent.com/rh-uxd/ai-helpers/
 tracker:
   jira:
     base_url: https://redhat.atlassian.net

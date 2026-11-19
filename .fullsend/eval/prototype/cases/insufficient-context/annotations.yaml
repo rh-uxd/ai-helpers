@@ -1,0 +1,12 @@
+expected_tier: reject
+expected_outcome: preflight_rejected
+checks:
+  - name: no_sandbox_started
+    description: Pre-script rejects before sandbox creation — no AI tokens used
+    severity: high
+  - name: comment_posted
+    description: Fillable checklist comment posted on the issue
+    severity: medium
+  - name: label_removed
+    description: ready-to-prototype label removed so re-labeling re-triggers
+    severity: medium

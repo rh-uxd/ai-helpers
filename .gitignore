@@ -40,3 +40,7 @@ AGENTS.local.md
 
 # Fullsend's resolved dependency cache (lock.yaml is the committed lockfile)
 /.fullsend/.fullsend-cache/
+
+# Internal planning docs (not for public repo)
+docs/fullsend-ux-roadmap.html
+docs/prototype-agent-build-log.md
