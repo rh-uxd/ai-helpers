@@ -1,0 +1,6 @@
+prompt: >-
+  Using the uxd-slides-create skill, plan a briefing deck titled "Catalog
+  review" for the design team. The user wants the finished deck in Figma
+  Slides. Do not publish, and do not run commands. Say where the local files
+  go, which template you start from, and what happens after the local deck
+  validates.
