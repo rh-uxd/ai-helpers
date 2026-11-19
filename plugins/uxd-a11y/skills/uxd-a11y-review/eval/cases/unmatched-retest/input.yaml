@@ -1,0 +1,1 @@
+prompt: "Consolidate supplied evidence only. Finding F1 has two occurrences on r10: Review dialog opened from Projects and Review dialog opened from Reports; Escape leaves each visible. A later pass on r11 tests only a Settings disclosure, not either Review dialog. No matching retest of either original occurrence exists. Can F1 be closed?"

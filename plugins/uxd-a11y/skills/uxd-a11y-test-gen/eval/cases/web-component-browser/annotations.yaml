@@ -1,0 +1,1 @@
+expected: "Use existing browser harness and real element registration/render readiness, shadow-aware queries/focus. No React/Jest imports, mocked custom elements, extra modal trap, mandatory focus transfer, or invented axe. Report scans/AT untested and distinguish setup from natural keyboard path."

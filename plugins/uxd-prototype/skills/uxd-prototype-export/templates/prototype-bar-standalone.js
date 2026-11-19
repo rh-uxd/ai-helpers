@@ -38,7 +38,7 @@
 
   function detectActiveView() {
     var path = (window.location && window.location.pathname) || '';
-    if (/\/evals\//.test(path) || document.documentElement.getAttribute('data-uxd-view') === 'eval') {
+    if (/\/(?:prototype-evaluations|evals)\//.test(path) || document.documentElement.getAttribute('data-uxd-view') === 'eval') {
       return 'eval';
     }
     return 'prototype';
@@ -231,7 +231,7 @@
     if (base && base !== '/') push(base + '/' + fromConfig);
     push('/' + fromConfig);
     if (id) {
-      var conventional = 'evals/' + encodeURIComponent(id) + '/';
+      var conventional = 'prototype-evaluations/' + encodeURIComponent(id) + '/';
       if (base && base !== '/') push(base + '/' + conventional);
       push('/' + conventional);
     }
@@ -259,7 +259,7 @@
     var fallback = cfg.views && cfg.views.eval;
     if (!fallback) return null;
     if (/^https?:\/\//i.test(fallback)) return fallback;
-    // Relative paths: try Pages path_prefix first (/mr-218/evals/…), then site-root /evals/…
+    // Relative report paths: try the Pages base path, then the site root.
     var candidates = evalUrlCandidates(fallback, id);
     for (var i = 0; i < candidates.length; i++) {
       if (await looksLikeEvalReport(candidates[i])) return candidates[i];
@@ -274,7 +274,7 @@
     var id = (cfg && cfg.id) || '…';
     var base = getBasePath();
     var prefix = base && base !== '/' ? base + '/' : '/';
-    return 'Eval report not available on this deployment (expected ' + prefix + 'evals/' + id + '/)';
+    return 'Eval report not available on this deployment (expected ' + prefix + 'prototype-evaluations/' + id + '/)';
   }
 
   var RETURN_URL_KEY = 'uxd-prototype-return-url';
@@ -302,7 +302,7 @@
     }
     try {
       var ref = document.referrer;
-      if (ref && !/\/evals\//.test(ref)) return ref;
+      if (ref && !/\/(?:prototype-evaluations|evals)\//.test(ref)) return ref;
     } catch (e) {
       /* ignore */
     }

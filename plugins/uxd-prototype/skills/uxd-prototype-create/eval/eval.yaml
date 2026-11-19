@@ -21,12 +21,6 @@ permissions:
   deny:
     - "mcp__*"
 
-mlflow:
-  experiment: uxd-prototype-create
-  tags:
-    team: uxd
-    pipeline: prototype-evaluator
-
 dataset:
   path: cases
   schema: |

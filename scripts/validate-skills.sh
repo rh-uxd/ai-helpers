@@ -66,12 +66,13 @@ while IFS= read -r agent_file; do
   fi
 done < <(find plugins -path '*/agents/*.md' -not -path '*/agents/*/*.md' 2>/dev/null)
 
-SKILL_COUNT=$(find plugins -name 'SKILL.md' 2>/dev/null | wc -l | tr -d ' ')
+SKILL_COUNT=$(find plugins -path '*/skills/*/SKILL.md' 2>/dev/null | wc -l | tr -d ' ')
+WORKFLOW_COUNT=$(find plugins -path '*/workflows/*/SKILL.md' 2>/dev/null | wc -l | tr -d ' ')
 AGENT_COUNT=$(find plugins -path '*/agents/*.md' -not -path '*/agents/*/*.md' 2>/dev/null | wc -l | tr -d ' ')
 
 if [[ "$ERRORS" -gt 0 ]]; then
   echo "${ERRORS} error(s) found."
   exit 1
 else
-  echo "Validated ${SKILL_COUNT} skill(s) and ${AGENT_COUNT} agent(s), 0 errors."
+  echo "Validated ${SKILL_COUNT} skill(s), ${WORKFLOW_COUNT} workflow(s), and ${AGENT_COUNT} agent(s), 0 errors."
 fi

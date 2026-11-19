@@ -1,0 +1,1 @@
+expected: "Accept native required without aria-required, both description IDs, indeterminate progress without value, empty-alt decoration without aria-hidden, and identical-purpose navigation names. Do not invent failures or runtime passes; state source-only limits."

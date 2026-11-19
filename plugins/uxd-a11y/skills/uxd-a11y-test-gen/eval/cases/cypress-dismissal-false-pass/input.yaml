@@ -1,0 +1,11 @@
+prompt: >-
+  Review this Cypress recipe only; no edits, installation or execution. The
+  installed cy.press implementation is verified for this custom dialog. The
+  dialog remains in the DOM when closed, with hidden=true. Current recipe:
+  cy.get('#open').focus(); cy.press(Cypress.Keyboard.Keys.ENTER);
+  cy.get('#review-dialog').should('be.visible');
+  cy.press(Cypress.Keyboard.Keys.ESC); cy.get('#open').should('have.focus');
+  Supplied negative behavior: Escape focuses #open but leaves #review-dialog
+  visible with aria-modal=true. Cancel can have the same bug. Explain whether
+  the test catches this and provide the minimal corrected assertions, also
+  noting the alternative for a dialog removed from the DOM.

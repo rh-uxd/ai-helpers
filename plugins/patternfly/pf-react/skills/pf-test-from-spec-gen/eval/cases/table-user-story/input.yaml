@@ -1,0 +1,19 @@
+prompt: |
+  Generate tests from this user story for a ResourceTable component:
+
+  ## User Story
+
+  As a cluster administrator, I want to view and manage my deployed resources
+  in a sortable, filterable table so I can quickly find and act on specific resources.
+
+  **Uses:** PatternFly Table, Toolbar, SearchInput, Pagination, Select
+
+  ### Acceptance Criteria
+
+  - Table displays columns: Name, Status, Namespace, Created date
+  - Rows are sortable by clicking column headers (default: Name ascending)
+  - A search input in the toolbar filters rows by name (case-insensitive)
+  - Pagination controls appear below the table with 10/20/50 per-page options
+  - Each row has a kebab menu with Edit and Delete actions
+  - Empty state shows "No resources found" with an optional create button
+  - Loading state shows a skeleton table with 5 placeholder rows

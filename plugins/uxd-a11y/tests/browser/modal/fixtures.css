@@ -1,0 +1,4 @@
+body { padding: 2rem; }
+button { margin: .5rem; }
+dialog { max-width: 32rem; padding: 2rem; }
+:focus-visible { outline: 3px solid #06c; outline-offset: 3px; }

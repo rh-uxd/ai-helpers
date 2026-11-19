@@ -1,6 +1,6 @@
 ---
 name: uxd-canvas-create
-version: 0.1.0
+version: 0.1.1
 description: >-
   Create or refine a canvas as local JSON Canvas, a Miro board, or both.
   Covers journey maps, service blueprints, architecture diagrams, user flows,
@@ -48,6 +48,7 @@ If the user names a type below, read that folder's `context.md` and start from i
 
 | Request | Template |
 |---|---|
+| Vision journey map, paired as-is and to-be map | `templates/vision-journey-map` |
 | Journey map, customer journey, or experience map | `templates/journey-map` |
 | Service blueprint | `templates/service-blueprint` |
 | User flow or task flow | `templates/user-flow` |

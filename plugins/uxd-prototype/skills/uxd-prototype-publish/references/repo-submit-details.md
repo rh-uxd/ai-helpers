@@ -29,12 +29,12 @@ When `--target` was a git URL during create/pipeline, pass that URL as `--upstre
 
 ### What the Script Does
 
-1. Reads `.artifacts/{ID}/workspace-analysis.json` for clone URL, workspace path, optional `upstream_url`, and MR base (`target_branch`, else `branch`)
-2. Reads `.artifacts/{ID}/changeset.md` for changed files
+1. Reads `workspace-analysis.json` under `artifacts/{ID}/` (or `.artifacts/{ID}/` if only the legacy root exists) for clone URL, workspace path, optional `upstream_url`, and MR base (`target_branch`, else `branch`)
+2. Reads `changeset.md` from the same root for changed files
 3. If `--upstream` or analysis `upstream_url` is set: ensure `upstream` remote points there
 4. **Detects workflow** — fork (`origin` ≠ `upstream`) vs same-repo
 5. Creates branch `prototype/{ID}`
-6. Stages changeset files **plus** Prototype Bar / eval Pages assets when present (`public/evals/{ID}/**`, `public/uxd-prototype-bar/**`, HTML entry with bar inject)
+6. Stages changeset files **plus** approved report/Prototype Bar assets when present (`public/prototype-evaluations/{ID}/**`, `public/uxd-prototype-bar/**`, HTML entry with bar inject)
 7. Commits: `Prototype: {ID} - {title}`
 8. Unshallows if needed (GitLab rejects shallow pushes)
 9. **Pushes to origin** (fork in fork workflows)
@@ -121,7 +121,7 @@ Use `pages_url` in the Jira comment (wiki markup: `[Preview|https://…]`).
 For standalone HTML without a workspace:
 
 ```bash
-cd .artifacts/{ID}/prototype
+cd artifacts/{ID}/prototype
 git init && git add . && git commit -m "feat: prototype for {ID}"
 git remote add origin {remote-url} && git push -u origin main
 ```

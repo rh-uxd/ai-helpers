@@ -1,0 +1,1 @@
+prompt: "Provide a test approach and conditional excerpts only. The project uses Lit and an existing Playwright browser harness; no RTL, Jest or axe integration. A real registered custom element renders a shadow-root button named Details; it expands supplemental content without moving focus. The host is not itself a button. Do not edit or execute tests."

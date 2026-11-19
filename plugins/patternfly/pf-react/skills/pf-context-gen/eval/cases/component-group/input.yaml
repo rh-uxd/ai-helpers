@@ -1,0 +1,1 @@
+prompt: I need a context file covering PatternFly Table with Toolbar, Pagination, and filtering. Show me how these components compose together and what props I need to wire up the data flow between them.

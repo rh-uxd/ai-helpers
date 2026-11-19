@@ -1,0 +1,3 @@
+expected: Accept static initial focus and successful scoped browser behavior. Say
+  no findings in tested coverage while exposing missing methods. Do not claim whole-product
+  conformance, AT announcements, source review, or newly executed interactions.

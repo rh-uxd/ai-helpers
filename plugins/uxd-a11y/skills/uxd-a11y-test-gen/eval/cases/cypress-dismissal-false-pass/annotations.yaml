@@ -1,0 +1,7 @@
+expected: >-
+  Identify the false pass: focus return does not establish dismissal. Assert
+  #review-dialog is not.be.visible after Escape before asserting #open focus;
+  independently test Cancel with closure then restoration. Use not.exist for
+  a removed dialog alternative, not for the stipulated retained DOM element.
+  The negative behavior must fail the closure assertion even when focus passes.
+  Preserve installed API and setup-versus-traversal limits; no execution or AT claim.
