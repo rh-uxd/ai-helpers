@@ -76,6 +76,11 @@ Written during Step 9. Tracks prototype state across creation and refinement. Us
       "key": "PROJ-298",
       "label": "RFE",
       "url": "https://issues.example.com/browse/PROJ-298"
+    },
+    {
+      "kind": "other",
+      "label": "Design context",
+      "url": "https://example.com/artifacts/design-context"
     }
   ],
   "build_mode": "existing-codebase",
@@ -103,6 +108,8 @@ Status values: `"draft"`, `"refined"`, `"reviewed"`, `"submitted"`.
 
 Optional fields: `journeys_path`, `states_path`, `design_spec_path`, `prototype_bar`, `exports` (populated when `--export` runs), `source_rfes` (multi-RFE compose), `sources` (normalized provenance for the Prototype Bar), `figma_url`.
 
+For supporting artifacts supplied with `--context`, add accessible URLs to `sources` with a descriptive label and a supported `kind`. Use `kind: "other"` for artifacts outside the named source categories. Keep the primary source classification in `source.type`; additional context does not change it.
+
 ## artifacts/{ID}/prototype-bar.json
 
 Written during Step 9 (and refreshed by evaluate / publish-report). Runtime config for the Prototype Bar Sources dropdown and Prototype ↔ Eval switch. Prefer generating it with:
@@ -126,11 +133,16 @@ Or write it directly from `metadata.json` fields. Schema: see `uxd-prototype-exp
       "key": "PROJ-298",
       "label": "RFE",
       "url": "https://issues.example.com/browse/PROJ-298"
+    },
+    {
+      "kind": "other",
+      "label": "Design context",
+      "url": "https://example.com/artifacts/design-context"
     }
   ],
   "views": {
     "prototype": null,
-    "eval": "/evals/PROJ-298/"
+    "eval": "/prototype-evaluations/PROJ-298/"
   },
   "scenarios": [
     { "route": "/api-keys", "id": "default", "name": "Populated list", "default": true },
@@ -139,7 +151,7 @@ Or write it directly from `metadata.json` fields. Schema: see `uxd-prototype-exp
 }
 ```
 
-`sources` is a single list for all provenance (outcome, RFE, strat, Figma, description). Outcome / strat entries are usually added later by evaluate when `outcome-context.json` exists. `views.eval` uses the conventional static path `/evals/{ID}/` so Pages hosting works once the report is copied there. `scenarios` is a slim flatten of `states.json` (synced by `sync-prototype-bar-config.mjs`) for the bar menu. The active state is `?state=<id>`.
+`sources` is a single list for all provenance (outcome, RFE, strat, Figma, description). Outcome / strat entries are usually added later by evaluate when `outcome-context.json` exists. `views.eval` uses `/prototype-evaluations/{ID}/` so Pages hosting works once the selected report is copied there. `scenarios` is a slim flatten of `states.json` (synced by `sync-prototype-bar-config.mjs`) for the bar menu. The active state is `?state=<id>`.
 
 ## artifacts/{ID}/changeset.md
 

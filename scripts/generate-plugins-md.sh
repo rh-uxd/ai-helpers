@@ -101,7 +101,8 @@ for raw_line in path.read_text(encoding="utf-8").splitlines():
     if found and next_section.match(raw_line):
         break
     if found and raw_line.strip():
-        line = re.sub(r"[|`*_]", "", raw_line)
+        line = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", raw_line)
+        line = re.sub(r"[|`*_]", "", line)
         line = re.sub(r"^[-# ]+", "", line)
         if not line.startswith("---"):
             parts.append(line)

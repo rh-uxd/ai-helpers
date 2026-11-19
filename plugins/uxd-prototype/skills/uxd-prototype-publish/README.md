@@ -19,4 +19,4 @@ Frontmatter updates use `uxd-prototype-create/scripts/frontmatter.py`. Sensitive
 
 - `uxd-prototype-create` — produces the prototype and artifacts
 - `uxd-prototype-evaluate` — AC FAIL blocks publish unless `--force`
-- `uxd-prototype-export` — copies eval report into `public/evals/` for hosted Eval
+- `uxd-prototype-export` — copies a selected report into `public/prototype-evaluations/` for hosted Eval

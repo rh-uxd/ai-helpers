@@ -1,0 +1,1 @@
+prompt: "Review supplied observations only. At 375x667 the page fits. A tester set deviceScaleFactor=2 and called that 200% text resize. At 320 CSS px an overlay clips its Close control, unreachable by keyboard scrolling. A tree snapshot exposes status text Saved; no AT run exists. Forced-colors and supported dark theme were not exercised. No browser available."

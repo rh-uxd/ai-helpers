@@ -26,6 +26,13 @@ agents:
 allowed_remote_resources:
   - https://raw.githubusercontent.com/fullsend-ai/fullsend/
   - https://raw.githubusercontent.com/fullsend-ai/agents/
+tracker:
+  jira:
+    base_url: https://redhat.atlassian.net
+    project: UXDOPS
+    poll:
+      enabled: true
+      query: 'project = UXDOPS AND labels = "repo:rh-uxd/ai-helpers" AND statusCategory != Done ORDER BY updated DESC'
 inference:
   provider: vertex
   region: global

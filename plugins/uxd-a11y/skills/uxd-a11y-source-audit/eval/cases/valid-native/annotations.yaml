@@ -1,0 +1,4 @@
+expected: Accept native role/modality and static initial focus. Do not require explicit
+  role, aria-modal, a new custom trap, or initial button focus. Attribute source evidence;
+  actual focus, dismissal, and restoration remain Not tested. Do not infer screen-reader
+  output or overall conformance.

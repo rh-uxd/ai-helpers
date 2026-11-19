@@ -1,0 +1,8 @@
+prompt: >-
+  Prepare only: the evaluator supplied the reviewed packet and source hashes,
+  exact build identity, environment and starting states, the junior persona's
+  create task only, scope/budget/stopping conditions and browser/provider decisions.
+  Full is awaiting-review; its continuation approval is still missing. Explain
+  the prepared entry path and what must happen before execution. Reuse the known
+  context without repeating persona selection or running Quick. Return a producer
+  bundle to Full after the review decision, not an independent run for splicing.

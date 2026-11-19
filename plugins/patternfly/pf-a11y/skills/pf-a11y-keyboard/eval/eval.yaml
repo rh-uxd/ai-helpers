@@ -30,8 +30,8 @@ dataset:
 outputs:
   - path: artifacts
     schema: |
-      The skill produces a report with a summary table (criteria tested / pass / fail / N/A),
-      a findings table, and violation details with severity (Critical / Major / Minor).
+      The skill produces a report with a summary table (criteria / pass / fail / N/A / not tested),
+      a findings table, and violation details with impact (Critical / Serious / Moderate / Minor).
 
 traces:
   stdout: true
@@ -162,13 +162,13 @@ judges:
       text = outputs.get("conversation", "")
       for path, content in outputs.get("files", {}).items():
           text += "\n" + content
-      has_summary = re.search(r'(?i)(criteria tested|Pass|Fail|N/A).{0,20}\|', text)
-      has_severity = re.search(r'(?i)(Critical|Major|Minor)', text)
+      has_summary = re.search(r'(?i)(criteria|Pass|Fail|N/A|Not tested).{0,30}\|', text)
+      has_impact = re.search(r'(?i)(Critical|Serious|Moderate|Minor)', text)
       if not has_summary:
-          return False, "Output missing summary table with criteria tested / Pass / Fail / N/A"
-      if not has_severity:
-          return False, "Output missing severity levels (Critical / Major / Minor)"
-      return True, "Output uses structured format with summary table and severity levels"
+          return False, "Output missing summary table with criteria / Pass / Fail / N/A / Not tested"
+      if not has_impact:
+          return False, "Output missing impact levels (Critical / Serious / Moderate / Minor)"
+      return True, "Output uses structured format with summary table and impact levels"
 
 thresholds:
   flags_navigation_violations:

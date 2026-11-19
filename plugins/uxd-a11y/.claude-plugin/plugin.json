@@ -1,0 +1,7 @@
+{
+  "name": "uxd-a11y",
+  "description": "Modular accessibility design review, source audit, runtime review, and test generation for native, custom, and PatternFly interfaces.",
+  "author": { "name": "UXD Team" },
+  "repository": "https://github.com/rh-uxd/ai-helpers",
+  "license": "MIT"
+}

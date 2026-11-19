@@ -1,0 +1,1 @@
+expected: "Preserve checkout failure despite acceptance and source pass. Preserve scoped exclusion and unresolved incomplete as Inconclusive. No overall pass, no invented scans; keep supplied origin and separate observations."

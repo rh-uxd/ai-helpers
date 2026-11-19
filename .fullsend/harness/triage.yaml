@@ -1,5 +1,5 @@
 # Jira-specific routing overlay over the pinned upstream triage harness.
-base: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/harness/triage.yaml#sha256=ae07e51bb1f634bbb842a498f9ca4cd588982c7811d1ae4c07a06232e50a231b
+base: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/harness/triage.yaml#sha256=d56f5ed8d45c5a8aee6031f519b3c7b1c048a3dc14e67870fbd0029d63d935b4
 
 # Only an explicitly routed, human-requested Jira triage event may dispatch.
 # The exactly-one repo label check prevents cross-repository ambiguity.

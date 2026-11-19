@@ -1,5 +1,6 @@
 ---
 name: uxd-figma-read
+version: 0.1.0
 description: >-
   Retrieve design context from a Figma file. Use when any workflow needs
   screenshots, page structure, node metadata, or design tokens from a Figma URL.

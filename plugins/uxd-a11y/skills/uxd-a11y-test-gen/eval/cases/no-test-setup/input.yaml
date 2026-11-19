@@ -1,0 +1,1 @@
+prompt: "Review these complete setup facts and propose accessibility testing: a native HTML project has no package manifest, runner, renderer, or test configuration. User requests a persistent test file but has not authorized installing dependencies. No source beyond a named native Save button is available. Do not invent missing project files."

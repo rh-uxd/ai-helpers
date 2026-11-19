@@ -129,7 +129,7 @@ SENSITIVE_FILES=(
   ".cursor-mcp-config.json"
 )
 
-# Keep public/ for webpack/Vite static assets (especially public/evals/ for Prototype Bar).
+# Keep public/ static assets, including public/prototype-evaluations/ reports.
 # Only strip known internal metadata files inside public/.
 SENSITIVE_PUBLIC_FILES=(
   "public/fork-descriptions.json"

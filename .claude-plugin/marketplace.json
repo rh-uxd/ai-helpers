@@ -20,6 +20,11 @@
       "description": "UXD skill routing — discover the right skills for research, design review, and prototyping workflows"
     },
     {
+      "name": "uxd-a11y",
+      "source": "./plugins/uxd-a11y",
+      "description": "Modular accessibility design review, source audit, runtime review, and test generation for native, custom, and PatternFly interfaces."
+    },
+    {
       "name": "uxd-design",
       "source": "./plugins/uxd-design",
       "description": "UX design workflow — Figma context, design evaluation, and implementation handoff"

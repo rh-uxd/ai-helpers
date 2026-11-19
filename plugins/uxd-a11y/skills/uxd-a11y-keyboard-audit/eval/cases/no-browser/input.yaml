@@ -1,0 +1,4 @@
+prompt: Test keyboard accessibility of a modal at http://127.0.0.1:4173. No browser
+  tools or manual observations are available. You have only source showing a correctly
+  named native dialog opened with showModal(). Do not launch or install tools for
+  this scenario.

@@ -4,17 +4,17 @@ generated_at: 2026-10-15T17:53:34.000023Z
 harnesses:
     code:
         source: harness/code.yaml
-        sha256: 0e753888b0f8b7d30e2413378df27cba98a21ebbf19e477c001ab9f07602119e
-        resolved_at: 2026-11-05T15:09:50.117968Z
+        sha256: aaa70264d2f0ab51dcc7c1d774d9cd8478b1e1ae9783594b9338cd1448051007
+        resolved_at: 2026-11-16T18:28:42.611151Z
         dependencies:
             - field: base
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/harness/code.yaml
-              sha256: 8973a15fe53798c632d86c6d2e595a476bfb7cd2f9392961b63533e30d4f1e15
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/harness/code.yaml
+              sha256: 198b71dd86ef14c5244578ebaffb862b4c62de1c513ece01c0fb51fef1630f37
               type: file
-              fetched_at: 2026-11-05T15:08:39.569507Z
+              fetched_at: 2026-11-16T18:28:33.021824Z
             - field: pre_script
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/scripts/pre-code.sh
-              sha256: 90f2b0684e13fa7bb35c61dc048c6eddf3fe6792deb7bfa5b93642fa25f6d479
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/scripts/pre-code.sh
+              sha256: 8705f4e8b8e0f68615e6e4514ebf165f4121d0f94d3239c43fcf653157463931
               type: directory
               files:
                 - path: bundle-sh-test.sh
@@ -32,7 +32,7 @@ harnesses:
                 - path: gitlint-forbidden-type-scope-test.sh
                   sha256: c0337a7d1a0acd41137592fc24f43445ac4ff05537b38857dd607efdcc5f79c6
                 - path: harness-jira-test.sh
-                  sha256: d834aa2dda4af08b3372e73a6352b4b9a0c43b02e183caa8c23880b0ed279bdb
+                  sha256: 70bf169d4d49cace37146c1f8e6df9bee09e5b04cc4643b4b3de87c73e67f50c
                 - path: labels-test.sh
                   sha256: f136a27f7d37583ba9c8004e160dc36737ee1d4807d62b03a5bf08eaf5235f89
                 - path: lib/branch-guard.lib.sh
@@ -43,6 +43,8 @@ harnesses:
                   sha256: 93dd8cd259fbc154c86357f050d6185cb6491d788f3ae8d9abc31d8019ece2b7
                 - path: lib/forge-transient-retry.lib.sh
                   sha256: 6bb41fe034abcda8d341cab6af0d995947a51e7f2edc7aaaf88cd14598901cf0
+                - path: lib/git-graph-policy.lib.sh
+                  sha256: 0ded5a62e2d6bcd85438d30d619f76169e0e7049d4ebdd2f2825eb2c22e5979c
                 - path: lib/github-api-csma.lib.sh
                   sha256: 85c94a21222265cd99b10950cdfa5a4e4914bbbac36fc55abb7bde01c1fe14b0
                 - path: lib/github-code-ops.lib.sh
@@ -79,10 +81,12 @@ harnesses:
                   sha256: 6e7fddadb62de92a44fc538ff30b030c9aa689d142f2774fdfdbd66d194809b2
                 - path: lib/gitleaks-install.lib.sh
                   sha256: d0a226137cba22a878e02565deaed41786228006bbbf31df416138475eb218c0
+                - path: lib/jira-auth.lib.sh
+                  sha256: d1bf4544d45696315d2b6c1d865408dc7bbd233ac293f6ea172d385394340f4f
                 - path: lib/jira-scribe-ops.lib.sh
-                  sha256: c6bcadac245c76e86dcdf15ffd84d489cd2ad0e5ad24052d83a7de590179ea09
+                  sha256: e49eb99826a0409947627c11479b947f0d0b803b63fb0939925358c4340b1d80
                 - path: lib/jira-triage-ops.lib.sh
-                  sha256: 16eb3bc32c05e9996177d2a4b015cc18ff072a9f23d5c6dae16691362969902c
+                  sha256: d82c4487f95ed519b55f8e9269c5aa807855766ef84effd7bad5313e594a9249
                 - path: lib/labels.lib.sh
                   sha256: 7c1d65e5fd533b4995ea62dc0a5690d20395d87d15d50140ca4ee11fd570c015
                 - path: lib/post-failure-report.lib.sh
@@ -110,19 +114,19 @@ harnesses:
                 - path: lib/triage-ops.lib.sh
                   sha256: 97e91450c2a0e7ba78f8d59c12a2ef0bdcfe12f470c3a7b87454663f3f330155
                 - path: post-code-test.sh
-                  sha256: 03af4c4cfe750968ecaa5b0022a2588a618808d6515fe2b74c6c42a5f89f23a7
+                  sha256: 9f54d107586c2330d31b352694bffb673ce26af8c75ed5cc0d7b1404a5061358
                 - path: post-code.sh
-                  sha256: 153481ff0001c1c7dad7383c914a5fdb5999d37a1ad9f1ae01ed289d7b8605bc
+                  sha256: be49ddcde03056dd7eed78a8af3c486d6d42ce3ccd97f522d6bf6ba92b8706f8
                 - path: post-code.src.sh
-                  sha256: 0c1060a990a37e3623a19f65d47a8101c826e82bdcfd146b9fcf9619f4f3d58b
+                  sha256: 7e4d87d241dfff2d6c33ae89a56243140b5152beb109c50c919c653701baec6a
                 - path: post-failure-report-test.sh
                   sha256: 58b15f7444701355aed76a490855c1693c72de1501b53e0a112689ebef5a5564
                 - path: post-fix-test.sh
-                  sha256: e69af506cc2682751ca715512d49eefac11fe091bc4acd4e68dc3cabf0c805d3
+                  sha256: 2a215b61f01885551cdb683433ce22420573b6b1789566ebb4c6e2ca4a5c0eb0
                 - path: post-fix.sh
-                  sha256: 45c8084f629db0d3eb087c32660d4ea86286c87d4c61ceca6bdde96a70abbf19
+                  sha256: cc59802568d40852b04a0f0b486e4ad8f29d7129e00a708a8ceb3f454c347d0d
                 - path: post-fix.src.sh
-                  sha256: 47d4769a5cb66a4b1b56eb70ad8c1b07e171cb6e0ac11d96c5c1015e54126580
+                  sha256: 3b003a386549ebbf73ff06ae6832b1c1c73685ab763da6cbccb7f93b392420c4
                 - path: post-prioritize-test.sh
                   sha256: e0c5040fb75282d31c9a9eb1bdd7c8a378d4f78f39b041d0dddd148b3f5c198c
                 - path: post-prioritize.sh
@@ -130,43 +134,45 @@ harnesses:
                 - path: post-prioritize.src.sh
                   sha256: ec5be598490d5cb0459295e100d0b0158b7ed3bc993e37db529df7588097c429
                 - path: post-retro-test.sh
-                  sha256: e4f16e3dbc9ff947a22153677885dac8f38f304a443a50822c78ffe17c2d44b4
+                  sha256: 1cdc1e2fb915698e2b53381c170457673534fe773eddba6dbac40b6170dd4880
                 - path: post-retro.sh
-                  sha256: 4bad7ef938bd58b247d60fe9a6fb90cf502148bc38a8bc2b58c03e1a86d613f2
+                  sha256: 2d84830ca82fcccce139298b9341f4dd93ed97e4609925f25be607a2c237f8fe
                 - path: post-retro.src.sh
-                  sha256: 9164fc47ccd8992818a982f242fb971ba72f126241352d36ae479c73b0901883
+                  sha256: 759fcce1d5e765855969788fb7471b79c7af2d30b8aeaf67d413d7cd1af1ed73
                 - path: post-review-test.sh
-                  sha256: ed2b873e0742d2729e06905263f6941e03b64020da680da6208e847220388b48
+                  sha256: a7e05a4e4ae526fea0952955350329b1d28bd777ec4e3e77b2cfb6d5ed027ac6
                 - path: post-review.sh
-                  sha256: 9a9c215a7135d87ad5834f610ad996ae33507ef45cb5e36f7761692f44715591
+                  sha256: ce6f855d38984c76b1eac165aeb405c1999e3ddaf13c57dab271ea43611bc165
                 - path: post-review.src.sh
-                  sha256: 77e3f1f857bae1e096f3fb333c86e6a4e12c8463c2e643fbd5ec2119bef6647b
+                  sha256: d4dc780fd0f5596d1ba7e24c3b2d9ca57b8e05b59cb761fdf7c3b7f01a454a59
                 - path: post-scribe-test.sh
-                  sha256: 6f4bfbc983ceebf5b75352297219f3205a23d1f00373ea25a55cc83d72ed7357
+                  sha256: a871d985448cf2fb644476027aa08789edc880339e6fd4de56963503f11f16e7
                 - path: post-scribe.sh
-                  sha256: 66f8b9e479527bbceccf3892be9833338c5be50fee2c98de4e3799911d2ce1b7
+                  sha256: 7441edf5140570a245cdda2fc3d6f49aa3329fe005be79b6a4435e1510133187
                 - path: post-scribe.src.sh
-                  sha256: 6b89bf5924d64227110ffb81901c9f1cf38a54ecfca0e23c166b7f312293f48b
+                  sha256: aa401479c571524a2e414b155a79bab3b86b67b42dcbe642c8e11d20d4d44e88
                 - path: post-triage-test.sh
-                  sha256: a2c994d0768c5331270b9e0722779e8d83663dbb6904ad2da11a2130cb7079ac
+                  sha256: f60eb4d1ba26ba0966cdb430dbd87ba8b8fce261210c171e00d6d19ef6258682
                 - path: post-triage.sh
-                  sha256: 2885fcc69c9e25d641387a7f3fd15870b5f0aa5dd6478aa66eb04b5fc9ef5039
+                  sha256: 6b07da7a4b1b70f37a88253e3700c9034cce88a6664e1b2414d7fac7ff259abe
                 - path: post-triage.src.sh
-                  sha256: dc72132908e684e4ac3bf7f7907a1c7ea43e7a3fe215298a572b628748fac15a
+                  sha256: 22d2e188ea846d13a689472e0d045308ceeb18c17fb118d07845cf6c24c98c1e
                 - path: pr-assignee-test.sh
                   sha256: 63693c7f670a469b7aff69b25b7f184d6468c6da35477592b4a8f9308ec11787
                 - path: pr-review-challenger-contract-test.sh
-                  sha256: ea6c475c91ade0618596700ac090ab204c4d41a9a2e5a3beabbbfc8287708ee8
+                  sha256: 70c339c1591ebe4b9b81dbf3275e30b722c158a31c10e20b79257cbd1e755b6d
                 - path: pr-review-dependency-scope-test.sh
                   sha256: b8f03dd35c4de3cf239ebd3dfe29445740a523c516fd06843a2e40cae92412d3
+                - path: pr-review-provisional-result-test.sh
+                  sha256: bbc6bd47036add3a64e976f308acefb853319725701cad1d033bf1992a7533a4
                 - path: pr-review-remediation-test.sh
-                  sha256: b191dd6647890e992f6e98c2481dd01416026cef67596f4ee60a97d5d084c64a
+                  sha256: 228d740486bb6e97bf2e5c28da246528a7fbb364794826b1ef68e1e669526f7b
                 - path: pre-code-jira-test.sh
-                  sha256: cb43ecaf277fa1d14a64f64250c492372344ee37410d32472a0869224e5827ec
+                  sha256: 616902f7a35c0f657ff7b0c044834aa01fd21ce558d1772b1fd86204dd9c594a
                 - path: pre-code-jira.sh
-                  sha256: a6b8482761e1a6fcc95ef9413df40ebad92f3a5000a6743d46dccfe0d316f864
+                  sha256: 82487c5a3925270dd8efd0620497f69f0658b36579dbead0b6e89ce7127e7cd3
                 - path: pre-code-jira.src.sh
-                  sha256: 7e2807224d07efb4a48a1c26108cab4b75530ef501042d221c771e7cc3f7cc69
+                  sha256: fdd6ce63f18f154bbc41d8ba0555c501275f93bcd216630de01f720dd95cc436
                 - path: pre-code-test.sh
                   sha256: 63f659567e90f8c7de2b559074c8a2b9edf87553ff6e2af12b66102a2568f0b8
                 - path: pre-code.sh
@@ -198,27 +204,27 @@ harnesses:
                 - path: pre-review.src.sh
                   sha256: df10a45101ac135cd95bd8cb745752f82f724cebdda3ddbb61a8916f1c448f5d
                 - path: pre-scribe-test.sh
-                  sha256: 326e0fb542684433ce2492a24c50227c82e6680bc9dfea6ad1bea82485eaf7da
+                  sha256: d173afc6c376a027cc1a7a9e954c903a3c5bda461e6c3f7b428d7ca4f64fbe58
                 - path: pre-scribe.sh
-                  sha256: a199466b2c6befd73eacd5bf14ac0876e7d095ef2815307740953197af18dbb0
+                  sha256: 92110557d78262c0936b45f93c6ee5c9aaadcadf190164816d863ec37a180af0
                 - path: pre-scribe.src.sh
-                  sha256: 097618c51785d63f1959ac9a4397b19772ffb5b749acc93e1f737de3798a88cb
+                  sha256: 06318b56889e9b33a72c1172a2aeceb5f04f5e5b7ca70b0f0c1ed03438f4c966
                 - path: pre-triage-test.sh
-                  sha256: c09326cec0ae6bc22e39e0b0d94da717a78841fcfa547fd54730ca94a9797946
+                  sha256: 4ad641903de39d00f1d0b9d1196b0e70489ae7511ef9ed362e66565164d31890
                 - path: pre-triage.sh
-                  sha256: 6783e4756507d22f6d323f70f9acd89596aa812327bee1460e9a3c5eacc72b81
+                  sha256: 703cd4c8dfff7ba0ef14b74049d97938c804271cdb9741f03d7e33df08f4ea7a
                 - path: pre-triage.src.sh
                   sha256: 226a84e19df65e8d620edd44fe67e61605b101d0d01ac0fc9ebbd49dd0821dcc
                 - path: prepare-sandbox-credentials.sh
                   sha256: a8fb256c39f8c82605f6e135e090b8fe62db98003cd34bd503baf7e030c50d42
                 - path: process-fix-result-test.py
-                  sha256: 320d10cd359809348a2b147cc1a105b12a220d2198c1bef820b33b78ed05f28f
+                  sha256: 97ffabb2156cd40e6d3e3599391067f904f5eb8a5d2ff16c7d9f67cb915efa89
                 - path: process-fix-result.py
-                  sha256: fa5fec0e400133d0debc0bbe07a1ad32559a3825d6e29bb824c5138517307642
+                  sha256: 242dbf8763579c7f149c43780283b1a358073a7494a4f8b217619e8b4944c7ab
                 - path: provider-credentials-test.sh
                   sha256: 9d738125505b304fb6319a3beff68c48d702a3f51964c7c9f0ef368040417955
                 - path: public-text-scan-test.sh
-                  sha256: 25fbbe20090b96e673a33ba959e49b16b96bb0f5df5a14ef0038abb2e11f03a3
+                  sha256: e9ccd9ccfc87aa321ab181fc4b7256e46ecf072a305da52f86d892e23a6be882
                 - path: review-body-fallback-test.sh
                   sha256: fd2fc80d7cef0532005606a3f0f281d9cfa9cb7f92615bb9f9e346a7a1d7a221
                 - path: risk-tier1-test.sh
@@ -226,11 +232,11 @@ harnesses:
                 - path: run-behaviour-test-exec.sh
                   sha256: ef7e5366ba175efa99aeae9270d852191f39b55f47393639595e43dfc3511b57
                 - path: sandbox-credential-boundary-test.sh
-                  sha256: 809d6284e16fae75c7d0fb7bc78f9fe6f9a898393ce8c008b3c5d19548a0446c
+                  sha256: 8a196b423e3203c762da3c44207976f8fd1b47819a44879c7bbeae22080c0316
                 - path: signoff-strip-test.sh
                   sha256: 7fdbe722468c0403e291e0cf7546d18b398db814ee393025788e6fa6c5514772
                 - path: skill-env-reachability-test.sh
-                  sha256: cba9eeb72d9405a5746a1a663885b63b556adb0aed9c46682da7b318ec5c52b5
+                  sha256: 517437a3c0be819bafc8b911d14c1df920b9e979ad1ee87cb21d6b4437cc1303
                 - path: test-fixtures/bundle/comment.src.sh
                   sha256: aefa9fc8b21b0c4365925647cf3b407269ba3f23e9dfd6c8aa68332428677684
                 - path: test-fixtures/bundle/cross-dedup.src.sh
@@ -264,13 +270,13 @@ harnesses:
                 - path: validate-code-output.src.sh
                   sha256: f2014aa5139caf89435efc98cc4d0d682138b75fc936bbca8fb8e6811cc594d5
                 - path: validate-output-schema-test.sh
-                  sha256: d416f0c759dcbdc85b1cd5608cbf87e5731042d20f955f8dc4935e0ea26bfb0f
+                  sha256: e67bcb279ef6762bf82b432c7def990455ccd214923013539a634f48ea2e6c21
                 - path: validate-output-schema.sh
                   sha256: 3e874a4553a24e99577da0cb6c0910ef80622fb85d53e03b057f6a6c0c4f8704
-              fetched_at: 2026-11-05T15:08:41.88903Z
+              fetched_at: 2026-11-16T18:28:35.20743Z
             - field: post_script
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/scripts/post-code.sh
-              sha256: 90f2b0684e13fa7bb35c61dc048c6eddf3fe6792deb7bfa5b93642fa25f6d479
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/scripts/post-code.sh
+              sha256: 8705f4e8b8e0f68615e6e4514ebf165f4121d0f94d3239c43fcf653157463931
               type: directory
               files:
                 - path: bundle-sh-test.sh
@@ -288,7 +294,7 @@ harnesses:
                 - path: gitlint-forbidden-type-scope-test.sh
                   sha256: c0337a7d1a0acd41137592fc24f43445ac4ff05537b38857dd607efdcc5f79c6
                 - path: harness-jira-test.sh
-                  sha256: d834aa2dda4af08b3372e73a6352b4b9a0c43b02e183caa8c23880b0ed279bdb
+                  sha256: 70bf169d4d49cace37146c1f8e6df9bee09e5b04cc4643b4b3de87c73e67f50c
                 - path: labels-test.sh
                   sha256: f136a27f7d37583ba9c8004e160dc36737ee1d4807d62b03a5bf08eaf5235f89
                 - path: lib/branch-guard.lib.sh
@@ -299,6 +305,8 @@ harnesses:
                   sha256: 93dd8cd259fbc154c86357f050d6185cb6491d788f3ae8d9abc31d8019ece2b7
                 - path: lib/forge-transient-retry.lib.sh
                   sha256: 6bb41fe034abcda8d341cab6af0d995947a51e7f2edc7aaaf88cd14598901cf0
+                - path: lib/git-graph-policy.lib.sh
+                  sha256: 0ded5a62e2d6bcd85438d30d619f76169e0e7049d4ebdd2f2825eb2c22e5979c
                 - path: lib/github-api-csma.lib.sh
                   sha256: 85c94a21222265cd99b10950cdfa5a4e4914bbbac36fc55abb7bde01c1fe14b0
                 - path: lib/github-code-ops.lib.sh
@@ -335,10 +343,12 @@ harnesses:
                   sha256: 6e7fddadb62de92a44fc538ff30b030c9aa689d142f2774fdfdbd66d194809b2
                 - path: lib/gitleaks-install.lib.sh
                   sha256: d0a226137cba22a878e02565deaed41786228006bbbf31df416138475eb218c0
+                - path: lib/jira-auth.lib.sh
+                  sha256: d1bf4544d45696315d2b6c1d865408dc7bbd233ac293f6ea172d385394340f4f
                 - path: lib/jira-scribe-ops.lib.sh
-                  sha256: c6bcadac245c76e86dcdf15ffd84d489cd2ad0e5ad24052d83a7de590179ea09
+                  sha256: e49eb99826a0409947627c11479b947f0d0b803b63fb0939925358c4340b1d80
                 - path: lib/jira-triage-ops.lib.sh
-                  sha256: 16eb3bc32c05e9996177d2a4b015cc18ff072a9f23d5c6dae16691362969902c
+                  sha256: d82c4487f95ed519b55f8e9269c5aa807855766ef84effd7bad5313e594a9249
                 - path: lib/labels.lib.sh
                   sha256: 7c1d65e5fd533b4995ea62dc0a5690d20395d87d15d50140ca4ee11fd570c015
                 - path: lib/post-failure-report.lib.sh
@@ -366,19 +376,19 @@ harnesses:
                 - path: lib/triage-ops.lib.sh
                   sha256: 97e91450c2a0e7ba78f8d59c12a2ef0bdcfe12f470c3a7b87454663f3f330155
                 - path: post-code-test.sh
-                  sha256: 03af4c4cfe750968ecaa5b0022a2588a618808d6515fe2b74c6c42a5f89f23a7
+                  sha256: 9f54d107586c2330d31b352694bffb673ce26af8c75ed5cc0d7b1404a5061358
                 - path: post-code.sh
-                  sha256: 153481ff0001c1c7dad7383c914a5fdb5999d37a1ad9f1ae01ed289d7b8605bc
+                  sha256: be49ddcde03056dd7eed78a8af3c486d6d42ce3ccd97f522d6bf6ba92b8706f8
                 - path: post-code.src.sh
-                  sha256: 0c1060a990a37e3623a19f65d47a8101c826e82bdcfd146b9fcf9619f4f3d58b
+                  sha256: 7e4d87d241dfff2d6c33ae89a56243140b5152beb109c50c919c653701baec6a
                 - path: post-failure-report-test.sh
                   sha256: 58b15f7444701355aed76a490855c1693c72de1501b53e0a112689ebef5a5564
                 - path: post-fix-test.sh
-                  sha256: e69af506cc2682751ca715512d49eefac11fe091bc4acd4e68dc3cabf0c805d3
+                  sha256: 2a215b61f01885551cdb683433ce22420573b6b1789566ebb4c6e2ca4a5c0eb0
                 - path: post-fix.sh
-                  sha256: 45c8084f629db0d3eb087c32660d4ea86286c87d4c61ceca6bdde96a70abbf19
+                  sha256: cc59802568d40852b04a0f0b486e4ad8f29d7129e00a708a8ceb3f454c347d0d
                 - path: post-fix.src.sh
-                  sha256: 47d4769a5cb66a4b1b56eb70ad8c1b07e171cb6e0ac11d96c5c1015e54126580
+                  sha256: 3b003a386549ebbf73ff06ae6832b1c1c73685ab763da6cbccb7f93b392420c4
                 - path: post-prioritize-test.sh
                   sha256: e0c5040fb75282d31c9a9eb1bdd7c8a378d4f78f39b041d0dddd148b3f5c198c
                 - path: post-prioritize.sh
@@ -386,43 +396,45 @@ harnesses:
                 - path: post-prioritize.src.sh
                   sha256: ec5be598490d5cb0459295e100d0b0158b7ed3bc993e37db529df7588097c429
                 - path: post-retro-test.sh
-                  sha256: e4f16e3dbc9ff947a22153677885dac8f38f304a443a50822c78ffe17c2d44b4
+                  sha256: 1cdc1e2fb915698e2b53381c170457673534fe773eddba6dbac40b6170dd4880
                 - path: post-retro.sh
-                  sha256: 4bad7ef938bd58b247d60fe9a6fb90cf502148bc38a8bc2b58c03e1a86d613f2
+                  sha256: 2d84830ca82fcccce139298b9341f4dd93ed97e4609925f25be607a2c237f8fe
                 - path: post-retro.src.sh
-                  sha256: 9164fc47ccd8992818a982f242fb971ba72f126241352d36ae479c73b0901883
+                  sha256: 759fcce1d5e765855969788fb7471b79c7af2d30b8aeaf67d413d7cd1af1ed73
                 - path: post-review-test.sh
-                  sha256: ed2b873e0742d2729e06905263f6941e03b64020da680da6208e847220388b48
+                  sha256: a7e05a4e4ae526fea0952955350329b1d28bd777ec4e3e77b2cfb6d5ed027ac6
                 - path: post-review.sh
-                  sha256: 9a9c215a7135d87ad5834f610ad996ae33507ef45cb5e36f7761692f44715591
+                  sha256: ce6f855d38984c76b1eac165aeb405c1999e3ddaf13c57dab271ea43611bc165
                 - path: post-review.src.sh
-                  sha256: 77e3f1f857bae1e096f3fb333c86e6a4e12c8463c2e643fbd5ec2119bef6647b
+                  sha256: d4dc780fd0f5596d1ba7e24c3b2d9ca57b8e05b59cb761fdf7c3b7f01a454a59
                 - path: post-scribe-test.sh
-                  sha256: 6f4bfbc983ceebf5b75352297219f3205a23d1f00373ea25a55cc83d72ed7357
+                  sha256: a871d985448cf2fb644476027aa08789edc880339e6fd4de56963503f11f16e7
                 - path: post-scribe.sh
-                  sha256: 66f8b9e479527bbceccf3892be9833338c5be50fee2c98de4e3799911d2ce1b7
+                  sha256: 7441edf5140570a245cdda2fc3d6f49aa3329fe005be79b6a4435e1510133187
                 - path: post-scribe.src.sh
-                  sha256: 6b89bf5924d64227110ffb81901c9f1cf38a54ecfca0e23c166b7f312293f48b
+                  sha256: aa401479c571524a2e414b155a79bab3b86b67b42dcbe642c8e11d20d4d44e88
                 - path: post-triage-test.sh
-                  sha256: a2c994d0768c5331270b9e0722779e8d83663dbb6904ad2da11a2130cb7079ac
+                  sha256: f60eb4d1ba26ba0966cdb430dbd87ba8b8fce261210c171e00d6d19ef6258682
                 - path: post-triage.sh
-                  sha256: 2885fcc69c9e25d641387a7f3fd15870b5f0aa5dd6478aa66eb04b5fc9ef5039
+                  sha256: 6b07da7a4b1b70f37a88253e3700c9034cce88a6664e1b2414d7fac7ff259abe
                 - path: post-triage.src.sh
-                  sha256: dc72132908e684e4ac3bf7f7907a1c7ea43e7a3fe215298a572b628748fac15a
+                  sha256: 22d2e188ea846d13a689472e0d045308ceeb18c17fb118d07845cf6c24c98c1e
                 - path: pr-assignee-test.sh
                   sha256: 63693c7f670a469b7aff69b25b7f184d6468c6da35477592b4a8f9308ec11787
                 - path: pr-review-challenger-contract-test.sh
-                  sha256: ea6c475c91ade0618596700ac090ab204c4d41a9a2e5a3beabbbfc8287708ee8
+                  sha256: 70c339c1591ebe4b9b81dbf3275e30b722c158a31c10e20b79257cbd1e755b6d
                 - path: pr-review-dependency-scope-test.sh
                   sha256: b8f03dd35c4de3cf239ebd3dfe29445740a523c516fd06843a2e40cae92412d3
+                - path: pr-review-provisional-result-test.sh
+                  sha256: bbc6bd47036add3a64e976f308acefb853319725701cad1d033bf1992a7533a4
                 - path: pr-review-remediation-test.sh
-                  sha256: b191dd6647890e992f6e98c2481dd01416026cef67596f4ee60a97d5d084c64a
+                  sha256: 228d740486bb6e97bf2e5c28da246528a7fbb364794826b1ef68e1e669526f7b
                 - path: pre-code-jira-test.sh
-                  sha256: cb43ecaf277fa1d14a64f64250c492372344ee37410d32472a0869224e5827ec
+                  sha256: 616902f7a35c0f657ff7b0c044834aa01fd21ce558d1772b1fd86204dd9c594a
                 - path: pre-code-jira.sh
-                  sha256: a6b8482761e1a6fcc95ef9413df40ebad92f3a5000a6743d46dccfe0d316f864
+                  sha256: 82487c5a3925270dd8efd0620497f69f0658b36579dbead0b6e89ce7127e7cd3
                 - path: pre-code-jira.src.sh
-                  sha256: 7e2807224d07efb4a48a1c26108cab4b75530ef501042d221c771e7cc3f7cc69
+                  sha256: fdd6ce63f18f154bbc41d8ba0555c501275f93bcd216630de01f720dd95cc436
                 - path: pre-code-test.sh
                   sha256: 63f659567e90f8c7de2b559074c8a2b9edf87553ff6e2af12b66102a2568f0b8
                 - path: pre-code.sh
@@ -454,27 +466,27 @@ harnesses:
                 - path: pre-review.src.sh
                   sha256: df10a45101ac135cd95bd8cb745752f82f724cebdda3ddbb61a8916f1c448f5d
                 - path: pre-scribe-test.sh
-                  sha256: 326e0fb542684433ce2492a24c50227c82e6680bc9dfea6ad1bea82485eaf7da
+                  sha256: d173afc6c376a027cc1a7a9e954c903a3c5bda461e6c3f7b428d7ca4f64fbe58
                 - path: pre-scribe.sh
-                  sha256: a199466b2c6befd73eacd5bf14ac0876e7d095ef2815307740953197af18dbb0
+                  sha256: 92110557d78262c0936b45f93c6ee5c9aaadcadf190164816d863ec37a180af0
                 - path: pre-scribe.src.sh
-                  sha256: 097618c51785d63f1959ac9a4397b19772ffb5b749acc93e1f737de3798a88cb
+                  sha256: 06318b56889e9b33a72c1172a2aeceb5f04f5e5b7ca70b0f0c1ed03438f4c966
                 - path: pre-triage-test.sh
-                  sha256: c09326cec0ae6bc22e39e0b0d94da717a78841fcfa547fd54730ca94a9797946
+                  sha256: 4ad641903de39d00f1d0b9d1196b0e70489ae7511ef9ed362e66565164d31890
                 - path: pre-triage.sh
-                  sha256: 6783e4756507d22f6d323f70f9acd89596aa812327bee1460e9a3c5eacc72b81
+                  sha256: 703cd4c8dfff7ba0ef14b74049d97938c804271cdb9741f03d7e33df08f4ea7a
                 - path: pre-triage.src.sh
                   sha256: 226a84e19df65e8d620edd44fe67e61605b101d0d01ac0fc9ebbd49dd0821dcc
                 - path: prepare-sandbox-credentials.sh
                   sha256: a8fb256c39f8c82605f6e135e090b8fe62db98003cd34bd503baf7e030c50d42
                 - path: process-fix-result-test.py
-                  sha256: 320d10cd359809348a2b147cc1a105b12a220d2198c1bef820b33b78ed05f28f
+                  sha256: 97ffabb2156cd40e6d3e3599391067f904f5eb8a5d2ff16c7d9f67cb915efa89
                 - path: process-fix-result.py
-                  sha256: fa5fec0e400133d0debc0bbe07a1ad32559a3825d6e29bb824c5138517307642
+                  sha256: 242dbf8763579c7f149c43780283b1a358073a7494a4f8b217619e8b4944c7ab
                 - path: provider-credentials-test.sh
                   sha256: 9d738125505b304fb6319a3beff68c48d702a3f51964c7c9f0ef368040417955
                 - path: public-text-scan-test.sh
-                  sha256: 25fbbe20090b96e673a33ba959e49b16b96bb0f5df5a14ef0038abb2e11f03a3
+                  sha256: e9ccd9ccfc87aa321ab181fc4b7256e46ecf072a305da52f86d892e23a6be882
                 - path: review-body-fallback-test.sh
                   sha256: fd2fc80d7cef0532005606a3f0f281d9cfa9cb7f92615bb9f9e346a7a1d7a221
                 - path: risk-tier1-test.sh
@@ -482,11 +494,11 @@ harnesses:
                 - path: run-behaviour-test-exec.sh
                   sha256: ef7e5366ba175efa99aeae9270d852191f39b55f47393639595e43dfc3511b57
                 - path: sandbox-credential-boundary-test.sh
-                  sha256: 809d6284e16fae75c7d0fb7bc78f9fe6f9a898393ce8c008b3c5d19548a0446c
+                  sha256: 8a196b423e3203c762da3c44207976f8fd1b47819a44879c7bbeae22080c0316
                 - path: signoff-strip-test.sh
                   sha256: 7fdbe722468c0403e291e0cf7546d18b398db814ee393025788e6fa6c5514772
                 - path: skill-env-reachability-test.sh
-                  sha256: cba9eeb72d9405a5746a1a663885b63b556adb0aed9c46682da7b318ec5c52b5
+                  sha256: 517437a3c0be819bafc8b911d14c1df920b9e979ad1ee87cb21d6b4437cc1303
                 - path: test-fixtures/bundle/comment.src.sh
                   sha256: aefa9fc8b21b0c4365925647cf3b407269ba3f23e9dfd6c8aa68332428677684
                 - path: test-fixtures/bundle/cross-dedup.src.sh
@@ -520,13 +532,13 @@ harnesses:
                 - path: validate-code-output.src.sh
                   sha256: f2014aa5139caf89435efc98cc4d0d682138b75fc936bbca8fb8e6811cc594d5
                 - path: validate-output-schema-test.sh
-                  sha256: d416f0c759dcbdc85b1cd5608cbf87e5731042d20f955f8dc4935e0ea26bfb0f
+                  sha256: e67bcb279ef6762bf82b432c7def990455ccd214923013539a634f48ea2e6c21
                 - path: validate-output-schema.sh
                   sha256: 3e874a4553a24e99577da0cb6c0910ef80622fb85d53e03b057f6a6c0c4f8704
-              fetched_at: 2026-11-05T15:08:41.88903Z
+              fetched_at: 2026-11-16T18:28:35.191961Z
             - field: validation_loop.script
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/scripts/validate-code-output.sh
-              sha256: 90f2b0684e13fa7bb35c61dc048c6eddf3fe6792deb7bfa5b93642fa25f6d479
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/scripts/validate-code-output.sh
+              sha256: 8705f4e8b8e0f68615e6e4514ebf165f4121d0f94d3239c43fcf653157463931
               type: directory
               files:
                 - path: bundle-sh-test.sh
@@ -544,7 +556,7 @@ harnesses:
                 - path: gitlint-forbidden-type-scope-test.sh
                   sha256: c0337a7d1a0acd41137592fc24f43445ac4ff05537b38857dd607efdcc5f79c6
                 - path: harness-jira-test.sh
-                  sha256: d834aa2dda4af08b3372e73a6352b4b9a0c43b02e183caa8c23880b0ed279bdb
+                  sha256: 70bf169d4d49cace37146c1f8e6df9bee09e5b04cc4643b4b3de87c73e67f50c
                 - path: labels-test.sh
                   sha256: f136a27f7d37583ba9c8004e160dc36737ee1d4807d62b03a5bf08eaf5235f89
                 - path: lib/branch-guard.lib.sh
@@ -555,6 +567,8 @@ harnesses:
                   sha256: 93dd8cd259fbc154c86357f050d6185cb6491d788f3ae8d9abc31d8019ece2b7
                 - path: lib/forge-transient-retry.lib.sh
                   sha256: 6bb41fe034abcda8d341cab6af0d995947a51e7f2edc7aaaf88cd14598901cf0
+                - path: lib/git-graph-policy.lib.sh
+                  sha256: 0ded5a62e2d6bcd85438d30d619f76169e0e7049d4ebdd2f2825eb2c22e5979c
                 - path: lib/github-api-csma.lib.sh
                   sha256: 85c94a21222265cd99b10950cdfa5a4e4914bbbac36fc55abb7bde01c1fe14b0
                 - path: lib/github-code-ops.lib.sh
@@ -591,10 +605,12 @@ harnesses:
                   sha256: 6e7fddadb62de92a44fc538ff30b030c9aa689d142f2774fdfdbd66d194809b2
                 - path: lib/gitleaks-install.lib.sh
                   sha256: d0a226137cba22a878e02565deaed41786228006bbbf31df416138475eb218c0
+                - path: lib/jira-auth.lib.sh
+                  sha256: d1bf4544d45696315d2b6c1d865408dc7bbd233ac293f6ea172d385394340f4f
                 - path: lib/jira-scribe-ops.lib.sh
-                  sha256: c6bcadac245c76e86dcdf15ffd84d489cd2ad0e5ad24052d83a7de590179ea09
+                  sha256: e49eb99826a0409947627c11479b947f0d0b803b63fb0939925358c4340b1d80
                 - path: lib/jira-triage-ops.lib.sh
-                  sha256: 16eb3bc32c05e9996177d2a4b015cc18ff072a9f23d5c6dae16691362969902c
+                  sha256: d82c4487f95ed519b55f8e9269c5aa807855766ef84effd7bad5313e594a9249
                 - path: lib/labels.lib.sh
                   sha256: 7c1d65e5fd533b4995ea62dc0a5690d20395d87d15d50140ca4ee11fd570c015
                 - path: lib/post-failure-report.lib.sh
@@ -622,19 +638,19 @@ harnesses:
                 - path: lib/triage-ops.lib.sh
                   sha256: 97e91450c2a0e7ba78f8d59c12a2ef0bdcfe12f470c3a7b87454663f3f330155
                 - path: post-code-test.sh
-                  sha256: 03af4c4cfe750968ecaa5b0022a2588a618808d6515fe2b74c6c42a5f89f23a7
+                  sha256: 9f54d107586c2330d31b352694bffb673ce26af8c75ed5cc0d7b1404a5061358
                 - path: post-code.sh
-                  sha256: 153481ff0001c1c7dad7383c914a5fdb5999d37a1ad9f1ae01ed289d7b8605bc
+                  sha256: be49ddcde03056dd7eed78a8af3c486d6d42ce3ccd97f522d6bf6ba92b8706f8
                 - path: post-code.src.sh
-                  sha256: 0c1060a990a37e3623a19f65d47a8101c826e82bdcfd146b9fcf9619f4f3d58b
+                  sha256: 7e4d87d241dfff2d6c33ae89a56243140b5152beb109c50c919c653701baec6a
                 - path: post-failure-report-test.sh
                   sha256: 58b15f7444701355aed76a490855c1693c72de1501b53e0a112689ebef5a5564
                 - path: post-fix-test.sh
-                  sha256: e69af506cc2682751ca715512d49eefac11fe091bc4acd4e68dc3cabf0c805d3
+                  sha256: 2a215b61f01885551cdb683433ce22420573b6b1789566ebb4c6e2ca4a5c0eb0
                 - path: post-fix.sh
-                  sha256: 45c8084f629db0d3eb087c32660d4ea86286c87d4c61ceca6bdde96a70abbf19
+                  sha256: cc59802568d40852b04a0f0b486e4ad8f29d7129e00a708a8ceb3f454c347d0d
                 - path: post-fix.src.sh
-                  sha256: 47d4769a5cb66a4b1b56eb70ad8c1b07e171cb6e0ac11d96c5c1015e54126580
+                  sha256: 3b003a386549ebbf73ff06ae6832b1c1c73685ab763da6cbccb7f93b392420c4
                 - path: post-prioritize-test.sh
                   sha256: e0c5040fb75282d31c9a9eb1bdd7c8a378d4f78f39b041d0dddd148b3f5c198c
                 - path: post-prioritize.sh
@@ -642,43 +658,45 @@ harnesses:
                 - path: post-prioritize.src.sh
                   sha256: ec5be598490d5cb0459295e100d0b0158b7ed3bc993e37db529df7588097c429
                 - path: post-retro-test.sh
-                  sha256: e4f16e3dbc9ff947a22153677885dac8f38f304a443a50822c78ffe17c2d44b4
+                  sha256: 1cdc1e2fb915698e2b53381c170457673534fe773eddba6dbac40b6170dd4880
                 - path: post-retro.sh
-                  sha256: 4bad7ef938bd58b247d60fe9a6fb90cf502148bc38a8bc2b58c03e1a86d613f2
+                  sha256: 2d84830ca82fcccce139298b9341f4dd93ed97e4609925f25be607a2c237f8fe
                 - path: post-retro.src.sh
-                  sha256: 9164fc47ccd8992818a982f242fb971ba72f126241352d36ae479c73b0901883
+                  sha256: 759fcce1d5e765855969788fb7471b79c7af2d30b8aeaf67d413d7cd1af1ed73
                 - path: post-review-test.sh
-                  sha256: ed2b873e0742d2729e06905263f6941e03b64020da680da6208e847220388b48
+                  sha256: a7e05a4e4ae526fea0952955350329b1d28bd777ec4e3e77b2cfb6d5ed027ac6
                 - path: post-review.sh
-                  sha256: 9a9c215a7135d87ad5834f610ad996ae33507ef45cb5e36f7761692f44715591
+                  sha256: ce6f855d38984c76b1eac165aeb405c1999e3ddaf13c57dab271ea43611bc165
                 - path: post-review.src.sh
-                  sha256: 77e3f1f857bae1e096f3fb333c86e6a4e12c8463c2e643fbd5ec2119bef6647b
+                  sha256: d4dc780fd0f5596d1ba7e24c3b2d9ca57b8e05b59cb761fdf7c3b7f01a454a59
                 - path: post-scribe-test.sh
-                  sha256: 6f4bfbc983ceebf5b75352297219f3205a23d1f00373ea25a55cc83d72ed7357
+                  sha256: a871d985448cf2fb644476027aa08789edc880339e6fd4de56963503f11f16e7
                 - path: post-scribe.sh
-                  sha256: 66f8b9e479527bbceccf3892be9833338c5be50fee2c98de4e3799911d2ce1b7
+                  sha256: 7441edf5140570a245cdda2fc3d6f49aa3329fe005be79b6a4435e1510133187
                 - path: post-scribe.src.sh
-                  sha256: 6b89bf5924d64227110ffb81901c9f1cf38a54ecfca0e23c166b7f312293f48b
+                  sha256: aa401479c571524a2e414b155a79bab3b86b67b42dcbe642c8e11d20d4d44e88
                 - path: post-triage-test.sh
-                  sha256: a2c994d0768c5331270b9e0722779e8d83663dbb6904ad2da11a2130cb7079ac
+                  sha256: f60eb4d1ba26ba0966cdb430dbd87ba8b8fce261210c171e00d6d19ef6258682
                 - path: post-triage.sh
-                  sha256: 2885fcc69c9e25d641387a7f3fd15870b5f0aa5dd6478aa66eb04b5fc9ef5039
+                  sha256: 6b07da7a4b1b70f37a88253e3700c9034cce88a6664e1b2414d7fac7ff259abe
                 - path: post-triage.src.sh
-                  sha256: dc72132908e684e4ac3bf7f7907a1c7ea43e7a3fe215298a572b628748fac15a
+                  sha256: 22d2e188ea846d13a689472e0d045308ceeb18c17fb118d07845cf6c24c98c1e
                 - path: pr-assignee-test.sh
                   sha256: 63693c7f670a469b7aff69b25b7f184d6468c6da35477592b4a8f9308ec11787
                 - path: pr-review-challenger-contract-test.sh
-                  sha256: ea6c475c91ade0618596700ac090ab204c4d41a9a2e5a3beabbbfc8287708ee8
+                  sha256: 70c339c1591ebe4b9b81dbf3275e30b722c158a31c10e20b79257cbd1e755b6d
                 - path: pr-review-dependency-scope-test.sh
                   sha256: b8f03dd35c4de3cf239ebd3dfe29445740a523c516fd06843a2e40cae92412d3
+                - path: pr-review-provisional-result-test.sh
+                  sha256: bbc6bd47036add3a64e976f308acefb853319725701cad1d033bf1992a7533a4
                 - path: pr-review-remediation-test.sh
-                  sha256: b191dd6647890e992f6e98c2481dd01416026cef67596f4ee60a97d5d084c64a
+                  sha256: 228d740486bb6e97bf2e5c28da246528a7fbb364794826b1ef68e1e669526f7b
                 - path: pre-code-jira-test.sh
-                  sha256: cb43ecaf277fa1d14a64f64250c492372344ee37410d32472a0869224e5827ec
+                  sha256: 616902f7a35c0f657ff7b0c044834aa01fd21ce558d1772b1fd86204dd9c594a
                 - path: pre-code-jira.sh
-                  sha256: a6b8482761e1a6fcc95ef9413df40ebad92f3a5000a6743d46dccfe0d316f864
+                  sha256: 82487c5a3925270dd8efd0620497f69f0658b36579dbead0b6e89ce7127e7cd3
                 - path: pre-code-jira.src.sh
-                  sha256: 7e2807224d07efb4a48a1c26108cab4b75530ef501042d221c771e7cc3f7cc69
+                  sha256: fdd6ce63f18f154bbc41d8ba0555c501275f93bcd216630de01f720dd95cc436
                 - path: pre-code-test.sh
                   sha256: 63f659567e90f8c7de2b559074c8a2b9edf87553ff6e2af12b66102a2568f0b8
                 - path: pre-code.sh
@@ -710,27 +728,27 @@ harnesses:
                 - path: pre-review.src.sh
                   sha256: df10a45101ac135cd95bd8cb745752f82f724cebdda3ddbb61a8916f1c448f5d
                 - path: pre-scribe-test.sh
-                  sha256: 326e0fb542684433ce2492a24c50227c82e6680bc9dfea6ad1bea82485eaf7da
+                  sha256: d173afc6c376a027cc1a7a9e954c903a3c5bda461e6c3f7b428d7ca4f64fbe58
                 - path: pre-scribe.sh
-                  sha256: a199466b2c6befd73eacd5bf14ac0876e7d095ef2815307740953197af18dbb0
+                  sha256: 92110557d78262c0936b45f93c6ee5c9aaadcadf190164816d863ec37a180af0
                 - path: pre-scribe.src.sh
-                  sha256: 097618c51785d63f1959ac9a4397b19772ffb5b749acc93e1f737de3798a88cb
+                  sha256: 06318b56889e9b33a72c1172a2aeceb5f04f5e5b7ca70b0f0c1ed03438f4c966
                 - path: pre-triage-test.sh
-                  sha256: c09326cec0ae6bc22e39e0b0d94da717a78841fcfa547fd54730ca94a9797946
+                  sha256: 4ad641903de39d00f1d0b9d1196b0e70489ae7511ef9ed362e66565164d31890
                 - path: pre-triage.sh
-                  sha256: 6783e4756507d22f6d323f70f9acd89596aa812327bee1460e9a3c5eacc72b81
+                  sha256: 703cd4c8dfff7ba0ef14b74049d97938c804271cdb9741f03d7e33df08f4ea7a
                 - path: pre-triage.src.sh
                   sha256: 226a84e19df65e8d620edd44fe67e61605b101d0d01ac0fc9ebbd49dd0821dcc
                 - path: prepare-sandbox-credentials.sh
                   sha256: a8fb256c39f8c82605f6e135e090b8fe62db98003cd34bd503baf7e030c50d42
                 - path: process-fix-result-test.py
-                  sha256: 320d10cd359809348a2b147cc1a105b12a220d2198c1bef820b33b78ed05f28f
+                  sha256: 97ffabb2156cd40e6d3e3599391067f904f5eb8a5d2ff16c7d9f67cb915efa89
                 - path: process-fix-result.py
-                  sha256: fa5fec0e400133d0debc0bbe07a1ad32559a3825d6e29bb824c5138517307642
+                  sha256: 242dbf8763579c7f149c43780283b1a358073a7494a4f8b217619e8b4944c7ab
                 - path: provider-credentials-test.sh
                   sha256: 9d738125505b304fb6319a3beff68c48d702a3f51964c7c9f0ef368040417955
                 - path: public-text-scan-test.sh
-                  sha256: 25fbbe20090b96e673a33ba959e49b16b96bb0f5df5a14ef0038abb2e11f03a3
+                  sha256: e9ccd9ccfc87aa321ab181fc4b7256e46ecf072a305da52f86d892e23a6be882
                 - path: review-body-fallback-test.sh
                   sha256: fd2fc80d7cef0532005606a3f0f281d9cfa9cb7f92615bb9f9e346a7a1d7a221
                 - path: risk-tier1-test.sh
@@ -738,11 +756,11 @@ harnesses:
                 - path: run-behaviour-test-exec.sh
                   sha256: ef7e5366ba175efa99aeae9270d852191f39b55f47393639595e43dfc3511b57
                 - path: sandbox-credential-boundary-test.sh
-                  sha256: 809d6284e16fae75c7d0fb7bc78f9fe6f9a898393ce8c008b3c5d19548a0446c
+                  sha256: 8a196b423e3203c762da3c44207976f8fd1b47819a44879c7bbeae22080c0316
                 - path: signoff-strip-test.sh
                   sha256: 7fdbe722468c0403e291e0cf7546d18b398db814ee393025788e6fa6c5514772
                 - path: skill-env-reachability-test.sh
-                  sha256: cba9eeb72d9405a5746a1a663885b63b556adb0aed9c46682da7b318ec5c52b5
+                  sha256: 517437a3c0be819bafc8b911d14c1df920b9e979ad1ee87cb21d6b4437cc1303
                 - path: test-fixtures/bundle/comment.src.sh
                   sha256: aefa9fc8b21b0c4365925647cf3b407269ba3f23e9dfd6c8aa68332428677684
                 - path: test-fixtures/bundle/cross-dedup.src.sh
@@ -776,18 +794,18 @@ harnesses:
                 - path: validate-code-output.src.sh
                   sha256: f2014aa5139caf89435efc98cc4d0d682138b75fc936bbca8fb8e6811cc594d5
                 - path: validate-output-schema-test.sh
-                  sha256: d416f0c759dcbdc85b1cd5608cbf87e5731042d20f955f8dc4935e0ea26bfb0f
+                  sha256: e67bcb279ef6762bf82b432c7def990455ccd214923013539a634f48ea2e6c21
                 - path: validate-output-schema.sh
                   sha256: 3e874a4553a24e99577da0cb6c0910ef80622fb85d53e03b057f6a6c0c4f8704
-              fetched_at: 2026-11-05T15:08:41.88903Z
+              fetched_at: 2026-11-16T18:28:35.191961Z
             - field: validation_loop.schema
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/schemas/code-result.schema.json
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/schemas/code-result.schema.json
               sha256: 05923f741f9b4a0539dd392925690b4f976f019b2c4ae9697035b72edd61a913
               type: resource
-              fetched_at: 2026-11-05T15:08:42.070416Z
+              fetched_at: 2026-11-16T18:28:35.397451Z
             - field: overlays[2].pre_script
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/scripts/pre-code-jira.sh
-              sha256: 90f2b0684e13fa7bb35c61dc048c6eddf3fe6792deb7bfa5b93642fa25f6d479
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/scripts/pre-code-jira.sh
+              sha256: 8705f4e8b8e0f68615e6e4514ebf165f4121d0f94d3239c43fcf653157463931
               type: directory
               files:
                 - path: bundle-sh-test.sh
@@ -805,7 +823,7 @@ harnesses:
                 - path: gitlint-forbidden-type-scope-test.sh
                   sha256: c0337a7d1a0acd41137592fc24f43445ac4ff05537b38857dd607efdcc5f79c6
                 - path: harness-jira-test.sh
-                  sha256: d834aa2dda4af08b3372e73a6352b4b9a0c43b02e183caa8c23880b0ed279bdb
+                  sha256: 70bf169d4d49cace37146c1f8e6df9bee09e5b04cc4643b4b3de87c73e67f50c
                 - path: labels-test.sh
                   sha256: f136a27f7d37583ba9c8004e160dc36737ee1d4807d62b03a5bf08eaf5235f89
                 - path: lib/branch-guard.lib.sh
@@ -816,6 +834,8 @@ harnesses:
                   sha256: 93dd8cd259fbc154c86357f050d6185cb6491d788f3ae8d9abc31d8019ece2b7
                 - path: lib/forge-transient-retry.lib.sh
                   sha256: 6bb41fe034abcda8d341cab6af0d995947a51e7f2edc7aaaf88cd14598901cf0
+                - path: lib/git-graph-policy.lib.sh
+                  sha256: 0ded5a62e2d6bcd85438d30d619f76169e0e7049d4ebdd2f2825eb2c22e5979c
                 - path: lib/github-api-csma.lib.sh
                   sha256: 85c94a21222265cd99b10950cdfa5a4e4914bbbac36fc55abb7bde01c1fe14b0
                 - path: lib/github-code-ops.lib.sh
@@ -852,10 +872,12 @@ harnesses:
                   sha256: 6e7fddadb62de92a44fc538ff30b030c9aa689d142f2774fdfdbd66d194809b2
                 - path: lib/gitleaks-install.lib.sh
                   sha256: d0a226137cba22a878e02565deaed41786228006bbbf31df416138475eb218c0
+                - path: lib/jira-auth.lib.sh
+                  sha256: d1bf4544d45696315d2b6c1d865408dc7bbd233ac293f6ea172d385394340f4f
                 - path: lib/jira-scribe-ops.lib.sh
-                  sha256: c6bcadac245c76e86dcdf15ffd84d489cd2ad0e5ad24052d83a7de590179ea09
+                  sha256: e49eb99826a0409947627c11479b947f0d0b803b63fb0939925358c4340b1d80
                 - path: lib/jira-triage-ops.lib.sh
-                  sha256: 16eb3bc32c05e9996177d2a4b015cc18ff072a9f23d5c6dae16691362969902c
+                  sha256: d82c4487f95ed519b55f8e9269c5aa807855766ef84effd7bad5313e594a9249
                 - path: lib/labels.lib.sh
                   sha256: 7c1d65e5fd533b4995ea62dc0a5690d20395d87d15d50140ca4ee11fd570c015
                 - path: lib/post-failure-report.lib.sh
@@ -883,19 +905,19 @@ harnesses:
                 - path: lib/triage-ops.lib.sh
                   sha256: 97e91450c2a0e7ba78f8d59c12a2ef0bdcfe12f470c3a7b87454663f3f330155
                 - path: post-code-test.sh
-                  sha256: 03af4c4cfe750968ecaa5b0022a2588a618808d6515fe2b74c6c42a5f89f23a7
+                  sha256: 9f54d107586c2330d31b352694bffb673ce26af8c75ed5cc0d7b1404a5061358
                 - path: post-code.sh
-                  sha256: 153481ff0001c1c7dad7383c914a5fdb5999d37a1ad9f1ae01ed289d7b8605bc
+                  sha256: be49ddcde03056dd7eed78a8af3c486d6d42ce3ccd97f522d6bf6ba92b8706f8
                 - path: post-code.src.sh
-                  sha256: 0c1060a990a37e3623a19f65d47a8101c826e82bdcfd146b9fcf9619f4f3d58b
+                  sha256: 7e4d87d241dfff2d6c33ae89a56243140b5152beb109c50c919c653701baec6a
                 - path: post-failure-report-test.sh
                   sha256: 58b15f7444701355aed76a490855c1693c72de1501b53e0a112689ebef5a5564
                 - path: post-fix-test.sh
-                  sha256: e69af506cc2682751ca715512d49eefac11fe091bc4acd4e68dc3cabf0c805d3
+                  sha256: 2a215b61f01885551cdb683433ce22420573b6b1789566ebb4c6e2ca4a5c0eb0
                 - path: post-fix.sh
-                  sha256: 45c8084f629db0d3eb087c32660d4ea86286c87d4c61ceca6bdde96a70abbf19
+                  sha256: cc59802568d40852b04a0f0b486e4ad8f29d7129e00a708a8ceb3f454c347d0d
                 - path: post-fix.src.sh
-                  sha256: 47d4769a5cb66a4b1b56eb70ad8c1b07e171cb6e0ac11d96c5c1015e54126580
+                  sha256: 3b003a386549ebbf73ff06ae6832b1c1c73685ab763da6cbccb7f93b392420c4
                 - path: post-prioritize-test.sh
                   sha256: e0c5040fb75282d31c9a9eb1bdd7c8a378d4f78f39b041d0dddd148b3f5c198c
                 - path: post-prioritize.sh
@@ -903,43 +925,45 @@ harnesses:
                 - path: post-prioritize.src.sh
                   sha256: ec5be598490d5cb0459295e100d0b0158b7ed3bc993e37db529df7588097c429
                 - path: post-retro-test.sh
-                  sha256: e4f16e3dbc9ff947a22153677885dac8f38f304a443a50822c78ffe17c2d44b4
+                  sha256: 1cdc1e2fb915698e2b53381c170457673534fe773eddba6dbac40b6170dd4880
                 - path: post-retro.sh
-                  sha256: 4bad7ef938bd58b247d60fe9a6fb90cf502148bc38a8bc2b58c03e1a86d613f2
+                  sha256: 2d84830ca82fcccce139298b9341f4dd93ed97e4609925f25be607a2c237f8fe
                 - path: post-retro.src.sh
-                  sha256: 9164fc47ccd8992818a982f242fb971ba72f126241352d36ae479c73b0901883
+                  sha256: 759fcce1d5e765855969788fb7471b79c7af2d30b8aeaf67d413d7cd1af1ed73
                 - path: post-review-test.sh
-                  sha256: ed2b873e0742d2729e06905263f6941e03b64020da680da6208e847220388b48
+                  sha256: a7e05a4e4ae526fea0952955350329b1d28bd777ec4e3e77b2cfb6d5ed027ac6
                 - path: post-review.sh
-                  sha256: 9a9c215a7135d87ad5834f610ad996ae33507ef45cb5e36f7761692f44715591
+                  sha256: ce6f855d38984c76b1eac165aeb405c1999e3ddaf13c57dab271ea43611bc165
                 - path: post-review.src.sh
-                  sha256: 77e3f1f857bae1e096f3fb333c86e6a4e12c8463c2e643fbd5ec2119bef6647b
+                  sha256: d4dc780fd0f5596d1ba7e24c3b2d9ca57b8e05b59cb761fdf7c3b7f01a454a59
                 - path: post-scribe-test.sh
-                  sha256: 6f4bfbc983ceebf5b75352297219f3205a23d1f00373ea25a55cc83d72ed7357
+                  sha256: a871d985448cf2fb644476027aa08789edc880339e6fd4de56963503f11f16e7
                 - path: post-scribe.sh
-                  sha256: 66f8b9e479527bbceccf3892be9833338c5be50fee2c98de4e3799911d2ce1b7
+                  sha256: 7441edf5140570a245cdda2fc3d6f49aa3329fe005be79b6a4435e1510133187
                 - path: post-scribe.src.sh
-                  sha256: 6b89bf5924d64227110ffb81901c9f1cf38a54ecfca0e23c166b7f312293f48b
+                  sha256: aa401479c571524a2e414b155a79bab3b86b67b42dcbe642c8e11d20d4d44e88
                 - path: post-triage-test.sh
-                  sha256: a2c994d0768c5331270b9e0722779e8d83663dbb6904ad2da11a2130cb7079ac
+                  sha256: f60eb4d1ba26ba0966cdb430dbd87ba8b8fce261210c171e00d6d19ef6258682
                 - path: post-triage.sh
-                  sha256: 2885fcc69c9e25d641387a7f3fd15870b5f0aa5dd6478aa66eb04b5fc9ef5039
+                  sha256: 6b07da7a4b1b70f37a88253e3700c9034cce88a6664e1b2414d7fac7ff259abe
                 - path: post-triage.src.sh
-                  sha256: dc72132908e684e4ac3bf7f7907a1c7ea43e7a3fe215298a572b628748fac15a
+                  sha256: 22d2e188ea846d13a689472e0d045308ceeb18c17fb118d07845cf6c24c98c1e
                 - path: pr-assignee-test.sh
                   sha256: 63693c7f670a469b7aff69b25b7f184d6468c6da35477592b4a8f9308ec11787
                 - path: pr-review-challenger-contract-test.sh
-                  sha256: ea6c475c91ade0618596700ac090ab204c4d41a9a2e5a3beabbbfc8287708ee8
+                  sha256: 70c339c1591ebe4b9b81dbf3275e30b722c158a31c10e20b79257cbd1e755b6d
                 - path: pr-review-dependency-scope-test.sh
                   sha256: b8f03dd35c4de3cf239ebd3dfe29445740a523c516fd06843a2e40cae92412d3
+                - path: pr-review-provisional-result-test.sh
+                  sha256: bbc6bd47036add3a64e976f308acefb853319725701cad1d033bf1992a7533a4
                 - path: pr-review-remediation-test.sh
-                  sha256: b191dd6647890e992f6e98c2481dd01416026cef67596f4ee60a97d5d084c64a
+                  sha256: 228d740486bb6e97bf2e5c28da246528a7fbb364794826b1ef68e1e669526f7b
                 - path: pre-code-jira-test.sh
-                  sha256: cb43ecaf277fa1d14a64f64250c492372344ee37410d32472a0869224e5827ec
+                  sha256: 616902f7a35c0f657ff7b0c044834aa01fd21ce558d1772b1fd86204dd9c594a
                 - path: pre-code-jira.sh
-                  sha256: a6b8482761e1a6fcc95ef9413df40ebad92f3a5000a6743d46dccfe0d316f864
+                  sha256: 82487c5a3925270dd8efd0620497f69f0658b36579dbead0b6e89ce7127e7cd3
                 - path: pre-code-jira.src.sh
-                  sha256: 7e2807224d07efb4a48a1c26108cab4b75530ef501042d221c771e7cc3f7cc69
+                  sha256: fdd6ce63f18f154bbc41d8ba0555c501275f93bcd216630de01f720dd95cc436
                 - path: pre-code-test.sh
                   sha256: 63f659567e90f8c7de2b559074c8a2b9edf87553ff6e2af12b66102a2568f0b8
                 - path: pre-code.sh
@@ -971,27 +995,27 @@ harnesses:
                 - path: pre-review.src.sh
                   sha256: df10a45101ac135cd95bd8cb745752f82f724cebdda3ddbb61a8916f1c448f5d
                 - path: pre-scribe-test.sh
-                  sha256: 326e0fb542684433ce2492a24c50227c82e6680bc9dfea6ad1bea82485eaf7da
+                  sha256: d173afc6c376a027cc1a7a9e954c903a3c5bda461e6c3f7b428d7ca4f64fbe58
                 - path: pre-scribe.sh
-                  sha256: a199466b2c6befd73eacd5bf14ac0876e7d095ef2815307740953197af18dbb0
+                  sha256: 92110557d78262c0936b45f93c6ee5c9aaadcadf190164816d863ec37a180af0
                 - path: pre-scribe.src.sh
-                  sha256: 097618c51785d63f1959ac9a4397b19772ffb5b749acc93e1f737de3798a88cb
+                  sha256: 06318b56889e9b33a72c1172a2aeceb5f04f5e5b7ca70b0f0c1ed03438f4c966
                 - path: pre-triage-test.sh
-                  sha256: c09326cec0ae6bc22e39e0b0d94da717a78841fcfa547fd54730ca94a9797946
+                  sha256: 4ad641903de39d00f1d0b9d1196b0e70489ae7511ef9ed362e66565164d31890
                 - path: pre-triage.sh
-                  sha256: 6783e4756507d22f6d323f70f9acd89596aa812327bee1460e9a3c5eacc72b81
+                  sha256: 703cd4c8dfff7ba0ef14b74049d97938c804271cdb9741f03d7e33df08f4ea7a
                 - path: pre-triage.src.sh
                   sha256: 226a84e19df65e8d620edd44fe67e61605b101d0d01ac0fc9ebbd49dd0821dcc
                 - path: prepare-sandbox-credentials.sh
                   sha256: a8fb256c39f8c82605f6e135e090b8fe62db98003cd34bd503baf7e030c50d42
                 - path: process-fix-result-test.py
-                  sha256: 320d10cd359809348a2b147cc1a105b12a220d2198c1bef820b33b78ed05f28f
+                  sha256: 97ffabb2156cd40e6d3e3599391067f904f5eb8a5d2ff16c7d9f67cb915efa89
                 - path: process-fix-result.py
-                  sha256: fa5fec0e400133d0debc0bbe07a1ad32559a3825d6e29bb824c5138517307642
+                  sha256: 242dbf8763579c7f149c43780283b1a358073a7494a4f8b217619e8b4944c7ab
                 - path: provider-credentials-test.sh
                   sha256: 9d738125505b304fb6319a3beff68c48d702a3f51964c7c9f0ef368040417955
                 - path: public-text-scan-test.sh
-                  sha256: 25fbbe20090b96e673a33ba959e49b16b96bb0f5df5a14ef0038abb2e11f03a3
+                  sha256: e9ccd9ccfc87aa321ab181fc4b7256e46ecf072a305da52f86d892e23a6be882
                 - path: review-body-fallback-test.sh
                   sha256: fd2fc80d7cef0532005606a3f0f281d9cfa9cb7f92615bb9f9e346a7a1d7a221
                 - path: risk-tier1-test.sh
@@ -999,11 +1023,11 @@ harnesses:
                 - path: run-behaviour-test-exec.sh
                   sha256: ef7e5366ba175efa99aeae9270d852191f39b55f47393639595e43dfc3511b57
                 - path: sandbox-credential-boundary-test.sh
-                  sha256: 809d6284e16fae75c7d0fb7bc78f9fe6f9a898393ce8c008b3c5d19548a0446c
+                  sha256: 8a196b423e3203c762da3c44207976f8fd1b47819a44879c7bbeae22080c0316
                 - path: signoff-strip-test.sh
                   sha256: 7fdbe722468c0403e291e0cf7546d18b398db814ee393025788e6fa6c5514772
                 - path: skill-env-reachability-test.sh
-                  sha256: cba9eeb72d9405a5746a1a663885b63b556adb0aed9c46682da7b318ec5c52b5
+                  sha256: 517437a3c0be819bafc8b911d14c1df920b9e979ad1ee87cb21d6b4437cc1303
                 - path: test-fixtures/bundle/comment.src.sh
                   sha256: aefa9fc8b21b0c4365925647cf3b407269ba3f23e9dfd6c8aa68332428677684
                 - path: test-fixtures/bundle/cross-dedup.src.sh
@@ -1037,96 +1061,113 @@ harnesses:
                 - path: validate-code-output.src.sh
                   sha256: f2014aa5139caf89435efc98cc4d0d682138b75fc936bbca8fb8e6811cc594d5
                 - path: validate-output-schema-test.sh
-                  sha256: d416f0c759dcbdc85b1cd5608cbf87e5731042d20f955f8dc4935e0ea26bfb0f
+                  sha256: e67bcb279ef6762bf82b432c7def990455ccd214923013539a634f48ea2e6c21
                 - path: validate-output-schema.sh
                   sha256: 3e874a4553a24e99577da0cb6c0910ef80622fb85d53e03b057f6a6c0c4f8704
-              fetched_at: 2026-11-05T15:08:41.88903Z
+              fetched_at: 2026-11-16T18:28:35.191961Z
             - field: agent
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/agents/code.md
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/agents/code.md
               sha256: 147a39cf59896768654a144cc439fbf94cf8266953ccfb2ae0be34fc6bc51d37
               type: resource
-              fetched_at: 2026-11-05T15:08:42.228528Z
+              fetched_at: 2026-11-16T18:28:35.577182Z
             - field: policy
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/policies/base.yaml
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/policies/base.yaml
               sha256: 3ed634401d87a1327fffe5e266272d930321484ce8a91dfa5fe447d4f2e00470
               type: resource
-              fetched_at: 2026-11-05T15:08:42.414807Z
+              fetched_at: 2026-11-16T18:28:35.765897Z
             - field: skills[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/skills/code-implementation/SKILL.md
-              sha256: c5c44b27831b78b53db943a3ed0de39b007d13604c4f242b7e871660f1cf8c69
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/skills/code-implementation/SKILL.md
+              sha256: 412a573c6335b8f3ae7c0442fea2c7248d53ca880e3656388664d813de89fb0b
               type: directory
               files:
                 - path: SKILL.md
-                  sha256: e9ca16eb8f3f163dc6e1dacf5b5ea1fa319835058c01d91b31cdeffc401281fb
-              fetched_at: 2026-11-05T15:08:43.936083Z
+                  sha256: a8dc0fb83f4411479edc64041fab9007155a267e90d0dc423bcf4107c17542fd
+                - path: references/attachments.md
+                  sha256: 3075a288664331706ec9680230b676f40a8d7abf7cdf652fd915461c11357f12
+              fetched_at: 2026-11-16T18:28:36.869042Z
             - field: overlays[0].skills[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/skills/github-forge/SKILL.md
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/skills/github-forge/SKILL.md
               sha256: 8f37aa32543b446155d13a6bfece648af5e352935dfccb390159af3285f52cd0
               type: directory
               files:
                 - path: SKILL.md
                   sha256: ecfa490f4ab9f0c94331e0b708b4e18853031e0bec3129cae6f99e972963c511
-              fetched_at: 2026-11-05T15:08:45.41967Z
+              fetched_at: 2026-11-16T18:28:37.944719Z
             - field: overlays[1].skills[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/skills/gitlab-forge/SKILL.md
-              sha256: a96eca1b2c7d9254b293d57b5d7550bad5e9e2b04eb26d2ed0b2c057faac795f
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/skills/gitlab-forge/SKILL.md
+              sha256: 5e6172ee8f56bc7df22713baa7a40d7c118523301e027b8bf0a46beaa18b876f
               type: directory
               files:
                 - path: SKILL.md
-                  sha256: 83df2efe6905b9c038aa67f1908acad0d218bf8749a3a4b0659e866335b21019
-              fetched_at: 2026-11-05T15:08:46.915472Z
+                  sha256: 3f104a9f06927912746690af609941a2d2be6cc0d5fdfddd22683ed63b70b92e
+              fetched_at: 2026-11-16T18:28:39.374568Z
             - field: host_files[0].src
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/env/gcp-vertex.env
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/env/gcp-vertex.env
               sha256: e2874d7d47a7a710f89ea6dcb99ae3b8c720ac06fccb7499dfddbe14f12b5ecb
               type: resource
-              fetched_at: 2026-11-05T15:08:47.0532Z
+              fetched_at: 2026-11-16T18:28:39.509343Z
             - field: host_files[1].src
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/env/ssl-cainfo.env
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/env/ssl-cainfo.env
               sha256: 5591b36910545a622cf50dd1cea3f9ddf1aafbef9ece35b69b2bd110293356c3
               type: resource
-              fetched_at: 2026-11-05T15:08:47.238347Z
+              fetched_at: 2026-11-16T18:28:39.669846Z
             - field: overlays[0].host_files[0].src
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/env/github/code.env
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/env/github/code.env
               sha256: 8c07e3a19f4bb157a4b55b35bcbfbb29f1ea03a0103bb0bcdc737898847e0a98
               type: resource
-              fetched_at: 2026-11-05T15:08:47.397845Z
+              fetched_at: 2026-11-16T18:28:39.859404Z
             - field: overlays[1].host_files[0].src
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/env/gitlab/code.env
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/env/gitlab/code.env
               sha256: 01fb4075ad32151d295ad42add348793491604d8d67bde8d018b4afc25b60b63
               type: resource
-              fetched_at: 2026-11-05T15:08:47.544905Z
+              fetched_at: 2026-11-16T18:28:40.013426Z
+            - field: overlays[2].host_files[0].src
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/env/jira/code.env
+              sha256: 6240e2fe915603e2adbab3a8acf6154ea2f14b1f4245d28fb5c9a4488abc19fa
+              type: resource
+              fetched_at: 2026-11-16T18:28:40.181719Z
             - field: overlays[0].openshell.profiles[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/profiles/fullsend-github-code.yaml
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/profiles/fullsend-github-code.yaml
               sha256: cbc086346d3be579d067888ea7d68cc35761bd5835e403b38771d02230686790
               type: resource
-              fetched_at: 2026-11-05T15:08:47.694158Z
+              fetched_at: 2026-11-16T18:28:40.32211Z
+            - field: overlays[0].openshell.profiles[1]
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/profiles/fullsend-github-attachments.yaml
+              sha256: 07c17f71677587f61fdc9de3b85dc8425e979ef0acc9a5cea1279e2af190e4b9
+              type: resource
+              fetched_at: 2026-11-16T18:28:40.493693Z
             - field: overlays[1].openshell.profiles[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/profiles/fullsend-gitlab-code.yaml
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/profiles/fullsend-gitlab-code.yaml
               sha256: fdf6d9373a232dcfe65fc97699551a74fc2ed2c4e72d52fdf0778d11651cf3bc
               type: resource
-              fetched_at: 2026-11-05T15:08:47.845107Z
+              fetched_at: 2026-11-16T18:28:40.655049Z
             - field: overlays[2].openshell.profiles[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/profiles/fullsend-jira-ro.yaml
-              sha256: e2bbbfac8d5d0db42dafe6227492fb3aa9078de1b4a3c78b1d75524e07803e74
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/profiles/fullsend-jira-ro.yaml
+              sha256: b587c41e9440c8c82b609b01ebc6ec24adc62e4f92d7f4ae57ecd848b1c6f6fc
               type: resource
-              fetched_at: 2026-11-05T15:08:48.005204Z
+              fetched_at: 2026-11-16T18:28:40.820615Z
             - field: overlays[0].providers[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/providers/github-code.yaml
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/providers/github-code.yaml
               sha256: 03c5bdadeb1cb069fc1fb761ea7e95f8201a207f6b9753484215927b2dd4a8d0
               type: resource
-              fetched_at: 2026-11-05T15:08:48.167831Z
+              fetched_at: 2026-11-16T18:28:40.960918Z
+            - field: overlays[0].providers[1]
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/providers/github-attachments.yaml
+              sha256: baa6fcf9d5f6e28214770a9f1cd9bf029842c9196088f3c6925db340adea0d8f
+              type: resource
+              fetched_at: 2026-11-16T18:28:41.165209Z
             - field: overlays[1].providers[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/providers/gitlab-code.yaml
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/providers/gitlab-code.yaml
               sha256: e19dcec443432edef69c3c2b33a1bfd17e24ec49328c2a9220ef73abc7ef9b8c
               type: resource
-              fetched_at: 2026-11-05T15:08:48.360917Z
+              fetched_at: 2026-11-16T18:28:41.308577Z
             - field: overlays[2].providers[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/providers/jira-ro.yaml
-              sha256: 6cb427913d96eb0b0b5c967dbaf36d4240552e60ebf692f6e1ddbf5c9c8652a0
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/providers/jira-ro.yaml
+              sha256: 459191d9cf21b51f4397e94c882a1ec036f82ab0351d950bc1750e4cd7abc3ea
               type: resource
-              fetched_at: 2026-11-05T15:08:48.522512Z
+              fetched_at: 2026-11-16T18:28:41.476153Z
             - field: plugins[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/plugins/gopls-lsp/
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/plugins/gopls-lsp/
               sha256: 489be6d59cd26c4c67946e885bf7931cc261d59e20035967f36b6c3d04976652
               type: directory
               files:
@@ -1134,7 +1175,7 @@ harnesses:
                   sha256: 1ffcba39aceff0200bd3e687b0c122efcda4a56c5247207d54c20cb68c5e338e
                 - path: plugin.json
                   sha256: aaf60aabcff7de402646e77f9887668ab88589724580a2442d50bc4d5327ccf6
-              fetched_at: 2026-11-05T15:08:50.023637Z
+              fetched_at: 2026-11-16T18:28:42.607915Z
     review:
         source: harness/review.yaml
         sha256: 41bf103dd491bf8ed43ba3e245edf77c12d9bd4d744d3de4c5291b9f0f1c421a
@@ -2001,17 +2042,17 @@ harnesses:
               fetched_at: 2026-11-05T15:08:47.0532Z
     triage:
         source: harness/triage.yaml
-        sha256: 39a59c81b1ff8be1bab769ec08fe28cfa5733d32a3e63612d951a433fb4cdfad
-        resolved_at: 2026-11-05T15:09:50.176204Z
+        sha256: e99e3fbb5323db7d7191286fca1785f8773f76e5ca6c78800333798b789de66b
+        resolved_at: 2026-11-16T18:28:49.2867Z
         dependencies:
             - field: base
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/harness/triage.yaml
-              sha256: ae07e51bb1f634bbb842a498f9ca4cd588982c7811d1ae4c07a06232e50a231b
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/harness/triage.yaml
+              sha256: d56f5ed8d45c5a8aee6031f519b3c7b1c048a3dc14e67870fbd0029d63d935b4
               type: file
-              fetched_at: 2026-11-05T15:08:56.870975Z
+              fetched_at: 2026-11-16T18:28:42.634113Z
             - field: pre_script
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/scripts/pre-triage.sh
-              sha256: 90f2b0684e13fa7bb35c61dc048c6eddf3fe6792deb7bfa5b93642fa25f6d479
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/scripts/pre-triage.sh
+              sha256: 8705f4e8b8e0f68615e6e4514ebf165f4121d0f94d3239c43fcf653157463931
               type: directory
               files:
                 - path: bundle-sh-test.sh
@@ -2029,7 +2070,7 @@ harnesses:
                 - path: gitlint-forbidden-type-scope-test.sh
                   sha256: c0337a7d1a0acd41137592fc24f43445ac4ff05537b38857dd607efdcc5f79c6
                 - path: harness-jira-test.sh
-                  sha256: d834aa2dda4af08b3372e73a6352b4b9a0c43b02e183caa8c23880b0ed279bdb
+                  sha256: 70bf169d4d49cace37146c1f8e6df9bee09e5b04cc4643b4b3de87c73e67f50c
                 - path: labels-test.sh
                   sha256: f136a27f7d37583ba9c8004e160dc36737ee1d4807d62b03a5bf08eaf5235f89
                 - path: lib/branch-guard.lib.sh
@@ -2040,6 +2081,8 @@ harnesses:
                   sha256: 93dd8cd259fbc154c86357f050d6185cb6491d788f3ae8d9abc31d8019ece2b7
                 - path: lib/forge-transient-retry.lib.sh
                   sha256: 6bb41fe034abcda8d341cab6af0d995947a51e7f2edc7aaaf88cd14598901cf0
+                - path: lib/git-graph-policy.lib.sh
+                  sha256: 0ded5a62e2d6bcd85438d30d619f76169e0e7049d4ebdd2f2825eb2c22e5979c
                 - path: lib/github-api-csma.lib.sh
                   sha256: 85c94a21222265cd99b10950cdfa5a4e4914bbbac36fc55abb7bde01c1fe14b0
                 - path: lib/github-code-ops.lib.sh
@@ -2076,10 +2119,12 @@ harnesses:
                   sha256: 6e7fddadb62de92a44fc538ff30b030c9aa689d142f2774fdfdbd66d194809b2
                 - path: lib/gitleaks-install.lib.sh
                   sha256: d0a226137cba22a878e02565deaed41786228006bbbf31df416138475eb218c0
+                - path: lib/jira-auth.lib.sh
+                  sha256: d1bf4544d45696315d2b6c1d865408dc7bbd233ac293f6ea172d385394340f4f
                 - path: lib/jira-scribe-ops.lib.sh
-                  sha256: c6bcadac245c76e86dcdf15ffd84d489cd2ad0e5ad24052d83a7de590179ea09
+                  sha256: e49eb99826a0409947627c11479b947f0d0b803b63fb0939925358c4340b1d80
                 - path: lib/jira-triage-ops.lib.sh
-                  sha256: 16eb3bc32c05e9996177d2a4b015cc18ff072a9f23d5c6dae16691362969902c
+                  sha256: d82c4487f95ed519b55f8e9269c5aa807855766ef84effd7bad5313e594a9249
                 - path: lib/labels.lib.sh
                   sha256: 7c1d65e5fd533b4995ea62dc0a5690d20395d87d15d50140ca4ee11fd570c015
                 - path: lib/post-failure-report.lib.sh
@@ -2107,19 +2152,19 @@ harnesses:
                 - path: lib/triage-ops.lib.sh
                   sha256: 97e91450c2a0e7ba78f8d59c12a2ef0bdcfe12f470c3a7b87454663f3f330155
                 - path: post-code-test.sh
-                  sha256: 03af4c4cfe750968ecaa5b0022a2588a618808d6515fe2b74c6c42a5f89f23a7
+                  sha256: 9f54d107586c2330d31b352694bffb673ce26af8c75ed5cc0d7b1404a5061358
                 - path: post-code.sh
-                  sha256: 153481ff0001c1c7dad7383c914a5fdb5999d37a1ad9f1ae01ed289d7b8605bc
+                  sha256: be49ddcde03056dd7eed78a8af3c486d6d42ce3ccd97f522d6bf6ba92b8706f8
                 - path: post-code.src.sh
-                  sha256: 0c1060a990a37e3623a19f65d47a8101c826e82bdcfd146b9fcf9619f4f3d58b
+                  sha256: 7e4d87d241dfff2d6c33ae89a56243140b5152beb109c50c919c653701baec6a
                 - path: post-failure-report-test.sh
                   sha256: 58b15f7444701355aed76a490855c1693c72de1501b53e0a112689ebef5a5564
                 - path: post-fix-test.sh
-                  sha256: e69af506cc2682751ca715512d49eefac11fe091bc4acd4e68dc3cabf0c805d3
+                  sha256: 2a215b61f01885551cdb683433ce22420573b6b1789566ebb4c6e2ca4a5c0eb0
                 - path: post-fix.sh
-                  sha256: 45c8084f629db0d3eb087c32660d4ea86286c87d4c61ceca6bdde96a70abbf19
+                  sha256: cc59802568d40852b04a0f0b486e4ad8f29d7129e00a708a8ceb3f454c347d0d
                 - path: post-fix.src.sh
-                  sha256: 47d4769a5cb66a4b1b56eb70ad8c1b07e171cb6e0ac11d96c5c1015e54126580
+                  sha256: 3b003a386549ebbf73ff06ae6832b1c1c73685ab763da6cbccb7f93b392420c4
                 - path: post-prioritize-test.sh
                   sha256: e0c5040fb75282d31c9a9eb1bdd7c8a378d4f78f39b041d0dddd148b3f5c198c
                 - path: post-prioritize.sh
@@ -2127,43 +2172,45 @@ harnesses:
                 - path: post-prioritize.src.sh
                   sha256: ec5be598490d5cb0459295e100d0b0158b7ed3bc993e37db529df7588097c429
                 - path: post-retro-test.sh
-                  sha256: e4f16e3dbc9ff947a22153677885dac8f38f304a443a50822c78ffe17c2d44b4
+                  sha256: 1cdc1e2fb915698e2b53381c170457673534fe773eddba6dbac40b6170dd4880
                 - path: post-retro.sh
-                  sha256: 4bad7ef938bd58b247d60fe9a6fb90cf502148bc38a8bc2b58c03e1a86d613f2
+                  sha256: 2d84830ca82fcccce139298b9341f4dd93ed97e4609925f25be607a2c237f8fe
                 - path: post-retro.src.sh
-                  sha256: 9164fc47ccd8992818a982f242fb971ba72f126241352d36ae479c73b0901883
+                  sha256: 759fcce1d5e765855969788fb7471b79c7af2d30b8aeaf67d413d7cd1af1ed73
                 - path: post-review-test.sh
-                  sha256: ed2b873e0742d2729e06905263f6941e03b64020da680da6208e847220388b48
+                  sha256: a7e05a4e4ae526fea0952955350329b1d28bd777ec4e3e77b2cfb6d5ed027ac6
                 - path: post-review.sh
-                  sha256: 9a9c215a7135d87ad5834f610ad996ae33507ef45cb5e36f7761692f44715591
+                  sha256: ce6f855d38984c76b1eac165aeb405c1999e3ddaf13c57dab271ea43611bc165
                 - path: post-review.src.sh
-                  sha256: 77e3f1f857bae1e096f3fb333c86e6a4e12c8463c2e643fbd5ec2119bef6647b
+                  sha256: d4dc780fd0f5596d1ba7e24c3b2d9ca57b8e05b59cb761fdf7c3b7f01a454a59
                 - path: post-scribe-test.sh
-                  sha256: 6f4bfbc983ceebf5b75352297219f3205a23d1f00373ea25a55cc83d72ed7357
+                  sha256: a871d985448cf2fb644476027aa08789edc880339e6fd4de56963503f11f16e7
                 - path: post-scribe.sh
-                  sha256: 66f8b9e479527bbceccf3892be9833338c5be50fee2c98de4e3799911d2ce1b7
+                  sha256: 7441edf5140570a245cdda2fc3d6f49aa3329fe005be79b6a4435e1510133187
                 - path: post-scribe.src.sh
-                  sha256: 6b89bf5924d64227110ffb81901c9f1cf38a54ecfca0e23c166b7f312293f48b
+                  sha256: aa401479c571524a2e414b155a79bab3b86b67b42dcbe642c8e11d20d4d44e88
                 - path: post-triage-test.sh
-                  sha256: a2c994d0768c5331270b9e0722779e8d83663dbb6904ad2da11a2130cb7079ac
+                  sha256: f60eb4d1ba26ba0966cdb430dbd87ba8b8fce261210c171e00d6d19ef6258682
                 - path: post-triage.sh
-                  sha256: 2885fcc69c9e25d641387a7f3fd15870b5f0aa5dd6478aa66eb04b5fc9ef5039
+                  sha256: 6b07da7a4b1b70f37a88253e3700c9034cce88a6664e1b2414d7fac7ff259abe
                 - path: post-triage.src.sh
-                  sha256: dc72132908e684e4ac3bf7f7907a1c7ea43e7a3fe215298a572b628748fac15a
+                  sha256: 22d2e188ea846d13a689472e0d045308ceeb18c17fb118d07845cf6c24c98c1e
                 - path: pr-assignee-test.sh
                   sha256: 63693c7f670a469b7aff69b25b7f184d6468c6da35477592b4a8f9308ec11787
                 - path: pr-review-challenger-contract-test.sh
-                  sha256: ea6c475c91ade0618596700ac090ab204c4d41a9a2e5a3beabbbfc8287708ee8
+                  sha256: 70c339c1591ebe4b9b81dbf3275e30b722c158a31c10e20b79257cbd1e755b6d
                 - path: pr-review-dependency-scope-test.sh
                   sha256: b8f03dd35c4de3cf239ebd3dfe29445740a523c516fd06843a2e40cae92412d3
+                - path: pr-review-provisional-result-test.sh
+                  sha256: bbc6bd47036add3a64e976f308acefb853319725701cad1d033bf1992a7533a4
                 - path: pr-review-remediation-test.sh
-                  sha256: b191dd6647890e992f6e98c2481dd01416026cef67596f4ee60a97d5d084c64a
+                  sha256: 228d740486bb6e97bf2e5c28da246528a7fbb364794826b1ef68e1e669526f7b
                 - path: pre-code-jira-test.sh
-                  sha256: cb43ecaf277fa1d14a64f64250c492372344ee37410d32472a0869224e5827ec
+                  sha256: 616902f7a35c0f657ff7b0c044834aa01fd21ce558d1772b1fd86204dd9c594a
                 - path: pre-code-jira.sh
-                  sha256: a6b8482761e1a6fcc95ef9413df40ebad92f3a5000a6743d46dccfe0d316f864
+                  sha256: 82487c5a3925270dd8efd0620497f69f0658b36579dbead0b6e89ce7127e7cd3
                 - path: pre-code-jira.src.sh
-                  sha256: 7e2807224d07efb4a48a1c26108cab4b75530ef501042d221c771e7cc3f7cc69
+                  sha256: fdd6ce63f18f154bbc41d8ba0555c501275f93bcd216630de01f720dd95cc436
                 - path: pre-code-test.sh
                   sha256: 63f659567e90f8c7de2b559074c8a2b9edf87553ff6e2af12b66102a2568f0b8
                 - path: pre-code.sh
@@ -2195,27 +2242,27 @@ harnesses:
                 - path: pre-review.src.sh
                   sha256: df10a45101ac135cd95bd8cb745752f82f724cebdda3ddbb61a8916f1c448f5d
                 - path: pre-scribe-test.sh
-                  sha256: 326e0fb542684433ce2492a24c50227c82e6680bc9dfea6ad1bea82485eaf7da
+                  sha256: d173afc6c376a027cc1a7a9e954c903a3c5bda461e6c3f7b428d7ca4f64fbe58
                 - path: pre-scribe.sh
-                  sha256: a199466b2c6befd73eacd5bf14ac0876e7d095ef2815307740953197af18dbb0
+                  sha256: 92110557d78262c0936b45f93c6ee5c9aaadcadf190164816d863ec37a180af0
                 - path: pre-scribe.src.sh
-                  sha256: 097618c51785d63f1959ac9a4397b19772ffb5b749acc93e1f737de3798a88cb
+                  sha256: 06318b56889e9b33a72c1172a2aeceb5f04f5e5b7ca70b0f0c1ed03438f4c966
                 - path: pre-triage-test.sh
-                  sha256: c09326cec0ae6bc22e39e0b0d94da717a78841fcfa547fd54730ca94a9797946
+                  sha256: 4ad641903de39d00f1d0b9d1196b0e70489ae7511ef9ed362e66565164d31890
                 - path: pre-triage.sh
-                  sha256: 6783e4756507d22f6d323f70f9acd89596aa812327bee1460e9a3c5eacc72b81
+                  sha256: 703cd4c8dfff7ba0ef14b74049d97938c804271cdb9741f03d7e33df08f4ea7a
                 - path: pre-triage.src.sh
                   sha256: 226a84e19df65e8d620edd44fe67e61605b101d0d01ac0fc9ebbd49dd0821dcc
                 - path: prepare-sandbox-credentials.sh
                   sha256: a8fb256c39f8c82605f6e135e090b8fe62db98003cd34bd503baf7e030c50d42
                 - path: process-fix-result-test.py
-                  sha256: 320d10cd359809348a2b147cc1a105b12a220d2198c1bef820b33b78ed05f28f
+                  sha256: 97ffabb2156cd40e6d3e3599391067f904f5eb8a5d2ff16c7d9f67cb915efa89
                 - path: process-fix-result.py
-                  sha256: fa5fec0e400133d0debc0bbe07a1ad32559a3825d6e29bb824c5138517307642
+                  sha256: 242dbf8763579c7f149c43780283b1a358073a7494a4f8b217619e8b4944c7ab
                 - path: provider-credentials-test.sh
                   sha256: 9d738125505b304fb6319a3beff68c48d702a3f51964c7c9f0ef368040417955
                 - path: public-text-scan-test.sh
-                  sha256: 25fbbe20090b96e673a33ba959e49b16b96bb0f5df5a14ef0038abb2e11f03a3
+                  sha256: e9ccd9ccfc87aa321ab181fc4b7256e46ecf072a305da52f86d892e23a6be882
                 - path: review-body-fallback-test.sh
                   sha256: fd2fc80d7cef0532005606a3f0f281d9cfa9cb7f92615bb9f9e346a7a1d7a221
                 - path: risk-tier1-test.sh
@@ -2223,11 +2270,11 @@ harnesses:
                 - path: run-behaviour-test-exec.sh
                   sha256: ef7e5366ba175efa99aeae9270d852191f39b55f47393639595e43dfc3511b57
                 - path: sandbox-credential-boundary-test.sh
-                  sha256: 809d6284e16fae75c7d0fb7bc78f9fe6f9a898393ce8c008b3c5d19548a0446c
+                  sha256: 8a196b423e3203c762da3c44207976f8fd1b47819a44879c7bbeae22080c0316
                 - path: signoff-strip-test.sh
                   sha256: 7fdbe722468c0403e291e0cf7546d18b398db814ee393025788e6fa6c5514772
                 - path: skill-env-reachability-test.sh
-                  sha256: cba9eeb72d9405a5746a1a663885b63b556adb0aed9c46682da7b318ec5c52b5
+                  sha256: 517437a3c0be819bafc8b911d14c1df920b9e979ad1ee87cb21d6b4437cc1303
                 - path: test-fixtures/bundle/comment.src.sh
                   sha256: aefa9fc8b21b0c4365925647cf3b407269ba3f23e9dfd6c8aa68332428677684
                 - path: test-fixtures/bundle/cross-dedup.src.sh
@@ -2261,13 +2308,13 @@ harnesses:
                 - path: validate-code-output.src.sh
                   sha256: f2014aa5139caf89435efc98cc4d0d682138b75fc936bbca8fb8e6811cc594d5
                 - path: validate-output-schema-test.sh
-                  sha256: d416f0c759dcbdc85b1cd5608cbf87e5731042d20f955f8dc4935e0ea26bfb0f
+                  sha256: e67bcb279ef6762bf82b432c7def990455ccd214923013539a634f48ea2e6c21
                 - path: validate-output-schema.sh
                   sha256: 3e874a4553a24e99577da0cb6c0910ef80622fb85d53e03b057f6a6c0c4f8704
-              fetched_at: 2026-11-05T15:08:41.88903Z
+              fetched_at: 2026-11-16T18:28:35.191961Z
             - field: post_script
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/scripts/post-triage.sh
-              sha256: 90f2b0684e13fa7bb35c61dc048c6eddf3fe6792deb7bfa5b93642fa25f6d479
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/scripts/post-triage.sh
+              sha256: 8705f4e8b8e0f68615e6e4514ebf165f4121d0f94d3239c43fcf653157463931
               type: directory
               files:
                 - path: bundle-sh-test.sh
@@ -2285,7 +2332,7 @@ harnesses:
                 - path: gitlint-forbidden-type-scope-test.sh
                   sha256: c0337a7d1a0acd41137592fc24f43445ac4ff05537b38857dd607efdcc5f79c6
                 - path: harness-jira-test.sh
-                  sha256: d834aa2dda4af08b3372e73a6352b4b9a0c43b02e183caa8c23880b0ed279bdb
+                  sha256: 70bf169d4d49cace37146c1f8e6df9bee09e5b04cc4643b4b3de87c73e67f50c
                 - path: labels-test.sh
                   sha256: f136a27f7d37583ba9c8004e160dc36737ee1d4807d62b03a5bf08eaf5235f89
                 - path: lib/branch-guard.lib.sh
@@ -2296,6 +2343,8 @@ harnesses:
                   sha256: 93dd8cd259fbc154c86357f050d6185cb6491d788f3ae8d9abc31d8019ece2b7
                 - path: lib/forge-transient-retry.lib.sh
                   sha256: 6bb41fe034abcda8d341cab6af0d995947a51e7f2edc7aaaf88cd14598901cf0
+                - path: lib/git-graph-policy.lib.sh
+                  sha256: 0ded5a62e2d6bcd85438d30d619f76169e0e7049d4ebdd2f2825eb2c22e5979c
                 - path: lib/github-api-csma.lib.sh
                   sha256: 85c94a21222265cd99b10950cdfa5a4e4914bbbac36fc55abb7bde01c1fe14b0
                 - path: lib/github-code-ops.lib.sh
@@ -2332,10 +2381,12 @@ harnesses:
                   sha256: 6e7fddadb62de92a44fc538ff30b030c9aa689d142f2774fdfdbd66d194809b2
                 - path: lib/gitleaks-install.lib.sh
                   sha256: d0a226137cba22a878e02565deaed41786228006bbbf31df416138475eb218c0
+                - path: lib/jira-auth.lib.sh
+                  sha256: d1bf4544d45696315d2b6c1d865408dc7bbd233ac293f6ea172d385394340f4f
                 - path: lib/jira-scribe-ops.lib.sh
-                  sha256: c6bcadac245c76e86dcdf15ffd84d489cd2ad0e5ad24052d83a7de590179ea09
+                  sha256: e49eb99826a0409947627c11479b947f0d0b803b63fb0939925358c4340b1d80
                 - path: lib/jira-triage-ops.lib.sh
-                  sha256: 16eb3bc32c05e9996177d2a4b015cc18ff072a9f23d5c6dae16691362969902c
+                  sha256: d82c4487f95ed519b55f8e9269c5aa807855766ef84effd7bad5313e594a9249
                 - path: lib/labels.lib.sh
                   sha256: 7c1d65e5fd533b4995ea62dc0a5690d20395d87d15d50140ca4ee11fd570c015
                 - path: lib/post-failure-report.lib.sh
@@ -2363,19 +2414,19 @@ harnesses:
                 - path: lib/triage-ops.lib.sh
                   sha256: 97e91450c2a0e7ba78f8d59c12a2ef0bdcfe12f470c3a7b87454663f3f330155
                 - path: post-code-test.sh
-                  sha256: 03af4c4cfe750968ecaa5b0022a2588a618808d6515fe2b74c6c42a5f89f23a7
+                  sha256: 9f54d107586c2330d31b352694bffb673ce26af8c75ed5cc0d7b1404a5061358
                 - path: post-code.sh
-                  sha256: 153481ff0001c1c7dad7383c914a5fdb5999d37a1ad9f1ae01ed289d7b8605bc
+                  sha256: be49ddcde03056dd7eed78a8af3c486d6d42ce3ccd97f522d6bf6ba92b8706f8
                 - path: post-code.src.sh
-                  sha256: 0c1060a990a37e3623a19f65d47a8101c826e82bdcfd146b9fcf9619f4f3d58b
+                  sha256: 7e4d87d241dfff2d6c33ae89a56243140b5152beb109c50c919c653701baec6a
                 - path: post-failure-report-test.sh
                   sha256: 58b15f7444701355aed76a490855c1693c72de1501b53e0a112689ebef5a5564
                 - path: post-fix-test.sh
-                  sha256: e69af506cc2682751ca715512d49eefac11fe091bc4acd4e68dc3cabf0c805d3
+                  sha256: 2a215b61f01885551cdb683433ce22420573b6b1789566ebb4c6e2ca4a5c0eb0
                 - path: post-fix.sh
-                  sha256: 45c8084f629db0d3eb087c32660d4ea86286c87d4c61ceca6bdde96a70abbf19
+                  sha256: cc59802568d40852b04a0f0b486e4ad8f29d7129e00a708a8ceb3f454c347d0d
                 - path: post-fix.src.sh
-                  sha256: 47d4769a5cb66a4b1b56eb70ad8c1b07e171cb6e0ac11d96c5c1015e54126580
+                  sha256: 3b003a386549ebbf73ff06ae6832b1c1c73685ab763da6cbccb7f93b392420c4
                 - path: post-prioritize-test.sh
                   sha256: e0c5040fb75282d31c9a9eb1bdd7c8a378d4f78f39b041d0dddd148b3f5c198c
                 - path: post-prioritize.sh
@@ -2383,43 +2434,45 @@ harnesses:
                 - path: post-prioritize.src.sh
                   sha256: ec5be598490d5cb0459295e100d0b0158b7ed3bc993e37db529df7588097c429
                 - path: post-retro-test.sh
-                  sha256: e4f16e3dbc9ff947a22153677885dac8f38f304a443a50822c78ffe17c2d44b4
+                  sha256: 1cdc1e2fb915698e2b53381c170457673534fe773eddba6dbac40b6170dd4880
                 - path: post-retro.sh
-                  sha256: 4bad7ef938bd58b247d60fe9a6fb90cf502148bc38a8bc2b58c03e1a86d613f2
+                  sha256: 2d84830ca82fcccce139298b9341f4dd93ed97e4609925f25be607a2c237f8fe
                 - path: post-retro.src.sh
-                  sha256: 9164fc47ccd8992818a982f242fb971ba72f126241352d36ae479c73b0901883
+                  sha256: 759fcce1d5e765855969788fb7471b79c7af2d30b8aeaf67d413d7cd1af1ed73
                 - path: post-review-test.sh
-                  sha256: ed2b873e0742d2729e06905263f6941e03b64020da680da6208e847220388b48
+                  sha256: a7e05a4e4ae526fea0952955350329b1d28bd777ec4e3e77b2cfb6d5ed027ac6
                 - path: post-review.sh
-                  sha256: 9a9c215a7135d87ad5834f610ad996ae33507ef45cb5e36f7761692f44715591
+                  sha256: ce6f855d38984c76b1eac165aeb405c1999e3ddaf13c57dab271ea43611bc165
                 - path: post-review.src.sh
-                  sha256: 77e3f1f857bae1e096f3fb333c86e6a4e12c8463c2e643fbd5ec2119bef6647b
+                  sha256: d4dc780fd0f5596d1ba7e24c3b2d9ca57b8e05b59cb761fdf7c3b7f01a454a59
                 - path: post-scribe-test.sh
-                  sha256: 6f4bfbc983ceebf5b75352297219f3205a23d1f00373ea25a55cc83d72ed7357
+                  sha256: a871d985448cf2fb644476027aa08789edc880339e6fd4de56963503f11f16e7
                 - path: post-scribe.sh
-                  sha256: 66f8b9e479527bbceccf3892be9833338c5be50fee2c98de4e3799911d2ce1b7
+                  sha256: 7441edf5140570a245cdda2fc3d6f49aa3329fe005be79b6a4435e1510133187
                 - path: post-scribe.src.sh
-                  sha256: 6b89bf5924d64227110ffb81901c9f1cf38a54ecfca0e23c166b7f312293f48b
+                  sha256: aa401479c571524a2e414b155a79bab3b86b67b42dcbe642c8e11d20d4d44e88
                 - path: post-triage-test.sh
-                  sha256: a2c994d0768c5331270b9e0722779e8d83663dbb6904ad2da11a2130cb7079ac
+                  sha256: f60eb4d1ba26ba0966cdb430dbd87ba8b8fce261210c171e00d6d19ef6258682
                 - path: post-triage.sh
-                  sha256: 2885fcc69c9e25d641387a7f3fd15870b5f0aa5dd6478aa66eb04b5fc9ef5039
+                  sha256: 6b07da7a4b1b70f37a88253e3700c9034cce88a6664e1b2414d7fac7ff259abe
                 - path: post-triage.src.sh
-                  sha256: dc72132908e684e4ac3bf7f7907a1c7ea43e7a3fe215298a572b628748fac15a
+                  sha256: 22d2e188ea846d13a689472e0d045308ceeb18c17fb118d07845cf6c24c98c1e
                 - path: pr-assignee-test.sh
                   sha256: 63693c7f670a469b7aff69b25b7f184d6468c6da35477592b4a8f9308ec11787
                 - path: pr-review-challenger-contract-test.sh
-                  sha256: ea6c475c91ade0618596700ac090ab204c4d41a9a2e5a3beabbbfc8287708ee8
+                  sha256: 70c339c1591ebe4b9b81dbf3275e30b722c158a31c10e20b79257cbd1e755b6d
                 - path: pr-review-dependency-scope-test.sh
                   sha256: b8f03dd35c4de3cf239ebd3dfe29445740a523c516fd06843a2e40cae92412d3
+                - path: pr-review-provisional-result-test.sh
+                  sha256: bbc6bd47036add3a64e976f308acefb853319725701cad1d033bf1992a7533a4
                 - path: pr-review-remediation-test.sh
-                  sha256: b191dd6647890e992f6e98c2481dd01416026cef67596f4ee60a97d5d084c64a
+                  sha256: 228d740486bb6e97bf2e5c28da246528a7fbb364794826b1ef68e1e669526f7b
                 - path: pre-code-jira-test.sh
-                  sha256: cb43ecaf277fa1d14a64f64250c492372344ee37410d32472a0869224e5827ec
+                  sha256: 616902f7a35c0f657ff7b0c044834aa01fd21ce558d1772b1fd86204dd9c594a
                 - path: pre-code-jira.sh
-                  sha256: a6b8482761e1a6fcc95ef9413df40ebad92f3a5000a6743d46dccfe0d316f864
+                  sha256: 82487c5a3925270dd8efd0620497f69f0658b36579dbead0b6e89ce7127e7cd3
                 - path: pre-code-jira.src.sh
-                  sha256: 7e2807224d07efb4a48a1c26108cab4b75530ef501042d221c771e7cc3f7cc69
+                  sha256: fdd6ce63f18f154bbc41d8ba0555c501275f93bcd216630de01f720dd95cc436
                 - path: pre-code-test.sh
                   sha256: 63f659567e90f8c7de2b559074c8a2b9edf87553ff6e2af12b66102a2568f0b8
                 - path: pre-code.sh
@@ -2451,27 +2504,27 @@ harnesses:
                 - path: pre-review.src.sh
                   sha256: df10a45101ac135cd95bd8cb745752f82f724cebdda3ddbb61a8916f1c448f5d
                 - path: pre-scribe-test.sh
-                  sha256: 326e0fb542684433ce2492a24c50227c82e6680bc9dfea6ad1bea82485eaf7da
+                  sha256: d173afc6c376a027cc1a7a9e954c903a3c5bda461e6c3f7b428d7ca4f64fbe58
                 - path: pre-scribe.sh
-                  sha256: a199466b2c6befd73eacd5bf14ac0876e7d095ef2815307740953197af18dbb0
+                  sha256: 92110557d78262c0936b45f93c6ee5c9aaadcadf190164816d863ec37a180af0
                 - path: pre-scribe.src.sh
-                  sha256: 097618c51785d63f1959ac9a4397b19772ffb5b749acc93e1f737de3798a88cb
+                  sha256: 06318b56889e9b33a72c1172a2aeceb5f04f5e5b7ca70b0f0c1ed03438f4c966
                 - path: pre-triage-test.sh
-                  sha256: c09326cec0ae6bc22e39e0b0d94da717a78841fcfa547fd54730ca94a9797946
+                  sha256: 4ad641903de39d00f1d0b9d1196b0e70489ae7511ef9ed362e66565164d31890
                 - path: pre-triage.sh
-                  sha256: 6783e4756507d22f6d323f70f9acd89596aa812327bee1460e9a3c5eacc72b81
+                  sha256: 703cd4c8dfff7ba0ef14b74049d97938c804271cdb9741f03d7e33df08f4ea7a
                 - path: pre-triage.src.sh
                   sha256: 226a84e19df65e8d620edd44fe67e61605b101d0d01ac0fc9ebbd49dd0821dcc
                 - path: prepare-sandbox-credentials.sh
                   sha256: a8fb256c39f8c82605f6e135e090b8fe62db98003cd34bd503baf7e030c50d42
                 - path: process-fix-result-test.py
-                  sha256: 320d10cd359809348a2b147cc1a105b12a220d2198c1bef820b33b78ed05f28f
+                  sha256: 97ffabb2156cd40e6d3e3599391067f904f5eb8a5d2ff16c7d9f67cb915efa89
                 - path: process-fix-result.py
-                  sha256: fa5fec0e400133d0debc0bbe07a1ad32559a3825d6e29bb824c5138517307642
+                  sha256: 242dbf8763579c7f149c43780283b1a358073a7494a4f8b217619e8b4944c7ab
                 - path: provider-credentials-test.sh
                   sha256: 9d738125505b304fb6319a3beff68c48d702a3f51964c7c9f0ef368040417955
                 - path: public-text-scan-test.sh
-                  sha256: 25fbbe20090b96e673a33ba959e49b16b96bb0f5df5a14ef0038abb2e11f03a3
+                  sha256: e9ccd9ccfc87aa321ab181fc4b7256e46ecf072a305da52f86d892e23a6be882
                 - path: review-body-fallback-test.sh
                   sha256: fd2fc80d7cef0532005606a3f0f281d9cfa9cb7f92615bb9f9e346a7a1d7a221
                 - path: risk-tier1-test.sh
@@ -2479,11 +2532,11 @@ harnesses:
                 - path: run-behaviour-test-exec.sh
                   sha256: ef7e5366ba175efa99aeae9270d852191f39b55f47393639595e43dfc3511b57
                 - path: sandbox-credential-boundary-test.sh
-                  sha256: 809d6284e16fae75c7d0fb7bc78f9fe6f9a898393ce8c008b3c5d19548a0446c
+                  sha256: 8a196b423e3203c762da3c44207976f8fd1b47819a44879c7bbeae22080c0316
                 - path: signoff-strip-test.sh
                   sha256: 7fdbe722468c0403e291e0cf7546d18b398db814ee393025788e6fa6c5514772
                 - path: skill-env-reachability-test.sh
-                  sha256: cba9eeb72d9405a5746a1a663885b63b556adb0aed9c46682da7b318ec5c52b5
+                  sha256: 517437a3c0be819bafc8b911d14c1df920b9e979ad1ee87cb21d6b4437cc1303
                 - path: test-fixtures/bundle/comment.src.sh
                   sha256: aefa9fc8b21b0c4365925647cf3b407269ba3f23e9dfd6c8aa68332428677684
                 - path: test-fixtures/bundle/cross-dedup.src.sh
@@ -2517,13 +2570,13 @@ harnesses:
                 - path: validate-code-output.src.sh
                   sha256: f2014aa5139caf89435efc98cc4d0d682138b75fc936bbca8fb8e6811cc594d5
                 - path: validate-output-schema-test.sh
-                  sha256: d416f0c759dcbdc85b1cd5608cbf87e5731042d20f955f8dc4935e0ea26bfb0f
+                  sha256: e67bcb279ef6762bf82b432c7def990455ccd214923013539a634f48ea2e6c21
                 - path: validate-output-schema.sh
                   sha256: 3e874a4553a24e99577da0cb6c0910ef80622fb85d53e03b057f6a6c0c4f8704
-              fetched_at: 2026-11-05T15:08:41.88903Z
+              fetched_at: 2026-11-16T18:28:35.191961Z
             - field: validation_loop.script
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/scripts/validate-output-schema.sh
-              sha256: 90f2b0684e13fa7bb35c61dc048c6eddf3fe6792deb7bfa5b93642fa25f6d479
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/scripts/validate-output-schema.sh
+              sha256: 8705f4e8b8e0f68615e6e4514ebf165f4121d0f94d3239c43fcf653157463931
               type: directory
               files:
                 - path: bundle-sh-test.sh
@@ -2541,7 +2594,7 @@ harnesses:
                 - path: gitlint-forbidden-type-scope-test.sh
                   sha256: c0337a7d1a0acd41137592fc24f43445ac4ff05537b38857dd607efdcc5f79c6
                 - path: harness-jira-test.sh
-                  sha256: d834aa2dda4af08b3372e73a6352b4b9a0c43b02e183caa8c23880b0ed279bdb
+                  sha256: 70bf169d4d49cace37146c1f8e6df9bee09e5b04cc4643b4b3de87c73e67f50c
                 - path: labels-test.sh
                   sha256: f136a27f7d37583ba9c8004e160dc36737ee1d4807d62b03a5bf08eaf5235f89
                 - path: lib/branch-guard.lib.sh
@@ -2552,6 +2605,8 @@ harnesses:
                   sha256: 93dd8cd259fbc154c86357f050d6185cb6491d788f3ae8d9abc31d8019ece2b7
                 - path: lib/forge-transient-retry.lib.sh
                   sha256: 6bb41fe034abcda8d341cab6af0d995947a51e7f2edc7aaaf88cd14598901cf0
+                - path: lib/git-graph-policy.lib.sh
+                  sha256: 0ded5a62e2d6bcd85438d30d619f76169e0e7049d4ebdd2f2825eb2c22e5979c
                 - path: lib/github-api-csma.lib.sh
                   sha256: 85c94a21222265cd99b10950cdfa5a4e4914bbbac36fc55abb7bde01c1fe14b0
                 - path: lib/github-code-ops.lib.sh
@@ -2588,10 +2643,12 @@ harnesses:
                   sha256: 6e7fddadb62de92a44fc538ff30b030c9aa689d142f2774fdfdbd66d194809b2
                 - path: lib/gitleaks-install.lib.sh
                   sha256: d0a226137cba22a878e02565deaed41786228006bbbf31df416138475eb218c0
+                - path: lib/jira-auth.lib.sh
+                  sha256: d1bf4544d45696315d2b6c1d865408dc7bbd233ac293f6ea172d385394340f4f
                 - path: lib/jira-scribe-ops.lib.sh
-                  sha256: c6bcadac245c76e86dcdf15ffd84d489cd2ad0e5ad24052d83a7de590179ea09
+                  sha256: e49eb99826a0409947627c11479b947f0d0b803b63fb0939925358c4340b1d80
                 - path: lib/jira-triage-ops.lib.sh
-                  sha256: 16eb3bc32c05e9996177d2a4b015cc18ff072a9f23d5c6dae16691362969902c
+                  sha256: d82c4487f95ed519b55f8e9269c5aa807855766ef84effd7bad5313e594a9249
                 - path: lib/labels.lib.sh
                   sha256: 7c1d65e5fd533b4995ea62dc0a5690d20395d87d15d50140ca4ee11fd570c015
                 - path: lib/post-failure-report.lib.sh
@@ -2619,19 +2676,19 @@ harnesses:
                 - path: lib/triage-ops.lib.sh
                   sha256: 97e91450c2a0e7ba78f8d59c12a2ef0bdcfe12f470c3a7b87454663f3f330155
                 - path: post-code-test.sh
-                  sha256: 03af4c4cfe750968ecaa5b0022a2588a618808d6515fe2b74c6c42a5f89f23a7
+                  sha256: 9f54d107586c2330d31b352694bffb673ce26af8c75ed5cc0d7b1404a5061358
                 - path: post-code.sh
-                  sha256: 153481ff0001c1c7dad7383c914a5fdb5999d37a1ad9f1ae01ed289d7b8605bc
+                  sha256: be49ddcde03056dd7eed78a8af3c486d6d42ce3ccd97f522d6bf6ba92b8706f8
                 - path: post-code.src.sh
-                  sha256: 0c1060a990a37e3623a19f65d47a8101c826e82bdcfd146b9fcf9619f4f3d58b
+                  sha256: 7e4d87d241dfff2d6c33ae89a56243140b5152beb109c50c919c653701baec6a
                 - path: post-failure-report-test.sh
                   sha256: 58b15f7444701355aed76a490855c1693c72de1501b53e0a112689ebef5a5564
                 - path: post-fix-test.sh
-                  sha256: e69af506cc2682751ca715512d49eefac11fe091bc4acd4e68dc3cabf0c805d3
+                  sha256: 2a215b61f01885551cdb683433ce22420573b6b1789566ebb4c6e2ca4a5c0eb0
                 - path: post-fix.sh
-                  sha256: 45c8084f629db0d3eb087c32660d4ea86286c87d4c61ceca6bdde96a70abbf19
+                  sha256: cc59802568d40852b04a0f0b486e4ad8f29d7129e00a708a8ceb3f454c347d0d
                 - path: post-fix.src.sh
-                  sha256: 47d4769a5cb66a4b1b56eb70ad8c1b07e171cb6e0ac11d96c5c1015e54126580
+                  sha256: 3b003a386549ebbf73ff06ae6832b1c1c73685ab763da6cbccb7f93b392420c4
                 - path: post-prioritize-test.sh
                   sha256: e0c5040fb75282d31c9a9eb1bdd7c8a378d4f78f39b041d0dddd148b3f5c198c
                 - path: post-prioritize.sh
@@ -2639,43 +2696,45 @@ harnesses:
                 - path: post-prioritize.src.sh
                   sha256: ec5be598490d5cb0459295e100d0b0158b7ed3bc993e37db529df7588097c429
                 - path: post-retro-test.sh
-                  sha256: e4f16e3dbc9ff947a22153677885dac8f38f304a443a50822c78ffe17c2d44b4
+                  sha256: 1cdc1e2fb915698e2b53381c170457673534fe773eddba6dbac40b6170dd4880
                 - path: post-retro.sh
-                  sha256: 4bad7ef938bd58b247d60fe9a6fb90cf502148bc38a8bc2b58c03e1a86d613f2
+                  sha256: 2d84830ca82fcccce139298b9341f4dd93ed97e4609925f25be607a2c237f8fe
                 - path: post-retro.src.sh
-                  sha256: 9164fc47ccd8992818a982f242fb971ba72f126241352d36ae479c73b0901883
+                  sha256: 759fcce1d5e765855969788fb7471b79c7af2d30b8aeaf67d413d7cd1af1ed73
                 - path: post-review-test.sh
-                  sha256: ed2b873e0742d2729e06905263f6941e03b64020da680da6208e847220388b48
+                  sha256: a7e05a4e4ae526fea0952955350329b1d28bd777ec4e3e77b2cfb6d5ed027ac6
                 - path: post-review.sh
-                  sha256: 9a9c215a7135d87ad5834f610ad996ae33507ef45cb5e36f7761692f44715591
+                  sha256: ce6f855d38984c76b1eac165aeb405c1999e3ddaf13c57dab271ea43611bc165
                 - path: post-review.src.sh
-                  sha256: 77e3f1f857bae1e096f3fb333c86e6a4e12c8463c2e643fbd5ec2119bef6647b
+                  sha256: d4dc780fd0f5596d1ba7e24c3b2d9ca57b8e05b59cb761fdf7c3b7f01a454a59
                 - path: post-scribe-test.sh
-                  sha256: 6f4bfbc983ceebf5b75352297219f3205a23d1f00373ea25a55cc83d72ed7357
+                  sha256: a871d985448cf2fb644476027aa08789edc880339e6fd4de56963503f11f16e7
                 - path: post-scribe.sh
-                  sha256: 66f8b9e479527bbceccf3892be9833338c5be50fee2c98de4e3799911d2ce1b7
+                  sha256: 7441edf5140570a245cdda2fc3d6f49aa3329fe005be79b6a4435e1510133187
                 - path: post-scribe.src.sh
-                  sha256: 6b89bf5924d64227110ffb81901c9f1cf38a54ecfca0e23c166b7f312293f48b
+                  sha256: aa401479c571524a2e414b155a79bab3b86b67b42dcbe642c8e11d20d4d44e88
                 - path: post-triage-test.sh
-                  sha256: a2c994d0768c5331270b9e0722779e8d83663dbb6904ad2da11a2130cb7079ac
+                  sha256: f60eb4d1ba26ba0966cdb430dbd87ba8b8fce261210c171e00d6d19ef6258682
                 - path: post-triage.sh
-                  sha256: 2885fcc69c9e25d641387a7f3fd15870b5f0aa5dd6478aa66eb04b5fc9ef5039
+                  sha256: 6b07da7a4b1b70f37a88253e3700c9034cce88a6664e1b2414d7fac7ff259abe
                 - path: post-triage.src.sh
-                  sha256: dc72132908e684e4ac3bf7f7907a1c7ea43e7a3fe215298a572b628748fac15a
+                  sha256: 22d2e188ea846d13a689472e0d045308ceeb18c17fb118d07845cf6c24c98c1e
                 - path: pr-assignee-test.sh
                   sha256: 63693c7f670a469b7aff69b25b7f184d6468c6da35477592b4a8f9308ec11787
                 - path: pr-review-challenger-contract-test.sh
-                  sha256: ea6c475c91ade0618596700ac090ab204c4d41a9a2e5a3beabbbfc8287708ee8
+                  sha256: 70c339c1591ebe4b9b81dbf3275e30b722c158a31c10e20b79257cbd1e755b6d
                 - path: pr-review-dependency-scope-test.sh
                   sha256: b8f03dd35c4de3cf239ebd3dfe29445740a523c516fd06843a2e40cae92412d3
+                - path: pr-review-provisional-result-test.sh
+                  sha256: bbc6bd47036add3a64e976f308acefb853319725701cad1d033bf1992a7533a4
                 - path: pr-review-remediation-test.sh
-                  sha256: b191dd6647890e992f6e98c2481dd01416026cef67596f4ee60a97d5d084c64a
+                  sha256: 228d740486bb6e97bf2e5c28da246528a7fbb364794826b1ef68e1e669526f7b
                 - path: pre-code-jira-test.sh
-                  sha256: cb43ecaf277fa1d14a64f64250c492372344ee37410d32472a0869224e5827ec
+                  sha256: 616902f7a35c0f657ff7b0c044834aa01fd21ce558d1772b1fd86204dd9c594a
                 - path: pre-code-jira.sh
-                  sha256: a6b8482761e1a6fcc95ef9413df40ebad92f3a5000a6743d46dccfe0d316f864
+                  sha256: 82487c5a3925270dd8efd0620497f69f0658b36579dbead0b6e89ce7127e7cd3
                 - path: pre-code-jira.src.sh
-                  sha256: 7e2807224d07efb4a48a1c26108cab4b75530ef501042d221c771e7cc3f7cc69
+                  sha256: fdd6ce63f18f154bbc41d8ba0555c501275f93bcd216630de01f720dd95cc436
                 - path: pre-code-test.sh
                   sha256: 63f659567e90f8c7de2b559074c8a2b9edf87553ff6e2af12b66102a2568f0b8
                 - path: pre-code.sh
@@ -2707,27 +2766,27 @@ harnesses:
                 - path: pre-review.src.sh
                   sha256: df10a45101ac135cd95bd8cb745752f82f724cebdda3ddbb61a8916f1c448f5d
                 - path: pre-scribe-test.sh
-                  sha256: 326e0fb542684433ce2492a24c50227c82e6680bc9dfea6ad1bea82485eaf7da
+                  sha256: d173afc6c376a027cc1a7a9e954c903a3c5bda461e6c3f7b428d7ca4f64fbe58
                 - path: pre-scribe.sh
-                  sha256: a199466b2c6befd73eacd5bf14ac0876e7d095ef2815307740953197af18dbb0
+                  sha256: 92110557d78262c0936b45f93c6ee5c9aaadcadf190164816d863ec37a180af0
                 - path: pre-scribe.src.sh
-                  sha256: 097618c51785d63f1959ac9a4397b19772ffb5b749acc93e1f737de3798a88cb
+                  sha256: 06318b56889e9b33a72c1172a2aeceb5f04f5e5b7ca70b0f0c1ed03438f4c966
                 - path: pre-triage-test.sh
-                  sha256: c09326cec0ae6bc22e39e0b0d94da717a78841fcfa547fd54730ca94a9797946
+                  sha256: 4ad641903de39d00f1d0b9d1196b0e70489ae7511ef9ed362e66565164d31890
                 - path: pre-triage.sh
-                  sha256: 6783e4756507d22f6d323f70f9acd89596aa812327bee1460e9a3c5eacc72b81
+                  sha256: 703cd4c8dfff7ba0ef14b74049d97938c804271cdb9741f03d7e33df08f4ea7a
                 - path: pre-triage.src.sh
                   sha256: 226a84e19df65e8d620edd44fe67e61605b101d0d01ac0fc9ebbd49dd0821dcc
                 - path: prepare-sandbox-credentials.sh
                   sha256: a8fb256c39f8c82605f6e135e090b8fe62db98003cd34bd503baf7e030c50d42
                 - path: process-fix-result-test.py
-                  sha256: 320d10cd359809348a2b147cc1a105b12a220d2198c1bef820b33b78ed05f28f
+                  sha256: 97ffabb2156cd40e6d3e3599391067f904f5eb8a5d2ff16c7d9f67cb915efa89
                 - path: process-fix-result.py
-                  sha256: fa5fec0e400133d0debc0bbe07a1ad32559a3825d6e29bb824c5138517307642
+                  sha256: 242dbf8763579c7f149c43780283b1a358073a7494a4f8b217619e8b4944c7ab
                 - path: provider-credentials-test.sh
                   sha256: 9d738125505b304fb6319a3beff68c48d702a3f51964c7c9f0ef368040417955
                 - path: public-text-scan-test.sh
-                  sha256: 25fbbe20090b96e673a33ba959e49b16b96bb0f5df5a14ef0038abb2e11f03a3
+                  sha256: e9ccd9ccfc87aa321ab181fc4b7256e46ecf072a305da52f86d892e23a6be882
                 - path: review-body-fallback-test.sh
                   sha256: fd2fc80d7cef0532005606a3f0f281d9cfa9cb7f92615bb9f9e346a7a1d7a221
                 - path: risk-tier1-test.sh
@@ -2735,11 +2794,11 @@ harnesses:
                 - path: run-behaviour-test-exec.sh
                   sha256: ef7e5366ba175efa99aeae9270d852191f39b55f47393639595e43dfc3511b57
                 - path: sandbox-credential-boundary-test.sh
-                  sha256: 809d6284e16fae75c7d0fb7bc78f9fe6f9a898393ce8c008b3c5d19548a0446c
+                  sha256: 8a196b423e3203c762da3c44207976f8fd1b47819a44879c7bbeae22080c0316
                 - path: signoff-strip-test.sh
                   sha256: 7fdbe722468c0403e291e0cf7546d18b398db814ee393025788e6fa6c5514772
                 - path: skill-env-reachability-test.sh
-                  sha256: cba9eeb72d9405a5746a1a663885b63b556adb0aed9c46682da7b318ec5c52b5
+                  sha256: 517437a3c0be819bafc8b911d14c1df920b9e979ad1ee87cb21d6b4437cc1303
                 - path: test-fixtures/bundle/comment.src.sh
                   sha256: aefa9fc8b21b0c4365925647cf3b407269ba3f23e9dfd6c8aa68332428677684
                 - path: test-fixtures/bundle/cross-dedup.src.sh
@@ -2773,118 +2832,118 @@ harnesses:
                 - path: validate-code-output.src.sh
                   sha256: f2014aa5139caf89435efc98cc4d0d682138b75fc936bbca8fb8e6811cc594d5
                 - path: validate-output-schema-test.sh
-                  sha256: d416f0c759dcbdc85b1cd5608cbf87e5731042d20f955f8dc4935e0ea26bfb0f
+                  sha256: e67bcb279ef6762bf82b432c7def990455ccd214923013539a634f48ea2e6c21
                 - path: validate-output-schema.sh
                   sha256: 3e874a4553a24e99577da0cb6c0910ef80622fb85d53e03b057f6a6c0c4f8704
-              fetched_at: 2026-11-05T15:08:41.88903Z
+              fetched_at: 2026-11-16T18:28:35.191961Z
             - field: validation_loop.schema
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/schemas/triage-result.schema.json
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/schemas/triage-result.schema.json
               sha256: e4a02dac105ddfaf3d5a8429965c4b55efec24a5c295db1bc528fb0bafae28c6
               type: resource
-              fetched_at: 2026-11-05T15:08:57.03148Z
+              fetched_at: 2026-11-16T18:28:42.946898Z
             - field: agent
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/agents/triage.md
-              sha256: e08912e330d97646d8655e69a6ac17f5085fb76c9d119210e8e2e60d11d24690
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/agents/triage.md
+              sha256: 623b762f5354712303722fcd4650cc079e81b4e9e359bd16fe693267661dc550
               type: resource
-              fetched_at: 2026-11-05T15:08:57.202714Z
+              fetched_at: 2026-11-16T18:28:43.099134Z
             - field: policy
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/policies/base.yaml
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/policies/base.yaml
               sha256: 3ed634401d87a1327fffe5e266272d930321484ce8a91dfa5fe447d4f2e00470
               type: resource
-              fetched_at: 2026-11-05T15:08:42.414807Z
+              fetched_at: 2026-11-16T18:28:35.75465Z
             - field: overlays[0].skills[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/skills/github-forge/SKILL.md
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/skills/github-forge/SKILL.md
               sha256: 8f37aa32543b446155d13a6bfece648af5e352935dfccb390159af3285f52cd0
               type: directory
               files:
                 - path: SKILL.md
                   sha256: ecfa490f4ab9f0c94331e0b708b4e18853031e0bec3129cae6f99e972963c511
-              fetched_at: 2026-11-05T15:08:45.41967Z
+              fetched_at: 2026-11-16T18:28:37.940202Z
             - field: overlays[0].skills[1]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/skills/issue-labels/github/SKILL.md
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/skills/issue-labels/github/SKILL.md
               sha256: ddd2653be68a9da9ad7e2ad3d0ec4e9e471def59a97c00027625cdd20114f40d
               type: directory
               files:
                 - path: SKILL.md
                   sha256: aedca807d8eea08a0fc30ccf42b86a05bc01d0250b384bb2a01e265a15ed8330
-              fetched_at: 2026-11-05T15:08:58.747832Z
+              fetched_at: 2026-11-16T18:28:44.185137Z
             - field: overlays[1].skills[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/skills/gitlab-forge/SKILL.md
-              sha256: a96eca1b2c7d9254b293d57b5d7550bad5e9e2b04eb26d2ed0b2c057faac795f
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/skills/gitlab-forge/SKILL.md
+              sha256: 5e6172ee8f56bc7df22713baa7a40d7c118523301e027b8bf0a46beaa18b876f
               type: directory
               files:
                 - path: SKILL.md
-                  sha256: 83df2efe6905b9c038aa67f1908acad0d218bf8749a3a4b0659e866335b21019
-              fetched_at: 2026-11-05T15:08:46.915472Z
+                  sha256: 3f104a9f06927912746690af609941a2d2be6cc0d5fdfddd22683ed63b70b92e
+              fetched_at: 2026-11-16T18:28:39.367619Z
             - field: overlays[1].skills[1]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/skills/issue-labels/gitlab/SKILL.md
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/skills/issue-labels/gitlab/SKILL.md
               sha256: 0ac9c9359c481166cc2217555df6aa26c3d9a0ad1ee4ebbec380c2c0e2522d27
               type: directory
               files:
                 - path: SKILL.md
                   sha256: 4ef50334dc55196993f406fdbd5651801d3d6e1b2aef82785a6920075f547762
-              fetched_at: 2026-11-05T15:09:00.247904Z
+              fetched_at: 2026-11-16T18:28:45.236747Z
             - field: overlays[2].skills[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/skills/jira-forge/SKILL.md
-              sha256: defe67b5040be8a32414d39000abf288de8eb36384d47ffa3766fc3a0984415f
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/skills/jira-forge/SKILL.md
+              sha256: 4abb4aba84dc806d46940af46df0a73a806db03c6029c80ad2f10a89dcec0b91
               type: directory
               files:
                 - path: SKILL.md
-                  sha256: 7aa6119ef7b8623053a3cf9f5f5345d4ca4960a03e2f0e03f07787568f503090
-              fetched_at: 2026-11-05T15:09:01.680194Z
+                  sha256: 6c6260a63c0d53df07ffbf66b82c121bdcafeda7edc5f885169c25353f4798ff
+              fetched_at: 2026-11-16T18:28:46.301559Z
             - field: overlays[2].skills[1]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/skills/issue-labels/jira/SKILL.md
-              sha256: badf928fdd57b991b134346b51460c9b5b36f50058151b108790febdd500a5c7
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/skills/issue-labels/jira/SKILL.md
+              sha256: 23a11d117e858fa941bf390cd4b07f1fecec48d0eb1e243f86bbf2ce4627c07a
               type: directory
               files:
                 - path: SKILL.md
-                  sha256: 4fc00f6215f60536e0c8cf265f053754bd55ef27ba7d7a971f01760486fd8624
-              fetched_at: 2026-11-05T15:09:03.124708Z
+                  sha256: 09f8034903edf3c6acfd6536966dc6f520a5599e52f1051952f4c84217abb00f
+              fetched_at: 2026-11-16T18:28:47.350819Z
             - field: overlays[2].skills[2]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/skills/jira-components/SKILL.md
-              sha256: 2c1e7eb441ae1ce36c4e6b80540b56f5e28f6f11fe8a73d3baebdca58b56412e
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/skills/jira-components/SKILL.md
+              sha256: 82c12730e3e88d293f82607ef56a94e76994d37ec9dd56d5229affc32dc37e63
               type: directory
               files:
                 - path: SKILL.md
-                  sha256: 64a3a4038ad9c779da34ede1c6d28967432a6d75378ef7163c71c3a88493ba0e
-              fetched_at: 2026-11-05T15:09:04.671096Z
+                  sha256: 4d1f409407f6bd3cf2a34121a6edbc73d56f9702bc57e50ef3ebf5044feeae11
+              fetched_at: 2026-11-16T18:28:48.395255Z
             - field: host_files[0].src
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/env/gcp-vertex.env
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/env/gcp-vertex.env
               sha256: e2874d7d47a7a710f89ea6dcb99ae3b8c720ac06fccb7499dfddbe14f12b5ecb
               type: resource
-              fetched_at: 2026-11-05T15:08:47.0532Z
+              fetched_at: 2026-11-16T18:28:39.500387Z
             - field: overlays[0].host_files[0].src
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/env/github/triage.env
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/env/github/triage.env
               sha256: ca36a9bce2f12be493d694968412375af14aa2871d6bb919b778f5b0e7ce7efc
               type: resource
-              fetched_at: 2026-11-05T15:09:04.809788Z
+              fetched_at: 2026-11-16T18:28:48.545872Z
             - field: overlays[1].host_files[0].src
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/env/gitlab/triage.env
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/env/gitlab/triage.env
               sha256: b2fbc3c43718675bb21e70bab24ed32926fef6d8455cdbd68ce33a008a6ddd8b
               type: resource
-              fetched_at: 2026-11-05T15:09:04.9692Z
+              fetched_at: 2026-11-16T18:28:48.745916Z
             - field: overlays[2].host_files[0].src
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/env/jira/triage.env
-              sha256: 445f932fd4bb7c5eea169f035cea4858fa0b6b3b47cc844862b225ea534218c7
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/env/jira/triage.env
+              sha256: 503219ac4b8819961dddea845a9cdf5bf1cb76411bb3dbadeca9f2fb14312650
               type: resource
-              fetched_at: 2026-11-05T15:09:05.111996Z
+              fetched_at: 2026-11-16T18:28:48.945772Z
             - field: overlays[1].openshell.profiles[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/profiles/fullsend-gitlab-rw.yaml
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/profiles/fullsend-gitlab-rw.yaml
               sha256: 477a7639c4c68ddb2f4a6d294741c1a8a0f73bd7dea09dee0dba3954f116096d
               type: resource
-              fetched_at: 2026-11-05T15:09:05.251526Z
+              fetched_at: 2026-11-16T18:28:49.120723Z
             - field: overlays[2].openshell.profiles[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/profiles/fullsend-jira-ro.yaml
-              sha256: e2bbbfac8d5d0db42dafe6227492fb3aa9078de1b4a3c78b1d75524e07803e74
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/profiles/fullsend-jira-ro.yaml
+              sha256: b587c41e9440c8c82b609b01ebc6ec24adc62e4f92d7f4ae57ecd848b1c6f6fc
               type: resource
-              fetched_at: 2026-11-05T15:08:48.005204Z
+              fetched_at: 2026-11-16T18:28:40.811538Z
             - field: overlays[1].providers[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/providers/gitlab-rw.yaml
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/providers/gitlab-rw.yaml
               sha256: 91516e7c49443f4e5377c0909fbb39497fef32f8c1f90eccaaec21b65a8fc54f
               type: resource
-              fetched_at: 2026-11-05T15:09:05.394242Z
+              fetched_at: 2026-11-16T18:28:49.28151Z
             - field: overlays[2].providers[0]
-              url: https://raw.githubusercontent.com/fullsend-ai/agents/87a43fcb849546b267a619434ca19dedde8df476/providers/jira-ro.yaml
-              sha256: 6cb427913d96eb0b0b5c967dbaf36d4240552e60ebf692f6e1ddbf5c9c8652a0
+              url: https://raw.githubusercontent.com/fullsend-ai/agents/3b40ac718d29c3190b71e68447b9f4e938f19974/providers/jira-ro.yaml
+              sha256: 459191d9cf21b51f4397e94c882a1ec036f82ab0351d950bc1750e4cd7abc3ea
               type: resource
-              fetched_at: 2026-11-05T15:08:48.522512Z
+              fetched_at: 2026-11-16T18:28:41.462661Z

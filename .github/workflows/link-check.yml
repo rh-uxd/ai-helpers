@@ -28,8 +28,9 @@ jobs:
               [[ "$link" =~ ^mailto: ]] && continue
               [[ "$link" =~ ^\# ]] && continue
               [[ "$link" =~ ^\{\{ ]] && continue
-              # Skip placeholder/example links
+              # Skip placeholder/example links and abbreviated pseudo-links
               [[ "$link" =~ ^(link|url|URL|\[url\])$ ]] && continue
+              [[ "$link" =~ \.\.\.$ ]] && continue
               [[ "$link" =~ ^/ ]] && [[ "$link" =~ \.\.\. ]] && continue
               [[ "$link" =~ ^/(patterns|components)/ ]] && continue
 

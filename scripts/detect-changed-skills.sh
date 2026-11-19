@@ -76,6 +76,15 @@ declare -A SKILLS_SEEN
 while IFS= read -r file; do
   [[ -z "$file" ]] && continue
 
+  # Shared accessibility guidance is used by all five workflow skills.
+  if [[ "$file" == plugins/uxd-a11y/references/* ]]; then
+    for skill in "${!EVAL_PATHS[@]}"; do
+      if [[ "${EVAL_PATHS[$skill]}" == plugins/uxd-a11y/skills/*/eval/eval.yaml ]]; then
+        SKILLS_SEEN["$skill"]=1
+      fi
+    done
+  fi
+
   # Match skills: plugins/patternfly/<plugin>/skills/<skill>/ or plugins/<plugin>/skills/<skill>/
   if [[ "$file" =~ ^plugins/patternfly/([^/]+)/skills/([^/]+)/ ]]; then
     plugin="${BASH_REMATCH[1]}"

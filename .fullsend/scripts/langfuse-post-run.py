@@ -53,7 +53,7 @@ def otlp_attributes(values):
 
 
 def add_filterable_context(values):
-    for key in ("project_key", "cost_center", "github.repository", "github.run_id"):
+    for key in ("project_key", "cost_center", "team", "github.repository", "github.run_id"):
         if values.get(key):
             name = key.replace(".", "_")
             for level in ("trace", "observation"):
@@ -61,6 +61,7 @@ def add_filterable_context(values):
     tags = [f"{label}:{values[key]}" for key, label in (
         ("gen_ai.agent.name", "stage"),
         ("project_key", "project_key"), ("cost_center", "cost_center"),
+        ("team", "team"),
         ("github.repository", "repo"),
     ) if values.get(key)]
     if tags:
@@ -96,6 +97,13 @@ def read_spans(path):
 def build_payload(path, context):
     spans = read_spans(path)
     agents = [span for span in spans if attributes(span.get("attributes")).get("gen_ai.operation.name") == "invoke_agent"]
+    # Fullsend emits a root "run" span and a child "agent" span, both tagged invoke_agent.
+    # Only the innermost belongs to a generation; counting both also suppresses the metrics
+    # fallback below, costing cost precision (FRFLY-755). Keyed on (traceId, spanId) so a
+    # child in one trace cannot suppress an agent in another.
+    parents = {(span.get("traceId"), span.get("parentSpanId")) for span in agents if span.get("parentSpanId")}
+    model_bearing = [span for span in agents if attributes(span.get("attributes")).get("gen_ai.request.model")]
+    agents = [span for span in agents if (span.get("traceId"), span.get("spanId")) not in parents]
     metrics = {}
     metrics_path = path.with_name("metrics.json")
     if metrics_path.is_file() and metrics_path.stat().st_size < 1024 * 1024:
@@ -103,7 +111,9 @@ def build_payload(path, context):
         if not isinstance(metrics, dict):
             metrics = {}
     # Use metrics only for a single agent; don't multiply whole-run totals across agents.
-    if len(agents) != 1:
+    # A genuine multi-agent run can collapse to one nested target, so also refuse when more
+    # than one agent span carries its own model (FRFLY-755).
+    if len(agents) != 1 or len(model_bearing) > 1:
         metrics = {}
     output = []
     for agent in agents:
@@ -136,9 +146,11 @@ def build_payload(path, context):
                 value = usage.get(fallback)
             if value is not None:
                 values[attr] = number(value, integer=True)
-        cost = source.get("fullsend.cost_usd")
+        # fullsend.cost_usd on the span is rounded to 2dp; metrics.json beside the telemetry
+        # carries full precision for the same run, so prefer it (FRFLY-755).
+        cost = metrics.get("total_cost_usd")
         if cost is None:
-            cost = metrics.get("total_cost_usd")
+            cost = source.get("fullsend.cost_usd")
         if cost is not None:
             values["gen_ai.usage.cost"] = number(cost)
             values["langfuse.observation.cost_details"] = json.dumps({"total": number(cost)})
@@ -228,6 +240,12 @@ def main(argv=None):
                           ("SOURCE_ACTOR", "user.id")):
         if os.environ.get(env_key):
             context[attr] = os.environ[env_key]
+    if not context.get("team"):
+        env_team = os.environ.get("FULLSEND_TEAM") or os.environ.get("JIRA_TEAM")
+        if env_team and env_team.strip().lower() not in ("unassigned", "none", "null", ""):
+            context["team"] = env_team.strip()
+    elif context.get("team") and context["team"].strip().lower() in ("unassigned", "none", "null", ""):
+        context.pop("team", None)
     if context.get("github.run_id"):
         context["session.id"] = context["langfuse.session.id"] = context["github.run_id"]
     if context.get("user.id"):
