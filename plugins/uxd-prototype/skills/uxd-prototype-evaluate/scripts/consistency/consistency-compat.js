@@ -9,6 +9,26 @@ const stable = value => Array.isArray(value) ? `[${value.map(stable).join(',')}]
 const read = file => JSON.parse(fs.readFileSync(file, 'utf8'));
 const write = (file, value) => fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx' });
 
+function workshopAnalyzer(pluginDir = path.resolve(__dirname, '../../../../../uxd-workshop')) {
+  if (!path.isAbsolute(pluginDir)) throw new Error('--workshop-plugin-dir must be an absolute path to the installed uxd-workshop plugin');
+  const checker = path.join(pluginDir, 'skills', 'uxd-consistency-check');
+  const missing = detail => new Error(`Selected consistency-source requires uxd-workshop:uxd-consistency-check (${detail}). Install or enable uxd-workshop, or omit consistency-source.`);
+  const workshop = ['.claude-plugin', '.cursor-plugin'].some(directory => {
+    const manifest = path.join(pluginDir, directory, 'plugin.json');
+    return fs.existsSync(manifest) && read(manifest)?.name === 'uxd-workshop';
+  });
+  if (!workshop) throw missing(`no uxd-workshop plugin at ${pluginDir}`);
+  for (const name of ['scripts/analyze.py', 'VERSION']) {
+    let stat;
+    try { stat = fs.statSync(path.join(checker, name)); } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      throw missing(`missing ${name} in ${checker}`);
+    }
+    if (!stat.isFile()) throw missing(`invalid ${name} in ${checker}`);
+  }
+  return path.join(checker, 'scripts', 'analyze.py');
+}
+
 function selection(packet, options, workspace) {
   // Keep the rules the user selected. Stop if the CLI and saved inputs disagree
   // rather than quietly checking against a different set of rules.
@@ -84,4 +104,4 @@ function status(report, findings = report.source_mode?.violations || []) {
   if (findings.length || report.internal_consistency.findings.length) return 'flagged';
   return 'passed';
 }
-module.exports = { hash, stable, selection, analyze, status };
+module.exports = { hash, stable, workshopAnalyzer, selection, analyze, status };

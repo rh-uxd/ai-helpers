@@ -61,7 +61,7 @@ profile. A missing source companion blocks that check, not unrelated routes.
 
 | Dependency | Installation | Evaluator role |
 |---|---|---|
-| `uxd-consistency-check` | Separately installed companion | Used only for selected `consistency-source`; its implementation is maintained separately. If absent, explain the missing dependency and stop that check. |
+| `uxd-workshop:uxd-consistency-check` | [Resolve the Workshop plugin](../references/workflow/selected-inspections.md#local-invocation) | Use its deterministic CLI only for selected `consistency-source`. If unavailable, explain the missing dependency and stop that check. |
 
 ## Standalone handoffs
 

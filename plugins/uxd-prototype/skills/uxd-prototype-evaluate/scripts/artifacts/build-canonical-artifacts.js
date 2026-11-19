@@ -87,7 +87,7 @@ function canonicalFinding(finding) {
   };
 }
 
-function buildDocuments({ extract, delta, consistency: consistencyReport, evidence: prototypeEvidence, rows }) {
+function buildDocuments({ extract, delta, consistency: consistencyReport, evidence: prototypeEvidence, rows, checkerRoot }) {
   if (rows.length !== extract.ac_list.length) throw new Error('Classified AC count does not match reviewed criteria');
 
   const createdAt = timestamp(prototypeEvidence.captured_at || extract.extracted_at);
@@ -135,9 +135,6 @@ function buildDocuments({ extract, delta, consistency: consistencyReport, eviden
   });
   const skillRoot = path.resolve(__dirname, '../..');
   // Retain an implementation fingerprint independently of source/build identity.
-  const consistencyRoot = path.resolve(
-    skillRoot, '..', 'uxd-consistency-check'
-  );
   const evaluatorFiles = [
     ...filesUnder(path.join(skillRoot, 'schemas', 'v1')),
     ...filesUnder(path.join(skillRoot, 'config')),
@@ -151,22 +148,11 @@ function buildDocuments({ extract, delta, consistency: consistencyReport, eviden
   const evaluatorInputs = [...new Set(evaluatorFiles)].sort().map(file => [
     path.relative(path.resolve(skillRoot, '..'), file), sha256(fs.readFileSync(file)),
   ]);
-  // Only companion resources are optional. Required evaluator inputs above
-  // must still fail loudly; an absent companion is not an empty rule corpus.
-  for (const name of ['guidelines', 'scripts', 'schemas', 'VERSION']) {
-    const resource = path.join(consistencyRoot, name);
-    const relative = path.relative(path.resolve(skillRoot, '..'), resource);
-    try { fs.statSync(resource); } catch (error) {
-      if (error.code !== 'ENOENT') throw error;
-      evaluatorInputs.push([relative, null]);
-      continue;
+  if (checkerRoot) {
+    // Fingerprint the selected Workshop implementation, not its install path.
+    for (const file of [path.join(checkerRoot, 'VERSION'), ...filesUnder(path.join(checkerRoot, 'scripts')).filter(file => file.endsWith('.py'))]) {
+      evaluatorInputs.push([`uxd-workshop:uxd-consistency-check/${path.relative(checkerRoot, file).split(path.sep).join('/')}`, sha256(fs.readFileSync(file))]);
     }
-    if (name !== 'VERSION') {
-      evaluatorInputs.push([relative, 'directory']);
-      for (const file of filesUnder(resource).filter(file => name === 'guidelines' || (name === 'scripts' ? file.endsWith('.py') : file.endsWith('.json'))).sort()) evaluatorInputs.push([
-        path.relative(path.resolve(skillRoot, '..'), file), sha256(fs.readFileSync(file)),
-      ]);
-    } else evaluatorInputs.push([relative, sha256(fs.readFileSync(resource))]);
   }
   evaluatorInputs.sort(([a], [b]) => a.localeCompare(b));
   evaluatorInputs.push(['producer-version', PRODUCER_VERSION]);

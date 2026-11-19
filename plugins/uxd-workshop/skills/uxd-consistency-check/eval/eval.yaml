@@ -1,7 +1,7 @@
 name: uxd-consistency-check-eval
 description: Evaluate product-only source selection, collision policy, retired checks, offline execution, and honest coverage
 
-skill: uxd-prototype:uxd-consistency-check
+skill: uxd-workshop:uxd-consistency-check
 
 execution:
   mode: case
@@ -10,7 +10,7 @@ execution:
 runner:
   type: claude-code
   plugin_dirs:
-    - plugins/uxd-prototype
+    - plugins/uxd-workshop
 
 models:
   skill: claude-sonnet-4-6
@@ -142,7 +142,7 @@ judges:
               continue
           for tool in event.get("tools", []):
               if (tool.get("name") != "Skill" or tool.get("input", {}).get("skill", "").lstrip("/")
-                      not in ("uxd-consistency-check", "uxd-prototype:uxd-consistency-check")):
+                      not in ("uxd-consistency-check", "uxd-workshop:uxd-consistency-check")):
                   return False, "Unauthorized dispatch or other audit in decision-only case"
       return True, "All fields and exact identities matched; no unauthorized tool dispatch"
 

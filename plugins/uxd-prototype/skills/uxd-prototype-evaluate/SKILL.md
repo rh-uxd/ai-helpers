@@ -80,9 +80,12 @@ Jira in a browser.
   command -v node >/dev/null 2>&1 || { echo "Error: This skill requires Node.js." >&2; exit 1; }
   ```
 
-- Source consistency additionally requires Python 3 and the `uxd-consistency-check`
-  sibling skill. For a separate trusted installation, set `UXD_CONSISTENCY_CHECKER_DIR`
-  to its absolute skill directory. The runner does not clone or bootstrap code.
+- Only the optional `consistency-source` check requires Python 3 and
+  `uxd-workshop:uxd-consistency-check`. The CLI finds Workshop in a shared
+  repository checkout. For separate plugin installs, the host resolves the
+  enabled Workshop plugin and passes its root to the runner as described in
+  the [Quick contract](references/workflow/selected-inspections.md#local-invocation).
+  Do not make the user configure an environment variable or automatically install code.
   When source consistency is selected, fail clearly if
   Python 3 is missing:
 

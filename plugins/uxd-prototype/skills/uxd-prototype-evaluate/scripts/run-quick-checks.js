@@ -45,6 +45,7 @@ function main() {
     'no-report': { type: 'boolean', default: false },
     'no-fix': { type: 'boolean', default: true },
     'judgment-bundle': { type: 'string' },
+    'workshop-plugin-dir': { type: 'string' },
     'design-system': { type: 'string' }, 'design-system-version': { type: 'string' },
     guidelines: { type: 'string', multiple: true }, 'guideline-manifest': { type: 'string' },
   } });
@@ -58,6 +59,7 @@ function main() {
   const input = path.resolve(values.input);
   const packetBytes = fs.readFileSync(input);
   const packet = JSON.parse(packetBytes);
+  if (values['workshop-plugin-dir'] !== undefined && !selected.includes('consistency-source')) throw new Error('--workshop-plugin-dir requires the selected consistency-source check');
   if (!selected.includes('consistency-source') && (packet.consistency || ['design-system', 'design-system-version', 'guidelines', 'guideline-manifest'].some(key => values[key] !== undefined))) throw new Error('Consistency selection requires the selected consistency-source check');
   const { source, prototype, extract } = packet;
   if (!source || !['jira', 'ux-spec'].includes(source.kind) || !source.id || !source.revision || !source.snapshot_path) throw new Error('Packet needs source kind, id, revision, and snapshot_path');
@@ -90,24 +92,11 @@ function main() {
     if (workspaceHead() !== prototype.revision || command('git', ['status', '--porcelain', '--untracked-files=all'], workspace)) throw new Error('Source checks require a clean workspace at the packet prototype revision');
   }
   if (selected.includes('consistency-source')) {
-    const override = process.env.UXD_CONSISTENCY_CHECKER_DIR;
-    if (override && !path.isAbsolute(override)) throw new Error('UXD_CONSISTENCY_CHECKER_DIR must be an absolute skill-directory path');
-    const companion = override || path.resolve(__dirname, '../../uxd-consistency-check');
-    for (const name of ['scripts/analyze.py', 'VERSION']) {
-      const resource = path.join(companion, name);
-      const missing = () => new Error(`Selected consistency-source requires uxd-consistency-check (${companion}: missing or invalid ${name}). Install it as a sibling, set UXD_CONSISTENCY_CHECKER_DIR, or omit consistency-source.`);
-      let stat;
-      try { stat = fs.statSync(resource); } catch (error) {
-        if (error.code !== 'ENOENT') throw error;
-        throw missing();
-      }
-      if (!stat.isFile()) throw missing();
-    }
+    analyzer = compatibility.workshopAnalyzer(values['workshop-plugin-dir']);
     if (!values.workspace || !values['base-ref']) throw new Error('Source consistency requires --workspace and a pinned --base-ref');
     workspace = fs.realpathSync(path.resolve(values.workspace));
     if (fs.realpathSync(command('git', ['rev-parse', '--show-toplevel'], workspace)) !== workspace) throw new Error('Workspace must be the repository root');
     assertWorkspace();
-    analyzer = path.join(companion, 'scripts/analyze.py');
     const capabilities = command('python3', [analyzer, '--help'], workspace);
     if (['--design-system', '--design-system-version', '--guidelines', '--guideline-manifest'].some(flag => !capabilities.includes(flag))) throw new Error('Incompatible uxd-consistency-check companion: source checks require the explicit policy and frozen-manifest contract. Install a compatible companion, or omit consistency-source.');
     baseRef = command('git', ['rev-parse', '--verify', `${values['base-ref']}^{commit}`], workspace);
@@ -161,13 +150,14 @@ function main() {
       assertWorkspace();
       consistency = readJson(path.join(stage, 'checks/consistency-report.json'));
       phases.push(phase('consistency-source', 'completed', checkStart, Date.now() - started));
-      context.checks.push({ check: 'consistency-source', producer: 'uxd-consistency-check/scripts/analyze.py', output: 'checks/consistency-report.json', input: 'clean workspace at prototype.revision', base_ref: baseRef, changed_files: changedFiles });
+      context.checks.push({ check: 'consistency-source', producer: 'uxd-workshop:uxd-consistency-check/scripts/analyze.py', output: 'checks/consistency-report.json', input: 'clean workspace at prototype.revision', base_ref: baseRef, changed_files: changedFiles });
     }
     for (const receipt of context.checks) receipt.output_sha256 = hash(fs.readFileSync(path.join(stage, receipt.output)));
     const { documents } = buildDocuments({
       extract: { key: extract.key, title: extract.title, ac_list: extract.ac_list, extracted_at: start },
       delta: { changed_files: changedFiles }, consistency,
       evidence: { prototype_url: prototype.url, captured_at: start }, rows,
+      checkerRoot: analyzer && path.dirname(path.dirname(analyzer)),
     });
     const brief = documents['pe-context.json'];
     brief.intent.tasks = packet.tasks || []; brief.intent.personas = packet.personas || [];

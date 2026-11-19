@@ -23,6 +23,9 @@ Ask for a missing workspace and confirm it exists. Use the requester-selected ch
 
 ## Requirements
 
+Install the `uxd-workshop` plugin to use this skill. It can run without the
+prototype evaluator.
+
 Python 3.10+ for bundled standard-library tools ([requirements.txt](requirements.txt)); Git for changed-source scope. [requirements-visual.txt](requirements-visual.txt) is optional for explicitly requested live browser capture only.
 
 ## Script layout
@@ -107,7 +110,9 @@ Legacy reports remain replayable evidence. New semantic validation uses 1.1 and 
 ## References and verification
 
 - [Project context, source safety and metadata](references/project-context.md)
-- To verify the evaluator handoff offline, run `python3 tests/smoke-with-evaluator.py` after installing the sibling evaluator's Node dependencies.
+- To verify the evaluator handoff offline from a repository checkout, install
+  the Node dependencies in `plugins/uxd-prototype/skills/uxd-prototype-evaluate`,
+  then run `python3 tests/smoke-with-evaluator.py` from this skill directory.
 - Run repository `make validate` for contributions, without generating docs.
 
 No publishing, issue creation, MR/PR writes, posts, or auto-merge occurs here. Those require separate authorization.
