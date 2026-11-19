@@ -5,6 +5,7 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 ## Table of Contents
 
 - [patternfly](#patternfly) — Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
+- [uxd-a11y](#uxd-a11y) — Modular accessibility design review, source audit, runtime review, and test generation for native, custom, and PatternFly interfaces.
 - [uxd-assist](#uxd-assist) — UXD skill routing — discover the right skills for research, design review, and prototyping workflows
 - [uxd-design](#uxd-design) — UX design workflow — Figma context, design evaluation, and implementation handoff
 - [uxd-prototype](#uxd-prototype) — Create UX prototypes from Jira tickets, Figma designs, or feature descriptions
@@ -27,6 +28,22 @@ Quick reference of all plugins and what they contain. This file is auto-generate
 Everything you need for PatternFly development — React components, design guidance, migration, and MCP docs
 
 No skills or agents yet.
+
+
+<br>
+
+### uxd-a11y
+
+Modular accessibility design review, source audit, runtime review, and test generation for native, custom, and PatternFly interfaces.
+
+<table>
+<tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
+<tr><td nowrap><code>uxd-a11y-design-review</code></td><td>Review screenshots and design specifications for accessibility risks, including contrast, target size, color-only meaning, and specified states.</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-a11y-keyboard-audit</code></td><td>Audit keyboard access and focus in running interfaces.</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-a11y-review</code></td><td>Review running interfaces with available automated scans, keyboard, rendered-semantic, and visual checks.</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-a11y-source-audit</code></td><td>Audit UI source for accessible names, structure, ARIA states, forms, updates, and modal behavior.</td><td>stable</td></tr>
+<tr><td nowrap><code>uxd-a11y-test-gen</code></td><td>Generate persistent accessibility tests using a project's existing framework and test tools.</td><td>stable</td></tr>
+</table>
 
 
 <br>
@@ -285,7 +302,7 @@ PatternFly team tools and skill incubation — issue triage, release management,
 
 **Eval coverage**
 
-- Consumer: 51/51 (100%)
+- Consumer: 56/56 (100%)
 - Workshop: 0/21 (0%)
 
 ---
@@ -296,6 +313,11 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 
 | Skill | Audience | Inputs | Outputs | Token cost |
 |---|---|---|---|---|
+| `uxd-a11y-design-review` | Designers and accessibility reviewers | Named screenshots or design specifications, optional tokens, brief, and review preferences | Evidence-based design findings, comparisons, and implementation verification gaps | S |
+| `uxd-a11y-keyboard-audit` | UI developers, QA, and accessibility reviewers | Running URL, user task, and optional prior observations | Observed keyboard results, findings, and capability gaps | S |
+| `uxd-a11y-review` | Product teams and accessibility reviewers | User task with source, running URL, or existing observations | Consolidated accessibility findings and method-specific coverage | S |
+| `uxd-a11y-source-audit` | UI developers and accessibility reviewers | Source files, directory, or diff and the intended user task | Source findings and checks needing runtime verification | S |
+| `uxd-a11y-test-gen` | UI developers and test authors | Component or module source, project test setup, and optional aria, keyboard, focus, or axe priority | Runnable test changes, actual execution results, and coverage gaps | S |
 | `uxd-canvas-create` | UXD practitioners | Accept a brief, document, ticket, research, Mermaid source, an existing canvas, a Miro URL, o... | Structured result | L |
 | `uxd-canvas-export` | UXD practitioners | Accept a canvas directory or a path to canvas.json. A canvas directory can also contain metad... | Structured result | M |
 | `uxd-canvas-publish` | UXD practitioners | Input Source Required Export directory .artifacts/{ID}/export/ or --source Yes export-manifes... | Structured result | S |
