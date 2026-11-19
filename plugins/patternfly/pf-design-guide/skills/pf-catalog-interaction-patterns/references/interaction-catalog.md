@@ -211,3 +211,17 @@ Components indexed by the user interactions they support. Use this catalog to fi
 | Table (bulk select) | Select all / deselect all via header checkbox |
 | DataList (bulk select) | Bulk selection toolbar pattern |
 | Toolbar (bulk select) | Bulk selection dropdown with count |
+
+---
+
+## Workflow — Collection surface behaviors
+
+These interactions coordinate Table, Toolbar, Pagination, EmptyState, and loading/error feedback. Read [Collection surface behaviors](collection-surface-behaviors.md) for applicability, state, exceptions, and verification.
+
+| Interaction need | Components | Behavior reference |
+|------------------|------------|--------------------|
+| Keep server-sorted lists restorable and reset paging on sort | Table, Pagination | [Server-sorted list state](collection-surface-behaviors.md#server-sorted-list-state) |
+| Reset the cursor when history-list filters change | Toolbar, Pagination | [Filters and cursor pagination in history lists](collection-surface-behaviors.md#filters-and-cursor-pagination-in-history-lists) |
+| Disable toolbar filter/action controls during refetch | Toolbar | [Toolbar state during refetch](collection-surface-behaviors.md#toolbar-state-during-refetch) |
+| Branch loading, error, empty, and filtered-empty states | Toolbar, Table, EmptyState | [Collection state branching](collection-surface-behaviors.md#collection-state-branching) |
+| Avoid duplicating the create action | EmptyState, PageSection | [Empty-state primary action](collection-surface-behaviors.md#empty-state-primary-action) |
