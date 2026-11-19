@@ -1,0 +1,2 @@
+# Analyzer, supplemental validation, and offline evidence use stdlib only.
+# Optional live capture: requirements-visual.txt.

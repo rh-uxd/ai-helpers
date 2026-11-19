@@ -63,11 +63,22 @@ node "${EVALUATOR_SKILL_DIR}/scripts/run-quick-checks.js" \
 
 Source consistency additionally needs `--workspace <repo-root>` and pinned
 `--base-ref <commit>`. The workspace must be clean and its full HEAD equal the
-packet's revision. Never reset the designer's checkout. The separately installed
-`uxd-consistency-check` companion must support explicit policy/frozen-manifest
-inputs; otherwise stop that selected check with a dependency message. Other
-checks do not require the companion. Local source checks do not probe a server
-or claim a URL serves that revision.
+packet's revision. Never reset the designer's checkout. Source consistency uses
+the deterministic CLI from `uxd-workshop:uxd-consistency-check` in Quick and
+Full; do not start a separate semantic review.
+
+- When running from this marketplace checkout, the runner locates Workshop
+  next to the prototype plugin. No configuration is needed.
+- For separately installed plugins, resolve `uxd-workshop:uxd-consistency-check`
+  through the host's enabled plugin or installed skill registry. Pass
+  `--workshop-plugin-dir <absolute-plugin-root>` to the runner. This is the
+  directory containing the Workshop plugin manifest and
+  `skills/uxd-consistency-check/`, not the skill directory. Do not search the
+  consumer project or unrelated checkouts for executable code.
+
+If Workshop or a compatible checker is unavailable, stop that selected check
+with a dependency message. Other checks do not require it. Local source checks
+do not probe a server or claim a URL serves that revision.
 
 ## Outputs and validation
 

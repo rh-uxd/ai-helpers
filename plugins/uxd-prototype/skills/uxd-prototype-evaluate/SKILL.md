@@ -1,10 +1,12 @@
 ---
 name: uxd-prototype-evaluate
-version: 0.2.0
+version: 0.2.1
 description: >-
   Run selected Quick Checks or composed Full Evaluation from Jira or reviewed
   written requirements, with canonical evidence, explicit checkpoints and optional reports.
   Use for source-linked prototype verification and review of existing findings.
+inputs: Reviewed requirements, exact prototype revision, and selected checks
+outputs: Canonical evidence and findings, with an optional HTML report
 ---
 
 # Evaluate Prototype
@@ -78,9 +80,13 @@ Jira in a browser.
   command -v node >/dev/null 2>&1 || { echo "Error: This skill requires Node.js." >&2; exit 1; }
   ```
 
-- Source consistency additionally requires Python 3 and a separately installed
-  `uxd-consistency-check` companion beside this skill. Its implementation is
-  maintained separately. When source consistency is selected, fail clearly if
+- Only the optional `consistency-source` check requires Python 3 and
+  `uxd-workshop:uxd-consistency-check`. The CLI finds Workshop in a shared
+  repository checkout. For separate plugin installs, the host resolves the
+  enabled Workshop plugin and passes its root to the runner as described in
+  the [Quick contract](references/workflow/selected-inspections.md#local-invocation).
+  Do not make the user configure an environment variable or automatically install code.
+  When source consistency is selected, fail clearly if
   Python 3 is missing:
 
   ```bash
@@ -92,7 +98,8 @@ Jira in a browser.
   Review explicit design-system, namespaced local guideline inputs or
   frozen-manifest replay through the
   [Quick contract](references/workflow/selected-inspections.md#explicit-source-policy-and-replay).
-  Internal source differences are review candidates, not normative violations.
+  Quick Checks imports deterministic source results. Semantic product-guideline
+  findings stay in the checker's separate report; no peer audit is required.
 
 ## Execute the approved route
 

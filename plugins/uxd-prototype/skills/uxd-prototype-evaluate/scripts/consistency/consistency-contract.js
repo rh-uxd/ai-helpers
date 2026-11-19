@@ -95,6 +95,12 @@ function validateReport(report) {
   requireThat(Array.isArray(docs) && Array.isArray(report.guideline_context.sources), 'Missing source context');
   ids(docs.map(d => d.id), 'Selected documents');
   requireThat(sameSet([...evaluated, ...unevaluated], docs.map(d => d.id)), 'Coverage does not partition selected guidelines');
+  const incomplete = report.coverage.incomplete_rules ?? {};
+  requireThat(incomplete && typeof incomplete === 'object' && !Array.isArray(incomplete), 'Invalid incomplete guideline coverage');
+  const incompleteIds = Object.keys(incomplete);
+  for (const [id, item] of Object.entries(incomplete)) {
+    requireThat(docs.some(doc => doc.id === id) && item?.status === 'incomplete' && typeof item.reason === 'string' && item.reason.trim() && Array.isArray(item.files) && item.files.length && item.files.every(file => typeof file === 'string' && file), 'Invalid incomplete guideline evidence');
+  }
   const summary = report.summary;
   requireThat(summary && ['total_guidelines_checked', 'violations', 'warnings', 'passes'].every(k => Number.isInteger(summary[k]) && summary[k] >= 0), 'Invalid summary counts');
   requireThat(evaluated.length === summary.total_guidelines_checked && summary.total_guidelines_checked === summary.violations + summary.warnings + summary.passes, 'Evaluated coverage/summary mismatch');
@@ -109,17 +115,19 @@ function validateReport(report) {
   const warnings = new Set(findings.filter(f => !errors.has(f.guideline_id)).map(f => f.guideline_id));
   requireThat(errors.size === summary.violations && warnings.size === summary.warnings, 'Grouped summary mismatch');
   const axis = report.guideline_consistency;
-  requireThat(axis?.status === coverageStatus(docs, evaluated), 'Guideline axis coverage status mismatch');
+  requireThat(axis?.status === (incompleteIds.length ? 'partially_evaluated' : coverageStatus(docs, evaluated)), 'Guideline axis coverage status mismatch');
   for (const [group, kinds] of [['baseline', ['baseline']], ['workspace', ['workspace', 'explicit']]]) {
     const members = new Set(report.guideline_context.sources.filter(s => kinds.includes(s.kind)).flatMap(s => s.document_ids));
     const selected = docs.filter(d => members.has(d.id)).map(d => d.id);
     const checked = selected.filter(id => evaluated.includes(id));
-    requireThat(axis[group] && sameSet(ids(axis[group].selected_rules, 'Axis selection'), selected) && sameSet(ids(axis[group].evaluated_rules, 'Axis evaluated coverage'), checked) && axis[group].status === coverageStatus(selected, checked), 'Guideline subgroup membership/status mismatch');
+    const expectedStatus = selected.some(id => Object.hasOwn(incomplete, id)) ? 'partially_evaluated' : coverageStatus(selected, checked);
+    requireThat(axis[group] && sameSet(ids(axis[group].selected_rules, 'Axis selection'), selected) && sameSet(ids(axis[group].evaluated_rules, 'Axis evaluated coverage'), checked) && axis[group].status === expectedStatus, 'Guideline subgroup membership/status mismatch');
   }
   const internal = report.internal_consistency;
   requireThat(internal && Array.isArray(internal.findings) && Array.isArray(internal.comparisons) && Array.isArray(internal.uncompared_targets) && typeof internal.reason === 'string', 'Missing internal comparison evidence');
   const internalStatus = internal.comparisons.length ? internal.uncompared_targets.length ? 'partially_evaluated' : 'evaluated' : 'insufficient_comparators';
-  requireThat(internal.status === internalStatus, 'Internal comparison coverage/status mismatch');
+  const notInScope = internal.status === 'not_evaluated' && !internal.comparisons.length && !internal.uncompared_targets.length && !internal.findings.length && internal.reason.trim();
+  requireThat(notInScope || internal.status === internalStatus, 'Internal comparison coverage/status mismatch');
   for (const f of internal.findings) {
     requireThat(f.review_candidate === true && f.confidence === 'low' && f.severity === 'warning' && f.verdict === 'FLAGGED' && f.check_method === 'internal_comparison' && f.different === true && Array.isArray(f.peers) && f.peers.length > 0, 'Internal differences must remain review candidates');
     requireThat(internal.comparisons.some(c => Object.entries(c).every(([k, v]) => equal(f[k], v))), 'Internal finding lacks its comparison evidence');

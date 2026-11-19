@@ -22,7 +22,15 @@
       "required": ["sources", "documents"], "additionalProperties": false
     },
     "coverage": {
-      "type": "object", "properties": { "evaluated_rules": { "$ref": "#/$defs/ids" }, "unevaluated_rules": { "$ref": "#/$defs/ids" } },
+      "type": "object", "properties": {
+        "evaluated_rules": { "$ref": "#/$defs/ids" },
+        "unevaluated_rules": { "$ref": "#/$defs/ids" },
+        "incomplete_rules": { "type": "object", "additionalProperties": {
+          "type": "object",
+          "properties": { "status": { "const": "incomplete" }, "files": { "type": "array", "minItems": 1, "items": { "type": "string", "minLength": 1 } }, "reason": { "type": "string", "minLength": 1 } },
+          "required": ["status", "files", "reason"], "additionalProperties": false
+        } }
+      },
       "required": ["evaluated_rules", "unevaluated_rules"], "additionalProperties": false
     },
     "guideline_consistency": {
@@ -31,7 +39,7 @@
     },
     "internal_consistency": {
       "type": "object", "properties": {
-        "status": { "enum": ["evaluated", "partially_evaluated", "insufficient_comparators"] },
+        "status": { "enum": ["evaluated", "partially_evaluated", "insufficient_comparators", "not_evaluated"] },
         "reason": { "type": "string" },
         "comparisons": { "type": "array", "items": { "type": "object" } },
         "uncompared_targets": { "type": "array", "items": { "type": "object" } },

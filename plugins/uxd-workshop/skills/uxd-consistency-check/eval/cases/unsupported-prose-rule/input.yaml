@@ -1,0 +1,5 @@
+prompt: >-
+  Using uxd-consistency-check, explain how a report should handle a selected
+  product guideline that contains only prose and no supported deterministic
+  check. Distinguish deterministic coverage, optional manual/model-assisted
+  review, and aggregate summary counts. Do not run a model or edit files.

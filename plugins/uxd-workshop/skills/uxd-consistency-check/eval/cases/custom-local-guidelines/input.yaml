@@ -1,0 +1,6 @@
+prompt: >-
+  Using uxd-consistency-check, explain the exact way to check my existing
+  application in /project/app against our selected local Markdown guidance at
+  /project/carbon-guidelines/controls.md. Use carbon as the explicit
+  design-system applicability label.
+  Do not run commands or change files.

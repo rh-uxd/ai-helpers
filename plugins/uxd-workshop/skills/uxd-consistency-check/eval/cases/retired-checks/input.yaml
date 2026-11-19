@@ -1,0 +1,6 @@
+prompt: >-
+  Using uxd-consistency-check, explain what happens if I select a local product
+  document or replay an old manifest declaring patternfly-component-usage or
+  css-token-usage. Does --design-system patternfly still enable those checks?
+  If I select no product rules, can a no-findings result or peer audit pass?
+  Explain only; do not run commands, retrieve documents, or modify files.

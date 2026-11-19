@@ -71,6 +71,7 @@ function run(options) {
   try {
     const planning = require('./workflow/evaluation-plan').preflight(options, parent, approval);
     const startsQuickChecks = route === 'quick' || (route === 'full' && !options['continue-from']);
+    if (options['workshop-plugin-dir'] !== undefined && !startsQuickChecks) throw new Error('--workshop-plugin-dir requires fresh Quick Checks with consistency-source');
     if (startsQuickChecks && (typeof options.checks !== 'string' || !options.checks.trim())) throw new Error('Select Quick checks explicitly with --checks, or provide a reviewed --plan that selects them');
     // Validate the prepared cohort before selected Quick/browser/provider work.
     // Full without a cohort can finish after review, but cannot run walkthroughs.
@@ -89,6 +90,7 @@ function run(options) {
       quickRoot = path.join(quickTemp, 'run');
       const args = [path.join(__dirname, 'run-quick-checks.js'), '--input', options.input, '--output', quickRoot, '--checks', options.checks];
       for (const key of ['workspace', 'base-ref', 'judgment-bundle', 'design-system', 'design-system-version', 'guideline-manifest']) if (options[key]) args.push(`--${key}`, options[key]);
+      if (options['workshop-plugin-dir'] !== undefined) args.push('--workshop-plugin-dir', options['workshop-plugin-dir']);
       for (const value of options.guidelines || []) args.push('--guidelines', value);
       const result = spawnSync(process.execPath, args, { encoding: 'utf8', timeout: 180000 });
       if (result.status !== 0) throw new Error(result.stderr || 'Quick Checks failed');
@@ -189,7 +191,7 @@ function run(options) {
 }
 
 function main() {
-  const { values } = parseArgs({ options: Object.fromEntries(['route', 'input', 'output', 'checks', 'workspace', 'base-ref', 'judgment-bundle', 'walkthrough-bundle', 'continue-from', 'verify-from', 'adapt-from', 'plan', 'plan-change', 'approval', 'fix-receipt', 'design-system', 'design-system-version', 'guideline-manifest'].map(k => [k, { type: 'string' }]).concat([['guidelines', { type: 'string', multiple: true }], ['report', { type: 'boolean', default: false }], ['no-fix', { type: 'boolean', default: true }]])) });
+  const { values } = parseArgs({ options: Object.fromEntries(['route', 'input', 'output', 'checks', 'workspace', 'base-ref', 'judgment-bundle', 'walkthrough-bundle', 'continue-from', 'verify-from', 'adapt-from', 'plan', 'plan-change', 'approval', 'fix-receipt', 'design-system', 'design-system-version', 'guideline-manifest', 'workshop-plugin-dir'].map(k => [k, { type: 'string' }]).concat([['guidelines', { type: 'string', multiple: true }], ['report', { type: 'boolean', default: false }], ['no-fix', { type: 'boolean', default: true }]])) });
   process.stdout.write(`${JSON.stringify(run(values))}\n`);
 }
 if (require.main === module) { try { main(); } catch (error) { process.stderr.write(`${error.message}\n`); process.exitCode = 1; } }

@@ -125,7 +125,9 @@ function identify(docs, route, inputs) {
     }
   }
   for (const name of ['scripts', 'schemas/v1', 'config', 'references', 'SKILL.md', 'package.json', 'package-lock.json']) collect(path.join(skillRoot, name));
-  for (const name of ['scripts', 'schemas', 'guidelines', 'VERSION']) collect(path.join(skillsRoot, 'uxd-consistency-check', name));
+  // Preserve the source run's implementation identity without resolving its
+  // Workshop installation again during composition or Full continuation.
+  if (sourceAnalysis) dependencies.push(['source-run-evaluator-key', state.identity.evaluator_key]);
   state.identity.evaluator_key = hash(JSON.stringify(dependencies));
   const { intent_key, build_key, evaluator_key } = state.identity;
   state.identity.compound_key = hash(JSON.stringify({ intent_key, build_key, evaluator_key }));

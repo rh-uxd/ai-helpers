@@ -1,0 +1,21 @@
+{
+  "case_type": "genuine-approval",
+  "strict_expected": {
+    "status": "confirmation_required",
+    "selected_source_ids": [
+      "controls"
+    ],
+    "qualified_rule_ids": [],
+    "locator": {
+      "kind": "local",
+      "path": "rules/controls.md"
+    },
+    "approval_required": true,
+    "fallback_approval_required": false,
+    "model_approval_required": true,
+    "deterministic_passes": 0,
+    "policy_mode": "product_design_guidelines_only",
+    "peer_audit": false,
+    "next_action": "request_genuine_scoped_approval"
+  }
+}
