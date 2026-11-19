@@ -412,18 +412,27 @@ test('slides commands run from an installed workshop plugin', (t) => {
   fs.cpSync(path.resolve(HERE, '..', '..', '..'), installed, { recursive: true });
   fs.symlinkSync(installed, plugin, 'dir');
 
-  for (const [skill, script, ...args] of [
-    ['create', 'instantiate-deck', 'briefing', deck],
-    ['create', 'validate-slides', deck],
-    ['export', 'export-slides', deck],
-    ['publish', 'publish-google', deck, '--dry-run'],
-    ['publish', 'publish-figma', deck]
-  ]) {
+  function run(skill, script, ...args) {
     const entry = path.join(plugin, 'skills', `uxd-slides-${skill}`, 'scripts', `${script}.mjs`);
     const result = spawnSync(process.execPath, [entry, ...args], { cwd: root, encoding: 'utf8' });
     assert.equal(result.status, 0, `${script}: ${result.stderr}`);
     assert.ok(result.stdout.trim(), `${script} produced no output`);
   }
-  const metadata = JSON.parse(fs.readFileSync(path.join(deck, 'metadata.json'), 'utf8'));
+  run('create', 'instantiate-deck', 'briefing', deck);
+  const metadataPath = path.join(deck, 'metadata.json');
+  const metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
   assert.equal(metadata.specVersion, SLIDES_SPEC_VERSION);
+  fs.writeFileSync(metadataPath, JSON.stringify({
+    ...metadata,
+    title: 'Workshop installation check',
+    description: 'A test deck instantiated from a standalone plugin.',
+    createdAt: '2026-10-12T12:00:00.000Z',
+    updatedAt: '2026-10-12T12:00:00.000Z'
+  }));
+
+  run('create', 'validate-slides', deck);
+  run('export', 'export-slides', deck);
+  run('publish', 'publish-google', deck, '--dry-run');
+  run('publish', 'publish-figma', deck);
+  assert.ok(fs.existsSync(path.join(deck, 'deck.json')));
 });
