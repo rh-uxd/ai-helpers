@@ -1,0 +1,14 @@
+scenario: accessible-field-errors
+expect_pf_components: true
+expected_components:
+  - Form
+  - FormGroup
+  - HelperText
+  - Alert
+expect_accessible_errors: true
+guidance_scope: recommendation_text_only
+expected_guidance:
+  - Associate each field with real, unique error/helper element IDs using aria-describedby.
+  - Expose invalid state and textual errors, not color alone.
+  - Make relevant error updates perceivable using contextual live-region feedback.
+  - For the long form, use a linked error summary or focus/scroll to the invalid field.

@@ -1,0 +1,5 @@
+prompt: >-
+  Our PatternFly React service settings form has several screens' worth of fields,
+  with Save at the bottom. People scroll down, try to save, and can't work out what
+  needs fixing higher up; the support team hears this especially from screen reader
+  users. What components and error-feedback behavior should we use?
