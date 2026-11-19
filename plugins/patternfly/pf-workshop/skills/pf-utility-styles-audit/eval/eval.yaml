@@ -1,7 +1,7 @@
-name: pf-utility-styles-eval
-description: Evaluate pf-utility-styles utility-class recommendations, installed-version awareness, and safe keep decisions
+name: pf-utility-styles-audit-eval
+description: Evaluate pf-utility-styles-audit utility-class recommendations, installed-version awareness, and safe keep decisions
 
-skill: pf-workshop:pf-utility-styles
+skill: pf-workshop:pf-utility-styles-audit
 
 execution:
   mode: case

@@ -1,5 +1,5 @@
 ---
-name: pf-utility-styles
+name: pf-utility-styles-audit
 version: 0.1.0
 description: >-
   Audit SCSS, CSS, and inline styles in the current project and report which
@@ -13,7 +13,7 @@ description: >-
   that depends on PatternFly.
 ---
 
-# PatternFly utility styles
+# PatternFly utility styles audit
 
 Decide whether a style declaration can become a PatternFly utility class for the project you are in. Report first. Change files only when the user asks to apply the replacements.
 
@@ -30,7 +30,7 @@ This skill requires Python 3 and a project with PatternFly 5 or later installed 
 Before scanning, verify Python is available:
 
 ```bash
-command -v python3 >/dev/null 2>&1 || { echo "Error: pf-utility-styles requires Python 3." >&2; exit 1; }
+command -v python3 >/dev/null 2>&1 || { echo "Error: pf-utility-styles-audit requires Python 3." >&2; exit 1; }
 ```
 
 ## Scan
