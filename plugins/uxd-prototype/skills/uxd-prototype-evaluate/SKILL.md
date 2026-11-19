@@ -5,6 +5,7 @@ description: >-
   Run selected Quick Checks or composed Full Evaluation from Jira or reviewed
   written requirements, with canonical evidence, explicit checkpoints and optional reports.
   Use for source-linked prototype verification and review of existing findings.
+inputs: "Reviewed evaluation packet with source snapshot, stable source IDs, exact prototype revision, and selected check scope"
 ---
 
 # Evaluate Prototype
