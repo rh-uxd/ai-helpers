@@ -12,6 +12,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 
 
@@ -164,5 +165,44 @@ with tempfile.TemporaryDirectory() as directory:
     run(workspace, *git, "commit", "-qam", "Keep root unchanged from the base")
     assert evaluate("untouched-root", ["repo=root-class.md"])["status"] == "degraded"
 
+    # Start a new pinned delta with only an attribute deletion and a pure rename.
+    (workspace / "old.html").write_text("<html>\n<body>Unchanged</body>\n</html>\n")
+    run(workspace, "git", "add", "old.html")
+    run(workspace, *git, "commit", "-qm", "Add rename fixture")
+    base = run(workspace, "git", "rev-parse", "HEAD")
+    html.write_text(html.read_text().replace('  class="must-have"\n', ""))
+    run(workspace, "git", "mv", "old.html", "renamed.html")
+    run(workspace, *git, "commit", "-qam", "Delete root class and rename unchanged file")
+
+    def committed_report():
+        result = subprocess.run(
+            [sys.executable, str(CHECKER / "scripts/analyze.py"), "--workspace", str(workspace),
+             "--guidelines", "repo=root-class.md", "--changed", "--merge-base", "--base-ref", base],
+            cwd=root, env=ENV, capture_output=True, text=True,
+        )
+        assert result.returncode == 1, result.stderr or result.stdout
+        return json.loads(result.stdout)
+
+    report = committed_report()
+    inputs = report["inputs"]
+    assert inputs["scope"] == "committed"
+    assert inputs["base"] == base and inputs["head"] == run(workspace, "git", "rev-parse", "HEAD")
+    assert inputs["changed_lines"] == {"index.html": [], "renamed.html": []}
+    assert inputs["skipped_files"] == {
+        file: "no added or modified lines to cite" for file in inputs["changed_lines"]
+    }
+    assert inputs["target_files"] == []
+    assert inputs["renamed_from"] == {"renamed.html": "old.html"}
+    assert set(inputs["files"]) == {"index.html", "renamed.html"}
+    violations = report["source_mode"]["violations"]
+    assert [(item["guideline_id"], item["file"], item["line"]) for item in violations] == [
+        ("repo:root", "index.html", 2)
+    ]
+    html.write_text(initial)
+    replay = committed_report()
+    assert replay["inputs"] == inputs
+    assert replay["source_mode"]["violations"] == violations
+
 print("Passed: checkout and host-resolved Workshop, missing Workshop, classification without checker, "
-      "repo/upload, delta, prose and JSX coverage, multiline root changes and deletions")
+      "repo/upload, delta, prose and JSX coverage, multiline root changes, "
+      "committed deletion and pure rename with no semantic targets")

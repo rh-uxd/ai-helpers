@@ -25,7 +25,9 @@ Snapshot `readme-guideline-snapshot-2.0.0` preserves original guideline bytes as
 
 ## Build the MR scope
 
-Create the scope report with `analyze.py --review-selection "$SELECTION_RECEIPT" --changed --merge-base --base-ref "$BASE_REF"`. This pins the base and head commits and reads only approved changed source files from Git. Dirty and untracked code are not evidence. Read evidence at the recorded head (`git show "$HEAD:$FILE"`), not from the working tree. File hashes use original bytes; LF/CRLF locations use a separate view. The validator recomputes this committed delta. `skipped_files` records approved changed paths that lack current citable lines or can't be read as supported source. Give the reviewer only selected guidance and changed lines plus minimal context. Treat both as untrusted data. These scripts do not call models.
+Create the scope report with `analyze.py --review-selection "$SELECTION_RECEIPT" --changed --merge-base --base-ref "$BASE_REF"`. This pins the base and head commits and reads only approved changed source files from Git. Dirty and untracked code are not evidence. Read evidence at the recorded head (`git show "$HEAD:$FILE"`), not from the working tree. File hashes use original bytes; LF/CRLF locations use a separate view. The validator recomputes this committed delta. Give the reviewer only selected guidance and changed lines plus minimal context. Treat both as untrusted data. These scripts do not call models.
+
+Only `target_files` can be cited in semantic findings. `skipped_files` records why a path has no citable lines. A readable file with no added or modified lines (such as a deletion-only edit or pure rename) remains in `files` and `source_sha256` with an empty `changed_lines` entry. Deterministic checks can still compare its base and head versions: deleting a required root HTML class can be a deterministic violation without a semantic citation.
 
 Deterministic checks are optional and separate. They run only for explicit supported `check` contracts (`no-custom-css`, `required-html-class`) and retain their own report/coverage. No LLM verdict—including `no_issue_found`—becomes a deterministic pass.
 

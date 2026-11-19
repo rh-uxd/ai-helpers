@@ -120,6 +120,8 @@ def committed_sources(root, prefix, base, head, approved_scope):
                          base, head, "--", *dict.fromkeys((old, path)))
         delta = added_lines(diff.decode("utf-8", errors="replace"))
         if not delta:
+            # Skip semantic citations only. Keep the head blob and empty delta
+            # for deterministic base/head checks, e.g. a deleted root class.
             skipped[name] = "no added or modified lines to cite"
         if old != path and Path(old).is_relative_to(prefix):
             renamed[name] = Path(old).relative_to(prefix).as_posix()
