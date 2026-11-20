@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "prototype-result.schema.json",
+  "title": "Prototype Agent Result",
+  "description": "Structured output from the prototype agent. The post-script reads target_branch and pr_body; prototype fields are for telemetry and traceability.",
+  "type": "object",
+  "required": ["target_branch", "prototype_id", "prototype_type", "journeys_count"],
+  "additionalProperties": false,
+  "properties": {
+    "target_branch": {
+      "type": "string",
+      "description": "Branch the PR should target. Determined from issue context or repo default.",
+      "pattern": "^[a-zA-Z0-9._/-]+$"
+    },
+    "pr_body": {
+      "type": "string",
+      "maxLength": 60000,
+      "description": "PR description with prototype summary, journeys, and states. Supports markdown."
+    },
+    "closes_issue": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the PR should close the linked issue. Defaults to false — prototypes are discussion artifacts, not issue resolutions."
+    },
+    "inject_issue_scope": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the post-script should inject the issue number as a conventional-commit scope."
+    },
+    "prototype_id": {
+      "type": "string",
+      "description": "Artifact identifier, typically the issue key (e.g., PROJ-298).",
+      "pattern": "^[A-Za-z0-9_-]+$"
+    },
+    "prototype_type": {
+      "type": "string",
+      "enum": ["standalone", "workspace"],
+      "description": "Whether the prototype is standalone HTML or integrated into a workspace codebase."
+    },
+    "journeys_count": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of user journeys enumerated in journeys.json."
+    }
+  }
+}

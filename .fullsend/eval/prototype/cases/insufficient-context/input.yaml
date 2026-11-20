@@ -1,0 +1,5 @@
+issue:
+  title: "Add settings page"
+  body: "We need a settings page."
+  labels:
+    - ready-to-prototype
