@@ -77,7 +77,7 @@ Every skill or agent must live in a plugin. Pick the one that matches your skill
 <tr><td nowrap><b>uxd-design</b></td><td>UX design workflow — Figma context, design evaluation, and implementation handoff</td><td>`uxd-canvas-create`, `uxd-canvas-export`, `uxd-canvas-publish`</td></tr>
 <tr><td nowrap><b>uxd-prototype</b></td><td>Create UX prototypes from Jira tickets, Figma designs, or feature descriptions</td><td>`uxd-prototype-create`, `uxd-prototype-evaluate`, `uxd-prototype-export`</td></tr>
 <tr><td nowrap><b>uxd-research</b></td><td>UX research pipeline — heuristic evaluation, usability testing, research methodology</td><td>`uxd-discovery`, `uxd-evaluate-code-heuristics`, `uxd-evaluate-design-heuristics`</td></tr>
-<tr><td nowrap><b>uxd-workshop</b></td><td>UXD skill incubator — new skills start here before graduating to consumer plugins</td><td>`uxd-experience-narrative-create`, `uxd-experience-review`, `uxd-problem-brief-create`</td></tr>
+<tr><td nowrap><b>uxd-workshop</b></td><td>UXD skill incubator — new skills start here before graduating to consumer plugins</td><td>`uxd-experience-narrative-create`, `uxd-experience-review`, `uxd-kit`</td></tr>
 <tr><td nowrap><b>pf-a11y</b></td><td>Accessibility auditing, reporting, and documentation</td><td>`pf-a11y-audit`, `pf-a11y-keyboard`, `pf-a11y-review`</td></tr>
 <tr><td nowrap><b>pf-assist</b></td><td>PatternFly skill routing — maps project signals to the right PF sub-skills for compliance, migration, and design audits</td><td></td></tr>
 <tr><td nowrap><b>pf-code-review</b></td><td>Code review and quality — adversarial review, security patterns</td><td>`pf-adversarial-review`, `pf-i18n-audit`, `pf-review`</td></tr>

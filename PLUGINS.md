@@ -120,6 +120,7 @@ UXD skill incubator — new skills start here before graduating to consumer plug
 <tr><th>Skill</th><th>Description</th><th>Eval</th></tr>
 <tr><td nowrap><code>uxd-experience-narrative-create</code></td><td>Turn a problem brief and paired vision journey map into an editable Miro storyboard, then finalize it as an experience narrative and prototype-ready screen breakdown.</td><td>—</td></tr>
 <tr><td nowrap><code>uxd-experience-review</code></td><td>Judge whether an experience narrative and prototype carry the framed problem, and draft the stakeholder demo.</td><td>—</td></tr>
+<tr><td nowrap><code>uxd-kit</code></td><td>Operating perspective for building a PatternFly-based UI kit — return-as-spec JSX, Rule 0 (nodes earn their place), three-tier kit (primitive → assembly → page/domain), config cascade (TS props + CSS presentational), logic passthrough, and base-support CSS.</td><td>stable</td></tr>
 <tr><td nowrap><code>uxd-problem-brief-create</code></td><td>Frame a product problem as a brief: who is affected, the current condition, evidence versus assumptions, and what is in scope.</td><td>—</td></tr>
 </table>
 
@@ -304,7 +305,7 @@ PatternFly team tools and skill incubation — issue triage, release management,
 **Eval coverage**
 
 - Consumer: 57/57 (100%)
-- Workshop: 0/21 (0%)
+- Workshop: 1/22 (4%)
 
 ---
 
@@ -335,6 +336,7 @@ Generated from skill frontmatter and section headings. Token cost is a relative 
 | `uxd-research-heuristic-eval` | UXD practitioners | Input Type Required Default Interface to evaluate Screenshots, image files, text descriptions... | Output Format Location Evaluation report .md and .html [project-dir]/heuristic-eval-[date].[ext] | XL |
 | `uxd-experience-narrative-create` | UX designers | A problem brief, a completed as-is/to-be journey map, an optional edited Miro storyboard, and optional target codebase | A Miro-editable To-Be storyboard, final experience narrative, and structured prototype handoff | M |
 | `uxd-experience-review` | UX designers | A problem brief, an experience narrative, a prototype, a paired vision map when available, and optional product principles | A review scorecard, improvement list, and presentation plan | M |
+| `uxd-kit` | Front-end engineers and UX engineers building or consuming a shared component kit | A page, component, or refactor to author or review, plus the project's kit location and export prefix | Kit-conformant JSX/CSS, a tier and placement decision, or a review against the checklist | L |
 | `uxd-problem-brief-create` | UX designers and product managers | A problem, feature request, or discovery brief, plus optional evidence | A problem brief in markdown | M |
 | `pf-a11y-audit` | PatternFly designers and developers | Task context | Per finding: [ERRORWARNINFO] file/path.tsx:42 — description (WCAG X.X.X) Found: what was dete... | L |
 | `pf-a11y-keyboard` | PatternFly designers and developers | Source Required Description URL Yes URL to a running application (localhost or deployed) Focu... | Structured result | L |
