@@ -1,0 +1,2 @@
+prompt: >-
+  Using the uxd-kit skill: we need a status summary card used only on the Overview page, with a title, a row of KitMetricsCount units, and a KitMenu in the header actions. Tell me what to name it, where the file goes, and write the skeleton. Do not call network or MCP tools.
