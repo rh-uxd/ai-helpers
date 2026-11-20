@@ -1,0 +1,9 @@
+case_type: walkthrough-choice
+installed_prefix: pf-v6-u-
+expected_classes:
+  - pf-v6-u-mt-md
+forbidden_classes: []
+expected_keep_terms:
+  - column-gap
+expected_invalid_classes: []
+expected_props: []

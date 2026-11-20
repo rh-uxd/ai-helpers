@@ -1,0 +1,9 @@
+case_type: component-props
+installed_prefix: pf-v6-u-
+expected_classes: []
+forbidden_classes: []
+expected_keep_terms: []
+expected_invalid_classes: []
+expected_props:
+  - alignItems
+  - spaceItems

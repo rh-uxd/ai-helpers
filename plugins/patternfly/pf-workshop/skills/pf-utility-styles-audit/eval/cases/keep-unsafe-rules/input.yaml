@@ -1,0 +1,8 @@
+prompt: >-
+  Audit UnsafeOverrides.scss and its companion UnsafeOverrides.ts for PatternFly
+  utility replacements. The project uses PatternFly 6.7.0 with prefix pf-v6-u-
+  and loads the utility stylesheet. The scanner found matching values, including
+  hidden review hits. Use that context without installing packages or calling
+  MCP tools. Be conservative: identify every declaration that must remain CSS
+  and explain why.
+fixture: UnsafeOverrides.scss

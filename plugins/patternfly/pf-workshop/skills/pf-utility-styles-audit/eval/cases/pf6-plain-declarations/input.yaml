@@ -1,0 +1,7 @@
+prompt: >-
+  Audit Card.scss for PatternFly utility replacements. The project has
+  @patternfly/patternfly 6.7.0 installed, the scanner reports prefix pf-v6-u-,
+  and src/app.scss imports the utilities stylesheet. Use the provided scanner
+  facts; do not install packages or call MCP tools. Report what can move to
+  utility classes and what should remain CSS.
+fixture: Card.scss
