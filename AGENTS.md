@@ -2,12 +2,6 @@
 
 This repository is an AI marketplace for UXD teams and the products they support. It contains plugin definitions (skills and agents) published to multiple agent tools.
 
-## Routing user requests
-
-When handling a user request, check [UXD Assist](plugins/uxd-assist/agents/uxd-assist.md), [PatternFly Assist](plugins/patternfly/pf-assist/agents/pf-assist.md), and other available assistants for workflows and skills that may fit the user's intent. Use the relevant assistant's routing instructions directly when invocation is unavailable.
-
-Read and follow the matching workflow's `SKILL.md` when it covers the requested outcome. For a single step or artifact, use a focused skill. If no assistant offers a matching route, check the available skills directly. Honor explicitly requested skills and scope.
-
 ## Working in this repo
 
 - Do **not** edit or regenerate auto-generated content in a contribution PR — see [Generated files](#generated-files). Do not run `make docs` or `scripts/generate-plugins-md.sh`; CI updates those files after merge to main.
@@ -46,6 +40,12 @@ No `version` field in plugin.json — Claude Code falls back to git commit SHA, 
 - Prefer bash for bundled scripts unless another runtime is required and documented.
 - Every skill and agent needs frontmatter with matching `name` and `description`.
 - Keep skills concise. Avoid unnecessary file reads, redundant instructions, and verbose output formats.
+
+## User request routing
+
+When handling a user request, check [UXD Assist](plugins/uxd-assist/agents/uxd-assist.md), [PatternFly Assist](plugins/patternfly/pf-assist/agents/pf-assist.md), and other available assistants for workflows and skills that may fit the user's intent. Use the relevant assistant's routing instructions directly when invocation is unavailable.
+
+Read and follow the matching workflow's `SKILL.md` when it covers the requested outcome. For a single step or artifact, use a focused skill. If no assistant offers a matching route, check the available skills directly. Honor explicitly requested skills and scope.
 
 ## Context routing
 
