@@ -1,7 +1,7 @@
 # Run Productize Quick
 
 1. **Start:** Ask UXD Assist “Help me review this prototype change” or ask for
-   Productize by name. PF Assist can also suggest it in PatternFly projects.
+   Productize by name. UXD Assist is the entry router.
    Any host with access to [the workflow file](../SKILL.md), the selected
    inputs, and a writable output workspace can follow the same instructions.
 2. **Confirm scope:** Pick checks by name or number. Give the revision and

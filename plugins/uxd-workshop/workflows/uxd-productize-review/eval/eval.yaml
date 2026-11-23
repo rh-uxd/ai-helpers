@@ -3,8 +3,8 @@ description: Exercise Productize check selection, phase approvals, traceability,
 execution:
   mode: case
   prompt: |
-    Start with the router named in the request, or plugins/uxd-assist/agents/uxd-assist.md
-    by default. Use its instructions to handle the designer's request.
+    Start with plugins/uxd-assist/agents/uxd-assist.md and use its instructions
+    to handle the designer's request.
 
     {{ input.prompt }}
 
@@ -39,6 +39,7 @@ permissions:
     - "Read(./checks/**)"
     - "Read(./artifacts/**)"
     - "Edit(./artifacts/**)"
+    - "Write(./artifacts/**)"
   deny:
     - Bash
     - Agent

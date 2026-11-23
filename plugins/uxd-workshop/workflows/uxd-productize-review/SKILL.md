@@ -49,8 +49,8 @@ Available does not mean approved to run.
    Compare approved observation or readable source with version- and
    variant-specific guidance, which takes precedence. Link both and report
    only that interaction's fit. Missing catalog, evidence, or guidance blocks the check;
-   confirmed non-PatternFly is not applicable. Do not route back to Productize,
-   invoke `/pf-review`, or start other audits.
+   confirmed non-PatternFly is not applicable. Do not invoke `/pf-review` or
+   start other audits.
 
 ## Phases
 
@@ -86,8 +86,8 @@ for skipped or blocked work, and links to findings and limitations. Mark
 checks complete only with a result, and leave untested coverage visible.
 Link native skill outputs. For chat-only results, save the full outward-facing
 output as `checks/<check-id>.md` (`accessibility`, `requirements`, or `patternfly`).
-Link each saved result from `run.md` with a clickable relative Markdown link,
-for example `[PatternFly finding](checks/patternfly.md)`. Keep findings and
+Link each saved result from `run.md` with a clickable relative Markdown link.
+For example, use `checks/patternfly.md` as the link target for a saved PatternFly finding. Keep findings and
 qualifiers unchanged.
 
 Share the record path and a short summary. Do not write the combined report
