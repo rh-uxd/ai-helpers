@@ -123,7 +123,9 @@ judges:
       expected = outputs.get("annotations", {})
       writes = expected.get("writes", {})
       staged = set(expected.get("staged_artifacts", []))
-      if outputs.get("exit_code") != 0 or outputs.get("modified_files"):
+      # The case runner writes these streams; agent writes are checked below.
+      changed_inputs = set(outputs.get("modified_files", {})) - {"output/stdout.log", "output/stderr.log"}
+      if outputs.get("exit_code") != 0 or changed_inputs:
           return False, "Run failed or modified staged inputs"
 
       # An unrun check must not be disguised as a denied tool attempt.

@@ -5,7 +5,7 @@ checks:
   requirements: skipped
   patternfly: completed
 reply_patterns:
-  - '\b(?:no (?:mismatch|issue|change|finding|discrepancy)|consistent with|matches|allowed|fits|aligns with|result[:—–-]\s*\**(?:scoped )?fit)\b'
+  - '\b(?:not a mismatch|no (?:mismatch|issue|change|finding|discrepancy)|consistent with|matches|allowed|fits|aligns with|result[:—–-]\s*\**(?:scoped )?fit)\b'
   - '\bhover\b'
 reads:
   - pf-assist/agents/pf-assist.md
@@ -27,4 +27,4 @@ writes:
       - 'pf-catalog-interaction-patterns'
       - 'alert popover'
       - 'hover'
-      - '\b(?:no (?:mismatch|issue|change|finding|discrepancy)|consistent with|aligns with|matches|allowed|fits|result\s*[:—–-]\s*\**(?:scoped )?fit)\b'
+      - '\b(?:not a mismatch|no (?:mismatch|issue|change|finding|discrepancy)|consistent with|aligns with|matches|allowed|fits|result\s*[:—–-]\s*\**(?:scoped )?fit)\b'

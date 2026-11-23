@@ -86,14 +86,17 @@ for skipped or blocked work, and links to findings and limitations. Mark
 checks complete only with a result, and leave untested coverage visible.
 Link native skill outputs. For chat-only results, save the full outward-facing
 output as `checks/<check-id>.md` (`accessibility`, `requirements`, or `patternfly`).
-Keep findings and qualifiers unchanged.
+Link each saved result from `run.md` with a clickable relative Markdown link,
+for example `[PatternFly finding](checks/patternfly.md)`. Keep findings and
+qualifiers unchanged.
 
 Share the record path and a short summary. Do not write the combined report
 until the designer approves Review.
 
 ### 3. Review findings with the designer
 
-Read the record and relevant results. On Review approval, save
+Review approval authorizes exactly one write: the report. Read the record
+and relevant results without updating their status or adding a backlink. Save
 `productize-report.md` beside `run.md`, marked `Pending review` with a link to
 the record. Link the detailed results; attribute findings to skills and
 include evidence, limits, and next steps. Leave the Evaluate record unchanged
