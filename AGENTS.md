@@ -4,7 +4,7 @@ This repository is an AI marketplace for UXD teams and the products they support
 
 ## Routing user requests
 
-When handling a user request, check [UXD Assist](plugins/uxd-assist/agents/uxd-assist.md), [PatternFly Assist](plugins/patternfly/pf-assist/agents/pf-assist.md), and other available assistants for workflows and skills that fit the user's intent and project context. Use the relevant assistant's current routing instructions directly when invocation is unavailable.
+When handling a user request, check [UXD Assist](plugins/uxd-assist/agents/uxd-assist.md), [PatternFly Assist](plugins/patternfly/pf-assist/agents/pf-assist.md), and other available assistants for workflows and skills that may fit the user's intent. Use the relevant assistant's routing instructions directly when invocation is unavailable.
 
 Read and follow the matching workflow's `SKILL.md` when it covers the requested outcome. For a single step or artifact, use a focused skill. If no assistant offers a matching route, check the available skills directly. Honor explicitly requested skills and scope.
 
