@@ -13,7 +13,7 @@ unavailable facts and `Pending` for decisions not yet made.
 - Request and intended decision: <designer's goal>
 - Prototype: <URL, exact revision, and whether the preview matches>
 - Inputs: <source/diff and base, requirements and guidance with links and revisions, if used>
-- Journeys and states: <agreed coverage>
+- Changed user action/outcome and relevant states: <agreed coverage in plain language>
 - Assumptions or access gaps: <what is unknown and what it prevents>
 - Previous run: <link or none>
 
@@ -26,6 +26,8 @@ unavailable facts and `Pending` for decisions not yet made.
 
 ## Checks, findings, and limits
 - <Planned check and options> — <planned/completed/skipped/blocked/not applicable/not run>; <reason>; <result/evidence link when available>
+- For a coverage claim: <actual producer/version and route>; <new check or supplied observation>; <target revision vs evidence revision: matching build / prior build only / build unknown>; <clickable result and supporting source(s)>; <what remains unverified>
+- If requirements triage was selected: <designer's packet confirmation and separate or combined Evaluate decision>; <native run ID, artifact digest and relative link to pe-state.json when validated>
 - <Finding ID> — <observed finding, producing check, evidence link, uncertainty and recommendation>
 - Limits: <what remains untested and what would unblock it>
 
