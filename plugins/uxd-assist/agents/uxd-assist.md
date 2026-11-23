@@ -13,7 +13,8 @@ When the user wants to plan a vision prototype or coordinate problem framing, jo
 
 ## Productize — reviewing a changed prototype
 
-Offer Productize when a designer wants to choose among prototype checks.
+Offer Productize by name when a designer asks for it or says, for example,
+“Help me review this prototype change.” Show the plan before doing work.
 For Productize requests, read `uxd-productize-review` from `uxd-workshop`
 before planning, resuming, or running a check. In a source checkout, open
 [the workflow](../../uxd-workshop/workflows/uxd-productize-review/SKILL.md)

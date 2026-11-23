@@ -1,9 +1,9 @@
 # Run Productize Quick
 
-1. **Start:** Ask UXD Assist to plan Productize Quick for a prototype and
-   journey. If the client cannot find it, open
-   [the workflow file](../SKILL.md) in a source checkout. Chai-bot is optional
-   and needs access to the same inputs and outputs.
+1. **Start:** Ask UXD Assist “Help me review this prototype change” or ask for
+   Productize by name. PF Assist can also suggest it in PatternFly projects.
+   Any host with access to [the workflow file](../SKILL.md), the selected
+   inputs, and a writable output workspace can follow the same instructions.
 2. **Confirm scope:** Pick checks by name or number. Give the revision and
    inputs those checks need. Agree on an output workspace the reviewer can
    open, outside the prototype checkout. Confirm scope to start `run.md`;
@@ -18,5 +18,5 @@
    a path on another machine is not a shared link.
 
 For a dry run, fill the [traceability record](traceability-record.md) by hand
-if needed. When comparing direct and Chai-bot entry, check whether designers
+if needed. When comparing entry routes, check whether designers
 can choose, review, and reopen the same results.

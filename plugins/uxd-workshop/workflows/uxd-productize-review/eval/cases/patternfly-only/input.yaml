@@ -2,7 +2,8 @@ prompt: |
   Continue Productize Quick for the alerts preview, build 73ac415. The scope
   showed all three checks as available. I chose only number 3, PatternFly
   interaction fit, and approve Evaluate for the Warning Alert popover trigger
-  only. Skip accessibility and requirements. Use the staged
+  only. The project uses @patternfly/react-core v6 and PF Assist is available
+  at plugins/patternfly/pf-assist/agents/pf-assist.md. Skip accessibility and requirements. Use the staged
   checks/alert-observation.md and checks/pf-v6-popover-guidance.md as my
   approved observation and version-specific docs; don't access a live preview.
   The PatternFly interaction catalog made me wonder whether hover is a

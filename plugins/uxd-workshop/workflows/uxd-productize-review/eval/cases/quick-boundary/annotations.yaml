@@ -1,0 +1,12 @@
+phase: scope
+waiting_for: evaluate
+checks:
+  accessibility: available
+  requirements: available
+  patternfly: not_applicable
+reads:
+  - uxd-assist/agents/uxd-assist.md
+reply_patterns:
+  - '(?i)(outside|out of scope|not supported|not (?:part|available)|does not|doesn.t|cannot|can.t|quick.only|not include)'
+  - '\b(?:persona|walkthrough)'
+  - '\b(?:classif\w*|triage)\b'

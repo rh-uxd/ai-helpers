@@ -8,6 +8,7 @@ reply_patterns:
   - '\b(?:no (?:mismatch|issue|change|finding|discrepancy)|consistent with|matches|allowed|fits|aligns with|result[:—–-]\s*\**(?:scoped )?fit)\b'
   - '\bhover\b'
 reads:
+  - pf-assist/agents/pf-assist.md
   - pf-catalog-interaction-patterns/references/interaction-catalog.md
   - checks/alert-observation.md
   - checks/pf-v6-popover-guidance.md

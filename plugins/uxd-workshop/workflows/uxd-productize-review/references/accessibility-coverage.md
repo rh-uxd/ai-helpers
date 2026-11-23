@@ -21,24 +21,7 @@ conformance.
 - **Reporting (`reporting.md`):** identify the check, state, method, evidence,
   and clickable source citation. Record what was not tested and why.
 
-## Full — agreed changed journeys and states
-
-Expand Quick across the agreed journeys and applicable states. Add:
-
-- Enlargement, reflow, supported themes, forced colors, reduced motion,
-  and measured contrast and focus across states (`visual-runtime.md`).
-- Complete keyboard journeys and applicable composite-widget behavior
-  (`keyboard-navigation.md`, `keyboard-patterns.md`).
-- Rendered names, descriptions, relationships, and changing states
-  (`aria-states-and-relationships.md`). For dialogs, check opening, containment,
-  dismissal, and restoration (`modal-dialog.md`).
-- Validation, recovery, loading, success, and dynamic feedback
-  (`forms-and-updates.md`), plus rendered semantics and scans across significant
-  states (`runtime-scanning.md`).
-- Selective `uxd-a11y-source-audit` when the diff or observed behavior raises
-  a question that source can answer. Limit review to the relevant UI.
-
 Supporting screenshots or specs can inform `uxd-a11y-design-review` when
-approved; label those findings static, not runtime. Both passes exclude test
+approved; label those findings static, not runtime. This check excludes test
 generation, component-internals review, and comprehensive assistive-technology
 or cross-browser testing.

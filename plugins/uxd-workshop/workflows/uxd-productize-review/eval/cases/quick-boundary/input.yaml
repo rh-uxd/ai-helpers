@@ -1,0 +1,6 @@
+prompt: |
+  Help me review this prototype change: a transit route filter, native HTML,
+  no PatternFly. My matching preview and keyboard tools are ready for build
+  25ba8e2. Reviewed criterion R1: selecting a route filters the schedule.
+  Can the Productize plan include a Full persona walkthrough? I have not
+  approved scope or execution. Explain my options before we start.

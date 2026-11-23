@@ -1,6 +1,6 @@
 ---
 name: uxd-productize-review
-version: 0.1.0
+version: 0.2.0
 description: >-
   Evaluate changed areas of an existing prototype using checks the designer
   selects. Use when a designer asks for Productize or wants a scoped review
@@ -14,7 +14,7 @@ outputs: "A traceable run record, selected check results, and a combined report 
 
 Evaluate selected changes, not the whole prototype. The phases are fixed;
 the checks are selectable. The [run guide](references/run-guide.md) covers
-direct and optional Chai-bot entry.
+how to start or resume from any host that can open the workflow and evidence.
 
 Read authorized inputs and write only evaluation artifacts. Do not change
 the prototype or source project, apply fixes, evaluate Figma directly,
@@ -37,23 +37,25 @@ Available does not mean approved to run.
    preview. See [coverage](references/accessibility-coverage.md). If runtime
    is blocked, offer `uxd-a11y-source-audit` of matching source as a scope
    change. Source evidence does not establish runtime behavior.
-2. **Requirements triage** — `uxd-prototype-evaluate` with only `classify`,
+2. **Requirements triage** — `uxd-prototype-evaluate` Quick Checks with only `classify`,
    no fixes, and its reviewed packet. Use Jira or reviewed written criteria;
    missing criteria block the check. It classifies text, not UI behavior,
    and does not verify acceptance criteria.
-3. **PatternFly interaction fit** — open the relevant entry in the catalog
+3. **PatternFly interaction fit** — use `pf-assist` to route to the interaction
+   catalog in a confirmed PatternFly project. If the router is unavailable,
+   use the same catalog directly and note the route. Open the relevant entry in the catalog
    shipped by `pf-catalog-interaction-patterns` in `pf-design-guide`
    ([source checkout](../../../patternfly/pf-design-guide/skills/pf-catalog-interaction-patterns/references/interaction-catalog.md)).
    Compare approved observation or readable source with version- and
    variant-specific guidance, which takes precedence. Link both and report
    only that interaction's fit. Missing catalog, evidence, or guidance blocks the check;
-   confirmed non-PatternFly is not applicable. Do not invoke PF Assist,
-   other PatternFly checks, or a second accessibility audit.
+   confirmed non-PatternFly is not applicable. Do not route back to Productize,
+   invoke `/pf-review`, or start other audits.
 
 ## Phases
 
 **Stop between phases.** Name the current phase and ask for approval before
-starting the next. Choosing Quick or Full does not authorize execution.
+starting the next. Selecting checks does not authorize execution.
 
 ### 1. Agree on scope
 
@@ -61,8 +63,9 @@ Introduce the workflow and version. Confirm the prototype revision and
 changed journeys/states. Claim diff coverage only from the reviewed head
 and base, and runtime observations only from a matching preview.
 
-Recommend a subset. Quick covers one journey; Full can widen the selected
-checks. Accept names or numbers, including “accessibility only” or none.
+Show a short plan for one changed journey: which checks would help, what each
+would answer, and when the designer will review it. Accept any subset by name
+or number, including “accessibility only” or none.
 Confirm an output location the reviewing designer can open.
 
 On scope confirmation, start `run.md` from the
@@ -74,11 +77,9 @@ scope confirmation. If no checks are selected, stop without evaluating.
 ### 2. Evaluate the selected checks
 
 Run only approved, ready checks. Obtain any separate tool or provider approval
-and use safe test data. Quick has no walkthroughs. If selected in Full, use
-the evaluator's no-fix Full route, not a standalone Quick run. Stay in Evaluate
-and wait for separate approval at its walkthrough checkpoint. Until approved,
-they are not run. AI simulations are not user research or proof that a criterion
-was met.
+and use safe test data. Full Evaluation and agentic walkthroughs are outside
+this workflow, even if requested. Offer the scoped checks; never silently
+substitute consistency checks or simulate a user.
 
 Update `run.md` as checks finish: actual skill and version, outcome, reason
 for skipped or blocked work, and links to findings and limitations. Mark

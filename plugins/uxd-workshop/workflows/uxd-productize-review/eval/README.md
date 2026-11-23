@@ -7,10 +7,10 @@ From the AI Helpers checkout, run this with
 /agent-eval-harness:eval-run --config plugins/uxd-workshop/workflows/uxd-productize-review/eval/eval.yaml --no-llm-judges
 ```
 
-The cases use the real UXD Assist route and Productize instructions in isolated
+The cases use the source UXD Assist and PF Assist routes and Productize instructions in isolated
 workspaces. They cover the editable menu and traceability record, scoped
-accessibility and PatternFly results, resuming from artifacts, the Full
-walkthrough gate, and recording the designer's next decision after Review.
+accessibility and PatternFly results, resuming from artifacts, declining a
+walkthrough request, and recording the designer's next decision after Review.
 Both deterministic judges must pass every case on Claude Sonnet 4.6.
 No live prototype or Chai-bot session is used.
 

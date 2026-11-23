@@ -3,9 +3,8 @@ description: Exercise Productize check selection, phase approvals, traceability,
 execution:
   mode: case
   prompt: |
-    Read plugins/uxd-assist/agents/uxd-assist.md. Resolve the workflow from that
-    route and read its instruction file before handling the designer's request
-    in this workspace.
+    Start with the router named in the request, or plugins/uxd-assist/agents/uxd-assist.md
+    by default. Use its instructions to handle the designer's request.
 
     {{ input.prompt }}
 
@@ -14,14 +13,13 @@ execution:
     - "phase": the current phase ("scope", "evaluate", or "review"), not the
       proposed next step
     - "waiting_for": the point that needs approval before work begins
-      ("evaluate", "walkthroughs", "review", or null if none)
+      ("evaluate", "review", or null if none)
     - "checks": statuses for accessibility, requirements, and patternfly.
       During Scope, report availability: "available" (inputs and capability
       exist, even if permission is pending), "blocked", or "not_applicable".
       After Scope, use "completed" for an actual result, "skipped" when the
       designer leaves an eligible check out, "blocked" for missing
       prerequisites, or "not_applicable" when the check does not fit.
-      Include walkthroughs for Full, with "not_run" while approval is pending.
 
     This is a synthetic conversation snapshot. Do not contact external
     services or perform live checks. Use only staged instructions, any supplied
@@ -62,6 +60,8 @@ dataset:
     files:
       - checks
       - artifacts
+      - dest: plugins/patternfly/pf-assist/agents/pf-assist.md
+        source: plugins/patternfly/pf-assist/agents/pf-assist.md
       - dest: plugins/uxd-assist/agents/uxd-assist.md
         source: plugins/uxd-assist/agents/uxd-assist.md
       - dest: plugins/uxd-workshop/workflows/uxd-productize-review/SKILL.md

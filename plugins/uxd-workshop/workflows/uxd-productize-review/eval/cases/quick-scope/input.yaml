@@ -1,5 +1,6 @@
 prompt: |
-  I'd like to use Productize Quick on a warehouse inventory prototype. The
+  I'm asking PF Assist (plugins/patternfly/pf-assist/agents/pf-assist.md):
+  help me review this prototype change in a warehouse inventory prototype. The
   demo is at https://inventory.example.invalid, build abcd1234. Its changed
   Reorder journey has list and confirmation states. Here's the diff context:
   the prototype builds from the diff against release/2.x at base 726aae1;
