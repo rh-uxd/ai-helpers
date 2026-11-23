@@ -2,6 +2,19 @@
 
 This repository is an AI marketplace for UXD teams and the products they support. It contains plugin definitions (skills and agents) published to multiple agent tools.
 
+## Routing user requests
+
+For user requests that fit an area covered by an assistant, start with that assistant to find the right workflow or skill. Match the intended outcome using the user's wording and project context. Everyday phrasing is enough to select a clear match.
+
+- Use [UXD Assist](plugins/uxd-assist/agents/uxd-assist.md) for UX research, design, vision work, and prototyping.
+- Use [PatternFly Assist](plugins/patternfly/pf-assist/agents/pf-assist.md) for work in projects with PatternFly dependencies.
+
+Apply the same approach to other relevant assistants available in the current environment. If you can't invoke an assistant directly, read its routing instructions and open the linked workflow or skill. If there's no matching route, check the available skills directly.
+
+Use the workflow when it covers the requested outcome and a focused skill when the request is for a single step or artifact. Honor explicitly requested skills and scope, and ask a focused question if plausible interpretations would lead to materially different work.
+
+For example, in a UXD context, treat “make a vision” as a request for the [UX Vision Workflow](plugins/uxd-assist/workflows/uxd-vision-create/SKILL.md). Start from the user's existing artifacts and follow the workflow's planning and review steps.
+
 ## Working in this repo
 
 - Do **not** edit or regenerate auto-generated content in a contribution PR — see [Generated files](#generated-files). Do not run `make docs` or `scripts/generate-plugins-md.sh`; CI updates those files after merge to main.
