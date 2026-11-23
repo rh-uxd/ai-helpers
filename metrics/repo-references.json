@@ -16,11 +16,11 @@
       "web/capability/plugin-rh-uxd-ai-helpers-pf-react.html",
       "web/capability/plugin-rh-uxd-ai-helpers-patternfly.html",
       "web/capability/plugin-rh-uxd-ai-helpers-pf-workshop.html",
-      "web/capability/plugin-rh-uxd-ai-helpers-uxd-workshop.html",
       "web/capability/plugin-rh-uxd-ai-helpers-pf-migration.html",
+      "web/capability/plugin-rh-uxd-ai-helpers-uxd-workshop.html",
       "web/capability/plugin-rh-uxd-ai-helpers-pf-code-review.html",
-      "web/capability/plugin-rh-uxd-ai-helpers-pf-design-audit.html",
-      "web/capability/plugin-rh-uxd-ai-helpers-pf-design-guide.html"
+      "web/capability/plugin-rh-uxd-ai-helpers-pf-design-guide.html",
+      "web/capability/plugin-rh-uxd-ai-helpers-pf-design-audit.html"
     ]
   },
   {
@@ -58,7 +58,14 @@
       "data/discovery/2026-11-12/baseline-identities.json",
       "data/discovery/2026-11-13/baseline-identities.json",
       "data/discovery/2026-11-14/baseline-identities.json",
-      "data/discovery/2026-11-16/baseline-identities.json"
+      "data/discovery/2026-11-16/baseline-identities.json",
+      "data/discovery/2026-11-17/baseline-identities.json",
+      "data/discovery/2026-11-18/baseline-identities.json",
+      "data/discovery/2026-11-19/baseline-identities.json",
+      "data/discovery/2026-11-20/baseline-identities.json",
+      "data/discovery/2026-11-21/baseline-identities.json",
+      "data/discovery/2026-11-22/baseline-identities.json",
+      "data/discovery/2026-11-23/baseline-identities.json"
     ]
   },
   {
@@ -127,10 +134,7 @@
     "url": "https://github.com/kosif199022-jpg/kosif-tool",
     "description": "KOSIF TOOL: Claude motion style library, original production prompts and source video links",
     "files": [
-      ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3011-uxd-research/SOURCE.md",
-      ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3000-pf-code-review/SOURCE.md",
-      ".claude/skills/kosif-superpowers/vendor/100-superskills/skills/accessibility-wcag/references/sources.md",
-      ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3011-uxd-research/12864-uxd-research-heuristic-eval/references/report-templates.md"
+      ".claude/skills/kosif-superpowers/vendor/kosif-atlas/skills/3011-uxd-research/SOURCE.md"
     ]
   },
   {

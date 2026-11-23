@@ -55,6 +55,14 @@
     ]
   },
   {
+    "name": "LuciferForge/mcp-directory",
+    "url": "https://github.com/LuciferForge/mcp-directory",
+    "description": "The largest index of MCP servers. 18,146+ Model Context Protocol servers searchable at protodex.io",
+    "files": [
+      "docs/servers/patternfly-patternfly-mcp.html"
+    ]
+  },
+  {
     "name": "OpenShift-Fleet/rehor",
     "url": "https://github.com/OpenShift-Fleet/rehor",
     "description": "Rehor",
@@ -66,7 +74,7 @@
       "presets/install-envs.sh",
       "scripts/verify-python-preset-e2e.sh",
       "presets/shared/skills/detect-tech-stack/SKILL.md",
-      "docs/onboarding-new-instance.md",
+      "docs/legacy/onboarding-new-instance.md",
       "presets/shared/skills/detect-tech-stack/detect_tech_stack.py"
     ]
   },
@@ -328,6 +336,16 @@
     "description": "",
     "files": [
       "BOOKMARKS.md"
+    ]
+  },
+  {
+    "name": "project-openubl/xhandler-service",
+    "url": "https://github.com/project-openubl/xhandler-service",
+    "description": "Descarga la base de datos de la SUNAT y lo almacena en tu propio servidor",
+    "files": [
+      "ui/.mcp.json",
+      "ui/.cursor/mcp.json",
+      "ui/.rulesync/mcp.json"
     ]
   },
   {
