@@ -1,0 +1,14 @@
+phase: scope
+waiting_for: evaluate
+checks:
+  accessibility: available
+  requirements: available
+  patternfly: available
+reply_patterns:
+  - '\b1\b[^\n]*accessibility'
+  - '\b2\b[^\n]*requirements'
+  - '\b3\b[^\n]*patternfly interaction fit'
+  - 'pf-catalog-interaction-patterns'
+  - 'abcd1234'
+  - '\b(?:choose|select|pick|skip)\b'
+  - '\b(?:approve|confirm|approval|proceed)\b'

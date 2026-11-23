@@ -1,0 +1,176 @@
+name: uxd-productize-review
+description: Exercise Productize check selection, phase approvals, traceability, and evidence handoff with synthetic prototypes.
+execution:
+  mode: case
+  prompt: |
+    Read plugins/uxd-assist/agents/uxd-assist.md. Resolve the workflow from that
+    route and read its instruction file before handling the designer's request
+    in this workspace.
+
+    {{ input.prompt }}
+
+    Reply normally to the designer. For the test client, end your reply with a
+    JSON object using these fields:
+    - "phase": the current phase ("scope", "evaluate", or "review"), not the
+      proposed next step
+    - "waiting_for": the point that needs approval before work begins
+      ("evaluate", "walkthroughs", "review", or null if none)
+    - "checks": statuses for accessibility, requirements, and patternfly.
+      During Scope, report availability: "available" (inputs and capability
+      exist, even if permission is pending), "blocked", or "not_applicable".
+      After Scope, use "completed" for an actual result, "skipped" when the
+      designer leaves an eligible check out, "blocked" for missing
+      prerequisites, or "not_applicable" when the check does not fit.
+      Include walkthroughs for Full, with "not_run" while approval is pending.
+
+    This is a synthetic conversation snapshot. Do not contact external
+    services or perform live checks. Use only staged instructions, any supplied
+    results, and permitted artifact writes. The workspace is the already approved
+    output workspace when the designer supplies a run path.
+  project_hooks: false
+  timeout: 120
+  max_budget_usd: 0.50
+  parallelism: 2
+runner:
+  type: claude-code
+models:
+  skill: claude-sonnet-4-6
+permissions:
+  allow:
+    - "Read(./plugins/**)"
+    - "Read(./checks/**)"
+    - "Read(./artifacts/**)"
+    - "Edit(./artifacts/**)"
+  deny:
+    - Bash
+    - Agent
+    - Task
+    - Skill
+    - AskUserQuestion
+    - NotebookEdit
+    - WebFetch
+    - WebSearch
+    - "mcp__*"
+dataset:
+  path: cases
+  schema: |
+    Each case supplies a designer request or an in-progress conversation and
+    its prior scope/results in input.yaml. The optional checks/ and artifacts/
+    directories contain only synthetic inputs or saved runs to resume.
+    Only annotations.yaml contains expected phase, coverage, and file checks.
+  workspace:
+    files:
+      - checks
+      - artifacts
+      - dest: plugins/uxd-assist/agents/uxd-assist.md
+        source: plugins/uxd-assist/agents/uxd-assist.md
+      - dest: plugins/uxd-workshop/workflows/uxd-productize-review/SKILL.md
+        source: plugins/uxd-workshop/workflows/uxd-productize-review/SKILL.md
+      - dest: plugins/uxd-workshop/workflows/uxd-productize-review/references
+        source: plugins/uxd-workshop/workflows/uxd-productize-review/references
+      - dest: plugins/patternfly/pf-design-guide/skills/pf-catalog-interaction-patterns/SKILL.md
+        source: plugins/patternfly/pf-design-guide/skills/pf-catalog-interaction-patterns/SKILL.md
+      - dest: plugins/patternfly/pf-design-guide/skills/pf-catalog-interaction-patterns/references/interaction-catalog.md
+        source: plugins/patternfly/pf-design-guide/skills/pf-catalog-interaction-patterns/references/interaction-catalog.md
+outputs:
+  - path: artifacts
+    schema: "Traceability record at scope confirmation, check results during Evaluate, and the combined report and designer decision in Review."
+traces:
+  events: true
+  metrics: true
+judges:
+  - name: phase_and_coverage
+    check: |
+      import json
+      import re
+
+      expected = outputs.get("annotations", {})
+      text = outputs.get("conversation", "")
+      decisions = []
+      for match in re.finditer(r"(?m)^[ \t]*(?=\{)", text):
+          try:
+              value, _ = json.JSONDecoder().raw_decode(text[match.end():])
+          except ValueError:
+              continue
+          if isinstance(value, dict) and "phase" in value:
+              decisions.append(value)
+      if not decisions:
+          return False, "No structured phase decision"
+      decision = decisions[-1]
+      for key in ("phase", "waiting_for"):
+          if key not in decision or decision[key] != expected[key]:
+              return False, f"Expected {key}={expected[key]!r}; got {decision.get(key)!r}"
+      checks = decision.get("checks")
+      if not isinstance(checks, dict):
+          return False, "Missing check statuses"
+      for key, status in expected["checks"].items():
+          if checks.get(key) != status:
+              return False, f"Expected {key}={status!r}; got {checks.get(key)!r}"
+      if "walkthroughs" not in expected["checks"] and checks.get("walkthroughs") not in (
+          None, "not_run", "not_applicable"
+      ):
+          return False, "Quick must not plan or report a walkthrough as completed"
+      for pattern in expected.get("reply_patterns", []):
+          if not re.search(pattern, text, re.IGNORECASE):
+              return False, f"Designer-facing response did not substantiate {pattern}"
+      return True, "Phase, approval, and check coverage match"
+  - name: artifacts_and_boundaries
+    check: |
+      import posixpath
+      from pathlib import PurePosixPath
+      import re
+
+      expected = outputs.get("annotations", {})
+      writes = expected.get("writes", {})
+      staged = set(expected.get("staged_artifacts", []))
+      if outputs.get("exit_code") != 0 or outputs.get("modified_files"):
+          return False, "Run failed or modified staged inputs"
+
+      # An unrun check must not be disguised as a denied tool attempt.
+      def matches(path, relative):
+          suffix = PurePosixPath(relative).parts
+          return ".." not in path.parts and path.parts[-len(suffix):] == suffix
+
+      reads = []
+      calls = (
+          call for event in outputs.get("events", [])
+          if event.get("type") == "assistant" for call in event.get("tools", [])
+      )
+      for call in calls:
+          tool = call.get("name", "")
+          args = call.get("input") or {}
+          path = PurePosixPath(args.get("file_path", ""))
+          if tool == "Read":
+              reads.append(path)
+          if tool in {"Read", "Glob", "Grep"}:
+              continue
+          if tool in {"Write", "Edit"} and any(matches(path, name) for name in writes):
+              continue
+          return False, f"Unexpected tool or write: {tool} {path}"
+      required_reads = ["uxd-productize-review/SKILL.md", *expected.get("reads", [])]
+      for relative in required_reads:
+          if not any(matches(path, relative) for path in reads):
+              return False, f"Did not read {relative}"
+
+      files = outputs.get("files", {})
+      required = set(writes) | staged
+      actual = {name for name in files if name.startswith("artifacts/")}
+      if actual != required:
+          return False, f"Expected artifacts {sorted(required)}, got {sorted(actual)}"
+      for name, rules in writes.items():
+          contents = files[name]
+          for pattern in rules.get("patterns", []):
+              if not re.search(pattern, contents, re.IGNORECASE):
+                  return False, f"{name} is missing {pattern}"
+          links = {
+              posixpath.normpath(posixpath.join(posixpath.dirname(name), link))
+              for link in re.findall(r"\]\(([^)\s]+)\)", contents)
+              if not link.startswith("/")
+          }
+          for target in rules.get("links_to", []):
+              if target not in links:
+                  return False, f"{name} is missing a working relative link to {target}"
+      return True, "Expected evidence handoff with no unauthorized actions"
+thresholds:
+  phase_and_coverage: {min_pass_rate: 1.0, max_error_rate: 0}
+  artifacts_and_boundaries: {min_pass_rate: 1.0, max_error_rate: 0}

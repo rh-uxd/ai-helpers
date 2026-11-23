@@ -1,0 +1,24 @@
+phase: review
+waiting_for: null
+checks:
+  accessibility: completed
+  requirements: blocked
+  patternfly: not_applicable
+staged_artifacts:
+  - artifacts/LIBRARY/productize/approved-review/run.md
+  - artifacts/LIBRARY/productize/approved-review/checks/accessibility.md
+reads:
+  - artifacts/LIBRARY/productize/approved-review/run.md
+  - artifacts/LIBRARY/productize/approved-review/checks/accessibility.md
+writes:
+  artifacts/LIBRARY/productize/approved-review/productize-report.md:
+    links_to:
+      - artifacts/LIBRARY/productize/approved-review/run.md
+      - artifacts/LIBRARY/productize/approved-review/checks/accessibility.md
+    patterns:
+      - '62c3b21'
+      - 'Renew Loan'
+      - 'uxd-a11y-keyboard-audit'
+      - 'https://www\.w3\.org/WAI/ARIA/apg/patterns/dialog-modal/'
+      - 'Pending review'
+      - 'not applicable'

@@ -1,0 +1,25 @@
+phase: review
+waiting_for: null
+checks:
+  accessibility: completed
+  requirements: skipped
+  patternfly: not_applicable
+staged_artifacts:
+  - artifacts/EXPORT/productize/download-dialog/run.md
+  - artifacts/EXPORT/productize/download-dialog/productize-report.md
+reads:
+  - artifacts/EXPORT/productize/download-dialog/run.md
+  - artifacts/EXPORT/productize/download-dialog/productize-report.md
+writes:
+  artifacts/EXPORT/productize/download-dialog/run.md:
+    links_to:
+      - artifacts/EXPORT/productize/download-dialog/productize-report.md
+    patterns:
+      - '8cd17ee'
+      - '(?:accessibility[^\n]*completed|completed[^\n]*accessibility)'
+      - 'runtime[^\n]*blocked'
+      - '(?:requirements[^\n]*skipped|skipped[^\n]*requirements)'
+      - '\brestor\w*[^\n]*preview\b'
+      - '\b(?:retest|verify|test)\w*[^\n]*keyboard\b'
+      - '\bprototype team\b'
+      - '\breview status\b[^\n]*(?:reviewed|complete|confirmed)'

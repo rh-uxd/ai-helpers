@@ -1,0 +1,13 @@
+prompt: |
+  Continue Productize Quick for the alerts preview, build 73ac415. The scope
+  showed all three checks as available. I chose only number 3, PatternFly
+  interaction fit, and approve Evaluate for the Warning Alert popover trigger
+  only. Skip accessibility and requirements. Use the staged
+  checks/alert-observation.md and checks/pf-v6-popover-guidance.md as my
+  approved observation and version-specific docs; don't access a live preview.
+  The PatternFly interaction catalog made me wonder whether hover is a
+  mismatch here. Compare its Popover entry with the supplied v6 guidance.
+  The agreed output location is artifacts/ALERTS/productize/pf-only/.
+  Tell me what you found and where I can open the result. Include clickable
+  links to both staged files in the saved check so the reviewer can open
+  them. I'm not approving Review yet.

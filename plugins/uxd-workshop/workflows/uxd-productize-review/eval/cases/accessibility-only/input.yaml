@@ -1,0 +1,25 @@
+prompt: |
+  Continue Productize Quick for the returns prototype at
+  https://returns.example.invalid, verified build 2e21b8a. Scope showed all
+  three checks as available: stable written requirements, the applicable
+  PatternFly v6 guidance and source, and the matching running preview.
+  My answer was “Accessibility only. Skip the other two. I approve Evaluate
+  on the Return Item journey using our agreed artifacts workspace.”
+  The accessibility skill just returned the full result below in chat. It
+  didn't write a check result file. My confirmed scope is already in
+  artifacts/RETURNS/productize/a11y-only/run.md. I separately saved the observation
+  at checks/returns-observation.md in the root of the approved output workspace,
+  not inside the new run folder. Our run location is
+  artifacts/RETURNS/productize/a11y-only/. What can I open while I decide
+  whether to move into Review? Please use that existing observation for a
+  clickable evidence link and the exact tested viewport.
+
+  Full outward-facing result from uxd-a11y-review on build 2e21b8a:
+  - A11Y-01, blocking: In the Return Item dialog, Escape closed the overlay but
+    focus moved to the page body rather than the Return Item trigger.
+    See checks/returns-observation.md and
+    https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/.
+  - A11Y-02, lower priority: The Clear Reason button's focus indicator was
+    obscured by the sticky footer. See the same saved observation.
+  - Coverage: keyboard only at desktop width; no automated scan or small
+    viewport was tested. Restore focus to the trigger, then retest both items.

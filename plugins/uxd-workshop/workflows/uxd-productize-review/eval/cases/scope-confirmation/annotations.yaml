@@ -1,0 +1,20 @@
+phase: scope
+waiting_for: evaluate
+checks:
+  accessibility: available
+  requirements: available
+  patternfly: not_applicable
+reply_patterns:
+  - '\brun\.md\b'
+reads:
+  - references/traceability-record.md
+writes:
+  artifacts/FILTERS/productize/scope-approved/run.md:
+    patterns:
+      - 'scope-approved'
+      - 'fe3ca08'
+      - 'Save Filter'
+      - 'FILTER-12'
+      - '(?:accessibility[^\n]*planned|planned[^\n]*accessibility)'
+      - '(?:requirements[^\n]*planned|planned[^\n]*requirements)'
+      - '\b(?:await\w*|pending|wait\w*)[^\n]*evaluat'

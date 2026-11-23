@@ -1,0 +1,29 @@
+phase: evaluate
+waiting_for: review
+checks:
+  accessibility: skipped
+  requirements: skipped
+  patternfly: completed
+reply_patterns:
+  - '\b(?:no (?:mismatch|issue|change|finding|discrepancy)|consistent with|matches|allowed|fits|aligns with|result[:—–-]\s*\**(?:scoped )?fit)\b'
+  - '\bhover\b'
+reads:
+  - pf-catalog-interaction-patterns/references/interaction-catalog.md
+  - checks/alert-observation.md
+  - checks/pf-v6-popover-guidance.md
+writes:
+  artifacts/ALERTS/productize/pf-only/run.md:
+    links_to:
+      - artifacts/ALERTS/productize/pf-only/checks/patternfly.md
+    patterns:
+      - '(?:accessibility[^\n]*skipped|skipped[^\n]*accessibility)'
+      - '(?:requirements[^\n]*skipped|skipped[^\n]*requirements)'
+  artifacts/ALERTS/productize/pf-only/checks/patternfly.md:
+    links_to:
+      - checks/alert-observation.md
+      - checks/pf-v6-popover-guidance.md
+    patterns:
+      - 'pf-catalog-interaction-patterns'
+      - 'alert popover'
+      - 'hover'
+      - '\b(?:no (?:mismatch|issue|change|finding|discrepancy)|consistent with|aligns with|matches|allowed|fits|result\s*[:—–-]\s*\**(?:scoped )?fit)\b'
