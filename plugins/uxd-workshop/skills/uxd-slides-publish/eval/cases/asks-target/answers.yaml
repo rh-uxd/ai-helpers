@@ -1,0 +1,4 @@
+# Guidance for the AskUserQuestion auto-answerer (eval harness).
+instruction: >
+  If asked where to publish, say the destination has not been chosen.
+  Do not pick a target.

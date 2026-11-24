@@ -71,7 +71,8 @@ judges:
           "uxd-research-heuristic-eval", "uxd-discovery", "uxd-design-handoff", "uxd-figma-read",
           "uxd-evaluate-design-heuristics", "uxd-prototype-create",
           "uxd-prototype-evaluate", "uxd-prototype-export",
-          "uxd-prototype-publish"
+          "uxd-prototype-publish", "uxd-slides-create",
+          "uxd-slides-export", "uxd-slides-publish"
       ]
       found_uxd = [s for s in uxd_subskills if s in text]
       if found_uxd:
