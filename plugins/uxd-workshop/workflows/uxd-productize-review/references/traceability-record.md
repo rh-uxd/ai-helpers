@@ -28,13 +28,13 @@ unavailable facts and `Pending` for decisions not yet made.
 - <Planned check and options> — <planned/completed/skipped/blocked/not applicable/not run>; <reason>; <result/evidence link when available>
 - For a coverage claim: <actual producer/version and route>; <new check or supplied observation>; <target revision vs evidence revision: matching build / prior build only / build unknown>; <clickable result and supporting source(s)>; <what remains unverified>
 - If requirements triage was selected: <designer's packet confirmation and separate or combined Evaluate decision>; <native run ID, artifact digest and relative link to pe-state.json when validated>
-- <Finding ID> — <observed finding, producing check, evidence link, uncertainty and recommendation>
+- <Finding ID> — <conclusion and producing check>; <link the evidence and say briefly how it supports the conclusion>; <uncertainty and recommendation>
 - Limits: <what remains untested and what would unblock it>
 
 ## Human review and next decision
 - Review status: Pending review
 - Reviewer, date, and report revision: <when reviewed>
-- Finding decisions or unresolved concerns: <only what the reviewer states>
+- Finding decisions or unresolved concerns: <finding ID and reviewer's decision>; <does the reviewer consider the evidence sufficient, insufficient, or still unverified?>; <if disputed, what evidence would resolve it? Leave unstated judgments pending.>
 - Material corrections: <what changed after review, if any>
 - Next action and owner: Pending
 
