@@ -1,11 +1,11 @@
 ---
 name: uxd-productize-review
-version: 0.2.0
+version: 0.3.0
 description: >-
-  Evaluate changed areas of an existing prototype using checks the designer
-  selects. Use when a designer asks for Productize or wants a scoped review
+  Evaluate changed areas of an existing prototype using checks the user
+  selects. Use when a user asks for Productize or wants a scoped review
   with evidence and no fixes.
-audience: "UX designers reviewing an existing prototype"
+audience: "People reviewing changes to an existing prototype"
 inputs: "An existing prototype, the changed user action or outcome to review, inputs for the selected checks, and an agreed output workspace"
 outputs: "A traceable run record, selected check results, and a combined report after Review approval"
 ---
@@ -57,12 +57,29 @@ Available does not mean approved to run.
 
 ## Phases
 
-**Stop between phases.** Name the current phase and ask for approval before
-starting the next. Selecting checks does not authorize execution.
+Name the current phase. Confirm scope before writing the record, obtain approval
+before Evaluate, and wait for Review approval before creating the report.
+Selecting checks does not authorize execution.
+
+### 0. Introduce Productize
+
+On a new run, welcome the user with the `version` from this file's frontmatter.
+Explain the plan using the change they brought. For example:
+
+> Welcome to Productize, version {version}. We'll agree on what changed and
+> which checks would help. With your approval, I'll run those checks and save
+> the evidence in a run record. Then we can review the findings together and
+> decide what to do next. The prototype itself won't be edited.
+
+Offer to adjust the plan and move straight to the scope question below in the
+same reply. The introduction does not create artifacts or start any checks.
+When resuming, read the existing record and recap the last outcome, any blockers,
+and the next decision instead of repeating the welcome. For a question about
+saved evidence alone, answer it without starting a new run.
 
 ### 1. Agree on scope
 
-Introduce the workflow and version. Confirm the prototype revision and
+Confirm the prototype revision and
 what changed for the user. One **journey** means one user goal or action and
 its relevant outcome, not a required journey map, persona, or walkthrough.
 “Save a filter and see it in the saved list” is enough. Reuse that scope
@@ -73,13 +90,13 @@ Claim diff coverage only from the reviewed head
 and base, and runtime observations only from a matching preview.
 
 Show a short plan for one changed journey: which checks would help, what each
-would answer, and when the designer will review it. Accept any subset by name
+would answer, and when the user will review it. Accept any subset by name
 or number, including “accessibility only” or none.
 Recommend from the question: “what still needs verification?” → requirements
 triage; “can I complete it with the keyboard?” → accessibility; “does this
 interaction follow the PatternFly pattern?” → PatternFly interaction fit.
 Explain any missing prerequisite. A recommendation or an available tool never selects a check.
-Confirm an output location the reviewing designer can open.
+Confirm an output location the reviewer can open.
 
 On scope confirmation, start `run.md` from the
 [traceability template](references/traceability-record.md). Record the
@@ -130,9 +147,9 @@ For example, use `checks/patternfly.md` as the link target for a saved PatternFl
 qualifiers unchanged.
 
 Share the record path and a short summary. Do not write the combined report
-until the designer approves Review.
+until the user approves Review.
 
-### 3. Review findings with the designer
+### 3. Review findings with the user
 
 Review approval authorizes exactly one write: the report. Read the record
 and relevant results without updating their status or adding a backlink. Save
@@ -141,7 +158,7 @@ the record. Link the detailed results; attribute findings to skills and
 include evidence, limits, and next steps. Leave the Evaluate record unchanged
 when opening Review.
 
-When the designer states a next decision, open the saved report to confirm
+When the user states a next decision, open the saved report to confirm
 it's for the same revision. Record the decision, owner, and stated review
 status in `run.md` and link the report. Preserve scope, check outcomes, and
 evidence. Leave unprovided decisions or owners pending; recording a decision
@@ -156,6 +173,5 @@ and prior runs intact.
 
 Open evidence files before citing them. Resolve input paths from the output
 workspace unless another base is supplied; link from the saved document's
-directory. From a run's `checks/accessibility.md`, workspace evidence at
-`checks/keyboard.md` is `../../../../../checks/keyboard.md`. State access gaps
+directory. State access gaps
 instead of inventing evidence. Do not store credentials or private reasoning.

@@ -1,7 +1,7 @@
 # Productize traceability record
 
 Fill this in manually as `run.md`. Start at scope confirmation, update actual
-coverage during Evaluate, and add the designer's decision in Review. Link
+coverage during Evaluate, and add the reviewer's decision in Review. Link
 detail rather than repeating the evaluation report. Use `Unknown` for
 unavailable facts and `Pending` for decisions not yet made.
 
@@ -10,7 +10,7 @@ unavailable facts and `Pending` for decisions not yet made.
 
 ## Request and scope
 - Date, workflow revision, and operator: <date; version or commit; role or name>
-- Request and intended decision: <designer's goal>
+- Request and intended decision: <user's goal>
 - Prototype: <URL, exact revision, and whether the preview matches>
 - Inputs: <source/diff and base, requirements and guidance with links and revisions, if used>
 - Changed user action/outcome and relevant states: <agreed coverage in plain language>
@@ -27,7 +27,7 @@ unavailable facts and `Pending` for decisions not yet made.
 ## Checks, findings, and limits
 - <Planned check and options> — <planned/completed/skipped/blocked/not applicable/not run>; <reason>; <result/evidence link when available>
 - For a coverage claim: <actual producer/version and route>; <new check or supplied observation>; <target revision vs evidence revision: matching build / prior build only / build unknown>; <clickable result and supporting source(s)>; <what remains unverified>
-- If requirements triage was selected: <designer's packet confirmation and separate or combined Evaluate decision>; <native run ID, artifact digest and relative link to pe-state.json when validated>
+- If requirements triage was selected: <user's packet confirmation and separate or combined Evaluate decision>; <native run ID, artifact digest and relative link to pe-state.json when validated>
 - <Finding ID> — <conclusion and producing check>; <link the evidence and say briefly how it supports the conclusion>; <uncertainty and recommendation>
 - Limits: <what remains untested and what would unblock it>
 
@@ -43,6 +43,6 @@ unavailable facts and `Pending` for decisions not yet made.
 - Feedback and follow-up: <observation, evidence or finding ID, and proposed follow-up>
 ```
 
-`Skipped` means the designer left a check out. `Blocked` means a missing
+`Skipped` means the user left a check out. `Blocked` means a missing
 prerequisite. Record `Blocked — matching preview unavailable`, not `Passed —
 no findings`, for a runtime check that could not run.

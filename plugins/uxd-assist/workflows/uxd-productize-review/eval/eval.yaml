@@ -4,11 +4,11 @@ execution:
   mode: case
   prompt: |
     Start with plugins/uxd-assist/agents/uxd-assist.md and use its instructions
-    to handle the designer's request.
+    to handle the user's request.
 
     {{ input.prompt }}
 
-    Reply normally to the designer. For the test client, end your reply with a
+    Reply normally to the user. For the test client, end your reply with a
     JSON object using these fields:
     - "phase": the current phase ("scope", "evaluate", or "review"), not the
       proposed next step
@@ -18,13 +18,13 @@ execution:
       During Scope, report availability: "available" (inputs and capability
       exist, even if permission is pending), "blocked", or "not_applicable".
       After Scope, use "completed" for an actual result, "skipped" when the
-      designer leaves an eligible check out, "blocked" for missing
+      user leaves an eligible check out, "blocked" for missing
       prerequisites, or "not_applicable" when the check does not fit.
 
     This is a synthetic conversation snapshot. Do not contact external
     services or perform live checks. Use only staged instructions, any supplied
     results, and permitted artifact writes. The workspace is the already approved
-    output workspace when the designer supplies a run path.
+    output workspace when the user supplies a run path.
   project_hooks: false
   timeout: 120
   max_budget_usd: 0.50
@@ -53,7 +53,7 @@ permissions:
 dataset:
   path: cases
   schema: |
-    Each case supplies a designer request or an in-progress conversation and
+    Each case supplies a user request or an in-progress conversation and
     its prior scope/results in input.yaml. The optional checks/ and artifacts/
     directories contain only synthetic inputs or saved runs to resume.
     Only annotations.yaml contains expected phase, coverage, and file checks.
@@ -65,17 +65,17 @@ dataset:
         source: plugins/patternfly/pf-assist/agents/pf-assist.md
       - dest: plugins/uxd-assist/agents/uxd-assist.md
         source: plugins/uxd-assist/agents/uxd-assist.md
-      - dest: plugins/uxd-workshop/workflows/uxd-productize-review/SKILL.md
-        source: plugins/uxd-workshop/workflows/uxd-productize-review/SKILL.md
-      - dest: plugins/uxd-workshop/workflows/uxd-productize-review/references
-        source: plugins/uxd-workshop/workflows/uxd-productize-review/references
+      - dest: plugins/uxd-assist/workflows/uxd-productize-review/SKILL.md
+        source: plugins/uxd-assist/workflows/uxd-productize-review/SKILL.md
+      - dest: plugins/uxd-assist/workflows/uxd-productize-review/references
+        source: plugins/uxd-assist/workflows/uxd-productize-review/references
       - dest: plugins/patternfly/pf-design-guide/skills/pf-catalog-interaction-patterns/SKILL.md
         source: plugins/patternfly/pf-design-guide/skills/pf-catalog-interaction-patterns/SKILL.md
       - dest: plugins/patternfly/pf-design-guide/skills/pf-catalog-interaction-patterns/references/interaction-catalog.md
         source: plugins/patternfly/pf-design-guide/skills/pf-catalog-interaction-patterns/references/interaction-catalog.md
 outputs:
   - path: artifacts
-    schema: "Traceability record at scope confirmation, check results during Evaluate, and the combined report and designer decision in Review."
+    schema: "Traceability record at scope confirmation, check results during Evaluate, and the combined report and reviewer decision in Review."
 traces:
   events: true
   metrics: true
@@ -113,7 +113,7 @@ judges:
           return False, "Quick must not plan or report a walkthrough as completed"
       for pattern in expected.get("reply_patterns", []):
           if not re.search(pattern, text, re.IGNORECASE):
-              return False, f"Designer-facing response did not substantiate {pattern}"
+              return False, f"User-facing response did not substantiate {pattern}"
       return True, "Phase, approval, and check coverage match"
   - name: artifacts_and_boundaries
     check: |

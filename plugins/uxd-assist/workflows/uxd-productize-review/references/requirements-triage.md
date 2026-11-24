@@ -3,12 +3,12 @@
 **Question:** What evidence would verify each criterion for this change? The result
 is a verification plan. It is not an observation of the prototype.
 
-1. **Prepare with the designer.** Productize owns scope and phase approvals. The
+1. **Prepare with the user.** Productize owns scope and phase approvals. The
    host prepares the evaluator packet from the authorized Jira or written source.
    Show the source ID/revision, exact criterion text and stable section/criterion
-   IDs, changed action, and prototype URL/revision. The **designer** confirms or
+   IDs, changed action, and prototype URL/revision. The **user** confirms or
    corrects the mapping before it is frozen. Reuse an already confirmed exact
-   packet; ask only about missing or changed details. The designer can confirm
+   packet; ask only about missing or changed details. The user can confirm
    the displayed mapping and approve Evaluate in one reply. Neither selecting a
    check nor providing a ticket implies either decision.
 2. **Pass the selection, not a new intake request.** Use the evaluator's reviewed

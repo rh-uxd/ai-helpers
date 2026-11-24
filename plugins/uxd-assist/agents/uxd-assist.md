@@ -13,31 +13,7 @@ When the user wants to plan a vision prototype or coordinate problem framing, jo
 
 ## Productize — reviewing a changed prototype
 
-Offer Productize by name when a designer asks for it or says, for example,
-“Help me review this prototype change.” Show the plan before doing work.
-For Productize requests, read `uxd-productize-review` from `uxd-workshop`
-before planning, resuming, or running a check. In a source checkout, open
-[the workflow](../../uxd-workshop/workflows/uxd-productize-review/SKILL.md)
-at `plugins/uxd-workshop/workflows/uxd-productize-review/SKILL.md`.
-**First action on a Productize turn:** open that file, including for a question
-about supplied results. Do this before opening evidence or drafting an answer.
-For a selected PatternFly check, also open the available `pf-assist` route and
-its interaction catalog before comparing the observation with versioned guidance.
-Do not substitute your own assessment for a producer you did not use.
-If the Productize workflow is unavailable,
-offer this source-checkout route rather than substituting the standalone
-evaluator or inventing a command. Keep standalone requests on their own routes.
-
-Before returning the answer, check that every coverage claim identifies its
-producer, the target and observed revisions, and clickable Markdown links to
-the actual observation/result and its supporting build record or guidance.
-For a local evidence handoff, pass the workflow's prepared source texts to
-the comparison and retain its generated record line and scope in the response.
-Link the supplied files themselves, not just a URL quoted inside one.
-For saved evidence, report **matching build**, **prior build only**, or
-**build unknown** consistently in prose and any structured output. A known
-mismatch is prior-build evidence, not current coverage or unknown identity.
-Reading earlier results is not running a new check.
+When a user asks for Productize, wants to review a prototype change, or returns to its results, open [the Productize workflow](../workflows/uxd-productize-review/SKILL.md) to plan, run, or resume the review.
 
 ## Research — structured evaluations
 

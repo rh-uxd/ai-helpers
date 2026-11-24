@@ -4,6 +4,8 @@
    Productize by name. UXD Assist is the entry router.
    Any host with access to [the workflow file](../SKILL.md), the selected
    inputs, and a writable output workspace can follow the same instructions.
+   A new run starts with the workflow version and a short plan. To resume,
+   provide the existing `run.md` for a recap of outcomes and the next decision.
 2. **Confirm scope:** Say what changed for the user (for example, “Save a
    filter and see it in the saved list”). No journey map is required. Pick
    checks by name or number. For “what still needs verification?”, choose
@@ -21,7 +23,7 @@
    a path on another machine is not a shared link.
 
 For a dry run, fill the [traceability record](traceability-record.md) by hand
-if needed. When comparing entry routes, check whether designers
+if needed. When comparing entry routes, check whether users
 can choose, review, and reopen the same results.
 
 ## Local evidence handoff

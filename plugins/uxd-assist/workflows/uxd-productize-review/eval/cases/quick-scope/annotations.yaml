@@ -7,6 +7,7 @@ checks:
   requirements: available
   patternfly: available
 reply_patterns:
+  - '\b0\.3\.0\b'
   - '\b1\b[^\n]*accessibility'
   - '\b2\b[^\n]*requirements'
   - '\b3\b[^\n]*patternfly interaction fit'
