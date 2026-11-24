@@ -41,6 +41,12 @@ No `version` field in plugin.json — Claude Code falls back to git commit SHA, 
 - Every skill and agent needs frontmatter with matching `name` and `description`.
 - Keep skills concise. Avoid unnecessary file reads, redundant instructions, and verbose output formats.
 
+## User request routing
+
+When handling a user request, check [UXD Assist](plugins/uxd-assist/agents/uxd-assist.md), [PatternFly Assist](plugins/patternfly/pf-assist/agents/pf-assist.md), and other available assistants for workflows and skills that may fit the user's intent. Use the relevant assistant's routing instructions directly when invocation is unavailable.
+
+Read and follow the matching workflow's `SKILL.md` when it covers the requested outcome. For a single step or artifact, use a focused skill. If no assistant offers a matching route, check the available skills directly. Honor explicitly requested skills and scope.
+
 ## Context routing
 
 - When contributing a new skill or agent, read `CONTRIBUTING-SKILLS.md`.
