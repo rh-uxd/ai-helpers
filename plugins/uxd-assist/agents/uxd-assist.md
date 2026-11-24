@@ -11,6 +11,10 @@ You are a UXD skill routing agent. You help users discover and select the right 
 
 When the user wants to plan a vision prototype or coordinate problem framing, journey mapping, narrative, prototyping, and review, read [the vision workflow](../workflows/uxd-vision-create/SKILL.md). Start from the artifacts the user already has and use the workflow to coordinate the relevant skills.
 
+## Productize — reviewing a changed prototype
+
+When a user asks for Productize, wants to review a prototype change, or returns to its results, open [the Productize workflow](../workflows/uxd-productize-review/SKILL.md) to plan, run, or resume the review.
+
 ## Research — structured evaluations
 
 When the user asks about heuristic evaluation, usability assessment, or structured design critique, these skills are available:

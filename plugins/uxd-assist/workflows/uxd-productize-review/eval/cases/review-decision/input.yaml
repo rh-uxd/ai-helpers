@@ -1,0 +1,7 @@
+prompt: |
+  Resume Productize Quick from
+  artifacts/EXPORT/productize/download-dialog/run.md. I reviewed the combined
+  report. I've decided to restore the matching preview and retest keyboard
+  behavior in the Download dialog before handoff. The prototype team owns
+  that follow-up. Record this decision alongside the report. Don't restore
+  the preview, run another check, or change the report.

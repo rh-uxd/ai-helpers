@@ -1,0 +1,17 @@
+phase: evaluate
+waiting_for: review
+checks:
+  accessibility: completed
+  requirements: blocked
+  patternfly: blocked
+staged_artifacts:
+  - artifacts/BILLING/productize/invoice-search/run.md
+  - artifacts/BILLING/productize/invoice-search/checks/accessibility.md
+reads:
+  - artifacts/BILLING/productize/invoice-search/run.md
+  - artifacts/BILLING/productize/invoice-search/checks/accessibility.md
+reply_patterns:
+  - '\b(?:approve|confirm|approval|proceed)\b'
+  - '\binvoice[- ]number (?:field|input)\b'
+  - '\b(?:narrow|viewport)\b'
+  - '\b(?:not tested|not run|untested|only (?:at|the))\b'

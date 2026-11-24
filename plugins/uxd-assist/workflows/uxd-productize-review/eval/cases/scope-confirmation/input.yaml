@@ -1,0 +1,10 @@
+prompt: |
+  Productize Quick: I confirm the scope for the filters prototype at
+  https://filters.example.invalid, verified revision fe3ca08, on the Save
+  Filter journey (filter panel and saved confirmation states). I choose
+  accessibility and requirements triage; a matching browser with keyboard
+  tools is available, and reviewed criterion FILTER-12 says saving a filter
+  adds it to the saved list. This native HTML prototype does not use PatternFly.
+  Our reviewing designer can open the agreed output workspace. Use run ID
+  scope-approved at artifacts/FILTERS/productize/scope-approved/.
+  Confirm and record this scope now, but wait to start Evaluate.
