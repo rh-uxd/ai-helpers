@@ -1,0 +1,5 @@
+---
+name: anthropic-api
+type: fullsend-anthropic-api
+credentials:
+  ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY}"

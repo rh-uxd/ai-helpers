@@ -1,0 +1,30 @@
+expected_tier: full
+expected_outcome: prototype_created
+checks:
+  - name: pf_page_layout
+    description: Uses PatternFly Page + PageSidebar + Nav, not custom divs
+    severity: high
+  - name: pf_table_component
+    description: Uses @patternfly/react-table (Thead, Tbody, Tr, Th, Td), not HTML table or div grid
+    severity: high
+  - name: pf_pagination
+    description: Uses PatternFly Pagination component, not custom pagination
+    severity: high
+  - name: pf_label_status
+    description: Pod status uses PF Label component with color variants
+    severity: medium
+  - name: state_coverage
+    description: Prototype includes empty, loading, and error states
+    severity: high
+  - name: state_switching
+    description: States switchable via ?state= URL parameter
+    severity: medium
+  - name: journeys_generated
+    description: journeys.json produced with at least 1 journey
+    severity: high
+  - name: design_spec
+    description: Design spec markdown file produced
+    severity: medium
+  - name: result_schema
+    description: agent-result.json validates against prototype-result.schema.json
+    severity: high

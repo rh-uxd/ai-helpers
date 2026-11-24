@@ -1,0 +1,29 @@
+# Allow Claude Code runtime to reach the inference API from the sandbox.
+# Supports both direct Anthropic API and EnMaaS gateway (Red Hat internal).
+id: fullsend-anthropic-api
+display_name: Anthropic API (with EnMaaS)
+description: Anthropic API and EnMaaS gateway access for Claude runtime agents
+category: inference
+endpoints:
+  - host: api.anthropic.com
+    port: 443
+    protocol: rest
+    access: read-write
+    enforcement: enforce
+  # api.enmaas.devshift.net is Red Hat internal — only reachable on VPN or corp network.
+  - host: api.enmaas.devshift.net
+    port: 443
+    protocol: rest
+    access: read-write
+    enforcement: enforce
+  # raw.githubusercontent.com for runtime skill fetching (public, no auth needed)
+  - host: raw.githubusercontent.com
+    port: 443
+    protocol: rest
+    access: read-only
+    enforcement: enforce
+binaries:
+  - "**/claude.exe"
+  - "**/claude"
+  - "**/node"
+  - "**/curl"
