@@ -22,6 +22,8 @@ If `@patternfly/patternfly-mcp` is available, use it to fetch full documentation
 
 The catalog lives in `references/interaction-catalog.md`. It maps interaction patterns to components, organized by category (Click, Hover, Keyboard, Drag, Focus, Selection). Read the reference file for the full mapping.
 
+For collection views that combine Table, Toolbar, Pagination, EmptyState, and loading/error feedback, read [references/collection-surface-behaviors.md](references/collection-surface-behaviors.md). It covers sort/filter query coordination, toolbar behavior during refetch, state branching, and duplicate-action coordination.
+
 ## Workflow
 
 ### Finding a component for an interaction
