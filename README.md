@@ -117,7 +117,7 @@ Then add the marketplace and install a plugin:
 # Add the marketplace (one time)
 codex plugin marketplace add rh-uxd/ai-helpers
 
-codex plugin list --marketplace uxd-ai-helpers --available
+codex plugin list --marketplace uxd-ai-helpers
 codex plugin add uxd-research@uxd-ai-helpers
 ```
 
